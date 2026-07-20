@@ -361,93 +361,85 @@ export default function ProjectsView() {
   }
 
   return (
-    <div className="projects-view-container" style={{ padding: "8px 0" }}>
+    <div className="projects-view-container" style={{ padding: "4px 0", display: "flex", flexDirection: "column", gap: "20px" }}>
+      
       {/* Top Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h2 style={{ fontSize: "1.5rem", fontWeight: "800", color: "var(--text-primary)", margin: 0 }}>
+          <h2 style={{ fontSize: "1.4rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>
             Projects & Client Hub
           </h2>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", margin: "4px 0 0 0" }}>
+          <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>
             Track client engagements, project discussions, assigned teams, and linked expense claims
           </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
           style={{
-            background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-            color: "#fff",
+            background: "#4c478a",
+            color: "#ffffff",
             border: "none",
-            borderRadius: "8px",
-            padding: "10px 18px",
-            fontWeight: "700",
-            fontSize: "0.88rem",
+            borderRadius: "4px",
+            padding: "9px 18px",
+            fontWeight: "600",
+            fontSize: "0.84rem",
             cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
             display: "flex",
             alignItems: "center",
-            gap: "8px"
+            gap: "8px",
+            boxShadow: "0 2px 4px rgba(76, 71, 138, 0.15)"
           }}
         >
           <span>＋</span> Register New Project
         </button>
       </div>
 
-      {/* Summary KPI Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "24px" }}>
-        <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: "10px", border: "1px solid #e2e8f0", borderLeft: "4px solid #2563eb" }}>
-          <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>
-            Total Projects
+      {/* Summary KPI Grid (3 Columns - Sourcing Allocation Removed) */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+        <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "4px", border: "1px solid #e2e8f0", borderLeft: "4px solid #4c478a" }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            TOTAL PROJECTS
           </div>
-          <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
-            {projects.length} <span style={{ fontSize: "0.8rem", color: "#059669", fontWeight: "600" }}>({activeCount} Active)</span>
-          </div>
-        </div>
-
-        <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: "10px", border: "1px solid #e2e8f0", borderLeft: "4px solid #059669" }}>
-          <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>
-            Sourcing Allocation
-          </div>
-          <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
-            ₹{totalBudget.toLocaleString()}
+          <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
+            {projects.length} <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "500" }}>({activeCount} Active)</span>
           </div>
         </div>
 
-        <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: "10px", border: "1px solid #e2e8f0", borderLeft: "4px solid #7c3aed" }}>
-          <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>
-            Project Discussions
+        <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "4px", border: "1px solid #e2e8f0", borderLeft: "4px solid #7c3aed" }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            PROJECT DISCUSSIONS
           </div>
-          <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
-            {totalDiscussions} <span style={{ fontSize: "0.8rem", color: "#64748b" }}>notes logged</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
+            {totalDiscussions} <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "400" }}>notes logged</span>
           </div>
         </div>
 
-        <div style={{ background: "#ffffff", padding: "18px 20px", borderRadius: "10px", border: "1px solid #e2e8f0", borderLeft: "4px solid #d97706" }}>
-          <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>
-            Assigned Consultants
+        <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "4px", border: "1px solid #e2e8f0", borderLeft: "4px solid #d97706" }}>
+          <div style={{ fontSize: "0.72rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            ASSIGNED CONSULTANTS
           </div>
-          <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
-            {consultants.length} <span style={{ fontSize: "0.8rem", color: "#64748b" }}>active leads</span>
+          <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
+            {consultants.length} <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "400" }}>active leads</span>
           </div>
         </div>
       </div>
 
       {/* Filter & Search Controls */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", border: "1px solid #e2e8f0", padding: "12px 16px", borderRadius: "4px" }}>
         <div style={{ display: "flex", gap: "8px" }}>
           {["All", "Active", "Completed", "On Hold"].map(st => (
             <button
               key={st}
               onClick={() => setStatusFilter(st)}
               style={{
-                padding: "6px 14px",
-                borderRadius: "6px",
+                padding: "5px 14px",
+                borderRadius: "4px",
                 fontSize: "0.8rem",
-                fontWeight: "700",
+                fontWeight: statusFilter === st ? "600" : "500",
                 cursor: "pointer",
-                border: statusFilter === st ? "1.5px solid #2563eb" : "1px solid var(--border-color)",
-                background: statusFilter === st ? "#eff6ff" : "var(--bg-secondary)",
-                color: statusFilter === st ? "#2563eb" : "var(--text-primary)"
+                border: statusFilter === st ? "1px solid #4c478a" : "1px solid #cbd5e1",
+                background: statusFilter === st ? "#f5f3ff" : "#ffffff",
+                color: statusFilter === st ? "#4c478a" : "#475569"
               }}
             >
               {st}
@@ -455,41 +447,44 @@ export default function ProjectsView() {
           ))}
         </div>
 
-        <input
-          type="text"
-          placeholder="🔍 Search by project name, code or client..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          style={{
-            padding: "8px 14px",
-            borderRadius: "6px",
-            border: "1px solid var(--border-color)",
-            width: "280px",
-            fontSize: "0.85rem",
-            outline: "none"
-          }}
-        />
+        <div style={{ position: "relative" }}>
+          <input
+            type="text"
+            placeholder="Search project, code or client..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{
+              padding: "7px 12px 7px 32px",
+              borderRadius: "4px",
+              border: "1px solid #cbd5e1",
+              width: "280px",
+              fontSize: "0.82rem",
+              outline: "none",
+              background: "#ffffff"
+            }}
+          />
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: "absolute", left: "10px", top: "9px" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
       </div>
 
-      {/* Projects Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
+      {/* Minimalistic Projects Grid */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
         {filteredProjects.map(proj => {
           const projExpenses = expenses.filter(e => e.projectId === proj.id || e.projectName === proj.name);
-          const totalSpent = projExpenses.filter(e => e.status === "Approved").reduce((sum, e) => sum + e.amount, 0);
 
           return (
             <div
               key={proj.id}
-              className="glass-card"
               style={{
+                background: "#ffffff",
                 padding: "20px",
-                borderRadius: "12px",
-                border: "1px solid var(--border-color)",
+                borderRadius: "4px",
+                border: "1px solid #e2e8f0",
                 display: "flex",
                 flexDirection: "column",
-                justify: "space-between",
-                gap: "14px",
-                transition: "all 0.2s ease",
+                justifyContent: "space-between",
+                gap: "16px",
+                transition: "all 0.15s ease",
                 cursor: "pointer"
               }}
               onClick={() => { setSelectedProject(proj); setActiveProjectTab("overview"); }}
@@ -501,52 +496,51 @@ export default function ProjectsView() {
                     <span
                       style={{
                         fontSize: "0.68rem",
-                        fontWeight: "800",
-                        letterSpacing: "0.06em",
-                        color: "#2563eb",
-                        background: "#eff6ff",
-                        border: "1px solid #bfdbfe",
+                        fontWeight: "700",
+                        letterSpacing: "0.05em",
+                        color: "#4c478a",
+                        background: "#f5f3ff",
+                        border: "1px solid #ddd6fe",
                         padding: "2px 8px",
-                        borderRadius: "4px"
+                        borderRadius: "3px"
                       }}
                     >
                       {proj.code}
                     </span>
-                    <h3 style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a", margin: "6px 0 2px 0" }}>
+                    <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", margin: "8px 0 4px 0" }}>
                       {proj.name}
                     </h3>
-                    <p style={{ fontSize: "0.8rem", color: "#475569", margin: 0, fontWeight: "500" }}>
-                      🏢 Client: <strong>{proj.client}</strong>
+                    <p style={{ fontSize: "0.8rem", color: "#64748b", margin: 0, fontWeight: "500" }}>
+                      Client: <strong style={{ color: "#334155" }}>{proj.client}</strong>
                     </p>
                   </div>
+
+                  {/* Clean Status Badge */}
                   <span
                     style={{
                       fontSize: "0.72rem",
-                      fontWeight: "700",
-                      padding: "3px 10px",
+                      fontWeight: "500",
+                      padding: "2px 10px",
                       borderRadius: "12px",
-                      background: proj.status === "Active" ? "#dcfce7" : proj.status === "On Hold" ? "#ffedd5" : "#dbeafe",
-                      color: proj.status === "Active" ? "#15803d" : proj.status === "On Hold" ? "#c2410c" : "#1d4ed8"
+                      background: proj.status === "Active" ? "#f0fdf4" : proj.status === "On Hold" ? "#fff7ed" : "#f0f9ff",
+                      border: proj.status === "Active" ? "1px solid #bbf7d0" : proj.status === "On Hold" ? "1px solid #fed7aa" : "1px solid #bae6fd",
+                      color: proj.status === "Active" ? "#16a34a" : proj.status === "On Hold" ? "#ea580c" : "#0284c7"
                     }}
                   >
                     ● {proj.status}
                   </span>
                 </div>
 
-                {/* Details */}
-                <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "8px", display: "flex", gap: "16px" }}>
+                {/* Details Pills */}
+                <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "12px", display: "flex", gap: "16px", flexWrap: "wrap" }}>
                   <span>📍 {proj.location || "On-site"}</span>
                   <span>💬 {proj.discussions?.length || 0} Discussions</span>
                   <span>💸 {projExpenses.length} Expense Claims</span>
                 </div>
               </div>
 
-              {/* Footer row */}
-              <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <span style={{ fontSize: "0.7rem", color: "#94a3b8", display: "block" }}>SOURCING BUDGET</span>
-                  <strong style={{ fontSize: "0.95rem", color: "#0f172a" }}>₹{(proj.budget || 0).toLocaleString()}</strong>
-                </div>
+              {/* Minimalistic Footer Row (Sourcing Budget Removed) */}
+              <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "14px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -554,15 +548,14 @@ export default function ProjectsView() {
                     setActiveProjectTab("overview");
                   }}
                   style={{
-                    background: "#2563eb",
+                    background: "#4c478a",
                     color: "#ffffff",
                     border: "none",
-                    borderRadius: "6px",
-                    padding: "7px 14px",
-                    fontWeight: "700",
+                    borderRadius: "4px",
+                    padding: "7px 16px",
+                    fontWeight: "600",
                     fontSize: "0.78rem",
-                    cursor: "pointer",
-                    boxShadow: "0 2px 4px rgba(37, 99, 235, 0.2)"
+                    cursor: "pointer"
                   }}
                 >
                   Open Project Hub ➔

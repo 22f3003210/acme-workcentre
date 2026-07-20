@@ -1285,23 +1285,23 @@ export default function AdminView({ activeTab, setActiveTab }) {
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "20px" }}>
             {/* Card 1: Who is off today */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-              <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#1e293b", margin: "0 0 14px 0" }}>Who is off today</h4>
+              <h4 style={{ fontSize: "0.95rem", fontWeight: "500", color: "#334155", margin: "0 0 14px 0" }}>Who is off today</h4>
               
               {/* Amber Notice Banner */}
-              <div style={{ background: "#fef9c3", border: "1px solid #fef08a", borderRadius: "0px", padding: "12px 16px", color: "#854d0e", fontSize: "0.85rem", fontWeight: "600" }}>
+              <div style={{ background: "#fef9c3", border: "1px solid #fef08a", borderRadius: "0px", padding: "12px 16px", color: "#854d0e", fontSize: "0.85rem", fontWeight: "400" }}>
                 No employee is off today.
               </div>
             </div>
 
             {/* Card 2: Not in yet today */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-              <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#1e293b", margin: "0 0 14px 0" }}>Not in yet today</h4>
+              <h4 style={{ fontSize: "0.95rem", fontWeight: "500", color: "#334155", margin: "0 0 14px 0" }}>Not in yet today</h4>
               
               <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
                 {users.filter(u => u.role === "Consultant").slice(0, 4).map(c => (
                   <div key={c.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                     <img src={c.avatar} alt={c.name} style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover", border: "2px solid #e2e8f0" }} />
-                    <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: "600", maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: "400", maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {c.name.split(" ")[0]}...
                     </span>
                   </div>
@@ -1315,43 +1315,41 @@ export default function AdminView({ activeTab, setActiveTab }) {
             {/* Stat 1: On Time */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#06b6d4" }} />
-              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Employees On Time today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Employees On Time today</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
             </div>
 
             {/* Stat 2: Late Arrivals */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#c026d3" }} />
-              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Late Arrivals today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Late Arrivals today</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
             </div>
 
             {/* Stat 3: Employees on Leave today */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#84cc16" }} />
-              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Employees on Leave today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Employees on Leave today</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
             </div>
 
             {/* Stat 4: Remote Clock-ins */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#f97316" }} />
-              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Remote Clock-ins today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Remote Clock-ins today</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
             </div>
           </div>
 
           {/* Section: Team calendar (Whole Month Wise Matrix Table) */}
           <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "22px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ fontSize: "1rem", fontWeight: "800", color: "#1e293b", margin: 0 }}>Team calendar</h3>
+            <h3 style={{ fontSize: "1rem", fontWeight: "500", color: "#334155", margin: "0 0 12px 0" }}>Team calendar</h3>
 
-              {/* Month Selector */}
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>‹</button>
-                <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "#334155" }}>Sept 2026</span>
-                <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>›</button>
-              </div>
+            {/* Month Selector (Left Aligned matching reference screenshot) */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+              <button type="button" style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.75rem", fontWeight: "400" }}>‹</button>
+              <span style={{ fontSize: "0.92rem", fontWeight: "500", color: "#334155" }}>Sept 2026</span>
+              <button type="button" style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.75rem", fontWeight: "400" }}>›</button>
             </div>
 
             {/* Whole Month Employee Matrix Grid */}
@@ -1359,7 +1357,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem", minWidth: "950px" }}>
                 <thead>
                   <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
-                    <th style={{ padding: "10px 16px", textAlign: "left", width: "190px", position: "sticky", left: 0, background: "#f8fafc", zIndex: 2, borderRight: "1px solid #e2e8f0" }}>Employee</th>
+                    <th style={{ padding: "10px 16px", textAlign: "left", width: "190px", position: "sticky", left: 0, background: "#f8fafc", zIndex: 2, borderRight: "1px solid #e2e8f0", fontWeight: "500" }}>Employee</th>
                     {[
                       { day: 1, name: "Tu" },
                       { day: 2, name: "We" },
@@ -1392,9 +1390,9 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       { day: 29, name: "Tu" },
                       { day: 30, name: "We" }
                     ].map(d => (
-                      <th key={d.day} style={{ padding: "8px 4px", textAlign: "center", minWidth: "32px", fontWeight: "600" }}>
-                        <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>{d.name}</div>
-                        <div style={{ color: "#334155", fontWeight: "700" }}>{d.day}</div>
+                      <th key={d.day} style={{ padding: "8px 4px", textAlign: "center", minWidth: "32px", fontWeight: "400" }}>
+                        <div style={{ fontSize: "0.68rem", color: "#94a3b8", fontWeight: "400" }}>{d.name}</div>
+                        <div style={{ color: "#334155", fontWeight: "500" }}>{d.day}</div>
                       </th>
                     ))}
                   </tr>
@@ -1405,37 +1403,37 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       <td style={{ padding: "10px 16px", position: "sticky", left: 0, background: uIdx % 2 === 0 ? "#ffffff" : "#fbfcfd", zIndex: 2, borderRight: "1px solid #e2e8f0" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <img src={emp.avatar} alt={emp.name} style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover" }} />
-                          <span style={{ fontWeight: "700", color: "#0f172a", fontSize: "0.82rem", whiteSpace: "nowrap" }}>{emp.name}</span>
+                          <span style={{ fontWeight: "500", color: "#0f172a", fontSize: "0.82rem", whiteSpace: "nowrap" }}>{emp.name}</span>
                         </div>
                       </td>
                       {Array.from({ length: 30 }, (_, i) => i + 1).map(dayNum => {
                         let cellContent = null;
                         if (uIdx === 0 && (dayNum === 4 || dayNum === 5 || dayNum === 6 || dayNum === 7)) {
                           cellContent = (
-                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#38bdf8", color: "#fff", fontWeight: "800", fontSize: "0.72rem" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#38bdf8", color: "#fff", fontWeight: "500", fontSize: "0.72rem" }}>
                               {dayNum}
                             </span>
                           );
                         } else if (uIdx === 1 && dayNum === 3) {
                           cellContent = (
-                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#facc15", color: "#713f12", fontWeight: "800", fontSize: "0.72rem" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#facc15", color: "#713f12", fontWeight: "500", fontSize: "0.72rem" }}>
                               {dayNum}
                             </span>
                           );
                         } else if (uIdx === 2 && (dayNum === 6 || dayNum === 7)) {
                           cellContent = (
-                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#f472b6", color: "#fff", fontWeight: "800", fontSize: "0.72rem" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#f472b6", color: "#fff", fontWeight: "500", fontSize: "0.72rem" }}>
                               {dayNum}
                             </span>
                           );
                         } else if (uIdx === 3 && dayNum === 5) {
                           cellContent = (
-                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#f472b6", color: "#fff", fontWeight: "800", fontSize: "0.72rem" }}>
+                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#f472b6", color: "#fff", fontWeight: "500", fontSize: "0.72rem" }}>
                               {dayNum}
                             </span>
                           );
                         } else {
-                          cellContent = <span style={{ color: "#94a3b8", fontSize: "0.75rem" }}>{dayNum}</span>;
+                          cellContent = <span style={{ color: "#94a3b8", fontSize: "0.75rem", fontWeight: "400" }}>{dayNum}</span>;
                         }
 
                         return (
@@ -1451,7 +1449,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
             </div>
 
             {/* Clean Legend Dots (Requested Items Only) */}
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "24px", fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "24px", fontSize: "0.8rem", color: "#475569", fontWeight: "400" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#38bdf8" }} /> Paid Leave
               </div>

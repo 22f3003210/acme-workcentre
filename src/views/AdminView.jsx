@@ -42,6 +42,18 @@ export default function AdminView({ activeTab, setActiveTab }) {
   // Workforce Sub-Navigation Header State (Matching Reference Screenshot)
   const [subModuleTab, setSubModuleTab] = useState("DASHBOARD");
   const [dashboardSubTab, setDashboardSubTab] = useState("Attendance Summary");
+
+  // Dynamic Team Calendar Month & Year State
+  const [selectedDate, setSelectedDate] = useState(new Date(2026, 8, 1)); // Default Sept 2026
+
+  const handlePrevMonth = () => {
+    setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
+
   const [empAdvance, setEmpAdvance] = useState("2000"); // default ₹2000
   const [empLocation, setEmpLocation] = useState("Mumbai / Showroom Site");
 
@@ -1433,134 +1445,163 @@ export default function AdminView({ activeTab, setActiveTab }) {
           <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "22px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
             <h3 style={{ fontSize: "1rem", fontWeight: "500", color: "#334155", margin: "0 0 12px 0" }}>Team calendar</h3>
 
-            {/* Month Selector (Left Aligned matching reference screenshot) */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-              <button type="button" style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.75rem", fontWeight: "400" }}>‹</button>
-              <span style={{ fontSize: "0.92rem", fontWeight: "500", color: "#334155" }}>Sept 2026</span>
-              <button type="button" style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.75rem", fontWeight: "400" }}>›</button>
-            </div>
+            {(() => {
+              const calendarYear = selectedDate.getFullYear();
+              const calendarMonth = selectedDate.getMonth();
+              const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
+              const formattedMonthLabel = `${monthNames[calendarMonth]} ${calendarYear}`;
+              const totalDaysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
 
-            {/* Enterprise Attendance Grid Table (P, A, HD, L, OFF with Summary Counts) */}
-            <div style={{ overflowX: "auto", border: "1px solid #cbd5e1", marginBottom: "20px" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem", minWidth: "1100px" }}>
-                <thead>
-                  <tr style={{ background: "#f1f5f9", borderBottom: "1px solid #cbd5e1", color: "#334155" }}>
-                    <th style={{ padding: "10px 14px", textAlign: "left", width: "220px", position: "sticky", left: 0, background: "#f1f5f9", zIndex: 2, borderRight: "1px solid #cbd5e1", fontWeight: "500" }}>Employee</th>
-                    {[
-                      { day: 1, name: "Wed" },
-                      { day: 2, name: "Thu" },
-                      { day: 3, name: "Fri" },
-                      { day: 4, name: "Sat" },
-                      { day: 5, name: "Sun" },
-                      { day: 6, name: "Mon" },
-                      { day: 7, name: "Tue" },
-                      { day: 8, name: "Wed" },
-                      { day: 9, name: "Thu" },
-                      { day: 10, name: "Fri" },
-                      { day: 11, name: "Sat" },
-                      { day: 12, name: "Sun" },
-                      { day: 13, name: "Mon" },
-                      { day: 14, name: "Tue" },
-                      { day: 15, name: "Wed" },
-                      { day: 16, name: "Thu" },
-                      { day: 17, name: "Fri" },
-                      { day: 18, name: "Sat" },
-                      { day: 19, name: "Sun" },
-                      { day: 20, name: "Mon" },
-                      { day: 21, name: "Tue" },
-                      { day: 22, name: "Wed" },
-                      { day: 23, name: "Thu" },
-                      { day: 24, name: "Fri" },
-                      { day: 25, name: "Sat" },
-                      { day: 26, name: "Sun" },
-                      { day: 27, name: "Mon" },
-                      { day: 28, name: "Tue" },
-                      { day: 29, name: "Wed" },
-                      { day: 30, name: "Thu" }
-                    ].map(d => (
-                      <th key={d.day} style={{ padding: "6px 2px", textAlign: "center", minWidth: "28px", fontWeight: "400", borderRight: "1px solid #e2e8f0" }}>
-                        <div style={{ color: "#1e293b", fontWeight: "500" }}>{d.day}</div>
-                        <div style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: "400" }}>{d.name}</div>
-                      </th>
-                    ))}
-                    {/* Summary Columns Header */}
-                    <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", borderLeft: "1px solid #cbd5e1", color: "#0f172a", fontWeight: "600" }}>P</th>
-                    <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#0284c7", fontWeight: "600" }}>L</th>
-                    <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#d97706", fontWeight: "600" }}>HD</th>
-                    <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#e11d48", fontWeight: "600" }}>A</th>
-                    <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#64748b", fontWeight: "600" }}>OFF</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.map((emp, uIdx) => {
-                    const getDayStatus = (dayNum) => {
-                      if (dayNum % 7 === 5 || dayNum % 7 === 6) return { code: "OFF", bg: "transparent", color: "#64748b" };
-                      
-                      if (uIdx === 0) {
-                        if (dayNum === 8 || dayNum === 10 || dayNum === 14) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
-                        if (dayNum === 12) return { code: "L", bg: "#e0f2fe", color: "#0369a1" };
-                        return { code: "P", bg: "transparent", color: "#334155" };
-                      } else if (uIdx === 1) {
-                        if (dayNum <= 12) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
-                        return { code: "P", bg: "transparent", color: "#334155" };
-                      } else if (uIdx === 2) {
-                        if (dayNum === 1 || dayNum === 4 || dayNum === 7 || dayNum === 11 || dayNum === 13) return { code: "HD", bg: "#bae6fd", color: "#0284c7" };
-                        if (dayNum === 3 || dayNum === 9 || dayNum === 16) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
-                        return { code: "P", bg: "transparent", color: "#334155" };
-                      } else {
-                        if (dayNum % 4 === 0) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
-                        if (dayNum % 7 === 0) return { code: "HD", bg: "#bae6fd", color: "#0284c7" };
-                        return { code: "P", bg: "transparent", color: "#334155" };
-                      }
-                    };
+              const daysHeader = Array.from({ length: totalDaysInMonth }, (_, i) => {
+                const dayNum = i + 1;
+                const d = new Date(calendarYear, calendarMonth, dayNum);
+                const dayName = d.toLocaleString('en-US', { weekday: 'short' });
+                const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+                return { day: dayNum, name: dayName, isWeekend };
+              });
 
-                    let pCount = 0, aCount = 0, hdCount = 0, lCount = 0, offCount = 0;
-                    const dayStatuses = Array.from({ length: 30 }, (_, i) => {
-                      const st = getDayStatus(i + 1);
-                      if (st.code === "P") pCount++;
-                      else if (st.code === "A") aCount++;
-                      else if (st.code === "HD") hdCount++;
-                      else if (st.code === "L") lCount++;
-                      else if (st.code === "OFF") offCount++;
-                      return st;
-                    });
+              return (
+                <>
+                  {/* Month Selector (Functional Previous & Next Month Navigation) */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+                    <button 
+                      type="button" 
+                      onClick={handlePrevMonth}
+                      title="Previous Month"
+                      style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600" }}
+                    >
+                      ‹
+                    </button>
 
-                    return (
-                      <tr key={emp.id} style={{ borderBottom: "1px solid #e2e8f0", background: uIdx % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
-                        {/* Sticky Employee Details Column */}
-                        <td style={{ padding: "8px 12px", position: "sticky", left: 0, background: uIdx % 2 === 0 ? "#ffffff" : "#f8fafc", zIndex: 2, borderRight: "1px solid #cbd5e1" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <img src={emp.avatar} alt={emp.name} style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover" }} />
-                            <div>
-                              <div style={{ fontWeight: "500", color: "#0f172a", fontSize: "0.82rem" }}>
-                                {emp.name} <span style={{ color: "#64748b", fontSize: "0.72rem" }}>[{emp.role === "Admin" ? "A0001" : `C00${uIdx + 1}`}]</span>
-                              </div>
-                              <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "400" }}>
-                                {emp.title || emp.role}, Hyderabad
-                              </div>
-                            </div>
-                          </div>
-                        </td>
+                    <div style={{ position: "relative", display: "inline-block" }}>
+                      <span style={{ fontSize: "0.92rem", fontWeight: "500", color: "#334155", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        {formattedMonthLabel}
+                      </span>
+                      <input
+                        type="month"
+                        value={`${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}`}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            const [y, m] = e.target.value.split("-");
+                            setSelectedDate(new Date(parseInt(y), parseInt(m) - 1, 1));
+                          }
+                        }}
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: "100%",
+                          opacity: 0,
+                          cursor: "pointer"
+                        }}
+                        title="Click to select month and year"
+                      />
+                    </div>
 
-                        {/* Days 1 to 30 Code Cells */}
-                        {dayStatuses.map((st, dIdx) => (
-                          <td key={dIdx} style={{ padding: "6px 2px", textAlign: "center", background: st.bg, color: st.color, fontWeight: "500", fontSize: "0.75rem", borderRight: "1px solid #f1f5f9" }}>
-                            {st.code}
-                          </td>
-                        ))}
+                    <button 
+                      type="button" 
+                      onClick={handleNextMonth}
+                      title="Next Month"
+                      style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600" }}
+                    >
+                      ›
+                    </button>
+                  </div>
 
-                        {/* Summary Columns */}
-                        <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#0f172a", borderLeft: "1px solid #cbd5e1", background: "#f8fafc" }}>{pCount}</td>
-                        <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#0284c7", background: "#f8fafc" }}>{lCount}</td>
-                        <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#d97706", background: "#f8fafc" }}>{hdCount}</td>
-                        <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#e11d48", background: "#f8fafc" }}>{aCount}</td>
-                        <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#64748b", background: "#f8fafc" }}>{offCount}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                  {/* Enterprise Attendance Grid Table (P, A, HD, L, OFF with Summary Counts) */}
+                  <div style={{ overflowX: "auto", border: "1px solid #cbd5e1", marginBottom: "20px" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem", minWidth: "1100px" }}>
+                      <thead>
+                        <tr style={{ background: "#f1f5f9", borderBottom: "1px solid #cbd5e1", color: "#334155" }}>
+                          <th style={{ padding: "10px 14px", textAlign: "left", width: "220px", position: "sticky", left: 0, background: "#f1f5f9", zIndex: 2, borderRight: "1px solid #cbd5e1", fontWeight: "500" }}>Employee</th>
+                          {daysHeader.map(d => (
+                            <th key={d.day} style={{ padding: "6px 2px", textAlign: "center", minWidth: "28px", fontWeight: "400", borderRight: "1px solid #e2e8f0", background: d.isWeekend ? "#f8fafc" : "#f1f5f9" }}>
+                              <div style={{ color: d.isWeekend ? "#dc2626" : "#1e293b", fontWeight: "500" }}>{d.day}</div>
+                              <div style={{ fontSize: "0.65rem", color: d.isWeekend ? "#ef4444" : "#64748b", fontWeight: "400" }}>{d.name}</div>
+                            </th>
+                          ))}
+                          {/* Summary Columns Header */}
+                          <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", borderLeft: "1px solid #cbd5e1", color: "#0f172a", fontWeight: "600" }}>P</th>
+                          <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#0284c7", fontWeight: "600" }}>L</th>
+                          <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#d97706", fontWeight: "600" }}>HD</th>
+                          <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#e11d48", fontWeight: "600" }}>A</th>
+                          <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#64748b", fontWeight: "600" }}>OFF</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map((emp, uIdx) => {
+                          const getDayStatus = (dayNum, isWeekend) => {
+                            if (isWeekend) return { code: "OFF", bg: "transparent", color: "#64748b" };
+                            
+                            if (uIdx === 0) {
+                              if (dayNum === 8 || dayNum === 10 || dayNum === 14) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
+                              if (dayNum === 12) return { code: "L", bg: "#e0f2fe", color: "#0369a1" };
+                              return { code: "P", bg: "transparent", color: "#334155" };
+                            } else if (uIdx === 1) {
+                              if (dayNum <= 12) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
+                              return { code: "P", bg: "transparent", color: "#334155" };
+                            } else if (uIdx === 2) {
+                              if (dayNum === 1 || dayNum === 4 || dayNum === 7 || dayNum === 11 || dayNum === 13) return { code: "HD", bg: "#bae6fd", color: "#0284c7" };
+                              if (dayNum === 3 || dayNum === 9 || dayNum === 16) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
+                              return { code: "P", bg: "transparent", color: "#334155" };
+                            } else {
+                              if (dayNum % 4 === 0) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
+                              if (dayNum % 7 === 0) return { code: "HD", bg: "#bae6fd", color: "#0284c7" };
+                              return { code: "P", bg: "transparent", color: "#334155" };
+                            }
+                          };
+
+                          let pCount = 0, aCount = 0, hdCount = 0, lCount = 0, offCount = 0;
+                          const dayStatuses = daysHeader.map(dh => {
+                            const st = getDayStatus(dh.day, dh.isWeekend);
+                            if (st.code === "P") pCount++;
+                            else if (st.code === "A") aCount++;
+                            else if (st.code === "HD") hdCount++;
+                            else if (st.code === "L") lCount++;
+                            else if (st.code === "OFF") offCount++;
+                            return st;
+                          });
+
+                          return (
+                            <tr key={emp.id} style={{ borderBottom: "1px solid #e2e8f0", background: uIdx % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
+                              {/* Sticky Employee Details Column */}
+                              <td style={{ padding: "8px 12px", position: "sticky", left: 0, background: uIdx % 2 === 0 ? "#ffffff" : "#f8fafc", zIndex: 2, borderRight: "1px solid #cbd5e1" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                  <img src={emp.avatar} alt={emp.name} style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover" }} />
+                                  <div>
+                                    <div style={{ fontWeight: "500", color: "#0f172a", fontSize: "0.82rem" }}>
+                                      {emp.name} <span style={{ color: "#64748b", fontSize: "0.72rem" }}>[{emp.role === "Admin" ? "A0001" : `C00${uIdx + 1}`}]</span>
+                                    </div>
+                                    <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "400" }}>
+                                      {emp.title || emp.role}, Hyderabad
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Days 1 to Total Days Code Cells */}
+                              {dayStatuses.map((st, dIdx) => (
+                                <td key={dIdx} style={{ padding: "6px 2px", textAlign: "center", background: st.bg, color: st.color, fontWeight: "500", fontSize: "0.75rem", borderRight: "1px solid #f1f5f9" }}>
+                                  {st.code}
+                                </td>
+                              ))}
+
+                              {/* Summary Columns */}
+                              <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#0f172a", borderLeft: "1px solid #cbd5e1", background: "#f8fafc" }}>{pCount}</td>
+                              <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#0284c7", background: "#f8fafc" }}>{lCount}</td>
+                              <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#d97706", background: "#f8fafc" }}>{hdCount}</td>
+                              <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#e11d48", background: "#f8fafc" }}>{aCount}</td>
+                              <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#64748b", background: "#f8fafc" }}>{offCount}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              );
+            })()}
 
             {/* Clean Legend Bar matching screenshot */}
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "28px", fontSize: "0.82rem", color: "#334155", fontWeight: "500" }}>

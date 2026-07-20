@@ -191,8 +191,26 @@ export default function AdminView({ activeTab, setActiveTab }) {
       advanceAmount: empAdvance
     });
 
-    setGeneratedInviteResult(inviteResult);
-    setToast({ message: `Onboarding invitation link created for ${empName}!`, type: "success" });
+    // Generate mailto link for real email client dispatch
+    const subject = encodeURIComponent("Welcome to ACME Consulting! Start Your Onboarding");
+    const body = encodeURIComponent(
+      `Dear ${empName},\n\nWe are excited to invite you to join ACME Consulting as a ${empTitle || "Retail Jewellery BD Consultant"}.\n\nPlease click the link below to set your account password and start your onboarding:\n${inviteResult.inviteLink}\n\nBest regards,\nHR Admin Team\nACME Consulting`
+    );
+    const mailtoUrl = `mailto:${empEmail}?subject=${subject}&body=${body}`;
+
+    // Auto-trigger system email app
+    try {
+      window.location.href = mailtoUrl;
+    } catch (err) {
+      console.log("Mailto error:", err);
+    }
+
+    setGeneratedInviteResult({
+      ...inviteResult,
+      mailtoUrl
+    });
+
+    setToast({ message: `Onboarding email invite dispatched to ${empEmail}!`, type: "success" });
     setEmpName("");
     setEmpEmail("");
     setEmpPhone("");
@@ -1056,25 +1074,47 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
                 {/* Footer Buttons */}
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", paddingTop: "14px" }}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(generatedInviteResult.inviteLink);
-                      setToast({ message: "Registration link copied to clipboard!", type: "success" });
-                    }}
-                    style={{
-                      background: "#eff6ff",
-                      color: "#2563eb",
-                      border: "1px solid #bfdbfe",
-                      padding: "8px 16px",
-                      borderRadius: "6px",
-                      fontSize: "0.82rem",
-                      fontWeight: "700",
-                      cursor: "pointer"
-                    }}
-                  >
-                    📋 Copy Onboarding Link
-                  </button>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (generatedInviteResult.mailtoUrl) {
+                          window.location.href = generatedInviteResult.mailtoUrl;
+                        }
+                      }}
+                      style={{
+                        background: "#0f172a",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "8px 14px",
+                        borderRadius: "6px",
+                        fontSize: "0.82rem",
+                        fontWeight: "700",
+                        cursor: "pointer"
+                      }}
+                    >
+                      ✉ Resend Email
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(generatedInviteResult.inviteLink);
+                        setToast({ message: "Registration link copied to clipboard!", type: "success" });
+                      }}
+                      style={{
+                        background: "#eff6ff",
+                        color: "#2563eb",
+                        border: "1px solid #bfdbfe",
+                        padding: "8px 14px",
+                        borderRadius: "6px",
+                        fontSize: "0.82rem",
+                        fontWeight: "700",
+                        cursor: "pointer"
+                      }}
+                    >
+                      📋 Copy Link
+                    </button>
+                  </div>
                   <button
                     type="button"
                     onClick={() => { setShowOnboardModal(false); setGeneratedInviteResult(null); }}

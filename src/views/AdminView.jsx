@@ -200,6 +200,17 @@ export default function AdminView({ activeTab, setActiveTab }) {
     const mailtoUrl = `mailto:${empEmail}?subject=${subject}&body=${body}`;
     const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(empEmail)}&su=${subject}&body=${body}`;
 
+    // Auto-trigger Gmail compose window or system mail app directly
+    try {
+      if (empEmail.toLowerCase().includes("gmail")) {
+        window.open(gmailUrl, "_blank");
+      } else {
+        window.location.href = mailtoUrl;
+      }
+    } catch (err) {
+      console.log("Email dispatch auto-trigger note:", err);
+    }
+
     setGeneratedInviteResult({
       ...inviteResult,
       mailtoUrl,
@@ -207,7 +218,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
       emailSentTo: empEmail
     });
 
-    setToast({ message: `Onboarding invite link generated for ${empEmail}!`, type: "success" });
+    setToast({ message: `Opening email dispatch for ${empEmail}!`, type: "success" });
     setEmpName("");
     setEmpEmail("");
     setEmpPhone("");

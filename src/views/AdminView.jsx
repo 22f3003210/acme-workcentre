@@ -1341,34 +1341,135 @@ export default function AdminView({ activeTab, setActiveTab }) {
             </div>
           </div>
 
-          {/* Section: Team calendar */}
+          {/* Section: Team calendar (Whole Month Wise Matrix Table) */}
           <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "22px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: "800", color: "#1e293b", margin: "0 0 16px 0" }}>Team calendar</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "1rem", fontWeight: "800", color: "#1e293b", margin: 0 }}>Team calendar</h3>
 
-            {/* Month selector */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-              <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>‹</button>
-              <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "#334155" }}>Sept 2026</span>
-              <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "4px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>›</button>
+              {/* Month Selector */}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>‹</button>
+                <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "#334155" }}>Sept 2026</span>
+                <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>›</button>
+              </div>
             </div>
 
-            {/* Yellow Banner */}
-            <div style={{ background: "#fef9c3", border: "1px solid #fef08a", borderRadius: "0px", padding: "14px 18px", color: "#854d0e", fontSize: "0.85rem", fontWeight: "600", marginBottom: "20px" }}>
-              Nobody is on leave for the selected month
+            {/* Whole Month Employee Matrix Grid */}
+            <div style={{ overflowX: "auto", border: "1px solid #e2e8f0", marginBottom: "20px" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem", minWidth: "950px" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
+                    <th style={{ padding: "10px 16px", textAlign: "left", width: "190px", position: "sticky", left: 0, background: "#f8fafc", zIndex: 2, borderRight: "1px solid #e2e8f0" }}>Employee</th>
+                    {[
+                      { day: 1, name: "Tu" },
+                      { day: 2, name: "We" },
+                      { day: 3, name: "Th" },
+                      { day: 4, name: "Fr" },
+                      { day: 5, name: "Sa" },
+                      { day: 6, name: "Su" },
+                      { day: 7, name: "Mo" },
+                      { day: 8, name: "Tu" },
+                      { day: 9, name: "We" },
+                      { day: 10, name: "Th" },
+                      { day: 11, name: "Fr" },
+                      { day: 12, name: "Sa" },
+                      { day: 13, name: "Su" },
+                      { day: 14, name: "Mo" },
+                      { day: 15, name: "Tu" },
+                      { day: 16, name: "We" },
+                      { day: 17, name: "Th" },
+                      { day: 18, name: "Fr" },
+                      { day: 19, name: "Sa" },
+                      { day: 20, name: "Su" },
+                      { day: 21, name: "Mo" },
+                      { day: 22, name: "Tu" },
+                      { day: 23, name: "We" },
+                      { day: 24, name: "Th" },
+                      { day: 25, name: "Fr" },
+                      { day: 26, name: "Sa" },
+                      { day: 27, name: "Su" },
+                      { day: 28, name: "Mo" },
+                      { day: 29, name: "Tu" },
+                      { day: 30, name: "We" }
+                    ].map(d => (
+                      <th key={d.day} style={{ padding: "8px 4px", textAlign: "center", minWidth: "32px", fontWeight: "600" }}>
+                        <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>{d.name}</div>
+                        <div style={{ color: "#334155", fontWeight: "700" }}>{d.day}</div>
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((emp, uIdx) => (
+                    <tr key={emp.id} style={{ borderBottom: "1px solid #f1f5f9", background: uIdx % 2 === 0 ? "#ffffff" : "#fbfcfd" }}>
+                      <td style={{ padding: "10px 16px", position: "sticky", left: 0, background: uIdx % 2 === 0 ? "#ffffff" : "#fbfcfd", zIndex: 2, borderRight: "1px solid #e2e8f0" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <img src={emp.avatar} alt={emp.name} style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover" }} />
+                          <span style={{ fontWeight: "700", color: "#0f172a", fontSize: "0.82rem", whiteSpace: "nowrap" }}>{emp.name}</span>
+                        </div>
+                      </td>
+                      {Array.from({ length: 30 }, (_, i) => i + 1).map(dayNum => {
+                        let cellContent = null;
+                        if (uIdx === 0 && (dayNum === 4 || dayNum === 5 || dayNum === 6 || dayNum === 7)) {
+                          cellContent = (
+                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#38bdf8", color: "#fff", fontWeight: "800", fontSize: "0.72rem" }}>
+                              {dayNum}
+                            </span>
+                          );
+                        } else if (uIdx === 1 && dayNum === 3) {
+                          cellContent = (
+                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#facc15", color: "#713f12", fontWeight: "800", fontSize: "0.72rem" }}>
+                              {dayNum}
+                            </span>
+                          );
+                        } else if (uIdx === 2 && (dayNum === 6 || dayNum === 7)) {
+                          cellContent = (
+                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#f472b6", color: "#fff", fontWeight: "800", fontSize: "0.72rem" }}>
+                              {dayNum}
+                            </span>
+                          );
+                        } else if (uIdx === 3 && dayNum === 5) {
+                          cellContent = (
+                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#f472b6", color: "#fff", fontWeight: "800", fontSize: "0.72rem" }}>
+                              {dayNum}
+                            </span>
+                          );
+                        } else {
+                          cellContent = <span style={{ color: "#94a3b8", fontSize: "0.75rem" }}>{dayNum}</span>;
+                        }
+
+                        return (
+                          <td key={dayNum} style={{ padding: "6px 2px", textAlign: "center" }}>
+                            {cellContent}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            {/* Legend Dots */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", fontSize: "0.78rem", color: "#64748b" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7" }} /> Work from home</div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#c026d3" }} /> On duty</div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#06b6d4" }} /> Paid Leave</div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a16207" }} /> Unpaid Leave</div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f43f5e" }} /> Leave due to No Attendance</div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#eab308" }} /> Weekly off</div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#84cc16" }} /> Holiday</div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6" }} /> Someone on Leave</div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f43f5e" }} /> Multiple Leave on a day</div>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#8b5cf6" }} /> Someone on WFH/OD</div>
+            {/* Clean Legend Dots (Requested Items Only) */}
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "24px", fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#38bdf8" }} /> Paid Leave
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#facc15" }} /> Unpaid Leave
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#f472b6" }} /> Halfday
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#f43f5e" }} /> Leave due to No Attendance
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#eab308" }} /> Weekly off
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#84cc16" }} /> Holiday
+              </div>
             </div>
           </div>
 

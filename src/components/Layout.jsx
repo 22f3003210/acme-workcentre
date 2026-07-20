@@ -1,13 +1,48 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import logoImg from "../assets/logo.png";
 
 export default function Layout({ children, activeTab, setActiveTab }) {
-  const { currentUser, logout } = useApp();
+  const { currentUser, users, logout } = useApp();
 
   // Profile modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [profileView, setProfileView] = useState("menu"); // "menu" | "edit" | "password"
+
+  // Search Bar Autocomplete States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showMoreEmployees, setShowMoreEmployees] = useState(false);
+
+  // Full Employee Profile Modal State
+  const [viewingProfileUser, setViewingProfileUser] = useState(null);
+  const [profileModalTab, setProfileModalTab] = useState("TIME");
+  const [timeSubTab, setTimeSubTab] = useState("Attendance");
+
+  // Listen for global open-employee-profile event (from View Profile buttons anywhere)
+  useEffect(() => {
+    const handleOpenProfile = (e) => {
+      if (e.detail && e.detail.user) {
+        setViewingProfileUser(e.detail.user);
+      }
+    };
+    window.addEventListener("open-employee-profile", handleOpenProfile);
+    return () => window.removeEventListener("open-employee-profile", handleOpenProfile);
+  }, []);
+
+  // Filter employees for top search bar
+  const filteredEmployees = (users || []).filter(u => {
+    if (!searchQuery.trim()) return false;
+    const q = searchQuery.toLowerCase();
+    return (
+      u.name?.toLowerCase().includes(q) ||
+      u.email?.toLowerCase().includes(q) ||
+      u.empCode?.toLowerCase().includes(q) ||
+      u.department?.toLowerCase().includes(q) ||
+      u.title?.toLowerCase().includes(q) ||
+      u.location?.toLowerCase().includes(q)
+    );
+  });
 
   // Edit profile form
   const [profileForm, setProfileForm] = useState({
@@ -298,13 +333,175 @@ export default function Layout({ children, activeTab, setActiveTab }) {
           )}
 
         </div>
-        <div className="sea-search-wrapper">
+        {/* Top Search Bar with Interactive Dropdown (Matching Keka HR Screenshot) */}
+        <div className="sea-search-wrapper" style={{ position: "relative" }}>
           <span className="sea-search-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
             </svg>
           </span>
-          <input type="text" className="sea-search-input" placeholder="Search Anything" disabled />
+          <input 
+            type="text" 
+            className="sea-search-input" 
+            placeholder="Search employees or actions (Ex: Apply Leave)" 
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setIsSearchOpen(true); }}
+            onFocus={() => setIsSearchOpen(true)}
+            style={{ width: "380px", borderRadius: isSearchOpen && searchQuery ? "10px 10px 0 0" : "20px" }}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => { setSearchQuery(""); setIsSearchOpen(false); }}
+              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.9rem" }}
+            >
+              ⊗
+            </button>
+          )}
+
+          {/* Autocomplete Dropdown Panel matching Keka HR screenshot */}
+          {isSearchOpen && searchQuery.trim() && (
+            <>
+              <div 
+                onClick={() => setIsSearchOpen(false)} 
+                style={{ position: "fixed", inset: 0, zIndex: 998 }} 
+              />
+              <div style={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                width: "480px",
+                background: "#ffffff",
+                borderRadius: "0 0 16px 16px",
+                border: "1px solid #e2e8f0",
+                borderTop: "none",
+                boxShadow: "0 20px 40px -10px rgba(0, 0, 0, 0.2)",
+                zIndex: 999,
+                padding: "16px",
+                maxHeight: "520px",
+                overflowY: "auto",
+                animation: "fadeIn 0.15s ease-out"
+              }}>
+                
+                {/* Section 1: Employees */}
+                <div style={{ fontSize: "0.82rem", fontWeight: "600", color: "#64748b", marginBottom: "10px" }}>
+                  Employees
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {filteredEmployees.length > 0 ? (
+                    (showMoreEmployees ? filteredEmployees : filteredEmployees.slice(0, 3)).map(emp => (
+                      <div
+                        key={emp.id}
+                        onClick={() => {
+                          setViewingProfileUser(emp);
+                          setIsSearchOpen(false);
+                          setSearchQuery("");
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "12px",
+                          padding: "10px 12px",
+                          borderRadius: "8px",
+                          background: "#f8fafc",
+                          border: "1px solid #f1f5f9",
+                          cursor: "pointer",
+                          transition: "all 0.15s ease"
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
+                        onMouseLeave={e => e.currentTarget.style.background = "#f8fafc"}
+                      >
+                        <img 
+                          src={emp.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120"} 
+                          alt={emp.name} 
+                          style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover" }} 
+                        />
+                        <div style={{ flex: 1, overflow: "hidden" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "0.88rem", fontWeight: "700", color: "#0f172a" }}>{emp.name}</span>
+                            <span style={{ fontSize: "0.78rem", color: "#64748b" }}>{emp.title || "Systems Operator"} |</span>
+                            <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#2563eb" }}>#{emp.empCode || "HBJ00007"}</span>
+                          </div>
+                          <div style={{ fontSize: "0.74rem", color: "#64748b", marginTop: "2px", display: "flex", gap: "10px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            <span>👤 {emp.department || "IT & SYSTEMS SUPPORT"}</span>
+                            <span>✉ {emp.email}</span>
+                            <span>📍 {emp.location || "Mehdipatnam"}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ fontSize: "0.82rem", color: "#94a3b8", padding: "8px" }}>No employees match '{searchQuery}'</div>
+                  )}
+
+                  {filteredEmployees.length > 3 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowMoreEmployees(!showMoreEmployees)}
+                      style={{
+                        margin: "4px auto 0 auto",
+                        background: "#ffffff",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "20px",
+                        padding: "4px 14px",
+                        fontSize: "0.75rem",
+                        fontWeight: "600",
+                        color: "#475569",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px"
+                      }}
+                    >
+                      {showMoreEmployees ? "View Less ∧" : `View ${filteredEmployees.length - 3} More ∨`}
+                    </button>
+                  )}
+                </div>
+
+                {/* Section 2: Quick Actions */}
+                <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "14px", paddingTop: "12px" }}>
+                  <div style={{ fontSize: "0.82rem", fontWeight: "600", color: "#64748b", marginBottom: "8px" }}>
+                    Quick Actions
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <div
+                      onClick={() => { setActiveTab("directory"); setIsSearchOpen(false); }}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "6px", cursor: "pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <span style={{ fontSize: "1rem" }}>👥</span>
+                      <div>
+                        <div style={{ fontSize: "0.84rem", fontWeight: "600", color: "#0f172a" }}>Employee Directory</div>
+                        <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Find your colleagues.</div>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => { setActiveTab("reports"); setIsSearchOpen(false); }}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "6px", cursor: "pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <span style={{ fontSize: "1rem" }}>💼</span>
+                      <div>
+                        <div style={{ fontSize: "0.84rem", fontWeight: "600", color: "#0f172a" }}>Expenses and Travel Summary</div>
+                        <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Monitor and analyze expenses and travel-related data.</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer Controls */}
+                <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "12px", paddingTop: "8px", display: "flex", justifyContent: "flex-end", gap: "16px", fontSize: "0.7rem", color: "#94a3b8" }}>
+                  <span>Navigate ↑ ↓</span>
+                  <span>To select ↵</span>
+                </div>
+
+              </div>
+            </>
+          )}
         </div>
         <div className="sea-nav-right">
           <img
@@ -588,6 +785,249 @@ export default function Layout({ children, activeTab, setActiveTab }) {
           </nav>
         </div>
       </div>
+
+      {/* ── Full Keka HR Employee Profile Modal Overlay ── */}
+      {viewingProfileUser && (
+        <div
+          onClick={() => setViewingProfileUser(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.75)",
+            backdropFilter: "blur(4px)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px"
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: "#f8fafc",
+              borderRadius: "12px",
+              width: "1100px",
+              maxWidth: "96vw",
+              maxHeight: "92vh",
+              overflowY: "auto",
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
+              border: "1px solid #cbd5e1",
+              position: "relative"
+            }}
+          >
+            {/* Modal Header Bar with Close Button */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", background: "#ffffff", borderBottom: "1px solid #e2e8f0" }}>
+              <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>
+                Employee Profile — {viewingProfileUser.empCode || "HBJ00007"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setViewingProfileUser(null)}
+                style={{
+                  background: "#f1f5f9",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "50%",
+                  width: "30px",
+                  height: "30px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontWeight: "700",
+                  color: "#475569"
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Profile Content Container */}
+            <div style={{ padding: "20px" }}>
+              
+              {/* Keka HR Style Banner Header */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
+                
+                {/* Purple Wavy Gradient Banner */}
+                <div style={{ position: "relative", height: "150px", background: "linear-gradient(135deg, #4c478a 0%, #312e5c 50%, #1e1b4b 100%)" }}>
+                  <div style={{ position: "absolute", bottom: "16px", left: "20px", display: "flex", alignItems: "center", gap: "20px" }}>
+                    <img 
+                      src={viewingProfileUser.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300"} 
+                      alt={viewingProfileUser.name}
+                      style={{ width: "96px", height: "96px", borderRadius: "50%", border: "4px solid #ffffff", objectFit: "cover" }}
+                    />
+                    <div style={{ color: "#ffffff" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <h1 style={{ fontSize: "1.6rem", fontWeight: "700", margin: 0, color: "#ffffff" }}>{viewingProfileUser.name}</h1>
+                        <span style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #86efac", padding: "2px 8px", borderRadius: "3px", fontSize: "0.7rem", fontWeight: "700" }}>
+                          IN
+                        </span>
+                        <span style={{ background: "rgba(255,255,255,0.2)", color: "#ffffff", padding: "2px 8px", borderRadius: "3px", fontSize: "0.7rem", fontWeight: "600", textTransform: "uppercase" }}>
+                          WEEKLY OFF
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "0.85rem", color: "#e2e8f0", marginTop: "4px" }}>
+                        🧰 {viewingProfileUser.title || "Systems Operator"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Contact Info Strip */}
+                <div style={{ padding: "12px 20px", background: "#ffffff", borderBottom: "1px solid #f1f5f9", display: "flex", gap: "24px", fontSize: "0.82rem", color: "#475569", flexWrap: "wrap" }}>
+                  <span>✉ {viewingProfileUser.email}</span>
+                  <span>📞 {viewingProfileUser.phone || "+91-7569099549"}</span>
+                  <span>📍 {viewingProfileUser.location || "Mehdipatnam"}</span>
+                  <span>🪪 {viewingProfileUser.empCode || "HBJ00007"}</span>
+                </div>
+
+                {/* Joining / Department / Reporting Manager Strip */}
+                <div style={{ padding: "14px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", gap: "48px", fontSize: "0.82rem" }}>
+                  <div>
+                    <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>JOINING DATE</span>
+                    <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>24 Jan 2025</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>DEPARTMENT</span>
+                    <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>{(viewingProfileUser.department || "IT & SYSTEMS SUPPORT").toUpperCase()}</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>REPORTING MANAGER</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                      <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100" alt="Manager" style={{ width: "20px", height: "20px", borderRadius: "50%" }} />
+                      <span style={{ fontWeight: "600", color: "#2563eb" }}>Shikhar Jain</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Profile Navigation Tabs Row */}
+                <div style={{ display: "flex", gap: "24px", padding: "0 20px", background: "#ffffff", borderBottom: "1px solid #e2e8f0", overflowX: "auto" }}>
+                  {["ABOUT", "PROFILE", "JOB", "TIME", "DOCUMENTS", "ASSETS", "FINANCES", "EXPENSES", "PERFORMANCE"].map(tab => {
+                    const isActive = profileModalTab === tab;
+                    return (
+                      <button
+                        key={tab}
+                        type="button"
+                        onClick={() => setProfileModalTab(tab)}
+                        style={{
+                          padding: "12px 0",
+                          background: "none",
+                          border: "none",
+                          borderBottom: isActive ? "2px solid #4c478a" : "2px solid transparent",
+                          color: isActive ? "#4c478a" : "#64748b",
+                          fontWeight: isActive ? "700" : "500",
+                          fontSize: "0.78rem",
+                          cursor: "pointer"
+                        }}
+                      >
+                        {tab}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Sub-Tabs Row under TIME */}
+                {profileModalTab === "TIME" && (
+                  <div style={{ display: "flex", gap: "16px", padding: "10px 20px", background: "#ffffff" }}>
+                    {["Attendance", "Leave"].map(subTab => {
+                      const isActive = timeSubTab === subTab;
+                      return (
+                        <button
+                          key={subTab}
+                          type="button"
+                          onClick={() => setTimeSubTab(subTab)}
+                          style={{
+                            padding: "5px 16px",
+                            background: isActive ? "#f3e8ff" : "#ffffff",
+                            color: isActive ? "#6b21a8" : "#475569",
+                            border: isActive ? "1px solid #d8b4fe" : "1px solid #e2e8f0",
+                            borderRadius: "4px",
+                            fontWeight: isActive ? "600" : "500",
+                            fontSize: "0.8rem",
+                            cursor: "pointer"
+                          }}
+                        >
+                          {subTab}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+              </div>
+
+              {/* Attendance Grid (Matching Keka HR Screenshot) */}
+              {profileModalTab === "TIME" && timeSubTab === "Attendance" && (
+                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1.2fr 1fr", gap: "16px" }}>
+                  
+                  {/* Card 1: Attendance Stats */}
+                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                      <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>Attendance Stats</h3>
+                      <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Last Week ▾</span>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: "14px", marginBottom: "14px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#fef3c7", color: "#d97706", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700" }}>👤</div>
+                        <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155" }}>Me</span>
+                      </div>
+                      <div style={{ display: "flex", gap: "20px", textAlign: "right" }}>
+                        <div><span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>AVG HRS / DAY</span><strong style={{ fontSize: "1.05rem" }}>9h 3m</strong></div>
+                        <div><span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>ON TIME ARRIVAL</span><strong style={{ fontSize: "1.05rem" }}>83%</strong></div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#e0f2fe", color: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700" }}>👥</div>
+                        <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155" }}>My Team</span>
+                      </div>
+                      <div style={{ display: "flex", gap: "20px", textAlign: "right" }}>
+                        <div><span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>AVG HRS / DAY</span><strong style={{ fontSize: "1.05rem" }}>8h 49m</strong></div>
+                        <div><span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>ON TIME ARRIVAL</span><strong style={{ fontSize: "1.05rem" }}>81%</strong></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Timings */}
+                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px" }}>
+                    <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 0 16px 0" }}>Timings</h3>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
+                      {["M", "T", "W", "T", "F", "S", "S"].map((d, idx) => (
+                        <div key={idx} style={{ width: "26px", height: "26px", borderRadius: "50%", background: idx === 1 ? "#38bdf8" : "#f1f5f9", color: idx === 1 ? "#ffffff" : "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: idx === 1 ? "700" : "500" }}>{d}</div>
+                      ))}
+                    </div>
+                    <div style={{ fontSize: "0.8rem", color: "#475569", fontWeight: "600", marginBottom: "10px" }}>Today (10:30 AM - 9:00 PM)</div>
+                    <div style={{ background: "#e0f2fe", height: "10px", borderRadius: "5px", overflow: "hidden", marginBottom: "12px" }}>
+                      <div style={{ background: "#38bdf8", width: "70%", height: "100%" }} />
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.74rem", color: "#64748b" }}>
+                      <span>Duration: 10h 30m</span>
+                      <span>☕ 40 min</span>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Actions */}
+                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px" }}>
+                    <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 0 16px 0" }}>Actions</h3>
+                    <div style={{ border: "1px solid #e2e8f0", borderRadius: "6px", padding: "12px", background: "#f8fafc", textAlign: "center", marginBottom: "14px" }}>
+                      <div style={{ fontSize: "1.25rem", fontWeight: "800", color: "#0f172a" }}>03:40:20 AM</div>
+                      <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Tue, 21 Jul 2026</div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-around", fontSize: "0.78rem", color: "#4c478a", fontWeight: "600" }}>
+                      <span>💼 On Duty</span>
+                      <span>📋 Attendance Policy</span>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

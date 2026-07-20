@@ -1239,29 +1239,26 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </div>
 
                     {/* View Profile small action button */}
-                    {u.role === "Consultant" && (
-                      <div style={{ marginTop: "12px" }}>
-                        <button
-                          onClick={() => {
-                            setSelectedConsultant(u);
-                            setShowInspector(true);
-                          }}
-                          style={{
-                            padding: "4px 8px",
-                            fontSize: "0.7rem",
-                            fontWeight: "600",
-                            border: "1px solid #3b82f6",
-                            color: "#3b82f6",
-                            backgroundColor: "#eff6ff",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            transition: "all 0.15s"
-                          }}
-                        >
-                          View Profile
-                        </button>
-                      </div>
-                    )}
+                    <div style={{ marginTop: "12px" }}>
+                      <button
+                        onClick={() => {
+                          window.dispatchEvent(new CustomEvent("open-employee-profile", { detail: { user: u } }));
+                        }}
+                        style={{
+                          padding: "4px 10px",
+                          fontSize: "0.74rem",
+                          fontWeight: "600",
+                          border: "1px solid #3b82f6",
+                          color: "#2563eb",
+                          backgroundColor: "#eff6ff",
+                          borderRadius: "4px",
+                          cursor: "pointer",
+                          transition: "all 0.15s"
+                        }}
+                      >
+                        View Profile
+                      </button>
+                    </div>
                   </div>
                 </div>
               );

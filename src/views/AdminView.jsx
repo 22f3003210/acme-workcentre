@@ -76,6 +76,11 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [newShiftEndAmpm, setNewShiftEndAmpm] = useState("PM");
   const [newShiftBreakMins, setNewShiftBreakMins] = useState("0");
 
+  // Flexible Shift Rules State (Matching Reference Screenshot)
+  const [expectGrossHours, setExpectGrossHours] = useState(false);
+  const [maxShiftDurationHours, setMaxShiftDurationHours] = useState("16");
+  const [isAdvanceOptionOpen, setIsAdvanceOptionOpen] = useState(true);
+
   // Form State for Add Weekly Off Form (Matching Reference Screenshot 2)
   const [newWeeklyOffName, setNewWeeklyOffName] = useState("");
   const [newWeeklyOffDays, setNewWeeklyOffDays] = useState(["M", "T", "W", "T", "F"]);
@@ -2996,86 +3001,203 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 </label>
               </div>
 
-              {/* Shift timings section */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
-                <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "600", color: "#0f172a" }}>Shift timings</h4>
+              {/* Conditional Rendering: Fixed Shift Timings vs Flexible Work Hours */}
+              {newShiftType === "fixed" ? (
+                /* Fixed Shift Timings View */
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
+                  <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "600", color: "#0f172a" }}>Shift timings</h4>
 
-                <div style={{ background: "#f8fafc", border: "1px solid #f1f5f9", padding: "20px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "32px", flexWrap: "wrap" }}>
+                  <div style={{ background: "#f8fafc", border: "1px solid #f1f5f9", padding: "20px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "32px", flexWrap: "wrap" }}>
+                    {/* Days Toggles */}
+                    <div>
+                      <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#475569", display: "block", marginBottom: "8px" }}>Days</span>
+                      <div style={{ display: "flex", gap: "6px" }}>
+                        {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => {
+                          const dayKey = day + idx;
+                          const isSelected = newShiftDays.includes(dayKey);
+                          return (
+                            <div 
+                              key={idx}
+                              onClick={() => {
+                                if (newShiftDays.includes(dayKey)) {
+                                  setNewShiftDays(newShiftDays.filter(d => d !== dayKey));
+                                } else {
+                                  setNewShiftDays([...newShiftDays, dayKey]);
+                                }
+                              }}
+                              style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "50%",
+                                background: isSelected ? "#3b82f6" : "#cbd5e1",
+                                color: "#ffffff",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: "0.75rem",
+                                fontWeight: "600",
+                                cursor: "pointer"
+                              }}
+                            >
+                              {day}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Shift Timings */}
+                    <div>
+                      <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#475569", display: "block", marginBottom: "8px" }}>Shift timings</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <input type="text" value={newShiftStartTime} onChange={(e) => setNewShiftStartTime(e.target.value)} style={{ width: "55px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", textAlign: "center" }} />
+                        <select value={newShiftStartAmpm} onChange={(e) => setNewShiftStartAmpm(e.target.value)} style={{ padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem" }}>
+                          <option>AM</option>
+                          <option>PM</option>
+                        </select>
+                        <span style={{ color: "#64748b" }}>-</span>
+                        <input type="text" value={newShiftEndTime} onChange={(e) => setNewShiftEndTime(e.target.value)} style={{ width: "55px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", textAlign: "center" }} />
+                        <select value={newShiftEndAmpm} onChange={(e) => setNewShiftEndAmpm(e.target.value)} style={{ padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem" }}>
+                          <option>PM</option>
+                          <option>AM</option>
+                        </select>
+                        <span style={{ fontSize: "0.75rem", color: "#64748b", marginLeft: "4px" }}>(9 hrs 0 mins)</span>
+                      </div>
+                    </div>
+
+                    {/* Break duration */}
+                    <div>
+                      <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#475569", display: "block", marginBottom: "8px" }}>Break duration</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <input type="text" value={newShiftBreakMins} onChange={(e) => setNewShiftBreakMins(e.target.value)} style={{ width: "45px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", textAlign: "center" }} />
+                        <span style={{ fontSize: "0.82rem", color: "#475569" }}>mins</span>
+                        <span style={{ fontSize: "0.75rem", color: "#64748b" }}>({newShiftBreakMins} mins)</span>
+                      </div>
+                    </div>
+
+                    {/* Plus Icon */}
+                    <div style={{ cursor: "pointer", color: "#64748b", marginTop: "16px" }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Flexible Work Hours View (Matching Reference Screenshot) */
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginTop: "8px" }}>
                   
-                  {/* Days Toggles */}
-                  <div>
-                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#475569", display: "block", marginBottom: "8px" }}>Days</span>
-                    <div style={{ display: "flex", gap: "6px" }}>
-                      {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => {
-                        const dayKey = day + idx;
-                        const isSelected = newShiftDays.includes(dayKey);
-                        return (
-                          <div 
-                            key={idx}
-                            onClick={() => {
-                              if (newShiftDays.includes(dayKey)) {
-                                setNewShiftDays(newShiftDays.filter(d => d !== dayKey));
-                              } else {
-                                setNewShiftDays([...newShiftDays, dayKey]);
-                              }
-                            }}
-                            style={{
-                              width: "28px",
-                              height: "28px",
-                              borderRadius: "50%",
-                              background: isSelected ? "#3b82f6" : "#cbd5e1",
-                              color: "#ffffff",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "0.75rem",
-                              fontWeight: "600",
-                              cursor: "pointer"
-                            }}
-                          >
-                            {day}
+                  {/* Gross Hours Checkbox */}
+                  <label style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem", color: "#334155", cursor: "pointer" }}>
+                    <input 
+                      type="checkbox" 
+                      checked={expectGrossHours} 
+                      onChange={(e) => setExpectGrossHours(e.target.checked)} 
+                    />
+                    Employees are expected to complete defined Gross hours once they come in
+                  </label>
+
+                  {/* Accordion: Advance option */}
+                  <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "12px", marginTop: "8px" }}>
+                    <div 
+                      onClick={() => setIsAdvanceOptionOpen(!isAdvanceOptionOpen)}
+                      style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", fontSize: "0.9rem", fontWeight: "600", color: "#0f172a" }}
+                    >
+                      <span>{isAdvanceOptionOpen ? "∧" : "∨"}</span>
+                      <span>Advance option</span>
+                    </div>
+
+                    {isAdvanceOptionOpen && (
+                      <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                        
+                        {/* Maximum shift duration input */}
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: "#334155", flexWrap: "wrap" }}>
+                            <span>Maximum shift duration possible is</span>
+                            <input 
+                              type="text" 
+                              value={maxShiftDurationHours} 
+                              onChange={(e) => setMaxShiftDurationHours(e.target.value)}
+                              style={{ width: "50px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", textAlign: "center" }}
+                            />
+                            <span>hours after the employee's first punch in for the day.</span>
                           </div>
-                        );
-                      })}
-                    </div>
-                  </div>
+                          <span style={{ fontSize: "0.75rem", color: "#64748b", display: "block", marginTop: "4px" }}>
+                            {maxShiftDurationHours || "16"} hrs 0 mins
+                          </span>
+                        </div>
 
-                  {/* Shift Timings */}
-                  <div>
-                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#475569", display: "block", marginBottom: "8px" }}>Shift timings</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <input type="text" value={newShiftStartTime} onChange={(e) => setNewShiftStartTime(e.target.value)} style={{ width: "55px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", textAlign: "center" }} />
-                      <select value={newShiftStartAmpm} onChange={(e) => setNewShiftStartAmpm(e.target.value)} style={{ padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem" }}>
-                        <option>AM</option>
-                        <option>PM</option>
-                      </select>
-                      <span style={{ color: "#64748b" }}>-</span>
-                      <input type="text" value={newShiftEndTime} onChange={(e) => setNewShiftEndTime(e.target.value)} style={{ width: "55px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", textAlign: "center" }} />
-                      <select value={newShiftEndAmpm} onChange={(e) => setNewShiftEndAmpm(e.target.value)} style={{ padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem" }}>
-                        <option>PM</option>
-                        <option>AM</option>
-                      </select>
-                      <span style={{ fontSize: "0.75rem", color: "#64748b", marginLeft: "4px" }}>(9 hrs 0 mins)</span>
-                    </div>
-                  </div>
+                        {/* Explanation Paragraph */}
+                        <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b", lineHeight: 1.5 }}>
+                          <strong style={{ color: "#334155" }}>For e.g.</strong> suppose the first punch is on Day 1 - 9:30pm and max shift limit is set to {maxShiftDurationHours || "16"}hrs. Then, all logs until Day 2 - 1:30pm are considered as logs for Day 1. Any logs beyond Day 2 - 1:30pm is considered as first log for Day 2.
+                        </p>
 
-                  {/* Break duration */}
-                  <div>
-                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#475569", display: "block", marginBottom: "8px" }}>Break duration</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <input type="text" value={newShiftBreakMins} onChange={(e) => setNewShiftBreakMins(e.target.value)} style={{ width: "45px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", textAlign: "center" }} />
-                      <span style={{ fontSize: "0.82rem", color: "#475569" }}>mins</span>
-                      <span style={{ fontSize: "0.75rem", color: "#64748b" }}>({newShiftBreakMins} mins)</span>
-                    </div>
-                  </div>
+                        {/* Diagram Card View */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap", marginTop: "8px" }}>
+                          
+                          {/* DAY - 1 LOGS CARD */}
+                          <div style={{ border: "1px solid #e2e8f0", background: "#ffffff", borderRadius: "6px", padding: "16px 20px", display: "flex", flexDirection: "column", gap: "12px", minWidth: "320px" }}>
+                            <span style={{ fontSize: "0.68rem", fontWeight: "700", color: "#64748b", letterSpacing: "0.05em" }}>DAY - 1 LOGS</span>
+                            
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                              
+                              {/* FIRST CLOCK-IN BOX */}
+                              <div style={{ border: "1px solid #f1f5f9", background: "#f8fafc", padding: "10px 14px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "10px" }}>
+                                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: "0.65rem", fontWeight: "700", color: "#64748b" }}>FIRST CLOCK-IN</div>
+                                  <div style={{ fontSize: "0.8rem", fontWeight: "600", color: "#0f172a" }}>Day 1 - 09:30 PM</div>
+                                </div>
+                              </div>
 
-                  {/* Plus Icon */}
-                  <div style={{ cursor: "pointer", color: "#64748b", marginTop: "16px" }}>
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                              {/* Arrow 16 hrs */}
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+                                <span style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: "600" }}>{maxShiftDurationHours || "16"} hrs</span>
+                                <span style={{ color: "#94a3b8" }}>➔</span>
+                              </div>
+
+                              {/* LAST POSSIBLE CLOCK-OUT BOX */}
+                              <div style={{ border: "1px solid #f1f5f9", background: "#f8fafc", padding: "10px 14px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "10px" }}>
+                                <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: "0.65rem", fontWeight: "700", color: "#64748b" }}>LAST POSSIBLE CLOCK-OUT FOR DAY 1</div>
+                                  <div style={{ fontSize: "0.8rem", fontWeight: "600", color: "#0f172a" }}>Day 2 - 01:30 PM</div>
+                                </div>
+                              </div>
+
+                            </div>
+
+                            <span style={{ fontSize: "0.72rem", color: "#64748b" }}>Employee can clock-out anytime before the last possible clock-out time</span>
+                          </div>
+
+                          <span style={{ color: "#94a3b8", fontSize: "1.2rem" }}>➔</span>
+
+                          {/* DAY - 2 LOGS CARD */}
+                          <div style={{ border: "1px solid #e2e8f0", background: "#ffffff", borderRadius: "6px", padding: "16px 20px", display: "flex", flexDirection: "column", gap: "12px", minWidth: "220px" }}>
+                            <span style={{ fontSize: "0.68rem", fontWeight: "700", color: "#64748b", letterSpacing: "0.05em" }}>DAY - 2 LOGS</span>
+                            
+                            <div style={{ border: "1px solid #f1f5f9", background: "#f8fafc", padding: "10px 14px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "10px" }}>
+                              <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#ecfdf5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: "0.65rem", fontWeight: "700", color: "#64748b" }}>FIRST POSSIBLE CLOCK-IN FOR DAY 2</div>
+                                <div style={{ fontSize: "0.8rem", fontWeight: "600", color: "#0f172a" }}>Any log after 01:30 PM</div>
+                              </div>
+                            </div>
+
+                          </div>
+
+                        </div>
+
+                      </div>
+                    )}
                   </div>
 
                 </div>
-              </div>
+              )}
 
             </div>
 

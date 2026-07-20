@@ -49,13 +49,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [assignmentsInnerTab, setAssignmentsInnerTab] = useState("Shift & Weekly Off Assignments");
 
   // Dynamic Shifts and Weekly Offs Lists State
-  const [shiftsList, setShiftsList] = useState([
-    { name: "Back -End Shift", code: "BE", count: "3 employees", timings: "10:30 AM - 9:00 PM", break: "40 mins" },
-    { name: "DRIVERS", code: "DRV", count: "0 employees", timings: "08:00 AM - 05:00 PM", break: "30 mins" },
-    { name: "HELPERS - UTC", code: "HUT", count: "3 employees", timings: "10:00 AM - 07:00 PM", break: "40 mins" },
-    { name: "Ladies", code: "LAD", count: "3 employees", timings: "10:00 AM - 06:30 PM", break: "30 mins" },
-    { name: "Ladies HELPERS", code: "LDH", count: "1 employee", timings: "10:00 AM - 06:30 PM", break: "30 mins" }
-  ]);
+  const [shiftsList, setShiftsList] = useState([]);
 
   const [weeklyOffsList, setWeeklyOffsList] = useState([
     { name: "Friday", count: "2 employees" },
@@ -124,7 +118,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
   };
 
   // Selection states inside Shifts & Weekly Offs
-  const [selectedShift, setSelectedShift] = useState("Back -End Shift");
+  const [selectedShift, setSelectedShift] = useState("");
   const [selectedWeeklyOff, setSelectedWeeklyOff] = useState("Friday");
   const [shiftSearchQuery, setShiftSearchQuery] = useState("");
   const [weeklyOffSearchQuery, setWeeklyOffSearchQuery] = useState("");
@@ -1943,36 +1937,79 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       </div>
 
                       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        {shiftsList.filter(s => s.name.toLowerCase().includes(shiftSearchQuery.toLowerCase())).map(item => {
-                          const isSelected = selectedShift === item.name;
-                          return (
-                            <div
-                              key={item.name}
-                              onClick={() => setSelectedShift(item.name)}
-                              style={{
-                                padding: "12px 14px",
-                                background: isSelected ? "#f1f5f9" : "#ffffff",
-                                borderLeft: isSelected ? "3px solid #4c478a" : "3px solid transparent",
-                                cursor: "pointer",
-                                transition: "all 0.15s ease"
-                              }}
-                            >
-                              <div style={{ fontWeight: isSelected ? "600" : "500", fontSize: "0.85rem", color: "#1e293b" }}>{item.name}</div>
-                              <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>{item.count}</div>
-                            </div>
-                          );
-                        })}
+                        {shiftsList.length > 0 ? (
+                          shiftsList.filter(s => s.name.toLowerCase().includes(shiftSearchQuery.toLowerCase())).map(item => {
+                            const isSelected = selectedShift === item.name;
+                            return (
+                              <div
+                                key={item.name}
+                                onClick={() => setSelectedShift(item.name)}
+                                style={{
+                                  padding: "12px 14px",
+                                  background: isSelected ? "#f1f5f9" : "#ffffff",
+                                  borderLeft: isSelected ? "3px solid #4c478a" : "3px solid transparent",
+                                  cursor: "pointer",
+                                  transition: "all 0.15s ease",
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center"
+                                }}
+                              >
+                                <div>
+                                  <div style={{ fontWeight: isSelected ? "600" : "500", fontSize: "0.85rem", color: "#1e293b" }}>{item.name}</div>
+                                  <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>{item.count}</div>
+                                </div>
+                                <button
+                                  type="button"
+                                  title="Delete Shift"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    const nextList = shiftsList.filter(s => s.name !== item.name);
+                                    setShiftsList(nextList);
+                                    if (selectedShift === item.name) {
+                                      setSelectedShift(nextList.length > 0 ? nextList[0].name : "");
+                                    }
+                                  }}
+                                  style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.9rem", padding: "2px 6px" }}
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div style={{ padding: "20px 8px", color: "#64748b", fontSize: "0.82rem", textAlign: "center" }}>
+                            No shifts available
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Right Details Panel */}
                     <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
-                      <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#0f172a", margin: "0 0 16px 0" }}>{selectedShift}</h3>
-                      
                       {(() => {
                         const activeShiftObj = shiftsList.find(s => s.name === selectedShift) || shiftsList[0];
+                        if (!activeShiftObj) {
+                          return (
+                            <div style={{ padding: "48px 24px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                              <div style={{ fontSize: "1rem", fontWeight: "600", color: "#334155" }}>No Shifts Created</div>
+                              <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0, maxWidth: "340px" }}>
+                                All sample shifts have been removed. Click below to add a new shift.
+                              </p>
+                              <button 
+                                type="button" 
+                                onClick={() => setShowAddShiftPage(true)}
+                                style={{ background: "#4c478a", color: "#ffffff", border: "none", padding: "10px 20px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer", marginTop: "8px" }}
+                              >
+                                + Add Shift
+                              </button>
+                            </div>
+                          );
+                        }
+
                         return (
                           <>
+                            <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#0f172a", margin: "0 0 16px 0" }}>{activeShiftObj.name}</h3>
                             <div style={{ marginBottom: "20px" }}>
                               <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "600", display: "block" }}>SHIFT CODE</span>
                               <span style={{ fontSize: "0.9rem", color: "#334155", fontWeight: "500" }}>{activeShiftObj.code || (activeShiftObj.name === "Back -End Shift" ? "BE" : activeShiftObj.name.slice(0, 3).toUpperCase())}</span>

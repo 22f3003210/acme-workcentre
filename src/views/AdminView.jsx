@@ -1271,59 +1271,186 @@ export default function AdminView({ activeTab, setActiveTab }) {
       )}
 
       {activeTab === "attendance" && (
-        <div className="expenses-section glass-card">
-          <h3>Workforce Daily Attendance Auditor</h3>
-          <p className="subtitle">Historical punch-card logs submitted by employees</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           
-          <table className="luxury-table" style={{ marginTop: "12px" }}>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Employee Name</th>
-                <th>Client Project</th>
-                <th>Clock In</th>
-                <th>Clock Out</th>
-                <th>Hours</th>
-                <th>Presence Status</th>
-                <th>Remarks</th>
-              </tr>
-            </thead>
-            <tbody>
-              {users.filter(u => u.role === "Consultant").flatMap(c => 
-                (c.attendance || []).map((a, idx) => (
-                  <tr key={`${c.id}-${idx}`}>
-                    <td>{a.date}</td>
-                    <td className="user-cell">
-                      <img src={c.avatar} alt={c.name} className="avatar-small" />
-                      <div className="user-cell-text">
-                        <strong>{c.name}</strong>
-                        <span>{c.title}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "4px" }}>
-                        {a.projectName || a.projectId || "DCB Bank Sourcing Account"}
-                      </span>
-                    </td>
-                    <td>{a.checkIn || "—"}</td>
-                    <td>{a.checkOut || <span className="warning-text">Active Working Shift</span>}</td>
-                    <td>{a.hoursWorked ? `${a.hoursWorked} hrs` : "—"}</td>
-                    <td>
-                      <span className={`status-badge ${a.status.toLowerCase()}`}>
-                        {a.status}
-                      </span>
-                    </td>
-                    <td style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{a.remarks || "—"}</td>
-                  </tr>
-                ))
-              )}
-              {users.filter(u => u.role === "Consultant").every(c => !c.attendance || c.attendance.length === 0) && (
+          {/* Header Bar */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <h2 style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>Attendance Dashboard</h2>
+              <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>Workforce presence & team leave calendar</p>
+            </div>
+          </div>
+
+          {/* Top Row: Who is off today & Not in yet today */}
+          <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "20px" }}>
+            {/* Card 1: Who is off today */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+              <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#1e293b", margin: "0 0 14px 0" }}>Who is off today</h4>
+              
+              {/* Amber Notice Banner */}
+              <div style={{ background: "#fef9c3", border: "1px solid #fef08a", borderRadius: "8px", padding: "12px 16px", color: "#854d0e", fontSize: "0.85rem", fontWeight: "600" }}>
+                No employee is off today.
+              </div>
+            </div>
+
+            {/* Card 2: Not in yet today */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+              <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#1e293b", margin: "0 0 14px 0" }}>Not in yet today</h4>
+              
+              <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                {users.filter(u => u.role === "Consultant").slice(0, 4).map(c => (
+                  <div key={c.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                    <img src={c.avatar} alt={c.name} style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover", border: "2px solid #e2e8f0" }} />
+                    <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: "600", maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {c.name.split(" ")[0]}...
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Middle Row: 4 Stat Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+            {/* Stat 1: On Time */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#06b6d4", borderRadius: "0 4px 4px 0" }} />
+              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Employees On Time today</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+            </div>
+
+            {/* Stat 2: Late Arrivals */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#c026d3", borderRadius: "0 4px 4px 0" }} />
+              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Late Arrivals today</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+            </div>
+
+            {/* Stat 3: WFH / On Duty */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#84cc16", borderRadius: "0 4px 4px 0" }} />
+              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Work from Home / On Duty today</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+            </div>
+
+            {/* Stat 4: Remote Clock-ins */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#f97316", borderRadius: "0 4px 4px 0" }} />
+              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Remote Clock-ins today</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+            </div>
+          </div>
+
+          {/* Section: Team calendar */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "22px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+            <h3 style={{ fontSize: "1rem", fontWeight: "800", color: "#1e293b", margin: "0 0 16px 0" }}>Team calendar</h3>
+
+            {/* Month selector */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
+              <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "4px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>‹</button>
+              <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "#334155" }}>Jul 2026</span>
+              <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "4px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>›</button>
+            </div>
+
+            {/* Yellow Banner */}
+            <div style={{ background: "#fef9c3", border: "1px solid #fef08a", borderRadius: "8px", padding: "14px 18px", color: "#854d0e", fontSize: "0.85rem", fontWeight: "600", marginBottom: "20px" }}>
+              Nobody is on leave for the selected month
+            </div>
+
+            {/* Legend Dots */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", fontSize: "0.78rem", color: "#64748b" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a855f7" }} /> Work from home</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#c026d3" }} /> On duty</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#06b6d4" }} /> Paid Leave</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#a16207" }} /> Unpaid Leave</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f43f5e" }} /> Leave due to No Attendance</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#eab308" }} /> Weekly off</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#84cc16" }} /> Holiday</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#3b82f6" }} /> Someone on Leave</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f43f5e" }} /> Multiple Leave on a day</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#8b5cf6" }} /> Someone on WFH/OD</div>
+            </div>
+          </div>
+
+          {/* Section: Peers Grid */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "22px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+            <h3 style={{ fontSize: "1rem", fontWeight: "800", color: "#1e293b", margin: "0 0 16px 0" }}>Peers ({users.length})</h3>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+              {users.map(u => (
+                <div key={u.id} style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <img src={u.avatar} alt={u.name} style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover" }} />
+                    <div>
+                      <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "#0f172a" }}>{u.name}</div>
+                      <div style={{ fontSize: "0.72rem", color: "#64748b", textTransform: "uppercase" }}>{u.title || u.role}</div>
+                    </div>
+                  </div>
+
+                  <span style={{ fontSize: "0.68rem", fontWeight: "800", color: "#0284c7", background: "#e0f2fe", border: "1px solid #bae6fd", padding: "3px 8px", borderRadius: "4px" }}>
+                    NOT IN YET
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Workforce Daily Attendance Auditor Table */}
+          <div className="expenses-section glass-card">
+            <h3>Workforce Daily Attendance Auditor</h3>
+            <p className="subtitle">Historical punch-card logs submitted by employees</p>
+            
+            <table className="luxury-table" style={{ marginTop: "12px" }}>
+              <thead>
                 <tr>
-                  <td colSpan="7" className="text-center">No attendance punches recorded in system.</td>
+                  <th>Date</th>
+                  <th>Employee Name</th>
+                  <th>Client Project</th>
+                  <th>Clock In</th>
+                  <th>Clock Out</th>
+                  <th>Hours</th>
+                  <th>Presence Status</th>
+                  <th>Remarks</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {users.filter(u => u.role === "Consultant").flatMap(c => 
+                  (c.attendance || []).map((a, idx) => (
+                    <tr key={`${c.id}-${idx}`}>
+                      <td>{a.date}</td>
+                      <td className="user-cell">
+                        <img src={c.avatar} alt={c.name} className="avatar-small" />
+                        <div className="user-cell-text">
+                          <strong>{c.name}</strong>
+                          <span>{c.title}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "4px" }}>
+                          {a.projectName || a.projectId || "DCB Bank Sourcing Account"}
+                        </span>
+                      </td>
+                      <td>{a.checkIn || "—"}</td>
+                      <td>{a.checkOut || <span className="warning-text">Active Working Shift</span>}</td>
+                      <td>{a.hoursWorked ? `${a.hoursWorked} hrs` : "—"}</td>
+                      <td>
+                        <span className={`status-badge ${a.status.toLowerCase()}`}>
+                          {a.status}
+                        </span>
+                      </td>
+                      <td style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{a.remarks || "—"}</td>
+                    </tr>
+                  ))
+                )}
+                {users.filter(u => u.role === "Consultant").every(c => !c.attendance || c.attendance.length === 0) && (
+                  <tr>
+                    <td colSpan="8" className="text-center">No attendance punches recorded in system.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
         </div>
       )}
 

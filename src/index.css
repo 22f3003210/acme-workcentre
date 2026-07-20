@@ -1,10 +1,10 @@
-/* Import Inter Font for Premium SaaS Feel */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Import Plus Jakarta Sans & Inter Fonts for Enterprise HR/SaaS Feel */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
 /* --- Minimal SaaS Design Tokens --- */
 :root {
-  --font-serif: 'Inter', -apple-system, sans-serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   
   /* Color Palette (Clean Corporate Minimal) */
   --bg-primary: #F8FAFC;       /* Light Gray background */

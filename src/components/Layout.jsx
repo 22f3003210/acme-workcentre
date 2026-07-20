@@ -149,79 +149,6 @@ export default function Layout({ children, activeTab, setActiveTab }) {
           <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
       )
-    },
-    {
-      name: "Assets Management",
-      bgColor: "#f3e8ff",
-      borderColor: "#e9d5ff",
-      iconColor: "#9333ea",
-      tabId: "projects",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-          <line x1="8" y1="21" x2="16" y2="21" />
-          <line x1="12" y1="17" x2="12" y2="21" />
-        </svg>
-      )
-    },
-    {
-      name: "Tasks",
-      bgColor: "#ecfeff",
-      borderColor: "#a5f3fc",
-      iconColor: "#0891b2",
-      tabId: "projects",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-          <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-          <path d="m9 14 2 2 4-4" />
-        </svg>
-      )
-    },
-    {
-      name: "Workflow",
-      bgColor: "#fff7ed",
-      borderColor: "#fed7aa",
-      iconColor: "#ea580c",
-      tabId: "projects",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="6" height="6" rx="1" />
-          <rect x="15" y="3" width="6" height="6" rx="1" />
-          <rect x="9" y="15" width="6" height="6" rx="1" />
-          <path d="M6 9v3a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V9" />
-          <path d="M12 13v2" />
-        </svg>
-      )
-    },
-    {
-      name: "Reports",
-      bgColor: "#ecfeff",
-      borderColor: "#a5f3fc",
-      iconColor: "#0891b2",
-      tabId: "reports",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-      )
-    },
-    {
-      name: "Engage",
-      bgColor: "#fff1f2",
-      borderColor: "#fecdd3",
-      iconColor: "#e11d48",
-      tabId: "dashboard",
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4.9 19.1C1.7 15.9 1.7 10.8 4.9 7.6" />
-          <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5" />
-          <circle cx="12" cy="12" r="2" />
-          <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5" />
-          <path d="M19.1 4.9c3.2 3.2 3.2 8.3 0 11.5" />
-        </svg>
-      )
     }
   ];
 
@@ -617,55 +544,9 @@ export default function Layout({ children, activeTab, setActiveTab }) {
 
       {/* Main Body Layout under Top Navbar */}
       <div className="app-body-layout" style={{ display: "flex", flexGrow: 1, width: "100%", minHeight: "calc(100vh - 80px)", position: "relative" }}>
-        {/* Sidebar for Desktop */}
-        <aside className="app-sidebar">
-          <div className="sidebar-brand">
-            <span className="brand-logo">
-              <img src={logoImg} alt="Acme Logo" style={{ width: "52px", height: "52px", objectFit: "contain", display: "block" }} />
-            </span>
-            <div className="brand-text">
-              <h2>Acme Consulting</h2>
-              <p>INTERNAL PORTAL</p>
-            </div>
-          </div>
-
-          <div className="user-profile-section">
-            <img src={currentUser.avatar} alt={currentUser.name} className="profile-avatar" />
-            <div className="profile-info">
-              <h4 className="profile-name">{currentUser.name}</h4>
-              <span className="profile-role">
-                {currentUser.role} {currentUser.department ? `• ${currentUser.department}` : ""}
-              </span>
-            </div>
-          </div>
-
-          <nav className="sidebar-nav" style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-            <div className="nav-items-group" style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              {navItems.map((item) => (
-                <button key={item.id} className={`nav-item ${activeTab === item.id ? "active" : ""}`} onClick={() => setActiveTab(item.id)}>
-                  <span className="nav-icon">{item.icon}</span>
-                  <span className="nav-label">{item.label}</span>
-                </button>
-              ))}
-            </div>
-
-            <button onClick={logout} className="nav-item sign-out-btn" style={{ marginTop: "auto", color: "var(--color-error)", borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: "16px", borderRadius: "0" }}>
-              <span className="nav-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" x2="9" y1="12" y2="12" />
-                </svg>
-              </span>
-              <span className="nav-label">Sign Out</span>
-            </button>
-          </nav>
-
-          <div className="sidebar-footer" style={{ marginTop: "16px" }}>
-            <p>© 2026 Acme Consulting</p>
-          </div>
-        </aside>
-
-        {/* Main Content Area */}
-        <div className="main-wrapper">
+        
+        {/* Main Content Area (Full 100% Width) */}
+        <div className="main-wrapper" style={{ flex: 1, width: "100%", maxWidth: "100%" }}>
           <header className="mobile-header">
             <div className="mobile-brand">
               <span className="brand-logo">

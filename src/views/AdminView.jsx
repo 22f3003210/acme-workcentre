@@ -51,15 +51,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
   // Dynamic Shifts and Weekly Offs Lists State
   const [shiftsList, setShiftsList] = useState([]);
 
-  const [weeklyOffsList, setWeeklyOffsList] = useState([
-    { name: "Friday", count: "2 employees" },
-    { name: "Monday", count: "4 employees" },
-    { name: "Saturday", count: "0 employees" },
-    { name: "Sunday", count: "11 employees" },
-    { name: "Teja", count: "1 employee" },
-    { name: "Thursday", count: "3 employees", isDefault: true },
-    { name: "Tuesday", count: "1 employee" }
-  ]);
+  const [weeklyOffsList, setWeeklyOffsList] = useState([]);
 
   // Modal Views for Add Shift & Add Weekly Off
   const [showAddShiftPage, setShowAddShiftPage] = useState(false);
@@ -128,7 +120,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
   // Selection states inside Shifts & Weekly Offs
   const [selectedShift, setSelectedShift] = useState("");
-  const [selectedWeeklyOff, setSelectedWeeklyOff] = useState("Friday");
+  const [selectedWeeklyOff, setSelectedWeeklyOff] = useState("");
   const [shiftSearchQuery, setShiftSearchQuery] = useState("");
   const [weeklyOffSearchQuery, setWeeklyOffSearchQuery] = useState("");
   const [assignmentSearchQuery, setAssignmentSearchQuery] = useState("");
@@ -2174,52 +2166,88 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       </div>
 
                       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        {weeklyOffsList.filter(w => w.name.toLowerCase().includes(weeklyOffSearchQuery.toLowerCase())).map(item => {
-                          const isSelected = selectedWeeklyOff === item.name;
-                          const assignedUsersCount = users.filter((u, idx) => {
-                            const userWeeklyOff = employeeAssignments[u.id]?.weeklyOff || (idx === 0 ? "Not Available" : idx % 4 === 0 ? "Friday" : idx % 5 === 0 ? "Monday" : "Sunday");
-                            return userWeeklyOff === item.name;
-                          }).length;
-                          const countText = `${assignedUsersCount} ${assignedUsersCount === 1 ? "employee" : "employees"}`;
+                        {weeklyOffsList.length > 0 ? (
+                          weeklyOffsList.filter(w => w.name.toLowerCase().includes(weeklyOffSearchQuery.toLowerCase())).map(item => {
+                            const isSelected = selectedWeeklyOff === item.name;
+                            const assignedUsersCount = users.filter(u => employeeAssignments[u.id]?.weeklyOff === item.name).length;
+                            const countText = `${assignedUsersCount} ${assignedUsersCount === 1 ? "employee" : "employees"}`;
 
-                          return (
-                            <div
-                              key={item.name}
-                              onClick={() => setSelectedWeeklyOff(item.name)}
-                              style={{
-                                padding: "12px 14px",
-                                background: isSelected ? "#f1f5f9" : "#ffffff",
-                                borderLeft: isSelected ? "3px solid #4c478a" : "3px solid transparent",
-                                cursor: "pointer",
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center"
-                              }}
-                            >
-                              <div>
-                                <div style={{ fontWeight: isSelected ? "600" : "500", fontSize: "0.85rem", color: "#1e293b" }}>{item.name}</div>
-                                <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>{countText}</div>
+                            return (
+                              <div
+                                key={item.name}
+                                onClick={() => setSelectedWeeklyOff(item.name)}
+                                style={{
+                                  padding: "12px 14px",
+                                  background: isSelected ? "#f1f5f9" : "#ffffff",
+                                  borderLeft: isSelected ? "3px solid #4c478a" : "3px solid transparent",
+                                  cursor: "pointer",
+                                  display: "flex",
+                                  justifyContent: "space-between",
+                                  alignItems: "center"
+                                }}
+                              >
+                                <div>
+                                  <div style={{ fontWeight: isSelected ? "600" : "500", fontSize: "0.85rem", color: "#1e293b" }}>{item.name}</div>
+                                  <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>{countText}</div>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  {item.isDefault && (
+                                    <span style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase" }}>DEFAULT</span>
+                                  )}
+                                  <button
+                                    type="button"
+                                    title="Delete Weekly Off"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const nextList = weeklyOffsList.filter(w => w.name !== item.name);
+                                      setWeeklyOffsList(nextList);
+                                      if (selectedWeeklyOff === item.name) {
+                                        setSelectedWeeklyOff(nextList.length > 0 ? nextList[0].name : "");
+                                      }
+                                    }}
+                                    style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.9rem", padding: "2px 6px" }}
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
                               </div>
-                              {item.isDefault && (
-                                <span style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase" }}>DEFAULT</span>
-                              )}
-                            </div>
-                          );
-                        })}
+                            );
+                          })
+                        ) : (
+                          <div style={{ padding: "20px 8px", color: "#64748b", fontSize: "0.82rem", textAlign: "center" }}>
+                            No weekly offs available
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Right Details Panel */}
                     <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
                       {(() => {
-                        const assignedWeeklyOffUsers = users.filter((u, idx) => {
-                          const userWeeklyOff = employeeAssignments[u.id]?.weeklyOff || (idx === 0 ? "Not Available" : idx % 4 === 0 ? "Friday" : idx % 5 === 0 ? "Monday" : "Sunday");
-                          return userWeeklyOff === selectedWeeklyOff;
-                        });
+                        const activeWeeklyOffObj = weeklyOffsList.find(w => w.name === selectedWeeklyOff) || weeklyOffsList[0];
+                        if (!activeWeeklyOffObj) {
+                          return (
+                            <div style={{ padding: "48px 24px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                              <div style={{ fontSize: "1rem", fontWeight: "600", color: "#334155" }}>No Weekly Offs Created</div>
+                              <p style={{ fontSize: "0.85rem", color: "#64748b", margin: 0, maxWidth: "340px" }}>
+                                All sample weekly offs have been removed. Click below to add a new weekly off.
+                              </p>
+                              <button 
+                                type="button" 
+                                onClick={() => setShowAddWeeklyOffDrawer(true)}
+                                style={{ background: "#4c478a", color: "#ffffff", border: "none", padding: "10px 20px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer", marginTop: "8px" }}
+                              >
+                                + Add Weekly Off
+                              </button>
+                            </div>
+                          );
+                        }
+
+                        const assignedWeeklyOffUsers = users.filter(u => employeeAssignments[u.id]?.weeklyOff === activeWeeklyOffObj.name);
 
                         return (
                           <>
-                            <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#0f172a", margin: "0 0 16px 0" }}>{selectedWeeklyOff}</h3>
+                            <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#0f172a", margin: "0 0 16px 0" }}>{activeWeeklyOffObj.name}</h3>
 
                             {/* Details Sub-Tabs (Track Weekly Off Versions removed) */}
                             <div style={{ borderBottom: "1px solid #e2e8f0", display: "flex", gap: "24px", marginBottom: "20px" }}>

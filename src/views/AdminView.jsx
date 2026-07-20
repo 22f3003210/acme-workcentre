@@ -53,6 +53,15 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [selectedWeeklyOff, setSelectedWeeklyOff] = useState("Friday");
   const [shiftSearchQuery, setShiftSearchQuery] = useState("");
   const [weeklyOffSearchQuery, setWeeklyOffSearchQuery] = useState("");
+  const [assignmentSearchQuery, setAssignmentSearchQuery] = useState("");
+
+  // Employee Assignment Overrides & Modals State
+  const [employeeAssignments, setEmployeeAssignments] = useState({});
+  const [selectedUserIdsForAssignment, setSelectedUserIdsForAssignment] = useState([]);
+  const [showUpdateShiftModal, setShowUpdateShiftModal] = useState(false);
+  const [showUpdateWeeklyOffModal, setShowUpdateWeeklyOffModal] = useState(false);
+  const [modalSelectedShift, setModalSelectedShift] = useState("Back -End Shift");
+  const [modalSelectedWeeklyOff, setModalSelectedWeeklyOff] = useState("Sunday");
 
   // Dynamic Team Calendar Month & Year State
   const [selectedDate, setSelectedDate] = useState(new Date(2026, 8, 1)); // Default Sept 2026
@@ -63,6 +72,40 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
   const handleNextMonth = () => {
     setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
+  };
+
+  const handleSaveShiftAssignment = () => {
+    const updated = { ...employeeAssignments };
+    const targetIds = selectedUserIdsForAssignment.length > 0 
+      ? selectedUserIdsForAssignment 
+      : users.map(u => u.id);
+    
+    targetIds.forEach(id => {
+      updated[id] = {
+        ...updated[id],
+        shift: modalSelectedShift
+      };
+    });
+    setEmployeeAssignments(updated);
+    setShowUpdateShiftModal(false);
+    if (setToast) setToast({ message: `Shift updated to "${modalSelectedShift}" for ${targetIds.length} employee(s)!`, type: "success" });
+  };
+
+  const handleSaveWeeklyOffAssignment = () => {
+    const updated = { ...employeeAssignments };
+    const targetIds = selectedUserIdsForAssignment.length > 0 
+      ? selectedUserIdsForAssignment 
+      : users.map(u => u.id);
+    
+    targetIds.forEach(id => {
+      updated[id] = {
+        ...updated[id],
+        weeklyOff: modalSelectedWeeklyOff
+      };
+    });
+    setEmployeeAssignments(updated);
+    setShowUpdateWeeklyOffModal(false);
+    if (setToast) setToast({ message: `Weekly Off updated to "${modalSelectedWeeklyOff}" for ${targetIds.length} employee(s)!`, type: "success" });
   };
 
   const [empAdvance, setEmpAdvance] = useState("2000"); // default ₹2000
@@ -1309,8 +1352,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 { id: "DASHBOARD", label: "DASHBOARD" },
                 { id: "APPROVALS", label: "APPROVALS", badge: 31 },
                 { id: "SHIFTS", label: "SHIFTS/WEEKLY OFFS & HOLIDAYS" },
-                { id: "ATTENDANCE_TRACKING", label: "ATTENDANCE TRACKING" },
-                { id: "OVERTIME", label: "OVERTIME" },
                 { id: "LEAVE", label: "LEAVE" },
                 { id: "REPORTS", label: "REPORTS" },
                 { id: "SETTINGS", label: "SETTINGS" }
@@ -2048,104 +2089,144 @@ export default function AdminView({ activeTab, setActiveTab }) {
             </div>
           )}
 
-          {/* Sub-Tab 2: Assignments (Matching Screenshot 3) */}
+          {/* Sub-Tab 2: Assignments (Updated per user feedback) */}
           {shiftsSubTab === "Assignments" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               
-              {/* Row 3 Sub-Nav Pills */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "10px 16px", display: "flex", gap: "10px" }}>
-                {["Shift & Weekly Off Assignments", "Shift & Weekly Off Rules Assignments"].map(tab => {
-                  const isActive = assignmentsInnerTab === tab;
-                  return (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setAssignmentsInnerTab(tab)}
-                      style={{
-                        padding: "6px 14px",
-                        background: isActive ? "#4c478a" : "#ffffff",
-                        color: isActive ? "#ffffff" : "#475569",
-                        border: isActive ? "1px solid #4c478a" : "1px solid #e2e8f0",
-                        borderRadius: "0px",
-                        fontWeight: isActive ? "600" : "400",
-                        fontSize: "0.82rem",
-                        cursor: "pointer",
-                        transition: "all 0.15s ease"
-                      }}
-                    >
-                      {tab}
-                    </button>
-                  );
-                })}
-              </div>
-
               {/* Main Content Area */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
                 
                 <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Shift & weekly offs assignment</h3>
 
-                {/* Filter Controls Row */}
-                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
-                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                    {["Business Unit", "Department", "Location", "Shift", "Weekly Off"].map(f => (
-                      <select key={f} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.82rem", color: "#475569", background: "#ffffff" }}>
-                        <option>{f}</option>
-                      </select>
-                    ))}
-                    <input type="text" placeholder="Search" style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.82rem", width: "160px" }} />
-                  </div>
-                </div>
+                {(() => {
+                  const filteredAssignmentUsers = users.filter(u => {
+                    if (!assignmentSearchQuery.trim()) return true;
+                    const q = assignmentSearchQuery.toLowerCase().trim();
+                    const empNum = u.role === "Admin" ? "2" : `hbj0000${users.indexOf(u) + 1}`;
+                    return (
+                      u.name.toLowerCase().includes(q) ||
+                      (u.title && u.title.toLowerCase().includes(q)) ||
+                      (u.role && u.role.toLowerCase().includes(q)) ||
+                      empNum.includes(q)
+                    );
+                  });
 
-                {/* Action Controls Row */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <button type="button" style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", fontWeight: "500" }}>Update Shift</button>
-                    <button type="button" style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", fontWeight: "500" }}>Update Weekly Off</button>
-                  </div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                    <span style={{ fontSize: "0.82rem", color: "#64748b" }}>Total: {users.length}</span>
-                    <button type="button" style={{ background: "#ffffff", border: "1px solid #4c478a", color: "#4c478a", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "600" }}>
-                      Import Shifts & Weekly Offs
-                    </button>
-                  </div>
-                </div>
+                  const isAllSelected = filteredAssignmentUsers.length > 0 && filteredAssignmentUsers.every(u => selectedUserIdsForAssignment.includes(u.id));
 
-                {/* Assignments Table */}
-                <div style={{ overflowX: "auto", border: "1px solid #e2e8f0" }}>
-                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem", textAlign: "left" }}>
-                    <thead>
-                      <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
-                        <th style={{ padding: "10px 14px", width: "30px" }}><input type="checkbox" /></th>
-                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>EMPLOYEE</th>
-                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>EMPLOYEE NUMBER</th>
-                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>DEPARTMENT</th>
-                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>LOCATION</th>
-                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>BUSINESS UNIT</th>
-                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>REPORTING MANAGER</th>
-                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>SHIFT TYPE</th>
-                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>WEEKLY OFF</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.map((u, idx) => (
-                        <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                          <td style={{ padding: "10px 14px" }}><input type="checkbox" /></td>
-                          <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>
-                            <div>{u.name}</div>
-                            <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{u.title || u.role}</div>
-                          </td>
-                          <td style={{ padding: "10px 14px", color: "#475569" }}>{u.role === "Admin" ? "2" : `HBJ0000${idx + 1}`}</td>
-                          <td style={{ padding: "10px 14px", color: "#475569" }}>{idx === 0 ? "Not Available" : idx % 2 === 0 ? "PURCHASE" : "ADMINISTRATION"}</td>
-                          <td style={{ padding: "10px 14px", color: "#475569" }}>{idx % 2 === 0 ? "Nampally" : "Mehdipatnam"}</td>
-                          <td style={{ padding: "10px 14px", color: "#475569" }}>-</td>
-                          <td style={{ padding: "10px 14px", color: "#475569" }}>Hemanth Kumar Jain</td>
-                          <td style={{ padding: "10px 14px", color: "#475569" }}>{idx === 0 ? "Not Available" : idx % 3 === 0 ? "Back -End Shift" : "UTC"}</td>
-                          <td style={{ padding: "10px 14px", color: "#475569" }}>{idx === 0 ? "Not Available" : idx % 4 === 0 ? "Friday" : idx % 5 === 0 ? "Monday" : "Sunday"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                  const toggleSelectAll = () => {
+                    if (isAllSelected) {
+                      setSelectedUserIdsForAssignment([]);
+                    } else {
+                      setSelectedUserIdsForAssignment(filteredAssignmentUsers.map(u => u.id));
+                    }
+                  };
+
+                  const toggleUserSelection = (userId) => {
+                    if (selectedUserIdsForAssignment.includes(userId)) {
+                      setSelectedUserIdsForAssignment(selectedUserIdsForAssignment.filter(id => id !== userId));
+                    } else {
+                      setSelectedUserIdsForAssignment([...selectedUserIdsForAssignment, userId]);
+                    }
+                  };
+
+                  return (
+                    <>
+                      {/* Action Controls & Search Row */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
+                        <div style={{ display: "flex", gap: "10px" }}>
+                          <button 
+                            type="button" 
+                            onClick={() => setShowUpdateShiftModal(true)}
+                            style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", fontWeight: "500", cursor: "pointer" }}
+                          >
+                            Update Shift {selectedUserIdsForAssignment.length > 0 && `(${selectedUserIdsForAssignment.length})`}
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={() => setShowUpdateWeeklyOffModal(true)}
+                            style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", fontWeight: "500", cursor: "pointer" }}
+                          >
+                            Update Weekly Off {selectedUserIdsForAssignment.length > 0 && `(${selectedUserIdsForAssignment.length})`}
+                          </button>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                          <div style={{ position: "relative" }}>
+                            <input 
+                              type="text" 
+                              placeholder="Search employee..." 
+                              value={assignmentSearchQuery}
+                              onChange={(e) => setAssignmentSearchQuery(e.target.value)}
+                              style={{ padding: "8px 12px 8px 30px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.82rem", width: "220px", outline: "none" }} 
+                            />
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: "absolute", left: "10px", top: "10px" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                          </div>
+                          <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500" }}>Total: {filteredAssignmentUsers.length}</span>
+                          <button type="button" style={{ background: "#ffffff", border: "1px solid #4c478a", color: "#4c478a", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "600" }}>
+                            Import Shifts & Weekly Offs
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Assignments Table (Location & Business Unit columns removed) */}
+                      <div style={{ overflowX: "auto", border: "1px solid #e2e8f0" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem", textAlign: "left" }}>
+                          <thead>
+                            <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
+                              <th style={{ padding: "10px 14px", width: "30px" }}>
+                                <input type="checkbox" checked={isAllSelected} onChange={toggleSelectAll} />
+                              </th>
+                              <th style={{ padding: "10px 14px", fontWeight: "600" }}>EMPLOYEE</th>
+                              <th style={{ padding: "10px 14px", fontWeight: "600" }}>EMPLOYEE NUMBER</th>
+                              <th style={{ padding: "10px 14px", fontWeight: "600" }}>DEPARTMENT</th>
+                              <th style={{ padding: "10px 14px", fontWeight: "600" }}>REPORTING MANAGER</th>
+                              <th style={{ padding: "10px 14px", fontWeight: "600" }}>SHIFT TYPE</th>
+                              <th style={{ padding: "10px 14px", fontWeight: "600" }}>WEEKLY OFF</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {filteredAssignmentUsers.length > 0 ? (
+                              filteredAssignmentUsers.map((u, idx) => {
+                                const isChecked = selectedUserIdsForAssignment.includes(u.id);
+                                const assignedShift = employeeAssignments[u.id]?.shift || (idx === 0 ? "Not Available" : idx % 3 === 0 ? "Back -End Shift" : "UTC");
+                                const assignedWeeklyOff = employeeAssignments[u.id]?.weeklyOff || (idx === 0 ? "Not Available" : idx % 4 === 0 ? "Friday" : idx % 5 === 0 ? "Monday" : "Sunday");
+                                return (
+                                  <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9", background: isChecked ? "#f0f9ff" : "transparent" }}>
+                                    <td style={{ padding: "10px 14px" }}>
+                                      <input type="checkbox" checked={isChecked} onChange={() => toggleUserSelection(u.id)} />
+                                    </td>
+                                    <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>
+                                      <div>{u.name}</div>
+                                      <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{u.title || u.role}</div>
+                                    </td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>{u.role === "Admin" ? "2" : `HBJ0000${idx + 1}`}</td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>{idx === 0 ? "Not Available" : idx % 2 === 0 ? "PURCHASE" : "ADMINISTRATION"}</td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>Hemanth Kumar Jain</td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>
+                                      <span style={{ fontWeight: employeeAssignments[u.id]?.shift ? "600" : "400", color: employeeAssignments[u.id]?.shift ? "#2563eb" : "#475569" }}>
+                                        {assignedShift}
+                                      </span>
+                                    </td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>
+                                      <span style={{ fontWeight: employeeAssignments[u.id]?.weeklyOff ? "600" : "400", color: employeeAssignments[u.id]?.weeklyOff ? "#2563eb" : "#475569" }}>
+                                        {assignedWeeklyOff}
+                                      </span>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            ) : (
+                              <tr>
+                                <td colSpan="7" style={{ textAlign: "center", padding: "24px", color: "#64748b", fontSize: "0.85rem" }}>
+                                  No employee found matching "{assignmentSearchQuery}"
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  );
+                })()}
 
               </div>
 
@@ -2659,6 +2740,69 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Update Shift Modal */}
+      {showUpdateShiftModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,23,42,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#ffffff", padding: "24px", width: "420px", border: "1px solid #cbd5e1", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "600", color: "#0f172a" }}>Update Shift Type</h3>
+            <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748b" }}>Select a new shift to assign to selected employee(s).</p>
+            
+            <div>
+              <label style={{ fontSize: "0.82rem", fontWeight: "500", color: "#334155", display: "block", marginBottom: "6px" }}>Shift Type</label>
+              <select
+                value={modalSelectedShift}
+                onChange={(e) => setModalSelectedShift(e.target.value)}
+                style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.85rem", background: "#ffffff" }}
+              >
+                <option value="Back -End Shift">Back -End Shift (10:30 AM - 9:00 PM)</option>
+                <option value="UTC">UTC (09:30 AM - 06:30 PM)</option>
+                <option value="DRIVERS">DRIVERS (08:00 AM - 05:00 PM)</option>
+                <option value="HELPERS - UTC">HELPERS - UTC (10:00 AM - 07:00 PM)</option>
+                <option value="Ladies">Ladies (10:00 AM - 06:30 PM)</option>
+                <option value="Ladies HELPERS">Ladies HELPERS (10:00 AM - 06:30 PM)</option>
+              </select>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
+              <button type="button" onClick={() => setShowUpdateShiftModal(false)} style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", cursor: "pointer" }}>Cancel</button>
+              <button type="button" onClick={handleSaveShiftAssignment} style={{ background: "#4c478a", color: "#ffffff", border: "none", padding: "8px 18px", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer" }}>Save Shift Assignment</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Update Weekly Off Modal */}
+      {showUpdateWeeklyOffModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,23,42,0.5)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#ffffff", padding: "24px", width: "420px", border: "1px solid #cbd5e1", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "600", color: "#0f172a" }}>Update Weekly Off</h3>
+            <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748b" }}>Select a new weekly off day to assign to selected employee(s).</p>
+            
+            <div>
+              <label style={{ fontSize: "0.82rem", fontWeight: "500", color: "#334155", display: "block", marginBottom: "6px" }}>Weekly Off Day</label>
+              <select
+                value={modalSelectedWeeklyOff}
+                onChange={(e) => setModalSelectedWeeklyOff(e.target.value)}
+                style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.85rem", background: "#ffffff" }}
+              >
+                <option value="Friday">Friday</option>
+                <option value="Sunday">Sunday</option>
+                <option value="Monday">Monday</option>
+                <option value="Thursday">Thursday (DEFAULT)</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Teja">Teja</option>
+              </select>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "8px" }}>
+              <button type="button" onClick={() => setShowUpdateWeeklyOffModal(false)} style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", cursor: "pointer" }}>Cancel</button>
+              <button type="button" onClick={handleSaveWeeklyOffAssignment} style={{ background: "#4c478a", color: "#ffffff", border: "none", padding: "8px 18px", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer" }}>Save Weekly Off</button>
+            </div>
           </div>
         </div>
       )}

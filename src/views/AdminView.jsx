@@ -135,6 +135,134 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [modalSelectedShift, setModalSelectedShift] = useState("Back -End Shift");
   const [modalSelectedWeeklyOff, setModalSelectedWeeklyOff] = useState("Sunday");
 
+  // Daily Report / Employee Swipes State (Matching Reference Screenshot)
+  const initialSwipes = [
+    {
+      id: "s1",
+      name: "Praveen Kumar Singh",
+      code: "#C0011",
+      time: "21:07:21",
+      date: "20 Jul, 2026",
+      shift: "Cons Shift",
+      inOut: "OUT",
+      receivedTime: "21:07:21",
+      receivedDate: "20 Jul, 2026",
+      door: "29, Major Deepak Tya...",
+      fullAddress: "29, Major Deepak Tyagi Marg, Chander Nagar, Janakpuri, New Delhi, Delhi. 3 m from Xoxo Zone, Pin-110058 (India)",
+      mobile: "OnePlus Nord CE6 Lite",
+      status: "Approved",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "s2",
+      name: "Mohammod Rabbani",
+      code: "#C0004",
+      time: "20:31:51",
+      date: "20 Jul, 2026",
+      shift: "Cons Shift",
+      inOut: "OUT",
+      receivedTime: "20:31:51",
+      receivedDate: "20 Jul, 2026",
+      door: "Ram Janki Mandir Roa...",
+      fullAddress: "Ram Janki Mandir Road, Sector 4, Hyderabad, Telangana, Pin-500081 (India)",
+      mobile: "Samsung Galaxy A54 5G",
+      status: "Approved",
+      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "s3",
+      name: "Abishek Ajmera",
+      code: "#C0010",
+      time: "19:20:33",
+      date: "20 Jul, 2026",
+      shift: "Cons Shift",
+      inOut: "OUT",
+      receivedTime: "19:20:33",
+      receivedDate: "20 Jul, 2026",
+      door: "13/15/17, Karnani Bui...",
+      fullAddress: "13/15/17, Karnani Building, Park Street, Kolkata, West Bengal, Pin-700016 (India)",
+      mobile: "Xiaomi Redmi Note 12",
+      status: "Approved",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "s4",
+      name: "Awaiz Sayyed",
+      code: "#C0002",
+      time: "18:28:23",
+      date: "20 Jul, 2026",
+      shift: "Cons Shift",
+      inOut: "OUT",
+      receivedTime: "18:28:23",
+      receivedDate: "20 Jul, 2026",
+      door: "Maharshi Karve Marg,...",
+      fullAddress: "Maharshi Karve Marg, Marine Lines, Mumbai, Maharashtra, Pin-400020 (India)",
+      mobile: "iPhone 14 Pro",
+      status: "Approved",
+      avatar: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "s5",
+      name: "Gulnaz Siddiqui",
+      code: "#E0003",
+      time: "18:02:14",
+      date: "20 Jul, 2026",
+      shift: "GENERAL SHIFT",
+      inOut: "OUT",
+      receivedTime: "18:02:14",
+      receivedDate: "20 Jul, 2026",
+      door: "Mobile Sign In",
+      fullAddress: "Mobile Sign In - GPS Coords: 17.3850° N, 78.4867° E (Hyderabad Office)",
+      mobile: "Vivo V27 5G",
+      status: "Approved",
+      avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "s6",
+      name: "Chaitanya",
+      code: "#E0008",
+      time: "18:01:41",
+      date: "20 Jul, 2026",
+      shift: "GENERAL SHIFT",
+      inOut: "OUT",
+      receivedTime: "18:01:41",
+      receivedDate: "20 Jul, 2026",
+      door: "Mobile Sign In",
+      fullAddress: "Mobile Sign In - GPS Coords: 17.4483° N, 78.3915° E (HITEC City)",
+      mobile: "Realme 11 Pro+",
+      status: "Approved",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80"
+    },
+    {
+      id: "s7",
+      name: "Bhagyasri",
+      code: "#E0009",
+      time: "18:01:35",
+      date: "20 Jul, 2026",
+      shift: "GENERAL SHIFT",
+      inOut: "OUT",
+      receivedTime: "18:01:35",
+      receivedDate: "20 Jul, 2026",
+      door: "Mobile Sign In",
+      fullAddress: "Mobile Sign In - GPS Coords: 17.4483° N, 78.3915° E (HITEC City)",
+      mobile: "OPPO Reno 10",
+      status: "Approved",
+      avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80"
+    }
+  ];
+
+  const [swipeRecords, setSwipeRecords] = useState(initialSwipes);
+  const [selectedSwipeRecordId, setSelectedSwipeRecordId] = useState("s1");
+  const [swipeSearchQuery, setSwipeSearchQuery] = useState("");
+  const [selectedSwipeCheckboxes, setSelectedSwipeCheckboxes] = useState([]);
+  const [swipeDateFilter, setSwipeDateFilter] = useState("20 Jul 2026 - 20 Jul 2026");
+  const [swipePayrollMonth, setSwipePayrollMonth] = useState("Jul'26");
+
+  // Map Modal & Location Pin Tooltip State (Matching Reference Screenshots 1 & 2)
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [mapModalSwipe, setMapModalSwipe] = useState(null);
+  const [hoveredLocationPinId, setHoveredLocationPinId] = useState(null);
+
   // Dynamic Team Calendar Month & Year State
   const [selectedDate, setSelectedDate] = useState(new Date(2026, 8, 1)); // Default Sept 2026
 
@@ -1467,7 +1595,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
               <div style={{ display: "flex", alignItems: "center", gap: "28px", padding: "10px 0 0 0", overflowX: "auto" }}>
                 {[
                   "Attendance Summary",
-                  "Attendance Analytics",
+                  "Daily Report",
                   "Leave Summary",
                   "Leave Analytics"
                 ].map(subTab => {
@@ -1530,7 +1658,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
           </div>
 
           {/* DASHBOARD Content View */}
-          {subModuleTab === "DASHBOARD" && (
+          {subModuleTab === "DASHBOARD" && dashboardSubTab === "Attendance Summary" && (
             <>
               {/* Header Bar */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1600,75 +1728,79 @@ export default function AdminView({ activeTab, setActiveTab }) {
             </div>
           </div>
 
-          {/* Section: Team calendar (Whole Month Wise Matrix Table) */}
-          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "22px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: "500", color: "#334155", margin: "0 0 12px 0" }}>Team calendar</h3>
-
+          {/* Section: Enterprise Attendance Grid */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "20px" }}>
+            
+            {/* Table Header Controls */}
             {(() => {
               const calendarYear = selectedDate.getFullYear();
               const calendarMonth = selectedDate.getMonth();
-              const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"];
-              const formattedMonthLabel = `${monthNames[calendarMonth]} ${calendarYear}`;
-              const totalDaysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+              const formattedMonthLabel = selectedDate.toLocaleDateString("en-US", { month: "short", year: "2-digit" }).replace(" ", "'");
 
-              const daysHeader = Array.from({ length: totalDaysInMonth }, (_, i) => {
-                const dayNum = i + 1;
-                const d = new Date(calendarYear, calendarMonth, dayNum);
-                const dayName = d.toLocaleString('en-US', { weekday: 'short' });
+              const daysInMonthCount = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+              const daysHeader = Array.from({ length: daysInMonthCount }, (_, i) => {
+                const d = new Date(calendarYear, calendarMonth, i + 1);
+                const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
                 const isWeekend = d.getDay() === 0 || d.getDay() === 6;
-                return { day: dayNum, name: dayName, isWeekend };
+                return { day: i + 1, name: dayName, isWeekend };
               });
 
               return (
                 <>
-                  {/* Month Selector (Functional Previous & Next Month Navigation) */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
-                    <button 
-                      type="button" 
-                      onClick={handlePrevMonth}
-                      title="Previous Month"
-                      style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600" }}
-                    >
-                      ‹
-                    </button>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h3 style={{ fontSize: "1.05rem", fontWeight: "500", color: "#0f172a", margin: 0 }}>
+                      Employee Attendance Matrix ({daysInMonthCount} Days)
+                    </h3>
 
-                    <div style={{ position: "relative", display: "inline-block" }}>
-                      <span style={{ fontSize: "0.92rem", fontWeight: "500", color: "#334155", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                        {formattedMonthLabel}
-                      </span>
-                      <input
-                        type="month"
-                        value={`${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}`}
-                        onChange={(e) => {
-                          if (e.target.value) {
-                            const [y, m] = e.target.value.split("-");
-                            setSelectedDate(new Date(parseInt(y), parseInt(m) - 1, 1));
-                          }
-                        }}
-                        style={{
-                          position: "absolute",
-                          top: 0,
-                          left: 0,
-                          width: "100%",
-                          height: "100%",
-                          opacity: 0,
-                          cursor: "pointer"
-                        }}
-                        title="Click to select month and year"
-                      />
+                    {/* Month Picker Controls */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <button 
+                        type="button" 
+                        onClick={handlePrevMonth}
+                        title="Previous Month"
+                        style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600" }}
+                      >
+                        ‹
+                      </button>
+                      
+                      <div style={{ position: "relative", display: "inline-block" }}>
+                        <span style={{ fontSize: "0.85rem", color: "#4c478a", fontWeight: "700", border: "1px solid #4c478a", padding: "4px 12px", background: "#f5f3ff", cursor: "pointer" }}>
+                          {formattedMonthLabel}
+                        </span>
+                        <input
+                          type="month"
+                          value={`${calendarYear}-${String(calendarMonth + 1).padStart(2, '0')}`}
+                          onChange={(e) => {
+                            if (e.target.value) {
+                              const [y, m] = e.target.value.split("-");
+                              setSelectedDate(new Date(parseInt(y), parseInt(m) - 1, 1));
+                            }
+                          }}
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            height: "100%",
+                            opacity: 0,
+                            cursor: "pointer"
+                          }}
+                          title="Click to select month and year"
+                        />
+                      </div>
+
+                      <button 
+                        type="button" 
+                        onClick={handleNextMonth}
+                        title="Next Month"
+                        style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600" }}
+                      >
+                        ›
+                      </button>
                     </div>
-
-                    <button 
-                      type="button" 
-                      onClick={handleNextMonth}
-                      title="Next Month"
-                      style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "26px", height: "26px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600" }}
-                    >
-                      ›
-                    </button>
                   </div>
 
-                  {/* Enterprise Attendance Grid Table (P, A, HD, L, OFF with Summary Counts) */}
+                  {/* Enterprise Attendance Grid Table */}
                   <div style={{ overflowX: "auto", border: "1px solid #cbd5e1", marginBottom: "20px" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem", minWidth: "1100px" }}>
                       <thead>
@@ -1680,7 +1812,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
                               <div style={{ fontSize: "0.65rem", color: d.isWeekend ? "#ef4444" : "#64748b", fontWeight: "400" }}>{d.name}</div>
                             </th>
                           ))}
-                          {/* Summary Columns Header */}
                           <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", borderLeft: "1px solid #cbd5e1", color: "#0f172a", fontWeight: "600" }}>P</th>
                           <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#0284c7", fontWeight: "600" }}>L</th>
                           <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#d97706", fontWeight: "600" }}>HD</th>
@@ -1724,7 +1855,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
                           return (
                             <tr key={emp.id} style={{ borderBottom: "1px solid #e2e8f0", background: uIdx % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
-                              {/* Sticky Employee Details Column */}
                               <td style={{ padding: "8px 12px", position: "sticky", left: 0, background: uIdx % 2 === 0 ? "#ffffff" : "#f8fafc", zIndex: 2, borderRight: "1px solid #cbd5e1" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                                   <img src={emp.avatar} alt={emp.name} style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover" }} />
@@ -1739,14 +1869,12 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                 </div>
                               </td>
 
-                              {/* Days 1 to Total Days Code Cells */}
                               {dayStatuses.map((st, dIdx) => (
                                 <td key={dIdx} style={{ padding: "6px 2px", textAlign: "center", background: st.bg, color: st.color, fontWeight: "500", fontSize: "0.75rem", borderRight: "1px solid #f1f5f9" }}>
                                   {st.code}
                                 </td>
                               ))}
 
-                              {/* Summary Columns */}
                               <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#0f172a", borderLeft: "1px solid #cbd5e1", background: "#f8fafc" }}>{pCount}</td>
                               <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#0284c7", background: "#f8fafc" }}>{lCount}</td>
                               <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#d97706", background: "#f8fafc" }}>{hdCount}</td>
@@ -1762,7 +1890,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
               );
             })()}
 
-            {/* Clean Legend Bar matching screenshot */}
+            {/* Clean Legend Bar */}
             <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "28px", fontSize: "0.82rem", color: "#334155", fontWeight: "500" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <span style={{ fontWeight: "700", color: "#0f172a" }}>P</span> Present
@@ -1781,86 +1909,491 @@ export default function AdminView({ activeTab, setActiveTab }) {
               </div>
             </div>
           </div>
+        </>
+      )}
 
-          {/* Section: Peers Grid */}
-          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "22px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: "800", color: "#1e293b", margin: "0 0 16px 0" }}>Peers ({users.length})</h3>
+      {/* DAILY REPORT / EMPLOYEE SWIPES View (Matching Reference Screenshots 1 & 2) */}
+      {subModuleTab === "DASHBOARD" && dashboardSubTab === "Daily Report" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+          
+          {/* Top Bar: Breadcrumb + Payroll Month / Filter / History */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: "8px" }}>
+            <div style={{ fontSize: "0.82rem", color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
+              <span>Home</span>
+              <span>&gt;</span>
+              <span>Workforce Management</span>
+              <span>&gt;</span>
+              <strong style={{ color: "#0f172a" }}>Employee Swipes</strong>
+            </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-              {users.map(u => (
-                <div key={u.id} style={{ border: "1px solid #e2e8f0", borderRadius: "0px", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <img src={u.avatar} alt={u.name} style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover" }} />
-                    <div>
-                      <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "#0f172a" }}>{u.name}</div>
-                      <div style={{ fontSize: "0.72rem", color: "#64748b", textTransform: "uppercase" }}>{u.title || u.role}</div>
-                    </div>
-                  </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              {/* Payroll Month Picker */}
+              <div style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "6px 12px", background: "#ffffff", fontSize: "0.82rem", color: "#334155", display: "flex", alignItems: "center", gap: "8px" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span>Payroll Month: <strong>{swipePayrollMonth}</strong></span>
+                <span style={{ fontSize: "0.7rem", color: "#64748b" }}>▼</span>
+              </div>
 
-                  <span style={{ fontSize: "0.68rem", fontWeight: "800", color: "#0284c7", background: "#e0f2fe", border: "1px solid #bae6fd", padding: "3px 8px", borderRadius: "0px" }}>
-                    NOT IN YET
-                  </span>
-                </div>
-              ))}
+              {/* Filter Dropdown */}
+              <div style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "6px 12px", background: "#ffffff", fontSize: "0.82rem", color: "#334155", display: "flex", alignItems: "center", gap: "8px" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                <span>All</span>
+                <span style={{ fontSize: "0.7rem", color: "#64748b" }}>▼</span>
+              </div>
+
+              {/* History Icon */}
+              <button type="button" title="History Log" style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 16 14"/></svg>
+              </button>
             </div>
           </div>
 
-          {/* Workforce Daily Attendance Auditor Table */}
-          <div className="expenses-section glass-card">
-            <h3>Workforce Daily Attendance Auditor</h3>
-            <p className="subtitle">Historical punch-card logs submitted by employees</p>
-            
-            <table className="luxury-table" style={{ marginTop: "12px" }}>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Employee Name</th>
-                  <th>Client Project</th>
-                  <th>Clock In</th>
-                  <th>Clock Out</th>
-                  <th>Hours</th>
-                  <th>Presence Status</th>
-                  <th>Remarks</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.filter(u => u.role === "Consultant").flatMap(c => 
-                  (c.attendance || []).map((a, idx) => (
-                    <tr key={`${c.id}-${idx}`}>
-                      <td>{a.date}</td>
-                      <td className="user-cell">
-                        <img src={c.avatar} alt={c.name} className="avatar-small" />
-                        <div className="user-cell-text">
-                          <strong>{c.name}</strong>
-                          <span>{c.title}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "4px" }}>
-                          {a.projectName || a.projectId || "DCB Bank Sourcing Account"}
-                        </span>
-                      </td>
-                      <td>{a.checkIn || "—"}</td>
-                      <td>{a.checkOut || <span className="warning-text">Active Working Shift</span>}</td>
-                      <td>{a.hoursWorked ? `${a.hoursWorked} hrs` : "—"}</td>
-                      <td>
-                        <span className={`status-badge ${a.status.toLowerCase()}`}>
-                          {a.status}
-                        </span>
-                      </td>
-                      <td style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>{a.remarks || "—"}</td>
-                    </tr>
-                  ))
-                )}
-                {users.filter(u => u.role === "Consultant").every(c => !c.attendance || c.attendance.length === 0) && (
-                  <tr>
-                    <td colSpan="8" className="text-center">No attendance punches recorded in system.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+          {/* Second Bar: Filters Row (Select Dates, Date Type, Employee Search) */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "16px 20px", display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
+              
+              {/* Select Dates */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+                  Select Dates<span style={{ color: "#ef4444" }}>*</span>
+                </label>
+                <div style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "6px 12px", background: "#ffffff", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", color: "#1e293b", minWidth: "200px" }}>
+                  <input 
+                    type="text" 
+                    value={swipeDateFilter} 
+                    onChange={(e) => setSwipeDateFilter(e.target.value)}
+                    style={{ border: "none", outline: "none", fontSize: "0.82rem", color: "#1e293b", width: "100%" }}
+                  />
+                  <span style={{ color: "#94a3b8", cursor: "pointer", fontSize: "0.8rem" }}>⊗</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+              </div>
+
+              {/* Date Type */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+                  Date Type<span style={{ color: "#ef4444" }}>*</span>
+                </label>
+                <select style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "7px 12px", background: "#ffffff", fontSize: "0.82rem", color: "#1e293b", outline: "none", minWidth: "150px" }}>
+                  <option>Swipe Date</option>
+                  <option>Received Date</option>
+                </select>
+              </div>
+
+              {/* Employee Search */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+                  Employee Search
+                </label>
+                <div style={{ position: "relative" }}>
+                  <input 
+                    type="text" 
+                    placeholder="Search Employee" 
+                    value={swipeSearchQuery}
+                    onChange={(e) => setSwipeSearchQuery(e.target.value)}
+                    style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "6px 36px 6px 12px", fontSize: "0.82rem", outline: "none", width: "200px" }}
+                  />
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: "absolute", right: "10px", top: "8px" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+              </div>
+
+              {/* Download & Filter Buttons */}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "18px" }}>
+                <button type="button" title="Download Export" style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </button>
+                <button type="button" title="Filter Rules" style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                </button>
+              </div>
+
+            </div>
           </div>
-        </>
+
+          {/* Main Content Layout: Table + Right Sidebar Card */}
+          {(() => {
+            const filteredSwipes = swipeRecords.filter(s => {
+              if (!swipeSearchQuery.trim()) return true;
+              const q = swipeSearchQuery.toLowerCase().trim();
+              return s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q) || s.shift.toLowerCase().includes(q);
+            });
+
+            const activeRecord = swipeRecords.find(s => s.id === selectedSwipeRecordId) || swipeRecords[0];
+
+            const isAllSwipesChecked = filteredSwipes.length > 0 && filteredSwipes.every(s => selectedSwipeCheckboxes.includes(s.id));
+            const toggleAllSwipes = () => {
+              if (isAllSwipesChecked) {
+                setSelectedSwipeCheckboxes([]);
+              } else {
+                setSelectedSwipeCheckboxes(filteredSwipes.map(s => s.id));
+              }
+            };
+
+            const toggleSwipeCheckbox = (id) => {
+              if (selectedSwipeCheckboxes.includes(id)) {
+                setSelectedSwipeCheckboxes(selectedSwipeCheckboxes.filter(i => i !== id));
+              } else {
+                setSelectedSwipeCheckboxes([...selectedSwipeCheckboxes, id]);
+              }
+            };
+
+            return (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "20px", alignItems: "start" }}>
+                
+                {/* Left Column: Employee Swipes Table */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", textAlign: "left" }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
+                        <th style={{ padding: "12px 14px", width: "30px" }}>
+                          <input type="checkbox" checked={isAllSwipesChecked} onChange={toggleAllSwipes} />
+                        </th>
+                        <th style={{ padding: "12px 14px", fontWeight: "600" }}>Employee Name</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "600" }}>Swipe Time & Date</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "600" }}>Shift</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "600" }}>In/Out</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "600" }}>Received On</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "600" }}>Door/Address</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "600" }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredSwipes.map((s) => {
+                        const isSelectedRow = selectedSwipeRecordId === s.id;
+                        const isChecked = selectedSwipeCheckboxes.includes(s.id);
+                        const isPinHovered = hoveredLocationPinId === s.id;
+
+                        return (
+                          <tr 
+                            key={s.id}
+                            onClick={() => setSelectedSwipeRecordId(s.id)}
+                            style={{
+                              borderBottom: "1px solid #f1f5f9",
+                              background: isSelectedRow ? "#f0f9ff" : isChecked ? "#f8fafc" : "transparent",
+                              cursor: "pointer"
+                            }}
+                          >
+                            <td style={{ padding: "12px 14px" }} onClick={(e) => e.stopPropagation()}>
+                              <input type="checkbox" checked={isChecked} onChange={() => toggleSwipeCheckbox(s.id)} />
+                            </td>
+                            <td style={{ padding: "12px 14px" }}>
+                              <div style={{ fontWeight: "600", color: "#0f172a" }}>{s.name}</div>
+                              <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{s.code}</div>
+                            </td>
+                            <td style={{ padding: "12px 14px" }}>
+                              <div style={{ fontWeight: "600", color: "#1e293b" }}>{s.time}</div>
+                              <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{s.date}</div>
+                            </td>
+                            <td style={{ padding: "12px 14px", color: "#334155", fontSize: "0.8rem" }}>
+                              {s.shift}
+                            </td>
+                            <td style={{ padding: "12px 14px", color: "#334155", fontWeight: "600", fontSize: "0.78rem" }}>
+                              {s.inOut}
+                            </td>
+                            <td style={{ padding: "12px 14px" }}>
+                              <div style={{ fontWeight: "600", color: "#1e293b" }}>{s.receivedTime}</div>
+                              <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{s.receivedDate}</div>
+                            </td>
+                            <td style={{ padding: "12px 14px", color: "#475569", fontSize: "0.78rem" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {s.door}
+                                </span>
+                                
+                                {/* Location Pin Icon with speech bubble tooltip matching Screenshots 1 & 2 */}
+                                <div 
+                                  style={{ position: "relative", display: "inline-flex", alignItems: "center" }}
+                                  onMouseEnter={() => setHoveredLocationPinId(s.id)}
+                                  onMouseLeave={() => setHoveredLocationPinId(null)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setMapModalSwipe(s);
+                                    setShowMapModal(true);
+                                  }}
+                                >
+                                  {/* Speech bubble tooltip popover matching Screenshot 1 */}
+                                  {isPinHovered && (
+                                    <div 
+                                      style={{
+                                        position: "absolute",
+                                        bottom: "100%",
+                                        left: "50%",
+                                        transform: "translateX(-50%)",
+                                        marginBottom: "8px",
+                                        background: "#475569",
+                                        color: "#ffffff",
+                                        padding: "6px 12px",
+                                        borderRadius: "6px",
+                                        fontSize: "0.78rem",
+                                        fontWeight: "500",
+                                        whiteSpace: "nowrap",
+                                        boxShadow: "0 4px 12px rgba(0,0,0,0.18)",
+                                        zIndex: 20
+                                      }}
+                                    >
+                                      Click here to view map
+                                      <div 
+                                        style={{
+                                          position: "absolute",
+                                          top: "100%",
+                                          left: "50%",
+                                          transform: "translateX(-50%)",
+                                          width: 0,
+                                          height: 0,
+                                          borderLeft: "6px solid transparent",
+                                          borderRight: "6px solid transparent",
+                                          borderTop: "6px solid #475569"
+                                        }}
+                                      />
+                                    </div>
+                                  )}
+
+                                  {/* Purple Location Pin SVG Icon matching Screenshot 1 */}
+                                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b21a8" strokeWidth="2" style={{ cursor: "pointer" }}>
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                    <circle cx="12" cy="10" r="3" />
+                                  </svg>
+                                </div>
+
+                              </div>
+                            </td>
+                            <td style={{ padding: "12px 14px" }}>
+                              <span style={{ border: "1px solid #86efac", background: "#f0fdf4", color: "#16a34a", padding: "2px 10px", borderRadius: "12px", fontSize: "0.72rem", fontWeight: "500" }}>
+                                {s.status}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Right Column: Swipe Details Sidebar Card */}
+                {activeRecord && (
+                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+                    
+                    {/* Top Green Banner */}
+                    <div style={{ background: "#f0fdf4", borderBottom: "1px solid #bbf7d0", padding: "12px 16px", display: "flex", alignItems: "center", gap: "8px", color: "#15803d", fontSize: "0.78rem", fontWeight: "600" }}>
+                      <span>🧭 📷</span>
+                      <span>Geo Tracking + Manual Selfie Capture</span>
+                    </div>
+
+                    {/* Selfie Image Container */}
+                    <div style={{ background: "#f8fafc", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                      <img 
+                        src={activeRecord.avatar} 
+                        alt={activeRecord.name}
+                        style={{ width: "100%", height: "240px", objectFit: "cover", borderRadius: "4px", border: "1px solid #e2e8f0" }}
+                      />
+                      <div style={{ width: "100%", marginTop: "12px" }}>
+                        <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>
+                          {activeRecord.inOut === "OUT" ? "Swipe-out Time" : "Swipe-in Time"}
+                        </span>
+                        <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a" }}>
+                          {activeRecord.time}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Swipe Details Section */}
+                    <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid #f1f5f9" }}>
+                      <h4 style={{ margin: 0, fontSize: "0.88rem", fontWeight: "700", color: "#0f172a" }}>Swipe Details</h4>
+
+                      <div>
+                        <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>Mobile Name</span>
+                        <span style={{ fontSize: "0.82rem", color: "#1e293b", fontWeight: "500" }}>{activeRecord.mobile}</span>
+                      </div>
+
+                      <div>
+                        <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>Access Card</span>
+                        <span style={{ fontSize: "0.82rem", color: "#1e293b" }}>-</span>
+                      </div>
+
+                      <div>
+                        <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>Door/Address</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                          <span style={{ fontSize: "0.78rem", color: "#334155", lineHeight: 1.4 }}>{activeRecord.fullAddress}</span>
+                          <svg 
+                            onClick={() => {
+                              setMapModalSwipe(activeRecord);
+                              setShowMapModal(true);
+                            }}
+                            width="18" 
+                            height="18" 
+                            viewBox="0 0 24 24" 
+                            fill="none" 
+                            stroke="#6b21a8" 
+                            strokeWidth="2" 
+                            style={{ cursor: "pointer", flexShrink: 0 }}
+                            title="Click to view map"
+                          >
+                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                            <circle cx="12" cy="10" r="3" />
+                          </svg>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>Remarks</span>
+                        <span style={{ fontSize: "0.82rem", color: "#1e293b" }}>-</span>
+                      </div>
+                    </div>
+
+                    {/* Bottom Actions Bar */}
+                    <div style={{ background: "#f8fafc", borderTop: "1px solid #e2e8f0", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <span style={{ fontSize: "0.72rem", color: "#64748b", textAlign: "center" }}>
+                        Select individual swipes to approve/reject
+                      </span>
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <button 
+                          type="button"
+                          style={{ flex: 1, background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px", fontSize: "0.82rem", color: "#475569", fontWeight: "500", borderRadius: "4px", cursor: "pointer" }}
+                        >
+                          Reject
+                        </button>
+                        <button 
+                          type="button"
+                          style={{ flex: 1, background: "#f1f5f9", border: "1px solid #cbd5e1", padding: "8px", fontSize: "0.82rem", color: "#94a3b8", fontWeight: "600", borderRadius: "4px", cursor: "pointer" }}
+                        >
+                          Approve
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+
+              </div>
+            );
+          })()}
+
+        </div>
+      )}
+
+      {/* MAP VIEW Modal (Matching Reference Screenshot 2) */}
+      {showMapModal && mapModalSwipe && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,23,42,0.65)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "6px", width: "940px", maxWidth: "95vw", height: "580px", maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+            
+            {/* Modal Header */}
+            <div style={{ borderBottom: "1px solid #e2e8f0", padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "#334155", letterSpacing: "0.03em" }}>
+                MAP VIEW - 09 JUL 2026 - {mapModalSwipe.name.toUpperCase()}
+              </span>
+              <button 
+                type="button" 
+                onClick={() => setShowMapModal(false)}
+                style={{ background: "none", border: "none", fontSize: "1.2rem", color: "#64748b", cursor: "pointer", fontWeight: "600" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body: 2 Columns (Timeline Sidebar + Google Map View) */}
+            <div style={{ flex: 1, display: "grid", gridTemplateColumns: "230px 1fr", overflow: "hidden" }}>
+              
+              {/* Left Column: Location Log Timeline Sidebar (Matching Screenshot Exactly) */}
+              <div style={{ background: "#ffffff", borderRight: "1px solid #e2e8f0", padding: "16px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
+                
+                {/* Item 1: HBJ MEHDIPATNAM */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#475569" }}>HBJ MEHDIPATNAM</div>
+                  <div style={{ fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span>↙</span> <span>10:25 AM</span>
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span>↗</span> <span>2:07 PM</span>
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span>↙</span> <span>2:35 PM</span>
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span>↗</span> <span>3:02 PM</span>
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span>↙</span> <span>9:06 PM</span>
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span>↗</span> <span>9:06 PM</span>
+                  </div>
+                </div>
+
+                {/* Item 2: REMOTE CLOCK IN */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px", borderTop: "1px solid #f1f5f9", paddingTop: "12px" }}>
+                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#475569" }}>REMOTE CLOCK IN</div>
+                  <div style={{ fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                      <span>↙</span> <span>10:25 AM</span>
+                    </div>
+                    <span style={{ background: "#64748b", color: "#fff", width: "18px", height: "18px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: "700" }}>B</span>
+                  </div>
+                  <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>17.422754,78.462235</div>
+                  <div style={{ fontSize: "0.75rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span>↗</span> <span>9:06 PM</span>
+                  </div>
+                </div>
+
+                {/* Item 3: LOCATION PUNCH */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", borderTop: "1px solid #f1f5f9", paddingTop: "12px" }}>
+                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#475569" }}>LOCATION PUNCH</div>
+                  
+                  {[
+                    { time: "10:26 AM", coords: "17.422621,78.461908", badge: "I" },
+                    { time: "10:41 AM", coords: "17.398775,78.447284", badge: "J" },
+                    { time: "10:56 AM", coords: "17.398707,78.447291", badge: "K" },
+                    { time: "11:11 AM", coords: "17.398707,78.447291", badge: "L" },
+                    { time: "11:26 AM", coords: "17.398682,78.447309", badge: "M" }
+                  ].map((punch) => (
+                    <div key={punch.badge} style={{ display: "flex", flexDirection: "column", gap: "2px", borderBottom: "1px dashed #f1f5f9", paddingBottom: "4px" }}>
+                      <div style={{ fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                          <span>↙</span> <span>{punch.time}</span>
+                        </div>
+                        <span style={{ background: "#64748b", color: "#fff", width: "18px", height: "18px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: "700" }}>{punch.badge}</span>
+                      </div>
+                      <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>{punch.coords}</div>
+                    </div>
+                  ))}
+                </div>
+
+              </div>
+
+              {/* Right Column: Google Maps API Canvas (Matching Screenshot Exactly) */}
+              <div style={{ position: "relative", background: "#e5e3df", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                
+                {/* Authentic Google Maps Embed API Iframe */}
+                <iframe 
+                  title="Google Maps Location View"
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }}
+                  loading="lazy"
+                  allowFullScreen
+                  src="https://maps.google.com/maps?q=17.422754,78.462235&amp;z=16&amp;output=embed"
+                />
+
+                {/* On-Map Photo Overlay Popup Card (Matching Reference Screenshot 2) */}
+                <div style={{ position: "absolute", top: "30px", left: "50%", transform: "translateX(-50%)", background: "#ffffff", borderRadius: "6px", border: "1px solid #cbd5e1", padding: "12px", boxShadow: "0 10px 25px rgba(0,0,0,0.25)", width: "230px", display: "flex", flexDirection: "column", gap: "8px", zIndex: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <span onClick={() => setShowMapModal(false)} style={{ cursor: "pointer", fontSize: "0.9rem", color: "#64748b" }}>✕</span>
+                  </div>
+                  <img 
+                    src={mapModalSwipe.avatar} 
+                    alt={mapModalSwipe.name}
+                    style={{ width: "100%", height: "170px", objectFit: "cover", borderRadius: "4px" }}
+                  />
+                  <div style={{ fontSize: "0.72rem", color: "#475569", lineHeight: 1.3, textAlign: "center" }}>
+                    {mapModalSwipe.fullAddress || "Somajiguda, Raj Bhavan Rd, near KFC, NMDC Colony, Hyderabad, Telangana"}
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
       )}
 
       {/* SHIFTS / WEEKLY OFFS & ASSIGNMENTS View (Holidays and Shift Allowance Removed as requested) */}

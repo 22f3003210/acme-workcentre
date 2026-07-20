@@ -33,9 +33,12 @@ export default function ConsultantView({ activeTab }) {
   const [advAmount, setAdvAmount] = useState("");
   const [advPurpose, setAdvPurpose] = useState("");
 
-  // Modal profile state
+  // Modal profile & Keka Profile Tab states
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [ledgerViewMode, setLedgerViewMode] = useState("grid"); // 'grid' or 'calendar'
+  const [profileTab, setProfileTab] = useState("TIME");
+  const [timeSubTab, setTimeSubTab] = useState("Attendance");
+  const [statsRange, setStatsRange] = useState("Last Week");
 
   // Update clock every second
   useEffect(() => {
@@ -175,201 +178,280 @@ export default function ConsultantView({ activeTab }) {
 
   return (
     <div className="consultant-view-container">
-      {/* Top Welcome Title Card */}
-      <div className="dashboard-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", borderBottom: "1px solid var(--border-color)", paddingBottom: "16px", marginBottom: "24px" }}>
-        <div>
-          <span className="uppercase-tracking" style={{ color: "var(--text-secondary)" }}>Employee Workspace Portal</span>
-          <h1 style={{ fontSize: "1.8rem", color: "var(--text-primary)" }}>{currentUser.name}</h1>
-          <p style={{ fontSize: "0.85rem", color: "var(--text-secondary)", marginTop: "2px" }}>{currentUser.title} • <strong>{currentUser.department} Department</strong></p>
+      {/* Keka HR Style Employee Profile Top Banner Card */}
+      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
+        
+        {/* Purple Wavy Texture Background Banner */}
+        <div style={{ position: "relative", height: "160px", background: "linear-gradient(135deg, #4c478a 0%, #312e5c 50%, #1e1b4b 100%)", overflow: "hidden" }}>
+          
+          {/* Decorative Pattern Lines */}
+          <div style={{ position: "absolute", inset: 0, opacity: 0.12, backgroundImage: "radial-gradient(circle at 20% 50%, #ffffff 0%, transparent 60%), radial-gradient(circle at 80% 20%, #ffffff 0%, transparent 50%)" }} />
+
+          {/* Profile Basic Info Row Over Banner */}
+          <div style={{ position: "absolute", bottom: "16px", left: "20px", display: "flex", alignItems: "center", gap: "20px" }}>
+            
+            {/* Avatar Photo */}
+            <img 
+              src={currentUser.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80"} 
+              alt={currentUser.name}
+              style={{ width: "100px", height: "100px", borderRadius: "50%", border: "4px solid #ffffff", objectFit: "cover", boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}
+            />
+
+            <div style={{ color: "#ffffff" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <h1 style={{ fontSize: "1.7rem", fontWeight: "700", margin: 0, color: "#ffffff" }}>{currentUser.name}</h1>
+                <span style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #86efac", padding: "2px 8px", borderRadius: "3px", fontSize: "0.7rem", fontWeight: "700" }}>
+                  IN
+                </span>
+                <span style={{ background: "rgba(255,255,255,0.2)", color: "#ffffff", padding: "2px 8px", borderRadius: "3px", fontSize: "0.7rem", fontWeight: "600", textTransform: "uppercase" }}>
+                  WEEKLY OFF
+                </span>
+              </div>
+
+              <div style={{ fontSize: "0.88rem", color: "#e2e8f0", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span>🧰</span> <span>{currentUser.title || "Systems Operator"}</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <button 
-          onClick={() => setShowProfileModal(true)} 
-          className="luxury-button"
-          style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--bg-sidebar)", color: "#fff", border: "1px solid var(--bg-sidebar)" }}
-        >
-          👤 View Profile & Sourcing Balance
-        </button>
+
+        {/* Contact Info Strip */}
+        <div style={{ padding: "12px 20px", background: "#ffffff", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: "24px", fontSize: "0.82rem", color: "#475569", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ color: "#64748b" }}>✉</span> <span>{currentUser.email || "mrmarvelmani1999@gmail.com"}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ color: "#64748b" }}>📞</span> <span>+91-7569099549</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ color: "#64748b" }}>📍</span> <span>Mehdipatnam</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ color: "#64748b" }}>🪪</span> <span>HBJ00007</span>
+          </div>
+        </div>
+
+        {/* Joining / Department / Reporting Manager Strip */}
+        <div style={{ padding: "14px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", gap: "48px", fontSize: "0.82rem" }}>
+          <div>
+            <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>JOINING DATE</span>
+            <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>24 Jan 2025</span>
+          </div>
+
+          <div>
+            <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>DEPARTMENT</span>
+            <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>{currentUser.department?.toUpperCase() || "IT & SYSTEMS SUPPORT"}</span>
+          </div>
+
+          <div>
+            <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>REPORTING MANAGER</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+              <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80" alt="Manager" style={{ width: "20px", height: "20px", borderRadius: "50%" }} />
+              <span style={{ fontWeight: "600", color: "#2563eb" }}>Shikhar Jain</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Profile Navigation Tabs Row */}
+        <div style={{ display: "flex", gap: "24px", padding: "0 20px", background: "#ffffff", borderBottom: "1px solid #e2e8f0", overflowX: "auto" }}>
+          {["ABOUT", "PROFILE", "JOB", "TIME", "DOCUMENTS", "ASSETS", "FINANCES", "EXPENSES", "PERFORMANCE"].map(tab => {
+            const isActive = profileTab === tab;
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setProfileTab(tab)}
+                style={{
+                  padding: "12px 0",
+                  background: "none",
+                  border: "none",
+                  borderBottom: isActive ? "2px solid #4c478a" : "2px solid transparent",
+                  color: isActive ? "#4c478a" : "#64748b",
+                  fontWeight: isActive ? "700" : "500",
+                  fontSize: "0.78rem",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Sub-Tabs Row under TIME */}
+        {profileTab === "TIME" && (
+          <div style={{ display: "flex", gap: "16px", padding: "10px 20px", background: "#ffffff", borderBottom: "1px solid #f1f5f9" }}>
+            {["Attendance", "Leave"].map(subTab => {
+              const isActive = timeSubTab === subTab;
+              return (
+                <button
+                  key={subTab}
+                  type="button"
+                  onClick={() => setTimeSubTab(subTab)}
+                  style={{
+                    padding: "5px 16px",
+                    background: isActive ? "#f3e8ff" : "#ffffff",
+                    color: isActive ? "#6b21a8" : "#475569",
+                    border: isActive ? "1px solid #d8b4fe" : "1px solid #e2e8f0",
+                    borderRadius: "4px",
+                    fontWeight: isActive ? "600" : "500",
+                    fontSize: "0.8rem",
+                    cursor: "pointer"
+                  }}
+                >
+                  {subTab}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
       </div>
 
-      {activeTab === "punch" && (
-        <div className="client-grid" style={{ gridTemplateColumns: "1.2fr 1fr 1fr", gap: "24px" }}>
+      {/* Attendance Content Grid (Matching Keka HR Screenshot) */}
+      {profileTab === "TIME" && timeSubTab === "Attendance" && (
+        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1.2fr 1fr", gap: "16px", marginBottom: "24px" }}>
           
-          {/* Daily Attendance Card */}
-          <div className="glass-card text-center" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          {/* Card 1: Attendance Stats */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
             <div>
-              <h3 style={{ fontSize: "1.1rem", marginBottom: "4px" }}>Daily Attendance</h3>
-              <p className="uppercase-tracking" style={{ fontSize: "0.65rem", display: "block", marginBottom: "16px" }}>Clock in daily shift</p>
-              
-              <div className="digital-clock-container" style={{ margin: "20px 0" }}>
-                <div className="digital-time" style={{ fontSize: "2.4rem", fontWeight: "700", color: "var(--text-primary)" }}>{formatClockTime(time)}</div>
-                <div className="digital-date" style={{ fontSize: "0.82rem", color: "var(--text-secondary)", marginTop: "4px" }}>{formatClockDate(time)}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>Attendance Stats</h3>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <select 
+                    value={statsRange} 
+                    onChange={(e) => setStatsRange(e.target.value)}
+                    style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "3px 8px", fontSize: "0.75rem", color: "#475569", outline: "none" }}
+                  >
+                    <option>Last Week</option>
+                    <option>This Week</option>
+                    <option>This Month</option>
+                  </select>
+                  <span title="Attendance policy info" style={{ color: "#94a3b8", cursor: "pointer", fontSize: "0.85rem" }}>ⓘ</span>
+                </div>
+              </div>
+
+              {/* Row 1: Me */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: "14px", marginBottom: "14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#fef3c7", color: "#d97706", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "0.85rem" }}>
+                    👤
+                  </div>
+                  <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155" }}>Me</span>
+                </div>
+
+                <div style={{ display: "flex", gap: "24px", textAlign: "right" }}>
+                  <div>
+                    <span style={{ fontSize: "0.68rem", color: "#94a3b8", fontWeight: "600", display: "block" }}>AVG HRS / DAY</span>
+                    <span style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a" }}>9h 3m</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.68rem", color: "#94a3b8", fontWeight: "600", display: "block" }}>ON TIME ARRIVAL</span>
+                    <span style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a" }}>83%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 2: My Team */}
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#e0f2fe", color: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "0.85rem" }}>
+                    👥
+                  </div>
+                  <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155" }}>My Team</span>
+                </div>
+
+                <div style={{ display: "flex", gap: "24px", textAlign: "right" }}>
+                  <div>
+                    <span style={{ fontSize: "0.68rem", color: "#94a3b8", fontWeight: "600", display: "block" }}>AVG HRS / DAY</span>
+                    <span style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a" }}>8h 49m</span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: "0.68rem", color: "#94a3b8", fontWeight: "600", display: "block" }}>ON TIME ARRIVAL</span>
+                    <span style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a" }}>81%</span>
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div className="punch-controls">
-              <div className="form-group" style={{ marginBottom: "10px", textAlign: "left" }}>
-                <label style={{ fontSize: "0.72rem", fontWeight: "600", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Client Project / Site</label>
-                <select
-                  value={punchProjectId}
-                  onChange={(e) => setPunchProjectId(e.target.value)}
-                  style={{ width: "100%", padding: "8px", border: "1px solid var(--border-color)", borderRadius: "6px", fontSize: "0.82rem" }}
-                >
-                  <option value="">General / HQ Operations</option>
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>{p.code} — {p.name}</option>
-                  ))}
-                </select>
+          {/* Card 2: Timings */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div>
+              <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 0 16px 0" }}>Timings</h3>
+
+              {/* Days Row */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", padding: "0 10px" }}>
+                {["M", "T", "W", "T", "F", "S", "S"].map((d, idx) => {
+                  const isToday = idx === 1; // Tuesday
+                  return (
+                    <div 
+                      key={idx}
+                      style={{
+                        width: "28px",
+                        height: "28px",
+                        borderRadius: "50%",
+                        background: isToday ? "#38bdf8" : "#f1f5f9",
+                        color: isToday ? "#ffffff" : "#64748b",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "0.75rem",
+                        fontWeight: isToday ? "700" : "500"
+                      }}
+                    >
+                      {d}
+                    </div>
+                  );
+                })}
               </div>
 
-              <div className="form-group" style={{ marginBottom: "16px", textAlign: "left" }}>
-                <label style={{ fontSize: "0.72rem", fontWeight: "600", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>Shift Remarks (Optional)</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. Remote work, Client site visit..." 
-                  value={punchRemarks}
-                  onChange={(e) => setPunchRemarks(e.target.value)}
-                  style={{ width: "100%", padding: "10px", border: "1px solid var(--border-color)", borderRadius: "6px" }}
-                />
+              <div style={{ fontSize: "0.8rem", color: "#475569", fontWeight: "600", marginBottom: "10px" }}>
+                Today (10:30 AM - 9:00 PM)
               </div>
 
-              {!todayPunch ? (
-                <div className="punch-action-area">
-                  <p style={{ fontSize: "0.78rem", color: "var(--text-secondary)", marginBottom: "12px" }}>Official hours start: <strong>9:00 AM</strong>. Grace limit: <strong>{settings.lateCheckInLimit}</strong>.</p>
+              {/* Visual Shift Timeline Bar */}
+              <div style={{ background: "#e0f2fe", height: "10px", borderRadius: "5px", overflow: "hidden", position: "relative", marginBottom: "12px" }}>
+                <div style={{ background: "#38bdf8", width: "70%", height: "100%" }} />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.74rem", color: "#64748b" }}>
+                <span>Duration: 10h 30m</span>
+                <span>☕ 40 min</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Actions */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            <div>
+              <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 0 16px 0" }}>Actions</h3>
+
+              {/* Digital Clock Box */}
+              <div style={{ border: "1px solid #e2e8f0", borderRadius: "6px", padding: "14px", background: "#f8fafc", textAlign: "center", marginBottom: "16px" }}>
+                <div style={{ fontSize: "1.3rem", fontWeight: "800", color: "#0f172a", letterSpacing: "0.02em" }}>
+                  {formatClockTime(time)}
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>
+                  {formatClockDate(time)}
+                </div>
+              </div>
+
+              {/* Punch Controls / Actions */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {!todayPunch ? (
                   <button 
+                    type="button" 
                     onClick={handlePunchIn}
-                    className="luxury-button checkin"
-                    style={{ width: "100%", background: "var(--color-success)", color: "#fff" }}
+                    style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "4px", padding: "8px 14px", fontWeight: "600", fontSize: "0.82rem", cursor: "pointer", width: "100%" }}
                   >
-                    ✔ Check In
+                    ✔ Check In Shift
                   </button>
-                </div>
-              ) : !todayPunch.checkOut ? (
-                <div className="punch-action-area">
-                  <div className="punch-status-badge active-shift" style={{ display: "inline-flex", gap: "8px", alignItems: "center", padding: "6px 12px", background: "var(--color-success-bg)", color: "var(--color-success)", borderRadius: "4px", fontSize: "0.8rem", fontWeight: "600", marginBottom: "12px" }}>
-                    <span className="pulse-indicator"></span>
-                    <span>Checked In: {todayPunch.checkIn}</span>
-                  </div>
+                ) : !todayPunch.checkOut ? (
                   <button 
+                    type="button" 
                     onClick={handlePunchOut}
-                    className="luxury-button checkout-btn"
-                    style={{ width: "100%", background: "var(--color-error)", color: "#fff" }}
-                  >
-                    ⏹ Check Out
-                  </button>
-                </div>
-              ) : (
-                <div className="punch-action-area">
-                  <div className="punch-status-badge shift-completed" style={{ display: "inline-flex", padding: "6px 12px", background: "var(--color-info-bg)", color: "var(--color-info)", borderRadius: "4px", fontSize: "0.8rem", fontWeight: "600", marginBottom: "12px" }}>
-                    <span>✓ Completed Today</span>
-                  </div>
-                  <p style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
-                    Logged: <strong>{todayPunch.checkIn} - {todayPunch.checkOut}</strong> ({todayPunch.hoursWorked} hrs)
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Monthly Attendance Progress */}
-          <div className="glass-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-            <div>
-              <h3 style={{ fontSize: "1.1rem", marginBottom: "4px" }}>Working Days</h3>
-              <p className="uppercase-tracking" style={{ fontSize: "0.65rem", display: "block", marginBottom: "16px" }}>Monthly compliance progress</p>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px", margin: "20px 0" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                  <span style={{ fontSize: "2.2rem", fontWeight: "700", color: "var(--text-primary)" }}>{presentDays}</span>
-                  <span style={{ fontSize: "0.95rem", color: "var(--text-secondary)" }}>/ {targetWorkingDays} Completed</span>
-                </div>
-                
-                {/* Emerald Progress Bar */}
-                <div className="progress-bar-container" style={{ height: "8px", background: "var(--bg-tertiary)", borderRadius: "4px", overflow: "hidden" }}>
-                  <div className="progress-bar" style={{ width: `${attendancePercentage}%`, height: "100%", backgroundColor: "var(--color-success)" }}></div>
-                </div>
-              </div>
-            </div>
-
-            <div style={{ borderTop: "1px solid var(--border-color)", paddingTop: "12px", fontSize: "0.82rem", color: "var(--text-secondary)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                <span>Present Days:</span>
-                <strong>{presentDays} days</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                <span>Weekly Offs:</span>
-                <strong>{totalWeeklyOffs} days</strong>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span>Absent Days (LOP):</span>
-                <strong style={{ color: absentDays > 0 ? "var(--color-error)" : "inherit" }}>{absentDays} days</strong>
-              </div>
-            </div>
-          </div>
-
-          {/* Current Month Calendar Card */}
-          <div className="glass-card">
-            <h3 style={{ fontSize: "1.1rem", marginBottom: "4px" }}>July 2026 Calendar</h3>
-            <p className="uppercase-tracking" style={{ fontSize: "0.65rem", display: "block", marginBottom: "12px" }}>Attendance Register Matrix</p>
-            
-            {/* Calendar Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", marginTop: "12px" }}>
-              {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map(d => (
-                <span key={d} style={{ fontSize: "0.7rem", fontWeight: "700", color: "var(--text-secondary)", textAlign: "center", paddingBottom: "4px" }}>{d}</span>
-              ))}
-              {calendarDays.map((c, idx) => {
-                if (c.status === "empty") {
-                  return <div key={`empty-${idx}`} style={{ aspectRatio: "1" }}></div>;
-                }
-                
-                let cellBg = "var(--bg-primary)";
-                let cellColor = "var(--text-primary)";
-                let borderStyle = "1px solid transparent";
-
-                if (c.status === "present") {
-                  cellBg = "var(--color-success-bg)";
-                  cellColor = "var(--color-success)";
-                  borderStyle = "1px solid rgba(16, 185, 129, 0.15)";
-                } else if (c.status === "absent") {
-                  cellBg = "var(--color-error-bg)";
-                  cellColor = "var(--color-error)";
-                  borderStyle = "1px solid rgba(239, 68, 68, 0.15)";
-                } else if (c.status === "weekoff") {
-                  cellBg = "var(--bg-tertiary)";
-                  cellColor = "var(--text-secondary)";
-                }
-
-                return (
-                  <div 
-                    key={c.day} 
-                    style={{ 
-                      aspectRatio: "1", 
-                      display: "flex", 
-                      alignItems: "center", 
-                      justifyContent: "center", 
-                      fontSize: "0.78rem", 
-                      fontWeight: "600", 
-                      borderRadius: "4px", 
-                      background: cellBg,
-                      color: cellColor,
-                      border: borderStyle
-                    }}
-                    title={c.status.toUpperCase()}
-                  >
-                    {c.day}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Legend */}
-            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.7rem", color: "var(--text-secondary)", marginTop: "12px", borderTop: "1px solid var(--border-color)", paddingTop: "8px" }}>
-              <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>🟢 Present</span>
-              <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>⚪ Week Off</span>
-              <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>🔴 Absent (LOP)</span>
-            </div>
-          </div>
-
-          {/* Attendance logs ledger */}
-          <div className="glass-card span-3">
             <h3>My Attendance Register</h3>
             <p className="subtitle">Historical record of check-in times and remarks</p>
             <table className="luxury-table">

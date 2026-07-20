@@ -38,6 +38,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [empRole, setEmpRole] = useState("Consultant");
   const [empTitle, setEmpTitle] = useState("Retail Jewellery BD Consultant"); // Designation
   const [empDept, setEmpDept] = useState("Advisory");
+
+  // Workforce Sub-Navigation Header State (Matching Reference Screenshot)
+  const [subModuleTab, setSubModuleTab] = useState("DASHBOARD");
+  const [dashboardSubTab, setDashboardSubTab] = useState("Attendance Summary");
   const [empAdvance, setEmpAdvance] = useState("2000"); // default ₹2000
   const [empLocation, setEmpLocation] = useState("Mumbai / Showroom Site");
 
@@ -1273,10 +1277,94 @@ export default function AdminView({ activeTab, setActiveTab }) {
       {activeTab === "attendance" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           
+          {/* Double-Tier Sub-Navigation Header Bar (Matching Reference Screenshot) */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", margin: "-12px 0 4px 0", padding: "0 20px" }}>
+            
+            {/* Row 1: Module Main Tabs */}
+            <div style={{ display: "flex", alignItems: "center", gap: "24px", borderBottom: "1px solid #e2e8f0", overflowX: "auto" }}>
+              {[
+                { id: "DASHBOARD", label: "DASHBOARD" },
+                { id: "APPROVALS", label: "APPROVALS", badge: 31 },
+                { id: "SHIFTS", label: "SHIFTS/WEEKLY OFFS & HOLIDAYS" },
+                { id: "ATTENDANCE_TRACKING", label: "ATTENDANCE TRACKING" },
+                { id: "OVERTIME", label: "OVERTIME" },
+                { id: "LEAVE", label: "LEAVE" },
+                { id: "REPORTS", label: "REPORTS" },
+                { id: "SETTINGS", label: "SETTINGS" }
+              ].map(tab => {
+                const isActive = subModuleTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setSubModuleTab(tab.id)}
+                    style={{
+                      padding: "12px 0",
+                      background: "none",
+                      border: "none",
+                      borderBottom: isActive ? "3px solid #5b50a1" : "3px solid transparent",
+                      color: isActive ? "#334155" : "#64748b",
+                      fontWeight: isActive ? "600" : "400",
+                      fontSize: "0.76rem",
+                      letterSpacing: "0.04em",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      whiteSpace: "nowrap",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    {tab.label}
+                    {tab.badge && (
+                      <span style={{ background: "#ef4444", color: "#ffffff", fontSize: "0.68rem", fontWeight: "600", padding: "1px 6px", borderRadius: "10px", lineHeight: 1 }}>
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Row 2: Sub-Tabs under DASHBOARD */}
+            {subModuleTab === "DASHBOARD" && (
+              <div style={{ display: "flex", alignItems: "center", gap: "28px", padding: "10px 0 0 0", overflowX: "auto" }}>
+                {[
+                  "Attendance Summary",
+                  "Attendance Analytics",
+                  "Leave Summary",
+                  "Leave Analytics"
+                ].map(subTab => {
+                  const isActive = dashboardSubTab === subTab;
+                  return (
+                    <button
+                      key={subTab}
+                      type="button"
+                      onClick={() => setDashboardSubTab(subTab)}
+                      style={{
+                        padding: "4px 0 8px 0",
+                        background: "none",
+                        border: "none",
+                        borderBottom: isActive ? "2px solid #5b50a1" : "2px solid transparent",
+                        color: isActive ? "#1e293b" : "#64748b",
+                        fontWeight: isActive ? "500" : "400",
+                        fontSize: "0.84rem",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {subTab}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Header Bar */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <h2 style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>Attendance Dashboard</h2>
+              <h2 style={{ fontSize: "1.4rem", fontWeight: "500", color: "#0f172a", margin: 0 }}>Attendance Dashboard</h2>
               <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>Workforce presence & team leave calendar</p>
             </div>
           </div>

@@ -92,12 +92,15 @@ export default function AdminView({ activeTab, setActiveTab }) {
     }
     const name = newShiftName.trim();
     const code = newShiftCode.trim() || name.slice(0, 3).toUpperCase();
-    const timings = `${newShiftStartTime} ${newShiftStartAmpm} - ${newShiftEndTime} ${newShiftEndAmpm}`;
+    const timings = newShiftType === "fixed"
+      ? `${newShiftStartTime} ${newShiftStartAmpm} - ${newShiftEndTime} ${newShiftEndAmpm}`
+      : `Flexible (${maxShiftDurationHours || "16"} hrs max)`;
     const breakStr = `${newShiftBreakMins} mins`;
 
     const newShiftObj = { name, code, count: "0 employees", timings, break: breakStr };
-    setShiftsList([...shiftsList, newShiftObj]);
+    setShiftsList(prev => [...prev, newShiftObj]);
     setSelectedShift(name);
+    setModalSelectedShift(name); // Interconnect to Update Shift modal!
     setShowAddShiftPage(false);
 
     // Reset Form
@@ -113,8 +116,9 @@ export default function AdminView({ activeTab, setActiveTab }) {
     }
     const name = newWeeklyOffName.trim();
     const newWeeklyOffObj = { name, count: "0 employees" };
-    setWeeklyOffsList([...weeklyOffsList, newWeeklyOffObj]);
+    setWeeklyOffsList(prev => [...prev, newWeeklyOffObj]);
     setSelectedWeeklyOff(name);
+    setModalSelectedWeeklyOff(name); // Interconnect to Update Weekly Off modal!
     setShowAddWeeklyOffDrawer(false);
 
     // Reset Form
@@ -2876,12 +2880,15 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 onChange={(e) => setModalSelectedShift(e.target.value)}
                 style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.85rem", background: "#ffffff" }}
               >
-                <option value="Back -End Shift">Back -End Shift (10:30 AM - 9:00 PM)</option>
-                <option value="UTC">UTC (09:30 AM - 06:30 PM)</option>
-                <option value="DRIVERS">DRIVERS (08:00 AM - 05:00 PM)</option>
-                <option value="HELPERS - UTC">HELPERS - UTC (10:00 AM - 07:00 PM)</option>
-                <option value="Ladies">Ladies (10:00 AM - 06:30 PM)</option>
-                <option value="Ladies HELPERS">Ladies HELPERS (10:00 AM - 06:30 PM)</option>
+                {shiftsList.length > 0 ? (
+                  shiftsList.map(s => (
+                    <option key={s.name} value={s.name}>
+                      {s.name} ({s.timings || "Fixed timings"})
+                    </option>
+                  ))
+                ) : (
+                  <option value="">No shifts available. Please create a shift first.</option>
+                )}
               </select>
             </div>
 
@@ -2907,13 +2914,15 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 onChange={(e) => setModalSelectedWeeklyOff(e.target.value)}
                 style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.85rem", background: "#ffffff" }}
               >
-                <option value="Friday">Friday</option>
-                <option value="Sunday">Sunday</option>
-                <option value="Monday">Monday</option>
-                <option value="Thursday">Thursday (DEFAULT)</option>
-                <option value="Saturday">Saturday</option>
-                <option value="Tuesday">Tuesday</option>
-                <option value="Teja">Teja</option>
+                {weeklyOffsList.length > 0 ? (
+                  weeklyOffsList.map(w => (
+                    <option key={w.name} value={w.name}>
+                      {w.name} {w.isDefault ? "(DEFAULT)" : ""}
+                    </option>
+                  ))
+                ) : (
+                  <option value="">No weekly off available.</option>
+                )}
               </select>
             </div>
 

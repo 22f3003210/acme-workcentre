@@ -48,6 +48,81 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [shiftsInnerTab, setShiftsInnerTab] = useState("Shifts"); // "Shifts" | "Weekly Offs" | "Shift & Weekly Off Rules"
   const [assignmentsInnerTab, setAssignmentsInnerTab] = useState("Shift & Weekly Off Assignments");
 
+  // Dynamic Shifts and Weekly Offs Lists State
+  const [shiftsList, setShiftsList] = useState([
+    { name: "Back -End Shift", code: "BE", count: "3 employees", timings: "10:30 AM - 9:00 PM", break: "40 mins" },
+    { name: "DRIVERS", code: "DRV", count: "0 employees", timings: "08:00 AM - 05:00 PM", break: "30 mins" },
+    { name: "HELPERS - UTC", code: "HUT", count: "3 employees", timings: "10:00 AM - 07:00 PM", break: "40 mins" },
+    { name: "Ladies", code: "LAD", count: "3 employees", timings: "10:00 AM - 06:30 PM", break: "30 mins" },
+    { name: "Ladies HELPERS", code: "LDH", count: "1 employee", timings: "10:00 AM - 06:30 PM", break: "30 mins" }
+  ]);
+
+  const [weeklyOffsList, setWeeklyOffsList] = useState([
+    { name: "Friday", count: "2 employees" },
+    { name: "Monday", count: "4 employees" },
+    { name: "Saturday", count: "0 employees" },
+    { name: "Sunday", count: "11 employees" },
+    { name: "Teja", count: "1 employee" },
+    { name: "Thursday", count: "3 employees", isDefault: true },
+    { name: "Tuesday", count: "1 employee" }
+  ]);
+
+  // Modal Views for Add Shift & Add Weekly Off
+  const [showAddShiftPage, setShowAddShiftPage] = useState(false);
+  const [showAddWeeklyOffDrawer, setShowAddWeeklyOffDrawer] = useState(false);
+
+  // Form State for Add Shift Form (Matching Reference Screenshot 1)
+  const [newShiftName, setNewShiftName] = useState("");
+  const [newShiftCode, setNewShiftCode] = useState("");
+  const [newShiftType, setNewShiftType] = useState("fixed"); // "fixed" | "flexible"
+  const [newShiftDays, setNewShiftDays] = useState(["M", "T", "W", "T", "F", "S", "S"]);
+  const [newShiftStartTime, setNewShiftStartTime] = useState("09:00");
+  const [newShiftStartAmpm, setNewShiftStartAmpm] = useState("AM");
+  const [newShiftEndTime, setNewShiftEndTime] = useState("06:00");
+  const [newShiftEndAmpm, setNewShiftEndAmpm] = useState("PM");
+  const [newShiftBreakMins, setNewShiftBreakMins] = useState("0");
+
+  // Form State for Add Weekly Off Form (Matching Reference Screenshot 2)
+  const [newWeeklyOffName, setNewWeeklyOffName] = useState("");
+  const [newWeeklyOffDays, setNewWeeklyOffDays] = useState(["M", "T", "W", "T", "F"]);
+
+  const handleCreateNewShift = () => {
+    if (!newShiftName.trim()) {
+      alert("Please enter a Shift Name");
+      return;
+    }
+    const name = newShiftName.trim();
+    const code = newShiftCode.trim() || name.slice(0, 3).toUpperCase();
+    const timings = `${newShiftStartTime} ${newShiftStartAmpm} - ${newShiftEndTime} ${newShiftEndAmpm}`;
+    const breakStr = `${newShiftBreakMins} mins`;
+
+    const newShiftObj = { name, code, count: "0 employees", timings, break: breakStr };
+    setShiftsList([...shiftsList, newShiftObj]);
+    setSelectedShift(name);
+    setShowAddShiftPage(false);
+
+    // Reset Form
+    setNewShiftName("");
+    setNewShiftCode("");
+    if (setToast) setToast({ message: `Shift "${name}" created successfully!`, type: "success" });
+  };
+
+  const handleCreateNewWeeklyOff = () => {
+    if (!newWeeklyOffName.trim()) {
+      alert("Please enter a Weekly Off Name");
+      return;
+    }
+    const name = newWeeklyOffName.trim();
+    const newWeeklyOffObj = { name, count: "0 employees" };
+    setWeeklyOffsList([...weeklyOffsList, newWeeklyOffObj]);
+    setSelectedWeeklyOff(name);
+    setShowAddWeeklyOffDrawer(false);
+
+    // Reset Form
+    setNewWeeklyOffName("");
+    if (setToast) setToast({ message: `Weekly Off "${name}" created successfully!`, type: "success" });
+  };
+
   // Selection states inside Shifts & Weekly Offs
   const [selectedShift, setSelectedShift] = useState("Back -End Shift");
   const [selectedWeeklyOff, setSelectedWeeklyOff] = useState("Friday");
@@ -1841,7 +1916,11 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       <span title="Info" style={{ color: "#64748b", cursor: "pointer" }}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                       </span>
-                      <button type="button" style={{ background: "#4c478a", color: "#ffffff", border: "none", borderRadius: "0px", padding: "10px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowAddShiftPage(true)}
+                        style={{ background: "#4c478a", color: "#ffffff", border: "none", borderRadius: "0px", padding: "10px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+                      >
                         +Add shifts ▾
                       </button>
                     </div>
@@ -1864,13 +1943,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       </div>
 
                       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        {[
-                          { name: "Back -End Shift", count: "3 employees" },
-                          { name: "DRIVERS", count: "0 employees" },
-                          { name: "HELPERS - UTC", count: "3 employees" },
-                          { name: "Ladies", count: "3 employees" },
-                          { name: "Ladies HELPERS", count: "1 employee" }
-                        ].filter(s => s.name.toLowerCase().includes(shiftSearchQuery.toLowerCase())).map(item => {
+                        {shiftsList.filter(s => s.name.toLowerCase().includes(shiftSearchQuery.toLowerCase())).map(item => {
                           const isSelected = selectedShift === item.name;
                           return (
                             <div
@@ -1896,53 +1969,60 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
                       <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#0f172a", margin: "0 0 16px 0" }}>{selectedShift}</h3>
                       
-                      <div style={{ marginBottom: "20px" }}>
-                        <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "600", display: "block" }}>SHIFT CODE</span>
-                        <span style={{ fontSize: "0.9rem", color: "#334155", fontWeight: "500" }}>{selectedShift === "Back -End Shift" ? "BE" : selectedShift.slice(0, 3).toUpperCase()}</span>
-                      </div>
+                      {(() => {
+                        const activeShiftObj = shiftsList.find(s => s.name === selectedShift) || shiftsList[0];
+                        return (
+                          <>
+                            <div style={{ marginBottom: "20px" }}>
+                              <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "600", display: "block" }}>SHIFT CODE</span>
+                              <span style={{ fontSize: "0.9rem", color: "#334155", fontWeight: "500" }}>{activeShiftObj.code || (activeShiftObj.name === "Back -End Shift" ? "BE" : activeShiftObj.name.slice(0, 3).toUpperCase())}</span>
+                            </div>
 
-                      {/* Details Sub-Tabs */}
-                      <div style={{ borderBottom: "1px solid #e2e8f0", display: "flex", gap: "24px", marginBottom: "20px" }}>
-                        <span style={{ padding: "8px 0", borderBottom: "2px solid #4c478a", color: "#1e293b", fontWeight: "600", fontSize: "0.85rem" }}>Summary</span>
-                        <span style={{ padding: "8px 0", color: "#64748b", fontSize: "0.85rem" }}>Employees</span>
-                        <span style={{ padding: "8px 0", color: "#64748b", fontSize: "0.85rem" }}>Track Shift Versions</span>
-                      </div>
+                            {/* Details Sub-Tabs */}
+                            <div style={{ borderBottom: "1px solid #e2e8f0", display: "flex", gap: "24px", marginBottom: "20px" }}>
+                              <span style={{ padding: "8px 0", borderBottom: "2px solid #4c478a", color: "#1e293b", fontWeight: "600", fontSize: "0.85rem" }}>Summary</span>
+                              <span style={{ padding: "8px 0", color: "#64748b", fontSize: "0.85rem" }}>Employees</span>
+                              <span style={{ padding: "8px 0", color: "#64748b", fontSize: "0.85rem" }}>Track Shift Versions</span>
+                            </div>
 
-                      {/* Summary Table & Right Card */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "20px" }}>
-                        <div style={{ border: "1px solid #e2e8f0" }}>
-                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
-                            <thead>
-                              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
-                                <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>DAYS</th>
-                                <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>SHIFT TIMINGS</th>
-                                <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>BREAK DURATION</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              <tr>
-                                <td style={{ padding: "14px", color: "#334155" }}>Sunday to Saturday</td>
-                                <td style={{ padding: "14px", color: "#334155" }}>
-                                  <div>10:30 AM - 9:00 PM</div>
-                                  <div style={{ fontSize: "0.75rem", color: "#64748b" }}>10 hrs 30 mins</div>
-                                </td>
-                                <td style={{ padding: "14px", color: "#334155" }}>
-                                  <div>40 mins</div>
-                                  <div style={{ fontSize: "0.75rem", color: "#64748b" }}>40 mins break</div>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
+                            {/* Summary Table & Right Card */}
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "20px" }}>
+                              <div style={{ border: "1px solid #e2e8f0" }}>
+                                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                                  <thead>
+                                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
+                                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>DAYS</th>
+                                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>SHIFT TIMINGS</th>
+                                      <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>BREAK DURATION</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr>
+                                      <td style={{ padding: "14px", color: "#334155" }}>Sunday to Saturday</td>
+                                      <td style={{ padding: "14px", color: "#334155" }}>
+                                        <div>{activeShiftObj.timings || "10:30 AM - 9:00 PM"}</div>
+                                        <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Work hours</div>
+                                      </td>
+                                      <td style={{ padding: "14px", color: "#334155" }}>
+                                        <div>{activeShiftObj.break || "40 mins"}</div>
+                                        <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Break duration</div>
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
 
-                        {/* Rule based assignment card */}
-                        <div style={{ border: "1px solid #e2e8f0", padding: "18px", background: "#f8fafc", display: "flex", flexDirection: "column", gap: "12px" }}>
-                          <h5 style={{ margin: 0, fontSize: "0.9rem", fontWeight: "600", color: "#0f172a" }}>Rule based assignment</h5>
-                          <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b", lineHeight: 1.4 }}>
-                            Employees following this rule will be added to this shift policy automatically.
-                          </p>
-                        </div>
-                      </div>
+                              {/* Rule based assignment card */}
+                              <div style={{ border: "1px solid #e2e8f0", padding: "18px", background: "#f8fafc", display: "flex", flexDirection: "column", gap: "12px" }}>
+                                <h5 style={{ margin: 0, fontSize: "0.9rem", fontWeight: "600", color: "#0f172a" }}>Rule based assignment</h5>
+                                <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b", lineHeight: 1.4 }}>
+                                  Employees following this rule will be added to this shift policy automatically.
+                                </p>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
 
                     </div>
 
@@ -1965,7 +2045,11 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       <span title="Info" style={{ color: "#64748b", cursor: "pointer" }}>
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                       </span>
-                      <button type="button" style={{ background: "#4c478a", color: "#ffffff", border: "none", borderRadius: "0px", padding: "10px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}>
+                      <button 
+                        type="button" 
+                        onClick={() => setShowAddWeeklyOffDrawer(true)}
+                        style={{ background: "#4c478a", color: "#ffffff", border: "none", borderRadius: "0px", padding: "10px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+                      >
                         + Add Weekly Off
                       </button>
                     </div>
@@ -1988,15 +2072,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       </div>
 
                       <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                        {[
-                          { name: "Friday", count: "2 employees" },
-                          { name: "Monday", count: "4 employees" },
-                          { name: "Saturday", count: "0 employees" },
-                          { name: "Sunday", count: "11 employees" },
-                          { name: "Teja", count: "1 employee" },
-                          { name: "Thursday", count: "3 employees", isDefault: true },
-                          { name: "Tuesday", count: "1 employee" }
-                        ].filter(w => w.name.toLowerCase().includes(weeklyOffSearchQuery.toLowerCase())).map(item => {
+                        {weeklyOffsList.filter(w => w.name.toLowerCase().includes(weeklyOffSearchQuery.toLowerCase())).map(item => {
                           const isSelected = selectedWeeklyOff === item.name;
                           return (
                             <div
@@ -2804,6 +2880,296 @@ export default function AdminView({ activeTab, setActiveTab }) {
               <button type="button" onClick={handleSaveWeeklyOffAssignment} style={{ background: "#4c478a", color: "#ffffff", border: "none", padding: "8px 18px", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer" }}>Save Weekly Off</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Add Shift Full-Page Modal (Matching Reference Screenshot 1) */}
+      {showAddShiftPage && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "#f8fafc", zIndex: 1100, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+          
+          {/* Header Bar */}
+          <div style={{ background: "#ffffff", borderBottom: "1px solid #e2e8f0", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <h2 style={{ fontSize: "1.3rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Add Shift</h2>
+              <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>You can create a new shift here</p>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <button 
+                type="button" 
+                onClick={handleCreateNewShift}
+                style={{ background: "#4c478a", color: "#ffffff", border: "none", borderRadius: "4px", padding: "8px 24px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+              >
+                Save
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setShowAddShiftPage(false)}
+                style={{ background: "none", border: "none", fontSize: "1.4rem", color: "#64748b", cursor: "pointer", padding: "4px" }}
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Form Content Area */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", flex: 1, background: "#ffffff" }}>
+            
+            {/* Left Form Column */}
+            <div style={{ padding: "32px", display: "flex", flexDirection: "column", gap: "24px" }}>
+              
+              {/* Shift Name & Shift Code */}
+              <div style={{ display: "grid", gridTemplateColumns: "280px 140px", gap: "20px" }}>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "500", color: "#334155", display: "block", marginBottom: "6px" }}>Shift Name</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: Customer Success Shift" 
+                    value={newShiftName}
+                    onChange={(e) => setNewShiftName(e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "500", color: "#334155", display: "block", marginBottom: "6px" }}>Shift Code</label>
+                  <input 
+                    type="text" 
+                    placeholder="Ex: CS" 
+                    value={newShiftCode}
+                    onChange={(e) => setNewShiftCode(e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <button type="button" style={{ background: "none", border: "none", color: "#4c478a", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer", padding: 0 }}>
+                  + Add description
+                </button>
+              </div>
+
+              {/* Radio options */}
+              <div style={{ display: "flex", gap: "24px", alignItems: "center" }}>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: "#334155", cursor: "pointer" }}>
+                  <input type="radio" name="shiftType" checked={newShiftType === "fixed"} onChange={() => setNewShiftType("fixed")} />
+                  Fixed shift timings
+                </label>
+                <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: "#334155", cursor: "pointer" }}>
+                  <input type="radio" name="shiftType" checked={newShiftType === "flexible"} onChange={() => setNewShiftType("flexible")} />
+                  Flexible work hours
+                </label>
+              </div>
+
+              {/* Shift timings section */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "12px" }}>
+                <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "600", color: "#0f172a" }}>Shift timings</h4>
+
+                <div style={{ background: "#f8fafc", border: "1px solid #f1f5f9", padding: "20px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "32px", flexWrap: "wrap" }}>
+                  
+                  {/* Days Toggles */}
+                  <div>
+                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#475569", display: "block", marginBottom: "8px" }}>Days</span>
+                    <div style={{ display: "flex", gap: "6px" }}>
+                      {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => {
+                        const dayKey = day + idx;
+                        const isSelected = newShiftDays.includes(dayKey);
+                        return (
+                          <div 
+                            key={idx}
+                            onClick={() => {
+                              if (newShiftDays.includes(dayKey)) {
+                                setNewShiftDays(newShiftDays.filter(d => d !== dayKey));
+                              } else {
+                                setNewShiftDays([...newShiftDays, dayKey]);
+                              }
+                            }}
+                            style={{
+                              width: "28px",
+                              height: "28px",
+                              borderRadius: "50%",
+                              background: isSelected ? "#3b82f6" : "#cbd5e1",
+                              color: "#ffffff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "0.75rem",
+                              fontWeight: "600",
+                              cursor: "pointer"
+                            }}
+                          >
+                            {day}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Shift Timings */}
+                  <div>
+                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#475569", display: "block", marginBottom: "8px" }}>Shift timings</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <input type="text" value={newShiftStartTime} onChange={(e) => setNewShiftStartTime(e.target.value)} style={{ width: "55px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", textAlign: "center" }} />
+                      <select value={newShiftStartAmpm} onChange={(e) => setNewShiftStartAmpm(e.target.value)} style={{ padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem" }}>
+                        <option>AM</option>
+                        <option>PM</option>
+                      </select>
+                      <span style={{ color: "#64748b" }}>-</span>
+                      <input type="text" value={newShiftEndTime} onChange={(e) => setNewShiftEndTime(e.target.value)} style={{ width: "55px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", textAlign: "center" }} />
+                      <select value={newShiftEndAmpm} onChange={(e) => setNewShiftEndAmpm(e.target.value)} style={{ padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem" }}>
+                        <option>PM</option>
+                        <option>AM</option>
+                      </select>
+                      <span style={{ fontSize: "0.75rem", color: "#64748b", marginLeft: "4px" }}>(9 hrs 0 mins)</span>
+                    </div>
+                  </div>
+
+                  {/* Break duration */}
+                  <div>
+                    <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#475569", display: "block", marginBottom: "8px" }}>Break duration</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <input type="text" value={newShiftBreakMins} onChange={(e) => setNewShiftBreakMins(e.target.value)} style={{ width: "45px", padding: "6px 8px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", textAlign: "center" }} />
+                      <span style={{ fontSize: "0.82rem", color: "#475569" }}>mins</span>
+                      <span style={{ fontSize: "0.75rem", color: "#64748b" }}>({newShiftBreakMins} mins)</span>
+                    </div>
+                  </div>
+
+                  {/* Plus Icon */}
+                  <div style={{ cursor: "pointer", color: "#64748b", marginTop: "16px" }}>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            {/* Right Guidance Sidebar */}
+            <div style={{ borderLeft: "1px solid #e2e8f0", padding: "32px 24px", display: "flex", flexDirection: "column", gap: "24px", background: "#ffffff" }}>
+              
+              <div>
+                <h5 style={{ margin: "0 0 8px 0", fontSize: "0.88rem", fontWeight: "600", color: "#0f172a" }}>What is fixed work hours ?</h5>
+                <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b", lineHeight: 1.5 }}>
+                  In a fixed shift, employees are required to work during specific shift hours. For instance, if an employee has a shift from 9:30 AM - 6:30 PM, they are expected to work during those specified hours.
+                </p>
+              </div>
+
+              <div>
+                <h5 style={{ margin: "0 0 8px 0", fontSize: "0.88rem", fontWeight: "600", color: "#0f172a" }}>What is flexible work hours?</h5>
+                <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b", lineHeight: 1.5 }}>
+                  Flexible work hours have no fixed schedule; employees have the freedom to come and go as needed, provided they fulfill their designated gross hours. For instance, if an employee has 8 hours defined as their gross hours, they can choose their own work hours while ensuring they complete the full 8 hours.
+                </p>
+              </div>
+
+              <div>
+                <h5 style={{ margin: "0 0 8px 0", fontSize: "0.88rem", fontWeight: "600", color: "#0f172a" }}>When should you use different timings for different days of a week ?</h5>
+                <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b", lineHeight: 1.5 }}>
+                  If Saturday is a half-day working day, you can assign a shift for that day accordingly.
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+      {/* Add Weekly Off Drawer (Matching Reference Screenshot 2) */}
+      {showAddWeeklyOffDrawer && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,23,42,0.5)", zIndex: 1100, display: "flex", justifyContent: "flex-end" }}>
+          
+          <div style={{ background: "#ffffff", width: "460px", height: "100%", display: "flex", flexDirection: "column", boxShadow: "-5px 0 25px rgba(0,0,0,0.15)" }}>
+            
+            {/* Drawer Header */}
+            <div style={{ padding: "20px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "600", color: "#0f172a" }}>Add Weekly Off</h3>
+              <button 
+                type="button" 
+                onClick={() => setShowAddWeeklyOffDrawer(false)}
+                style={{ background: "none", border: "none", fontSize: "1.3rem", color: "#64748b", cursor: "pointer" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Drawer Form Body */}
+            <div style={{ padding: "24px", flex: 1, display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "500", color: "#334155", display: "block", marginBottom: "6px" }}>Weekly Off Name</label>
+                <input 
+                  type="text" 
+                  placeholder="Ex: Saturdays and Sundays" 
+                  value={newWeeklyOffName}
+                  onChange={(e) => setNewWeeklyOffName(e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
+                />
+              </div>
+
+              <div>
+                <button type="button" style={{ background: "none", border: "none", color: "#4c478a", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer", padding: 0 }}>
+                  + Add description
+                </button>
+              </div>
+
+              <div>
+                <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#0f172a", display: "block", marginBottom: "12px" }}>Days off</span>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => {
+                    const dayKey = day + idx;
+                    const isSelected = newWeeklyOffDays.includes(dayKey);
+                    return (
+                      <div 
+                        key={idx}
+                        onClick={() => {
+                          if (newWeeklyOffDays.includes(dayKey)) {
+                            setNewWeeklyOffDays(newWeeklyOffDays.filter(d => d !== dayKey));
+                          } else {
+                            setNewWeeklyOffDays([...newWeeklyOffDays, dayKey]);
+                          }
+                        }}
+                        style={{
+                          width: "32px",
+                          height: "32px",
+                          borderRadius: "50%",
+                          background: isSelected ? "#3b82f6" : "#ffffff",
+                          color: isSelected ? "#ffffff" : "#475569",
+                          border: isSelected ? "1px solid #3b82f6" : "1px solid #cbd5e1",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: "0.8rem",
+                          fontWeight: "600",
+                          cursor: "pointer"
+                        }}
+                      >
+                        {day}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <button type="button" style={{ background: "none", border: "none", color: "#4c478a", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer", padding: 0 }}>
+                  Customize
+                </button>
+              </div>
+
+            </div>
+
+            {/* Drawer Footer */}
+            <div style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end" }}>
+              <button 
+                type="button" 
+                onClick={handleCreateNewWeeklyOff}
+                style={{ background: "#4c478a", color: "#ffffff", border: "none", borderRadius: "4px", padding: "10px 24px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+              >
+                Save
+              </button>
+            </div>
+
+          </div>
+
         </div>
       )}
     </div>

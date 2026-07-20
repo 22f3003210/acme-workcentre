@@ -43,6 +43,17 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [subModuleTab, setSubModuleTab] = useState("DASHBOARD");
   const [dashboardSubTab, setDashboardSubTab] = useState("Attendance Summary");
 
+  // Shifts & Weekly Offs Sub-Navigation State (Holidays & Shift Allowance removed as requested)
+  const [shiftsSubTab, setShiftsSubTab] = useState("Shift & Weekly Offs"); // "Shift & Weekly Offs" | "Assignments"
+  const [shiftsInnerTab, setShiftsInnerTab] = useState("Shifts"); // "Shifts" | "Weekly Offs" | "Shift & Weekly Off Rules"
+  const [assignmentsInnerTab, setAssignmentsInnerTab] = useState("Shift & Weekly Off Assignments");
+
+  // Selection states inside Shifts & Weekly Offs
+  const [selectedShift, setSelectedShift] = useState("Back -End Shift");
+  const [selectedWeeklyOff, setSelectedWeeklyOff] = useState("Friday");
+  const [shiftSearchQuery, setShiftSearchQuery] = useState("");
+  const [weeklyOffSearchQuery, setWeeklyOffSearchQuery] = useState("");
+
   // Dynamic Team Calendar Month & Year State
   const [selectedDate, setSelectedDate] = useState(new Date(2026, 8, 1)); // Default Sept 2026
 
@@ -1371,15 +1382,50 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 })}
               </div>
             )}
+
+            {/* Row 2: Sub-Tabs under SHIFTS/WEEKLY OFFS (Holidays & Shift Allowance Removed) */}
+            {subModuleTab === "SHIFTS" && (
+              <div style={{ display: "flex", alignItems: "center", gap: "28px", padding: "10px 0 0 0", overflowX: "auto" }}>
+                {[
+                  "Shift & Weekly Offs",
+                  "Assignments"
+                ].map(subTab => {
+                  const isActive = shiftsSubTab === subTab;
+                  return (
+                    <button
+                      key={subTab}
+                      type="button"
+                      onClick={() => setShiftsSubTab(subTab)}
+                      style={{
+                        padding: "4px 0 8px 0",
+                        background: "none",
+                        border: "none",
+                        borderBottom: isActive ? "2px solid #5b50a1" : "2px solid transparent",
+                        color: isActive ? "#1e293b" : "#64748b",
+                        fontWeight: isActive ? "500" : "400",
+                        fontSize: "0.84rem",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {subTab}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          {/* Header Bar */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <h2 style={{ fontSize: "1.4rem", fontWeight: "500", color: "#0f172a", margin: 0 }}>Attendance Dashboard</h2>
-              <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>Workforce presence & team leave calendar</p>
-            </div>
-          </div>
+          {/* DASHBOARD Content View */}
+          {subModuleTab === "DASHBOARD" && (
+            <>
+              {/* Header Bar */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h2 style={{ fontSize: "1.4rem", fontWeight: "500", color: "#0f172a", margin: 0 }}>Attendance Dashboard</h2>
+                  <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>Workforce presence & team leave calendar</p>
+                </div>
+              </div>
 
           {/* Top Row: Who is off today & Not in yet today */}
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "20px" }}>
@@ -1701,6 +1747,413 @@ export default function AdminView({ activeTab, setActiveTab }) {
               </tbody>
             </table>
           </div>
+        </>
+      )}
+
+      {/* SHIFTS / WEEKLY OFFS & ASSIGNMENTS View (Holidays and Shift Allowance Removed as requested) */}
+      {subModuleTab === "SHIFTS" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+          
+          {/* Sub-Tab 1: Shift & Weekly Offs */}
+          {shiftsSubTab === "Shift & Weekly Offs" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {/* Row 3 Pills: Shifts | Weekly Offs | Shift & Weekly Off Rules */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "10px 16px", display: "flex", gap: "10px", alignItems: "center" }}>
+                {["Shifts", "Weekly Offs", "Shift & Weekly Off Rules"].map(tab => {
+                  const isActive = shiftsInnerTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setShiftsInnerTab(tab)}
+                      style={{
+                        padding: "6px 14px",
+                        background: isActive ? "#f3e8ff" : "#ffffff",
+                        color: isActive ? "#6b21a8" : "#475569",
+                        border: isActive ? "1px solid #d8b4fe" : "1px solid #e2e8f0",
+                        borderRadius: "0px",
+                        fontWeight: isActive ? "600" : "400",
+                        fontSize: "0.82rem",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {tab}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* View 1.1: Shifts (Matching Screenshot 1) */}
+              {shiftsInnerTab === "Shifts" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {/* Title Bar */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <h2 style={{ fontSize: "1.3rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Shifts</h2>
+                      <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>
+                        You can specify shift timings here. These can be assigned to individual employees. The default shift gets applied to all employees when not explicitly set.
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span title="Info" style={{ color: "#64748b", cursor: "pointer" }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                      </span>
+                      <button type="button" style={{ background: "#4c478a", color: "#ffffff", border: "none", borderRadius: "0px", padding: "10px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}>
+                        +Add shifts ▾
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 2 Column Layout */}
+                  <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "20px" }}>
+                    
+                    {/* Left Sidebar List */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type="text"
+                          placeholder="Search"
+                          value={shiftSearchQuery}
+                          onChange={(e) => setShiftSearchQuery(e.target.value)}
+                          style={{ width: "100%", padding: "8px 12px 8px 32px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.82rem", outline: "none" }}
+                        />
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: "absolute", left: "10px", top: "10px" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {[
+                          { name: "Back -End Shift", count: "3 employees" },
+                          { name: "DRIVERS", count: "0 employees" },
+                          { name: "HELPERS - UTC", count: "3 employees" },
+                          { name: "Ladies", count: "3 employees" },
+                          { name: "Ladies HELPERS", count: "1 employee" }
+                        ].filter(s => s.name.toLowerCase().includes(shiftSearchQuery.toLowerCase())).map(item => {
+                          const isSelected = selectedShift === item.name;
+                          return (
+                            <div
+                              key={item.name}
+                              onClick={() => setSelectedShift(item.name)}
+                              style={{
+                                padding: "12px 14px",
+                                background: isSelected ? "#f1f5f9" : "#ffffff",
+                                borderLeft: isSelected ? "3px solid #4c478a" : "3px solid transparent",
+                                cursor: "pointer",
+                                transition: "all 0.15s ease"
+                              }}
+                            >
+                              <div style={{ fontWeight: isSelected ? "600" : "500", fontSize: "0.85rem", color: "#1e293b" }}>{item.name}</div>
+                              <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>{item.count}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Right Details Panel */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
+                      <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#0f172a", margin: "0 0 16px 0" }}>{selectedShift}</h3>
+                      
+                      <div style={{ marginBottom: "20px" }}>
+                        <span style={{ fontSize: "0.7rem", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: "600", display: "block" }}>SHIFT CODE</span>
+                        <span style={{ fontSize: "0.9rem", color: "#334155", fontWeight: "500" }}>{selectedShift === "Back -End Shift" ? "BE" : selectedShift.slice(0, 3).toUpperCase()}</span>
+                      </div>
+
+                      {/* Details Sub-Tabs */}
+                      <div style={{ borderBottom: "1px solid #e2e8f0", display: "flex", gap: "24px", marginBottom: "20px" }}>
+                        <span style={{ padding: "8px 0", borderBottom: "2px solid #4c478a", color: "#1e293b", fontWeight: "600", fontSize: "0.85rem" }}>Summary</span>
+                        <span style={{ padding: "8px 0", color: "#64748b", fontSize: "0.85rem" }}>Employees</span>
+                        <span style={{ padding: "8px 0", color: "#64748b", fontSize: "0.85rem" }}>Track Shift Versions</span>
+                      </div>
+
+                      {/* Summary Table & Right Card */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "20px" }}>
+                        <div style={{ border: "1px solid #e2e8f0" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                            <thead>
+                              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
+                                <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>DAYS</th>
+                                <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>SHIFT TIMINGS</th>
+                                <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>BREAK DURATION</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td style={{ padding: "14px", color: "#334155" }}>Sunday to Saturday</td>
+                                <td style={{ padding: "14px", color: "#334155" }}>
+                                  <div>10:30 AM - 9:00 PM</div>
+                                  <div style={{ fontSize: "0.75rem", color: "#64748b" }}>10 hrs 30 mins</div>
+                                </td>
+                                <td style={{ padding: "14px", color: "#334155" }}>
+                                  <div>40 mins</div>
+                                  <div style={{ fontSize: "0.75rem", color: "#64748b" }}>40 mins break</div>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Rule based assignment card */}
+                        <div style={{ border: "1px solid #e2e8f0", padding: "18px", background: "#f8fafc", display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <h5 style={{ margin: 0, fontSize: "0.9rem", fontWeight: "600", color: "#0f172a" }}>Rule based assignment</h5>
+                          <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b", lineHeight: 1.4 }}>
+                            Employees following this rule will be added to this shift policy automatically.
+                          </p>
+                        </div>
+                      </div>
+
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {/* View 1.2: Weekly Offs (Matching Screenshot 2) */}
+              {shiftsInnerTab === "Weekly Offs" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {/* Title Bar */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <h2 style={{ fontSize: "1.3rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Weekly offs</h2>
+                      <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>
+                        You can specify weekly offs here. These can be assigned to individual employees. The default weekly off gets applied to all employees when not explicitly set.
+                      </p>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span title="Info" style={{ color: "#64748b", cursor: "pointer" }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                      </span>
+                      <button type="button" style={{ background: "#4c478a", color: "#ffffff", border: "none", borderRadius: "0px", padding: "10px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}>
+                        + Add Weekly Off
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 2 Column Layout */}
+                  <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "20px" }}>
+                    
+                    {/* Left Sidebar List */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type="text"
+                          placeholder="Search"
+                          value={weeklyOffSearchQuery}
+                          onChange={(e) => setWeeklyOffSearchQuery(e.target.value)}
+                          style={{ width: "100%", padding: "8px 12px 8px 32px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.82rem", outline: "none" }}
+                        />
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: "absolute", left: "10px", top: "10px" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      </div>
+
+                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                        {[
+                          { name: "Friday", count: "2 employees" },
+                          { name: "Monday", count: "4 employees" },
+                          { name: "Saturday", count: "0 employees" },
+                          { name: "Sunday", count: "11 employees" },
+                          { name: "Teja", count: "1 employee" },
+                          { name: "Thursday", count: "3 employees", isDefault: true },
+                          { name: "Tuesday", count: "1 employee" }
+                        ].filter(w => w.name.toLowerCase().includes(weeklyOffSearchQuery.toLowerCase())).map(item => {
+                          const isSelected = selectedWeeklyOff === item.name;
+                          return (
+                            <div
+                              key={item.name}
+                              onClick={() => setSelectedWeeklyOff(item.name)}
+                              style={{
+                                padding: "12px 14px",
+                                background: isSelected ? "#f1f5f9" : "#ffffff",
+                                borderLeft: isSelected ? "3px solid #4c478a" : "3px solid transparent",
+                                cursor: "pointer",
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center"
+                              }}
+                            >
+                              <div>
+                                <div style={{ fontWeight: isSelected ? "600" : "500", fontSize: "0.85rem", color: "#1e293b" }}>{item.name}</div>
+                                <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>{item.count}</div>
+                              </div>
+                              {item.isDefault && (
+                                <span style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase" }}>DEFAULT</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Right Details Panel */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
+                      <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#0f172a", margin: "0 0 16px 0" }}>{selectedWeeklyOff}</h3>
+
+                      {/* Details Sub-Tabs */}
+                      <div style={{ borderBottom: "1px solid #e2e8f0", display: "flex", gap: "24px", marginBottom: "20px" }}>
+                        <span style={{ padding: "8px 0", borderBottom: "2px solid #4c478a", color: "#1e293b", fontWeight: "600", fontSize: "0.85rem" }}>Summary</span>
+                        <span style={{ padding: "8px 0", color: "#64748b", fontSize: "0.85rem" }}>Employees</span>
+                        <span style={{ padding: "8px 0", color: "#64748b", fontSize: "0.85rem" }}>Track Weekly Off Versions</span>
+                      </div>
+
+                      {/* Light Blue Banner */}
+                      <div style={{ background: "#e0f2fe", border: "1px solid #bae6fd", padding: "12px 16px", color: "#0369a1", fontSize: "0.82rem", marginBottom: "20px" }}>
+                        You are viewing the current Weekly-Off version that has been assigned to the employees. If you wish to view all Weekly Off versions, go to Track Weekly Off Versions.
+                      </div>
+
+                      {/* Summary Table & Right Card */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "20px" }}>
+                        <div style={{ border: "1px solid #e2e8f0" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                            <thead>
+                              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
+                                <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>WEEKLY OFFS</th>
+                                <th style={{ padding: "10px 14px", textAlign: "left", fontWeight: "600" }}>DAY OFF</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td style={{ padding: "14px", color: "#334155" }}>All {selectedWeeklyOff}</td>
+                                <td style={{ padding: "14px", color: "#334155" }}>Full Day Off</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        {/* Rule based assignment card */}
+                        <div style={{ border: "1px solid #e2e8f0", padding: "18px", background: "#f8fafc", display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <h5 style={{ margin: 0, fontSize: "0.9rem", fontWeight: "600", color: "#0f172a" }}>Rule based assignment</h5>
+                          <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b", lineHeight: 1.4 }}>
+                            Employees following this rule will be added to this weekly off policy automatically.
+                          </p>
+                          <button type="button" style={{ marginTop: "auto", background: "#ffffff", border: "1px solid #4c478a", color: "#4c478a", padding: "6px 14px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer" }}>
+                            Add rule
+                          </button>
+                        </div>
+                      </div>
+
+                    </div>
+
+                  </div>
+                </div>
+              )}
+
+              {/* View 1.3: Shift & Weekly Off Rules */}
+              {shiftsInnerTab === "Shift & Weekly Off Rules" && (
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", margin: "0 0 12px 0" }}>Shift & Weekly Off Rules</h3>
+                  <p style={{ fontSize: "0.85rem", color: "#64748b" }}>No active rules set. Create automatic assignment rules for new joiners.</p>
+                </div>
+              )}
+
+            </div>
+          )}
+
+          {/* Sub-Tab 2: Assignments (Matching Screenshot 3) */}
+          {shiftsSubTab === "Assignments" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {/* Row 3 Sub-Nav Pills */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "10px 16px", display: "flex", gap: "10px" }}>
+                {["Shift & Weekly Off Assignments", "Shift & Weekly Off Rules Assignments"].map(tab => {
+                  const isActive = assignmentsInnerTab === tab;
+                  return (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setAssignmentsInnerTab(tab)}
+                      style={{
+                        padding: "6px 14px",
+                        background: isActive ? "#4c478a" : "#ffffff",
+                        color: isActive ? "#ffffff" : "#475569",
+                        border: isActive ? "1px solid #4c478a" : "1px solid #e2e8f0",
+                        borderRadius: "0px",
+                        fontWeight: isActive ? "600" : "400",
+                        fontSize: "0.82rem",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {tab}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Main Content Area */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Shift & weekly offs assignment</h3>
+
+                {/* Filter Controls Row */}
+                <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "12px" }}>
+                  <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                    {["Business Unit", "Department", "Location", "Shift", "Weekly Off"].map(f => (
+                      <select key={f} style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.82rem", color: "#475569", background: "#ffffff" }}>
+                        <option>{f}</option>
+                      </select>
+                    ))}
+                    <input type="text" placeholder="Search" style={{ padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.82rem", width: "160px" }} />
+                  </div>
+                </div>
+
+                {/* Action Controls Row */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
+                  <div style={{ display: "flex", gap: "10px" }}>
+                    <button type="button" style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", fontWeight: "500" }}>Update Shift</button>
+                    <button type="button" style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", fontWeight: "500" }}>Update Weekly Off</button>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <span style={{ fontSize: "0.82rem", color: "#64748b" }}>Total: {users.length}</span>
+                    <button type="button" style={{ background: "#ffffff", border: "1px solid #4c478a", color: "#4c478a", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "600" }}>
+                      Import Shifts & Weekly Offs
+                    </button>
+                  </div>
+                </div>
+
+                {/* Assignments Table */}
+                <div style={{ overflowX: "auto", border: "1px solid #e2e8f0" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem", textAlign: "left" }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
+                        <th style={{ padding: "10px 14px", width: "30px" }}><input type="checkbox" /></th>
+                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>EMPLOYEE</th>
+                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>EMPLOYEE NUMBER</th>
+                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>DEPARTMENT</th>
+                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>LOCATION</th>
+                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>BUSINESS UNIT</th>
+                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>REPORTING MANAGER</th>
+                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>SHIFT TYPE</th>
+                        <th style={{ padding: "10px 14px", fontWeight: "600" }}>WEEKLY OFF</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.map((u, idx) => (
+                        <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "10px 14px" }}><input type="checkbox" /></td>
+                          <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>
+                            <div>{u.name}</div>
+                            <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{u.title || u.role}</div>
+                          </td>
+                          <td style={{ padding: "10px 14px", color: "#475569" }}>{u.role === "Admin" ? "2" : `HBJ0000${idx + 1}`}</td>
+                          <td style={{ padding: "10px 14px", color: "#475569" }}>{idx === 0 ? "Not Available" : idx % 2 === 0 ? "PURCHASE" : "ADMINISTRATION"}</td>
+                          <td style={{ padding: "10px 14px", color: "#475569" }}>{idx % 2 === 0 ? "Nampally" : "Mehdipatnam"}</td>
+                          <td style={{ padding: "10px 14px", color: "#475569" }}>-</td>
+                          <td style={{ padding: "10px 14px", color: "#475569" }}>Hemanth Kumar Jain</td>
+                          <td style={{ padding: "10px 14px", color: "#475569" }}>{idx === 0 ? "Not Available" : idx % 3 === 0 ? "Back -End Shift" : "UTC"}</td>
+                          <td style={{ padding: "10px 14px", color: "#475569" }}>{idx === 0 ? "Not Available" : idx % 4 === 0 ? "Friday" : idx % 5 === 0 ? "Monday" : "Sunday"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+        </div>
+      )}
 
         </div>
       )}

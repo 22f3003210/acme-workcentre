@@ -257,6 +257,9 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [selectedSwipeCheckboxes, setSelectedSwipeCheckboxes] = useState([]);
   const [swipeDateFilter, setSwipeDateFilter] = useState("20 Jul 2026 - 20 Jul 2026");
   const [swipePayrollMonth, setSwipePayrollMonth] = useState("Jul'26");
+  const [swipeDateType, setSwipeDateType] = useState("Swipe Date");
+  const [swipeStatusFilter, setSwipeStatusFilter] = useState("All");
+  const [showSwipeFilterPopover, setShowSwipeFilterPopover] = useState(false);
 
   // Map Modal & Location Pin Tooltip State (Matching Reference Screenshots 1 & 2)
   const [showMapModal, setShowMapModal] = useState(false);
@@ -1916,56 +1919,47 @@ export default function AdminView({ activeTab, setActiveTab }) {
       {subModuleTab === "DASHBOARD" && dashboardSubTab === "Daily Report" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           
-          {/* Top Bar: Breadcrumb + Payroll Month / Filter / History */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: "8px" }}>
-            <div style={{ fontSize: "0.82rem", color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
-              <span>Home</span>
-              <span>&gt;</span>
-              <span>Workforce Management</span>
-              <span>&gt;</span>
-              <strong style={{ color: "#0f172a" }}>Employee Swipes</strong>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {/* Payroll Month Picker */}
-              <div style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "6px 12px", background: "#ffffff", fontSize: "0.82rem", color: "#334155", display: "flex", alignItems: "center", gap: "8px" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <span>Payroll Month: <strong>{swipePayrollMonth}</strong></span>
-                <span style={{ fontSize: "0.7rem", color: "#64748b" }}>▼</span>
-              </div>
-
-              {/* Filter Dropdown */}
-              <div style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "6px 12px", background: "#ffffff", fontSize: "0.82rem", color: "#334155", display: "flex", alignItems: "center", gap: "8px" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                <span>All</span>
-                <span style={{ fontSize: "0.7rem", color: "#64748b" }}>▼</span>
-              </div>
-
-              {/* History Icon */}
-              <button type="button" title="History Log" style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 16 14"/></svg>
-              </button>
-            </div>
-          </div>
-
-          {/* Second Bar: Filters Row (Select Dates, Date Type, Employee Search) */}
-          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "16px 20px", display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
+          {/* Second Bar: Filters Row (Select Dates, Date Type, Employee Search, Download Export, Filter Rules) */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "16px 20px", display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap", justifyContent: "space-between", position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap", width: "100%" }}>
               
               {/* Select Dates */}
               <div>
                 <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
                   Select Dates<span style={{ color: "#ef4444" }}>*</span>
                 </label>
-                <div style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "6px 12px", background: "#ffffff", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", color: "#1e293b", minWidth: "200px" }}>
+                <div style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "6px 12px", background: "#ffffff", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", color: "#1e293b", minWidth: "220px", position: "relative" }}>
                   <input 
                     type="text" 
                     value={swipeDateFilter} 
                     onChange={(e) => setSwipeDateFilter(e.target.value)}
+                    placeholder="20 Jul 2026 - 20 Jul 2026"
                     style={{ border: "none", outline: "none", fontSize: "0.82rem", color: "#1e293b", width: "100%" }}
                   />
-                  <span style={{ color: "#94a3b8", cursor: "pointer", fontSize: "0.8rem" }}>⊗</span>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  {swipeDateFilter && (
+                    <span 
+                      onClick={() => setSwipeDateFilter("")}
+                      title="Clear date filter"
+                      style={{ color: "#94a3b8", cursor: "pointer", fontSize: "0.9rem", fontWeight: "700" }}
+                    >
+                      ⊗
+                    </span>
+                  )}
+                  <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" style={{ cursor: "pointer" }}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <input 
+                      type="date" 
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          const [y, m, d] = e.target.value.split("-");
+                          const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+                          const formatted = dateObj.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+                          setSwipeDateFilter(formatted);
+                        }
+                      }}
+                      style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", opacity: 0, cursor: "pointer" }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1974,9 +1968,13 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
                   Date Type<span style={{ color: "#ef4444" }}>*</span>
                 </label>
-                <select style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "7px 12px", background: "#ffffff", fontSize: "0.82rem", color: "#1e293b", outline: "none", minWidth: "150px" }}>
-                  <option>Swipe Date</option>
-                  <option>Received Date</option>
+                <select 
+                  value={swipeDateType}
+                  onChange={(e) => setSwipeDateType(e.target.value)}
+                  style={{ border: "1px solid #cbd5e1", borderRadius: "4px", padding: "7px 12px", background: "#ffffff", fontSize: "0.82rem", color: "#1e293b", outline: "none", minWidth: "150px", cursor: "pointer" }}
+                >
+                  <option value="Swipe Date">Swipe Date</option>
+                  <option value="Received Date">Received Date</option>
                 </select>
               </div>
 
@@ -1998,13 +1996,87 @@ export default function AdminView({ activeTab, setActiveTab }) {
               </div>
 
               {/* Download & Filter Buttons */}
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "18px" }}>
-                <button type="button" title="Download Export" style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "18px", marginLeft: "auto", position: "relative" }}>
+                
+                {/* Download CSV Export Button */}
+                <button 
+                  type="button" 
+                  title="Download CSV Export" 
+                  onClick={() => {
+                    const filtered = swipeRecords.filter(s => {
+                      if (swipeSearchQuery.trim()) {
+                        const q = swipeSearchQuery.toLowerCase().trim();
+                        if (!s.name.toLowerCase().includes(q) && !s.code.toLowerCase().includes(q) && !s.shift.toLowerCase().includes(q)) return false;
+                      }
+                      if (swipeStatusFilter !== "All" && s.status.toLowerCase() !== swipeStatusFilter.toLowerCase()) return false;
+                      return true;
+                    });
+                    const headers = ["Employee Name", "Employee Code", "Swipe Time", "Swipe Date", "Shift", "In/Out", "Received Time", "Received Date", "Door/Address", "Status"];
+                    const rows = filtered.map(r => [
+                      `"${r.name}"`,
+                      `"${r.code}"`,
+                      `"${r.time}"`,
+                      `"${r.date}"`,
+                      `"${r.shift}"`,
+                      `"${r.inOut}"`,
+                      `"${r.receivedTime}"`,
+                      `"${r.receivedDate}"`,
+                      `"${r.door}"`,
+                      `"${r.status}"`
+                    ]);
+                    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", `Employee_Swipes_${new Date().toISOString().slice(0,10)}.csv`);
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                  style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#475569" }}
+                >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 </button>
-                <button type="button" title="Filter Rules" style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}>
+
+                {/* Filter Rules Button */}
+                <button 
+                  type="button" 
+                  title="Filter Rules" 
+                  onClick={() => setShowSwipeFilterPopover(!showSwipeFilterPopover)}
+                  style={{ background: showSwipeFilterPopover ? "#f1f5f9" : "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", width: "34px", height: "34px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#475569" }}
+                >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                 </button>
+
+                {/* Filter Rules Popover Dropdown */}
+                {showSwipeFilterPopover && (
+                  <div style={{ position: "absolute", right: 0, top: "42px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", padding: "14px", width: "220px", zIndex: 100, display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#0f172a", borderBottom: "1px solid #f1f5f9", paddingBottom: "6px" }}>Filter Swipes</div>
+                    
+                    <div>
+                      <label style={{ fontSize: "0.72rem", color: "#64748b", display: "block", marginBottom: "4px" }}>Status</label>
+                      <select 
+                        value={swipeStatusFilter}
+                        onChange={(e) => setSwipeStatusFilter(e.target.value)}
+                        style={{ width: "100%", padding: "6px", fontSize: "0.8rem", border: "1px solid #cbd5e1", borderRadius: "4px", outline: "none" }}
+                      >
+                        <option value="All">All Statuses</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Rejected">Rejected</option>
+                      </select>
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={() => setShowSwipeFilterPopover(false)}
+                      style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "4px", padding: "6px", fontSize: "0.78rem", fontWeight: "600", cursor: "pointer", marginTop: "4px" }}
+                    >
+                      Apply Filter
+                    </button>
+                  </div>
+                )}
+
               </div>
 
             </div>
@@ -2012,11 +2084,28 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
           {/* Main Content Layout: Table + Right Sidebar Card */}
           {(() => {
-            const filteredSwipes = swipeRecords.filter(s => {
-              if (!swipeSearchQuery.trim()) return true;
-              const q = swipeSearchQuery.toLowerCase().trim();
-              return s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q) || s.shift.toLowerCase().includes(q);
+            let filteredSwipes = swipeRecords.filter(s => {
+              if (swipeSearchQuery.trim()) {
+                const q = swipeSearchQuery.toLowerCase().trim();
+                const match = s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q) || s.shift.toLowerCase().includes(q);
+                if (!match) return false;
+              }
+              if (swipeDateFilter.trim()) {
+                const dQ = swipeDateFilter.toLowerCase().trim();
+                const targetDateStr = swipeDateType === "Received Date" ? s.receivedDate.toLowerCase() : s.date.toLowerCase();
+                if (dQ !== "20 jul 2026 - 20 jul 2026" && dQ !== "") {
+                  if (!targetDateStr.includes(dQ) && !s.date.toLowerCase().includes(dQ)) return false;
+                }
+              }
+              if (swipeStatusFilter !== "All") {
+                if (s.status.toLowerCase() !== swipeStatusFilter.toLowerCase()) return false;
+              }
+              return true;
             });
+
+            if (swipeDateType === "Received Date") {
+              filteredSwipes = [...filteredSwipes].sort((a, b) => a.receivedTime.localeCompare(b.receivedTime));
+            }
 
             const activeRecord = swipeRecords.find(s => s.id === selectedSwipeRecordId) || swipeRecords[0];
 

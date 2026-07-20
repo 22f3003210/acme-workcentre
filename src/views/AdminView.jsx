@@ -191,33 +191,23 @@ export default function AdminView({ activeTab, setActiveTab }) {
       advanceAmount: empAdvance
     });
 
-    // Generate mailto link for manual / mail client dispatch
-    const subject = encodeURIComponent("Welcome to ACME Consulting! Start Your Onboarding");
-    const body = encodeURIComponent(
-      `Dear ${empName},\n\nWe are excited to invite you to join ACME Consulting as a ${empTitle || "Retail Jewellery BD Consultant"}.\n\nPlease click the link below to set your account password and start your onboarding:\n${inviteResult.inviteLink}\n\nBest regards,\nHR Admin Team\nACME Consulting`
-    );
+    // Generate mailto and Gmail compose links for real email dispatch
+    const rawSubject = "Welcome to ACME Consulting! Start Your Onboarding";
+    const rawBody = `Dear ${empName},\n\nWe are excited to invite you to join ACME Consulting as a ${empTitle || "Retail Jewellery BD Consultant"}.\n\nPlease click the link below to set your account password and start your onboarding:\n${inviteResult.inviteLink}\n\nBest regards,\nHR Admin Team\nACME Consulting`;
+    
+    const subject = encodeURIComponent(rawSubject);
+    const body = encodeURIComponent(rawBody);
     const mailtoUrl = `mailto:${empEmail}?subject=${subject}&body=${body}`;
-
-    // Send HTTP POST payload to email API service
-    fetch("https://formspree.io/f/xknkybqe", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: empEmail,
-        candidate_name: empName,
-        subject: "Welcome to ACME Consulting! Start Your Onboarding",
-        onboarding_link: inviteResult.inviteLink,
-        message: `Welcome ${empName}! Please click this link to start your onboarding: ${inviteResult.inviteLink}`
-      })
-    }).catch(err => console.log("Background email API response:", err));
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(empEmail)}&su=${subject}&body=${body}`;
 
     setGeneratedInviteResult({
       ...inviteResult,
       mailtoUrl,
+      gmailUrl,
       emailSentTo: empEmail
     });
 
-    setToast({ message: `Onboarding email sent to ${empEmail}!`, type: "success" });
+    setToast({ message: `Onboarding invite link generated for ${empEmail}!`, type: "success" });
     setEmpName("");
     setEmpEmail("");
     setEmpPhone("");
@@ -1080,8 +1070,32 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 </div>
 
                 {/* Footer Buttons */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", paddingTop: "14px" }}>
-                  <div style={{ display: "flex", gap: "8px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", paddingTop: "14px", flexWrap: "wrap", gap: "10px" }}>
+                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (generatedInviteResult.gmailUrl) {
+                          window.open(generatedInviteResult.gmailUrl, "_blank");
+                        }
+                      }}
+                      style={{
+                        background: "#ea4335",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "8px 14px",
+                        borderRadius: "6px",
+                        fontSize: "0.82rem",
+                        fontWeight: "700",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px"
+                      }}
+                    >
+                      <span>✉ Send via Gmail</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -1100,8 +1114,9 @@ export default function AdminView({ activeTab, setActiveTab }) {
                         cursor: "pointer"
                       }}
                     >
-                      ✉ Resend Email
+                      📫 Send via Mail App
                     </button>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -1122,6 +1137,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       📋 Copy Link
                     </button>
                   </div>
+
                   <button
                     type="button"
                     onClick={() => { setShowOnboardModal(false); setGeneratedInviteResult(null); }}

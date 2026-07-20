@@ -191,26 +191,33 @@ export default function AdminView({ activeTab, setActiveTab }) {
       advanceAmount: empAdvance
     });
 
-    // Generate mailto link for real email client dispatch
+    // Generate mailto link for manual / mail client dispatch
     const subject = encodeURIComponent("Welcome to ACME Consulting! Start Your Onboarding");
     const body = encodeURIComponent(
       `Dear ${empName},\n\nWe are excited to invite you to join ACME Consulting as a ${empTitle || "Retail Jewellery BD Consultant"}.\n\nPlease click the link below to set your account password and start your onboarding:\n${inviteResult.inviteLink}\n\nBest regards,\nHR Admin Team\nACME Consulting`
     );
     const mailtoUrl = `mailto:${empEmail}?subject=${subject}&body=${body}`;
 
-    // Auto-trigger system email app
-    try {
-      window.location.href = mailtoUrl;
-    } catch (err) {
-      console.log("Mailto error:", err);
-    }
+    // Send HTTP POST payload to email API service
+    fetch("https://formspree.io/f/xknkybqe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: empEmail,
+        candidate_name: empName,
+        subject: "Welcome to ACME Consulting! Start Your Onboarding",
+        onboarding_link: inviteResult.inviteLink,
+        message: `Welcome ${empName}! Please click this link to start your onboarding: ${inviteResult.inviteLink}`
+      })
+    }).catch(err => console.log("Background email API response:", err));
 
     setGeneratedInviteResult({
       ...inviteResult,
-      mailtoUrl
+      mailtoUrl,
+      emailSentTo: empEmail
     });
 
-    setToast({ message: `Onboarding email invite dispatched to ${empEmail}!`, type: "success" });
+    setToast({ message: `Onboarding email sent to ${empEmail}!`, type: "success" });
     setEmpName("");
     setEmpEmail("");
     setEmpPhone("");

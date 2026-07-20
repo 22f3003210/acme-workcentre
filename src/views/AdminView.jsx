@@ -1284,17 +1284,17 @@ export default function AdminView({ activeTab, setActiveTab }) {
           {/* Top Row: Who is off today & Not in yet today */}
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "20px" }}>
             {/* Card 1: Who is off today */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
               <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#1e293b", margin: "0 0 14px 0" }}>Who is off today</h4>
               
               {/* Amber Notice Banner */}
-              <div style={{ background: "#fef9c3", border: "1px solid #fef08a", borderRadius: "8px", padding: "12px 16px", color: "#854d0e", fontSize: "0.85rem", fontWeight: "600" }}>
+              <div style={{ background: "#fef9c3", border: "1px solid #fef08a", borderRadius: "0px", padding: "12px 16px", color: "#854d0e", fontSize: "0.85rem", fontWeight: "600" }}>
                 No employee is off today.
               </div>
             </div>
 
             {/* Card 2: Not in yet today */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
               <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#1e293b", margin: "0 0 14px 0" }}>Not in yet today</h4>
               
               <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
@@ -1313,47 +1313,47 @@ export default function AdminView({ activeTab, setActiveTab }) {
           {/* Middle Row: 4 Stat Cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
             {/* Stat 1: On Time */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
-              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#06b6d4", borderRadius: "0 4px 4px 0" }} />
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#06b6d4" }} />
               <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Employees On Time today</span>
               <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
             </div>
 
             {/* Stat 2: Late Arrivals */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
-              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#c026d3", borderRadius: "0 4px 4px 0" }} />
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#c026d3" }} />
               <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Late Arrivals today</span>
               <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
             </div>
 
             {/* Stat 3: WFH / On Duty */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
-              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#84cc16", borderRadius: "0 4px 4px 0" }} />
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#84cc16" }} />
               <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Work from Home / On Duty today</span>
               <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
             </div>
 
             {/* Stat 4: Remote Clock-ins */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
-              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#f97316", borderRadius: "0 4px 4px 0" }} />
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#f97316" }} />
               <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Remote Clock-ins today</span>
               <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
             </div>
           </div>
 
           {/* Section: Team calendar */}
-          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "22px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "22px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
             <h3 style={{ fontSize: "1rem", fontWeight: "800", color: "#1e293b", margin: "0 0 16px 0" }}>Team calendar</h3>
 
             {/* Month selector */}
             <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-              <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "4px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>‹</button>
-              <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "#334155" }}>Jul 2026</span>
+              <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>‹</button>
+              <span style={{ fontSize: "0.9rem", fontWeight: "700", color: "#334155" }}>Sept 2026</span>
               <button type="button" style={{ background: "#3b4252", color: "#fff", border: "none", borderRadius: "4px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.8rem", fontWeight: "700" }}>›</button>
             </div>
 
             {/* Yellow Banner */}
-            <div style={{ background: "#fef9c3", border: "1px solid #fef08a", borderRadius: "8px", padding: "14px 18px", color: "#854d0e", fontSize: "0.85rem", fontWeight: "600", marginBottom: "20px" }}>
+            <div style={{ background: "#fef9c3", border: "1px solid #fef08a", borderRadius: "0px", padding: "14px 18px", color: "#854d0e", fontSize: "0.85rem", fontWeight: "600", marginBottom: "20px" }}>
               Nobody is on leave for the selected month
             </div>
 
@@ -1373,12 +1373,12 @@ export default function AdminView({ activeTab, setActiveTab }) {
           </div>
 
           {/* Section: Peers Grid */}
-          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "22px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "22px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
             <h3 style={{ fontSize: "1rem", fontWeight: "800", color: "#1e293b", margin: "0 0 16px 0" }}>Peers ({users.length})</h3>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
               {users.map(u => (
-                <div key={u.id} style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div key={u.id} style={{ border: "1px solid #e2e8f0", borderRadius: "0px", padding: "14px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                     <img src={u.avatar} alt={u.name} style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover" }} />
                     <div>
@@ -1387,7 +1387,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </div>
                   </div>
 
-                  <span style={{ fontSize: "0.68rem", fontWeight: "800", color: "#0284c7", background: "#e0f2fe", border: "1px solid #bae6fd", padding: "3px 8px", borderRadius: "4px" }}>
+                  <span style={{ fontSize: "0.68rem", fontWeight: "800", color: "#0284c7", background: "#e0f2fe", border: "1px solid #bae6fd", padding: "3px 8px", borderRadius: "0px" }}>
                     NOT IN YET
                   </span>
                 </div>

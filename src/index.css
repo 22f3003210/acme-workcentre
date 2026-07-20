@@ -55,6 +55,51 @@
   scrollbar-width: thin;
 }
 
+/* --- Global Sharp 90° Square Edges Override --- */
+.glass-card,
+.card,
+.project-card,
+.expenses-section,
+.task-modal-card,
+.modal-content,
+.sea-search-input,
+.sea-search-wrapper,
+.sea-top-navbar,
+.sea-btn-tagging,
+.status-badge,
+.design-card,
+.luxury-table,
+.luxury-button,
+.app-card,
+.login-card,
+.register-card,
+.drawer-content,
+.drawer-container,
+div,
+button,
+input,
+select,
+textarea,
+fieldset,
+form,
+section,
+article,
+header {
+  border-radius: 0px !important;
+}
+
+/* Maintain circular user profile avatars */
+img.avatar,
+img.profile-avatar,
+img.sea-user-avatar,
+img.avatar-small,
+.avatar,
+.avatar-small,
+.profile-avatar,
+.sea-user-avatar {
+  border-radius: 50% !important;
+}
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);

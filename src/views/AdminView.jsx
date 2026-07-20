@@ -987,58 +987,42 @@ export default function AdminView({ activeTab, setActiveTab }) {
             </div>
 
             {generatedInviteResult ? (
-              <div style={{ padding: "20px 0 0 0", display: "flex", flexDirection: "column", gap: "16px" }}>
-                <div style={{ background: "#dcfce7", border: "1px solid #86efac", padding: "16px", borderRadius: "10px", color: "#166534" }}>
-                  <strong style={{ fontSize: "1rem", display: "block" }}>✓ Onboarding Invite Link Generated!</strong>
-                  <span style={{ fontSize: "0.85rem", marginTop: "4px", display: "block" }}>
-                    Share this unique link with <strong>{generatedInviteResult.user.name}</strong> to let them set their password and complete self-registration.
-                  </span>
+              <div style={{ padding: "12px 0 0 0", display: "flex", flexDirection: "column", gap: "14px" }}>
+                
+                {/* Simulated Sent Email Header Banner */}
+                <div style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "14px 16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", color: "#475569", marginBottom: "6px" }}>
+                    <span>📧 <strong>From:</strong> HR Admin &lt;onboarding@acmeworkcentre.com&gt;</span>
+                    <span style={{ color: "#15803d", fontWeight: "700", background: "#dcfce7", border: "1px solid #86efac", padding: "2px 8px", borderRadius: "4px", fontSize: "0.75rem" }}>
+                      ✓ Email Sent Successfully
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "0.85rem", color: "#0f172a", marginBottom: "4px" }}>
+                    <strong>To:</strong> {generatedInviteResult.user.name} &lt;{generatedInviteResult.user.email}&gt;
+                  </div>
+                  <div style={{ fontSize: "0.88rem", fontWeight: "800", color: "#1e293b", borderTop: "1px solid #e2e8f0", paddingTop: "8px", marginTop: "6px" }}>
+                    Subject: Welcome to ACME Consulting! Start Your Onboarding
+                  </div>
                 </div>
 
-                <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Registration Invite Token</span>
-                  <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#2563eb", margin: "4px 0 10px 0" }}>
-                    {generatedInviteResult.inviteToken}
+                {/* Email Body Card */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
+                    <img src={logoImg} alt="ACME Logo" style={{ height: "26px", objectFit: "contain" }} />
+                    <span style={{ fontSize: "0.72rem", fontWeight: "800", color: "#2563eb", background: "#eff6ff", padding: "3px 8px", borderRadius: "4px" }}>
+                      OFFICIAL INVITATION
+                    </span>
                   </div>
 
-                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Direct Link</span>
-                  <input
-                    type="text"
-                    readOnly
-                    value={generatedInviteResult.inviteLink}
-                    style={{
-                      width: "100%",
-                      padding: "8px 12px",
-                      borderRadius: "6px",
-                      border: "1px solid #cbd5e1",
-                      fontSize: "0.82rem",
-                      background: "#ffffff",
-                      boxSizing: "border-box",
-                      margin: "4px 0 12px 0"
-                    }}
-                  />
+                  <p style={{ fontSize: "0.9rem", color: "#1e293b", margin: "0 0 10px 0" }}>
+                    Dear <strong>{generatedInviteResult.user.name}</strong>,
+                  </p>
+                  <p style={{ fontSize: "0.85rem", color: "#475569", lineHeight: "1.5", margin: "0 0 18px 0" }}>
+                    We are excited to invite you to join ACME Consulting as a <strong>{generatedInviteResult.user.title}</strong>. Please click the button below to set your account password and start your onboarding.
+                  </p>
 
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(generatedInviteResult.inviteLink);
-                        setToast({ message: "Registration link copied to clipboard!", type: "success" });
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: "10px",
-                        borderRadius: "6px",
-                        border: "1px solid #2563eb",
-                        background: "#eff6ff",
-                        color: "#2563eb",
-                        fontWeight: "700",
-                        fontSize: "0.85rem",
-                        cursor: "pointer"
-                      }}
-                    >
-                      📋 Copy Registration Link
-                    </button>
+                  {/* START ONBOARDING CTA BUTTON */}
+                  <div style={{ textAlign: "center", margin: "16px 0" }}>
                     <button
                       type="button"
                       onClick={() => {
@@ -1047,27 +1031,54 @@ export default function AdminView({ activeTab, setActiveTab }) {
                         setShowOnboardModal(false);
                       }}
                       style={{
-                        flex: 1,
-                        padding: "10px",
-                        borderRadius: "6px",
-                        border: "none",
-                        background: "#2563eb",
+                        background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
                         color: "#ffffff",
-                        fontWeight: "700",
-                        fontSize: "0.85rem",
-                        cursor: "pointer"
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "12px 28px",
+                        fontSize: "0.95rem",
+                        fontWeight: "800",
+                        cursor: "pointer",
+                        boxShadow: "0 4px 14px rgba(37, 99, 235, 0.3)",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px"
                       }}
                     >
-                      ⚡ Test Candidate Self-Reg ➔
+                      <span>Start Onboarding</span> ➔
                     </button>
+                  </div>
+
+                  <div style={{ background: "#f8fafc", padding: "10px", borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.78rem", color: "#64748b", wordBreak: "break-all", marginTop: "14px" }}>
+                    <strong>Direct Link:</strong> {generatedInviteResult.inviteLink}
                   </div>
                 </div>
 
-                <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid #e2e8f0", paddingTop: "14px" }}>
+                {/* Footer Buttons */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", paddingTop: "14px" }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedInviteResult.inviteLink);
+                      setToast({ message: "Registration link copied to clipboard!", type: "success" });
+                    }}
+                    style={{
+                      background: "#eff6ff",
+                      color: "#2563eb",
+                      border: "1px solid #bfdbfe",
+                      padding: "8px 16px",
+                      borderRadius: "6px",
+                      fontSize: "0.82rem",
+                      fontWeight: "700",
+                      cursor: "pointer"
+                    }}
+                  >
+                    📋 Copy Onboarding Link
+                  </button>
                   <button
                     type="button"
                     onClick={() => { setShowOnboardModal(false); setGeneratedInviteResult(null); }}
-                    style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer", fontWeight: "600" }}
+                    style={{ padding: "8px 18px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer", fontWeight: "600" }}
                   >
                     Done
                   </button>

@@ -1326,10 +1326,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
               <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
             </div>
 
-            {/* Stat 3: WFH / On Duty */}
+            {/* Stat 3: Employees on Leave today */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#84cc16" }} />
-              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Work from Home / On Duty today</span>
+              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "600", display: "block" }}>Employees on Leave today</span>
               <span style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
             </div>
 

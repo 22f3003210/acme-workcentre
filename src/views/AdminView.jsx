@@ -1352,121 +1352,144 @@ export default function AdminView({ activeTab, setActiveTab }) {
               <button type="button" style={{ background: "#4c478a", color: "#fff", border: "none", borderRadius: "0px", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "0.75rem", fontWeight: "400" }}>›</button>
             </div>
 
-            {/* Whole Month Employee Matrix Grid */}
-            <div style={{ overflowX: "auto", border: "1px solid #e2e8f0", marginBottom: "20px" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem", minWidth: "950px" }}>
+            {/* Enterprise Attendance Grid Table (P, A, HD, L, OFF with Summary Counts) */}
+            <div style={{ overflowX: "auto", border: "1px solid #cbd5e1", marginBottom: "20px" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem", minWidth: "1100px" }}>
                 <thead>
-                  <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
-                    <th style={{ padding: "10px 16px", textAlign: "left", width: "190px", position: "sticky", left: 0, background: "#f8fafc", zIndex: 2, borderRight: "1px solid #e2e8f0", fontWeight: "500" }}>Employee</th>
+                  <tr style={{ background: "#f1f5f9", borderBottom: "1px solid #cbd5e1", color: "#334155" }}>
+                    <th style={{ padding: "10px 14px", textAlign: "left", width: "220px", position: "sticky", left: 0, background: "#f1f5f9", zIndex: 2, borderRight: "1px solid #cbd5e1", fontWeight: "500" }}>Employee</th>
                     {[
-                      { day: 1, name: "Tu" },
-                      { day: 2, name: "We" },
-                      { day: 3, name: "Th" },
-                      { day: 4, name: "Fr" },
-                      { day: 5, name: "Sa" },
-                      { day: 6, name: "Su" },
-                      { day: 7, name: "Mo" },
-                      { day: 8, name: "Tu" },
-                      { day: 9, name: "We" },
-                      { day: 10, name: "Th" },
-                      { day: 11, name: "Fr" },
-                      { day: 12, name: "Sa" },
-                      { day: 13, name: "Su" },
-                      { day: 14, name: "Mo" },
-                      { day: 15, name: "Tu" },
-                      { day: 16, name: "We" },
-                      { day: 17, name: "Th" },
-                      { day: 18, name: "Fr" },
-                      { day: 19, name: "Sa" },
-                      { day: 20, name: "Su" },
-                      { day: 21, name: "Mo" },
-                      { day: 22, name: "Tu" },
-                      { day: 23, name: "We" },
-                      { day: 24, name: "Th" },
-                      { day: 25, name: "Fr" },
-                      { day: 26, name: "Sa" },
-                      { day: 27, name: "Su" },
-                      { day: 28, name: "Mo" },
-                      { day: 29, name: "Tu" },
-                      { day: 30, name: "We" }
+                      { day: 1, name: "Wed" },
+                      { day: 2, name: "Thu" },
+                      { day: 3, name: "Fri" },
+                      { day: 4, name: "Sat" },
+                      { day: 5, name: "Sun" },
+                      { day: 6, name: "Mon" },
+                      { day: 7, name: "Tue" },
+                      { day: 8, name: "Wed" },
+                      { day: 9, name: "Thu" },
+                      { day: 10, name: "Fri" },
+                      { day: 11, name: "Sat" },
+                      { day: 12, name: "Sun" },
+                      { day: 13, name: "Mon" },
+                      { day: 14, name: "Tue" },
+                      { day: 15, name: "Wed" },
+                      { day: 16, name: "Thu" },
+                      { day: 17, name: "Fri" },
+                      { day: 18, name: "Sat" },
+                      { day: 19, name: "Sun" },
+                      { day: 20, name: "Mon" },
+                      { day: 21, name: "Tue" },
+                      { day: 22, name: "Wed" },
+                      { day: 23, name: "Thu" },
+                      { day: 24, name: "Fri" },
+                      { day: 25, name: "Sat" },
+                      { day: 26, name: "Sun" },
+                      { day: 27, name: "Mon" },
+                      { day: 28, name: "Tue" },
+                      { day: 29, name: "Wed" },
+                      { day: 30, name: "Thu" }
                     ].map(d => (
-                      <th key={d.day} style={{ padding: "8px 4px", textAlign: "center", minWidth: "32px", fontWeight: "400" }}>
-                        <div style={{ fontSize: "0.68rem", color: "#94a3b8", fontWeight: "400" }}>{d.name}</div>
-                        <div style={{ color: "#334155", fontWeight: "500" }}>{d.day}</div>
+                      <th key={d.day} style={{ padding: "6px 2px", textAlign: "center", minWidth: "28px", fontWeight: "400", borderRight: "1px solid #e2e8f0" }}>
+                        <div style={{ color: "#1e293b", fontWeight: "500" }}>{d.day}</div>
+                        <div style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: "400" }}>{d.name}</div>
                       </th>
                     ))}
+                    {/* Summary Columns Header */}
+                    <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", borderLeft: "1px solid #cbd5e1", color: "#0f172a", fontWeight: "600" }}>P</th>
+                    <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#0284c7", fontWeight: "600" }}>L</th>
+                    <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#d97706", fontWeight: "600" }}>HD</th>
+                    <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#e11d48", fontWeight: "600" }}>A</th>
+                    <th style={{ padding: "6px 6px", textAlign: "center", width: "30px", background: "#e2e8f0", color: "#64748b", fontWeight: "600" }}>OFF</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {users.map((emp, uIdx) => (
-                    <tr key={emp.id} style={{ borderBottom: "1px solid #f1f5f9", background: uIdx % 2 === 0 ? "#ffffff" : "#fbfcfd" }}>
-                      <td style={{ padding: "10px 16px", position: "sticky", left: 0, background: uIdx % 2 === 0 ? "#ffffff" : "#fbfcfd", zIndex: 2, borderRight: "1px solid #e2e8f0" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <img src={emp.avatar} alt={emp.name} style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover" }} />
-                          <span style={{ fontWeight: "500", color: "#0f172a", fontSize: "0.82rem", whiteSpace: "nowrap" }}>{emp.name}</span>
-                        </div>
-                      </td>
-                      {Array.from({ length: 30 }, (_, i) => i + 1).map(dayNum => {
-                        let cellContent = null;
-                        if (uIdx === 0 && (dayNum === 4 || dayNum === 5 || dayNum === 6 || dayNum === 7)) {
-                          cellContent = (
-                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#38bdf8", color: "#fff", fontWeight: "500", fontSize: "0.72rem" }}>
-                              {dayNum}
-                            </span>
-                          );
-                        } else if (uIdx === 1 && dayNum === 3) {
-                          cellContent = (
-                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#facc15", color: "#713f12", fontWeight: "500", fontSize: "0.72rem" }}>
-                              {dayNum}
-                            </span>
-                          );
-                        } else if (uIdx === 2 && (dayNum === 6 || dayNum === 7)) {
-                          cellContent = (
-                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#f472b6", color: "#fff", fontWeight: "500", fontSize: "0.72rem" }}>
-                              {dayNum}
-                            </span>
-                          );
-                        } else if (uIdx === 3 && dayNum === 5) {
-                          cellContent = (
-                            <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: "24px", height: "24px", borderRadius: "50%", background: "#f472b6", color: "#fff", fontWeight: "500", fontSize: "0.72rem" }}>
-                              {dayNum}
-                            </span>
-                          );
-                        } else {
-                          cellContent = <span style={{ color: "#94a3b8", fontSize: "0.75rem", fontWeight: "400" }}>{dayNum}</span>;
-                        }
+                  {users.map((emp, uIdx) => {
+                    const getDayStatus = (dayNum) => {
+                      if (dayNum % 7 === 5 || dayNum % 7 === 6) return { code: "OFF", bg: "transparent", color: "#64748b" };
+                      
+                      if (uIdx === 0) {
+                        if (dayNum === 8 || dayNum === 10 || dayNum === 14) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
+                        if (dayNum === 12) return { code: "L", bg: "#e0f2fe", color: "#0369a1" };
+                        return { code: "P", bg: "transparent", color: "#334155" };
+                      } else if (uIdx === 1) {
+                        if (dayNum <= 12) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
+                        return { code: "P", bg: "transparent", color: "#334155" };
+                      } else if (uIdx === 2) {
+                        if (dayNum === 1 || dayNum === 4 || dayNum === 7 || dayNum === 11 || dayNum === 13) return { code: "HD", bg: "#bae6fd", color: "#0284c7" };
+                        if (dayNum === 3 || dayNum === 9 || dayNum === 16) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
+                        return { code: "P", bg: "transparent", color: "#334155" };
+                      } else {
+                        if (dayNum % 4 === 0) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
+                        if (dayNum % 7 === 0) return { code: "HD", bg: "#bae6fd", color: "#0284c7" };
+                        return { code: "P", bg: "transparent", color: "#334155" };
+                      }
+                    };
 
-                        return (
-                          <td key={dayNum} style={{ padding: "6px 2px", textAlign: "center" }}>
-                            {cellContent}
+                    let pCount = 0, aCount = 0, hdCount = 0, lCount = 0, offCount = 0;
+                    const dayStatuses = Array.from({ length: 30 }, (_, i) => {
+                      const st = getDayStatus(i + 1);
+                      if (st.code === "P") pCount++;
+                      else if (st.code === "A") aCount++;
+                      else if (st.code === "HD") hdCount++;
+                      else if (st.code === "L") lCount++;
+                      else if (st.code === "OFF") offCount++;
+                      return st;
+                    });
+
+                    return (
+                      <tr key={emp.id} style={{ borderBottom: "1px solid #e2e8f0", background: uIdx % 2 === 0 ? "#ffffff" : "#f8fafc" }}>
+                        {/* Sticky Employee Details Column */}
+                        <td style={{ padding: "8px 12px", position: "sticky", left: 0, background: uIdx % 2 === 0 ? "#ffffff" : "#f8fafc", zIndex: 2, borderRight: "1px solid #cbd5e1" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <img src={emp.avatar} alt={emp.name} style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover" }} />
+                            <div>
+                              <div style={{ fontWeight: "500", color: "#0f172a", fontSize: "0.82rem" }}>
+                                {emp.name} <span style={{ color: "#64748b", fontSize: "0.72rem" }}>[{emp.role === "Admin" ? "A0001" : `C00${uIdx + 1}`}]</span>
+                              </div>
+                              <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "400" }}>
+                                {emp.title || emp.role}, Hyderabad
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Days 1 to 30 Code Cells */}
+                        {dayStatuses.map((st, dIdx) => (
+                          <td key={dIdx} style={{ padding: "6px 2px", textAlign: "center", background: st.bg, color: st.color, fontWeight: "500", fontSize: "0.75rem", borderRight: "1px solid #f1f5f9" }}>
+                            {st.code}
                           </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
+                        ))}
+
+                        {/* Summary Columns */}
+                        <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#0f172a", borderLeft: "1px solid #cbd5e1", background: "#f8fafc" }}>{pCount}</td>
+                        <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#0284c7", background: "#f8fafc" }}>{lCount}</td>
+                        <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#d97706", background: "#f8fafc" }}>{hdCount}</td>
+                        <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#e11d48", background: "#f8fafc" }}>{aCount}</td>
+                        <td style={{ padding: "6px 6px", textAlign: "center", fontWeight: "500", color: "#64748b", background: "#f8fafc" }}>{offCount}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
 
-            {/* Clean Legend Dots (Requested Items Only) */}
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "24px", fontSize: "0.8rem", color: "#475569", fontWeight: "400" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#38bdf8" }} /> Paid Leave
+            {/* Clean Legend Bar matching screenshot */}
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "28px", fontSize: "0.82rem", color: "#334155", fontWeight: "500" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontWeight: "700", color: "#0f172a" }}>P</span> Present
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#facc15" }} /> Unpaid Leave
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontWeight: "700", color: "#0369a1", background: "#e0f2fe", padding: "1px 6px" }}>A</span> Absent
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#f472b6" }} /> Halfday
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontWeight: "700", color: "#0284c7", background: "#bae6fd", padding: "1px 6px" }}>HD</span> Halfday
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#f43f5e" }} /> Leave due to No Attendance
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontWeight: "700", color: "#0369a1", background: "#e0f2fe", padding: "1px 6px" }}>L</span> Leave
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#eab308" }} /> Weekly off
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#84cc16" }} /> Holiday
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontWeight: "700", color: "#64748b" }}>OFF</span> Weekly Off
               </div>
             </div>
           </div>

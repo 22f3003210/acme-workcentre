@@ -786,67 +786,54 @@ export default function Layout({ children, activeTab, setActiveTab }) {
         </div>
       </div>
 
-      {/* ── Full Keka HR Employee Profile Modal Overlay ── */}
+      {/* ── Standalone Full-Page View for Employee Profile (Matching User Request) ── */}
       {viewingProfileUser && (
         <div
-          onClick={() => setViewingProfileUser(null)}
           style={{
             position: "fixed",
-            inset: 0,
-            background: "rgba(15, 23, 42, 0.75)",
-            backdropFilter: "blur(4px)",
-            zIndex: 9999,
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "#f8fafc",
+            zIndex: 10000,
             display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "20px"
+            flexDirection: "column",
+            overflow: "hidden"
           }}
         >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              background: "#f8fafc",
-              borderRadius: "12px",
-              width: "1100px",
-              maxWidth: "96vw",
-              maxHeight: "92vh",
-              overflowY: "auto",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.35)",
-              border: "1px solid #cbd5e1",
-              position: "relative"
-            }}
-          >
-            {/* Modal Header Bar with Close Button */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 20px", background: "#ffffff", borderBottom: "1px solid #e2e8f0" }}>
-              <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>
-                Employee Profile — {viewingProfileUser.empCode || "HBJ00007"}
-              </span>
-              <button
-                type="button"
-                onClick={() => setViewingProfileUser(null)}
-                style={{
-                  background: "#f1f5f9",
-                  border: "1px solid #cbd5e1",
-                  borderRadius: "50%",
-                  width: "30px",
-                  height: "30px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  fontWeight: "700",
-                  color: "#475569"
-                }}
-              >
-                ✕
-              </button>
-            </div>
+          {/* Top Full-Width Header Bar */}
+          <div style={{ borderBottom: "1px solid #e2e8f0", padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", height: "48px", flexShrink: 0 }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "#334155", letterSpacing: "0.03em", textTransform: "uppercase" }}>
+              EMPLOYEE PROFILE — {viewingProfileUser.empCode || "HBJ00007"}
+            </span>
+            <button
+              type="button"
+              onClick={() => setViewingProfileUser(null)}
+              style={{
+                background: "#f1f5f9",
+                border: "1px solid #cbd5e1",
+                borderRadius: "50%",
+                width: "32px",
+                height: "32px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                fontWeight: "700",
+                color: "#475569"
+              }}
+              title="Close Profile View"
+            >
+              ✕
+            </button>
+          </div>
 
-            {/* Profile Content Container */}
-            <div style={{ padding: "20px" }}>
-              
-              {/* Keka HR Style Banner Header */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
+          {/* Full-Height Standalone Page Content Area */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "24px 32px" }}>
+            
+            {/* Keka HR Style Banner Header */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
                 
                 {/* Purple Wavy Gradient Banner */}
                 <div style={{ position: "relative", height: "150px", background: "linear-gradient(135deg, #4c478a 0%, #312e5c 50%, #1e1b4b 100%)" }}>
@@ -1026,7 +1013,6 @@ export default function Layout({ children, activeTab, setActiveTab }) {
 
             </div>
           </div>
-        </div>
       )}
     </div>
   );

@@ -2357,128 +2357,116 @@ export default function AdminView({ activeTab, setActiveTab }) {
         </div>
       )}
 
-      {/* MAP VIEW Modal (Matching Reference Screenshot 2) */}
+      {/* MAP VIEW Standalone Full-Screen View Page (Matching Keka HR Screenshot 2 Exactly) */}
       {showMapModal && mapModalSwipe && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15,23,42,0.65)", zIndex: 1100, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div style={{ background: "#ffffff", borderRadius: "6px", width: "940px", maxWidth: "95vw", height: "580px", maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.3)" }}>
+        <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "#ffffff", zIndex: 10000, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          
+          {/* Top Header Bar across full browser width */}
+          <div style={{ borderBottom: "1px solid #e2e8f0", padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", height: "48px", flexShrink: 0 }}>
+            <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155", letterSpacing: "0.03em" }}>
+              MAP VIEW - 12 JUL 2026 - {mapModalSwipe.name.toUpperCase()}
+            </span>
+            <button 
+              type="button" 
+              onClick={() => setShowMapModal(false)}
+              style={{ background: "none", border: "none", fontSize: "1.3rem", color: "#64748b", cursor: "pointer", fontWeight: "600", padding: "0 8px" }}
+              title="Close Map View"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Full-Height Standalone Page Layout (Timeline Sidebar + 100% Height Map Canvas) */}
+          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "260px 1fr", overflow: "hidden", height: "calc(100vh - 48px)" }}>
             
-            {/* Modal Header */}
-            <div style={{ borderBottom: "1px solid #e2e8f0", padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff" }}>
-              <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "#334155", letterSpacing: "0.03em" }}>
-                MAP VIEW - 09 JUL 2026 - {mapModalSwipe.name.toUpperCase()}
-              </span>
-              <button 
-                type="button" 
-                onClick={() => setShowMapModal(false)}
-                style={{ background: "none", border: "none", fontSize: "1.2rem", color: "#64748b", cursor: "pointer", fontWeight: "600" }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Modal Body: 2 Columns (Timeline Sidebar + Google Map View) */}
-            <div style={{ flex: 1, display: "grid", gridTemplateColumns: "230px 1fr", overflow: "hidden" }}>
+            {/* Left Column: Full-Height Timeline Sidebar */}
+            <div style={{ background: "#ffffff", borderRight: "1px solid #e2e8f0", padding: "20px 18px", display: "flex", flexDirection: "column", gap: "20px", overflowY: "auto" }}>
               
-              {/* Left Column: Location Log Timeline Sidebar (Matching Screenshot Exactly) */}
-              <div style={{ background: "#ffffff", borderRight: "1px solid #e2e8f0", padding: "16px", display: "flex", flexDirection: "column", gap: "16px", overflowY: "auto" }}>
-                
-                {/* Item 1: HBJ MEHDIPATNAM */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#475569" }}>HBJ MEHDIPATNAM</div>
-                  <div style={{ fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span>↙</span> <span>10:25 AM</span>
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span>↗</span> <span>2:07 PM</span>
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span>↙</span> <span>2:35 PM</span>
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span>↗</span> <span>3:02 PM</span>
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span>↙</span> <span>9:06 PM</span>
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span>↗</span> <span>9:06 PM</span>
-                  </div>
+              {/* Section 1: HBJ MEHDIPATNAM */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155", letterSpacing: "0.02em" }}>HBJ MEHDIPATNAM</div>
+                <div style={{ fontSize: "0.76rem", color: "#16a34a", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>↙</span> <span>10:22 AM</span>
                 </div>
-
-                {/* Item 2: REMOTE CLOCK IN */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "4px", borderTop: "1px solid #f1f5f9", paddingTop: "12px" }}>
-                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#475569" }}>REMOTE CLOCK IN</div>
-                  <div style={{ fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                      <span>↙</span> <span>10:25 AM</span>
-                    </div>
-                    <span style={{ background: "#64748b", color: "#fff", width: "18px", height: "18px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: "700" }}>B</span>
-                  </div>
-                  <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>17.422754,78.462235</div>
-                  <div style={{ fontSize: "0.75rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span>↗</span> <span>9:06 PM</span>
-                  </div>
+                <div style={{ fontSize: "0.76rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>↗</span> <span>9:40 PM</span>
                 </div>
-
-                {/* Item 3: LOCATION PUNCH */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px", borderTop: "1px solid #f1f5f9", paddingTop: "12px" }}>
-                  <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#475569" }}>LOCATION PUNCH</div>
-                  
-                  {[
-                    { time: "10:26 AM", coords: "17.422621,78.461908", badge: "I" },
-                    { time: "10:41 AM", coords: "17.398775,78.447284", badge: "J" },
-                    { time: "10:56 AM", coords: "17.398707,78.447291", badge: "K" },
-                    { time: "11:11 AM", coords: "17.398707,78.447291", badge: "L" },
-                    { time: "11:26 AM", coords: "17.398682,78.447309", badge: "M" }
-                  ].map((punch) => (
-                    <div key={punch.badge} style={{ display: "flex", flexDirection: "column", gap: "2px", borderBottom: "1px dashed #f1f5f9", paddingBottom: "4px" }}>
-                      <div style={{ fontSize: "0.75rem", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <span>↙</span> <span>{punch.time}</span>
-                        </div>
-                        <span style={{ background: "#64748b", color: "#fff", width: "18px", height: "18px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: "700" }}>{punch.badge}</span>
-                      </div>
-                      <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>{punch.coords}</div>
-                    </div>
-                  ))}
-                </div>
-
               </div>
 
-              {/* Right Column: Google Maps API Canvas (Matching Screenshot Exactly) */}
-              <div style={{ position: "relative", background: "#e5e3df", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                
-                {/* Authentic Google Maps Embed API Iframe */}
-                <iframe 
-                  title="Google Maps Location View"
-                  width="100%" 
-                  height="100%" 
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  allowFullScreen
-                  src="https://maps.google.com/maps?q=17.422754,78.462235&amp;z=16&amp;output=embed"
-                />
-
-                {/* On-Map Photo Overlay Popup Card (Matching Reference Screenshot 2) */}
-                <div style={{ position: "absolute", top: "30px", left: "50%", transform: "translateX(-50%)", background: "#ffffff", borderRadius: "6px", border: "1px solid #cbd5e1", padding: "12px", boxShadow: "0 10px 25px rgba(0,0,0,0.25)", width: "230px", display: "flex", flexDirection: "column", gap: "8px", zIndex: 10 }}>
-                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                    <span onClick={() => setShowMapModal(false)} style={{ cursor: "pointer", fontSize: "0.9rem", color: "#64748b" }}>✕</span>
+              {/* Section 2: REMOTE CLOCK IN */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
+                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155", letterSpacing: "0.02em" }}>REMOTE CLOCK IN</div>
+                <div style={{ fontSize: "0.76rem", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span>↙</span> <span>8:52 PM</span>
                   </div>
-                  <img 
-                    src={mapModalSwipe.avatar} 
-                    alt={mapModalSwipe.name}
-                    style={{ width: "100%", height: "170px", objectFit: "cover", borderRadius: "4px" }}
-                  />
-                  <div style={{ fontSize: "0.72rem", color: "#475569", lineHeight: 1.3, textAlign: "center" }}>
-                    {mapModalSwipe.fullAddress || "Somajiguda, Raj Bhavan Rd, near KFC, NMDC Colony, Hyderabad, Telangana"}
-                  </div>
+                  <span style={{ background: "#64748b", color: "#ffffff", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: "700" }}>B</span>
                 </div>
+                <div style={{ fontSize: "0.7rem", color: "#94a3b8" }}>17.398873,78.447274</div>
+                <div style={{ fontSize: "0.76rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span>↗</span> <span>9:40 PM</span>
+                </div>
+              </div>
 
+              {/* Section 3: LOCATION PUNCH */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
+                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155", letterSpacing: "0.02em" }}>LOCATION PUNCH</div>
+                
+                {[
+                  { time: "8:52 PM", coords: "17.398865,78.447267", badge: "E" },
+                  { time: "10:26 AM", coords: "17.422621,78.461908", badge: "I" },
+                  { time: "10:41 AM", coords: "17.398775,78.447284", badge: "J" },
+                  { time: "10:56 AM", coords: "17.398707,78.447291", badge: "K" },
+                  { time: "11:11 AM", coords: "17.398707,78.447291", badge: "L" },
+                  { time: "11:26 AM", coords: "17.398682,78.447309", badge: "M" }
+                ].map((punch) => (
+                  <div key={punch.badge} style={{ display: "flex", flexDirection: "column", gap: "2px", borderBottom: "1px dashed #f1f5f9", paddingBottom: "6px" }}>
+                    <div style={{ fontSize: "0.76rem", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span>↙</span> <span>{punch.time}</span>
+                      </div>
+                      <span style={{ background: "#64748b", color: "#ffffff", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: "700" }}>{punch.badge}</span>
+                    </div>
+                    <div style={{ fontSize: "0.7rem", color: "#94a3b8" }}>{punch.coords}</div>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+
+            {/* Right Column: Full-Width Full-Height Google Maps Canvas (Matching Screenshot 2 Exactly) */}
+            <div style={{ position: "relative", width: "100%", height: "100%", background: "#e5e3df", overflow: "hidden" }}>
+              
+              {/* Full-Height Authentic Google Maps Embed API Iframe */}
+              <iframe 
+                title="Full Screen Google Maps Location View"
+                width="100%" 
+                height="100%" 
+                style={{ border: 0, width: "100%", height: "100%" }}
+                loading="lazy"
+                allowFullScreen
+                src="https://maps.google.com/maps?q=17.422754,78.462235&amp;z=16&amp;output=embed"
+              />
+
+              {/* On-Map Photo Overlay Popup Card (Matching Reference Screenshot 1 & 2) */}
+              <div style={{ position: "absolute", top: "30px", left: "50%", transform: "translateX(-50%)", background: "#ffffff", borderRadius: "8px", border: "1px solid #cbd5e1", padding: "14px", boxShadow: "0 12px 30px rgba(0,0,0,0.25)", width: "260px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 10 }}>
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  <span onClick={() => setShowMapModal(false)} style={{ cursor: "pointer", fontSize: "0.95rem", color: "#64748b", fontWeight: "700" }}>✕</span>
+                </div>
+                <img 
+                  src={mapModalSwipe.avatar} 
+                  alt={mapModalSwipe.name}
+                  style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "6px" }}
+                />
+                <div style={{ fontSize: "0.75rem", color: "#475569", lineHeight: 1.4, textAlign: "center" }}>
+                  {mapModalSwipe.fullAddress || "Ram Janki Mandir Road, Sector 4, Hyderabad, Telangana, Pin-500081 (India)"}
+                </div>
               </div>
 
             </div>
 
           </div>
+
         </div>
       )}
 

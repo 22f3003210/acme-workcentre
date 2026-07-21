@@ -22,14 +22,19 @@ export default function RecruiterView() {
   // Job Detail Sub-Tab: 'Checklist' | 'Dashboard' | 'Candidates' | 'Job Info' | 'Hiring Setup' | 'Analytics'
   const [jobSubTab, setJobSubTab] = useState("Candidates");
 
+  // Job Info Inner Sub-Tab: 'Job details' | 'Positions' | 'Activity' | 'Linked requisitions'
+  const [jobInfoSubTab, setJobInfoSubTab] = useState("Activity");
+
+  // Hiring Setup Inner Sub-Tab: 'Application Form' | 'Hiring Team' | 'Hiring Flow' | 'Scorecard'
+  const [hiringSetupSubTab, setHiringSetupSubTab] = useState("Scorecard");
+
   // Active Chevron Stage in Candidate Pipeline View
   const [activePipelineChevron, setActivePipelineChevron] = useState("Sourced"); // 'Sourced' | 'Screening' | 'Phase 1' | 'Phase 2' | 'Preboarding' | 'Hired' | 'Archived'
 
   // Modals
   const [showCreateJobModal, setShowCreateJobModal] = useState(false);
   const [showAddCandidateModal, setShowAddCandidateModal] = useState(false);
-  const [showGeoMatchModal, setShowGeoMatchModal] = useState(false);
-  const [selectedReqForGeo, setSelectedReqForGeo] = useState(null);
+  const [showCreateScorecardModal, setShowCreateScorecardModal] = useState(false);
 
   // Filter & Search States
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,6 +42,7 @@ export default function RecruiterView() {
   const [locationFilter, setLocationFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
   const [showOnlyPriority, setShowOnlyPriority] = useState(false);
+  const [candidatesMovedToPool, setCandidatesMovedToPool] = useState(false);
 
   // Candidate Filters under Pipeline
   const [candSourceFilter, setCandSourceFilter] = useState("All");
@@ -53,7 +59,6 @@ export default function RecruiterView() {
   const [positionsCount, setPositionsCount] = useState("3");
   const [assignedRecruiter, setAssignedRecruiter] = useState("HBJ HR");
   const [jobDescription, setJobDescription] = useState("");
-  const [isConfidential, setIsConfidential] = useState(true);
 
   // New Candidate Form State
   const [candName, setCandName] = useState("");
@@ -66,7 +71,14 @@ export default function RecruiterView() {
   const [candJobId, setCandJobId] = useState("");
   const [candSummary, setCandSummary] = useState("");
 
-  // Initial Sample Jobs matching screenshot if hiringRequisitions is empty or to enrich default jobs list
+  // Scorecard Form State
+  const [scorecardSectionName, setScorecardSectionName] = useState("Evaluation Skills");
+  const [scorecardSkill, setScorecardSkill] = useState("Oral Communication & Retail Pitching");
+  const [scorecardInstruction, setScorecardInstruction] = useState("Analyse the candidate by asking past showroom sales achievements...");
+  const [scorecardResponseType, setScorecardResponseType] = useState("Star rating");
+  const [scorecardMandatory, setScorecardMandatory] = useState(true);
+
+  // Initial Sample Jobs
   const defaultApprovedRequisition = {
     id: "req-app-1",
     jobTitle: "Customer Relations Executive",
@@ -187,7 +199,53 @@ export default function RecruiterView() {
     }
   ];
 
-  // Combined active jobs from context & defaults
+  // Sample Archived candidates matching Screenshot 1
+  const archivedCandidatesSample = [
+    {
+      id: "arch-1",
+      name: "ROHIT SINGH THAKUR",
+      archivedFrom: "Sourced",
+      archivedBy: "HBJ HR",
+      archivedOn: "07 Jun 2026",
+      reason: "Candidate Not Interested",
+      tags: "Not Available",
+      phone: "+91 9704138501",
+      email: "rohitsingh@gmail.com"
+    },
+    {
+      id: "arch-2",
+      name: "ERAPATNAM AVINASH",
+      archivedFrom: "Sourced",
+      archivedBy: "HBJ HR",
+      archivedOn: "26 Apr 2026",
+      reason: "Candidate Not Interested",
+      tags: "Not Available",
+      phone: "+91 9000245745",
+      email: "avinashaaby@gmail.com"
+    },
+    {
+      id: "arch-3",
+      name: "SHAIK EJAS PASHA",
+      archivedFrom: "Sourced",
+      archivedBy: "HBJ HR",
+      archivedOn: "26 Apr 2026",
+      reason: "Candidate Not Interested",
+      tags: "Not Available",
+      phone: "+91 9912412760",
+      email: "ejaspasha786@gmail.com"
+    }
+  ];
+
+  // Activity log history matching Screenshot 2
+  const activityLogsSample = [
+    { user: "Shikhar Jain", action: "removed shikhar jain as Interviewer", time: "07 Jul 2025, 12:21 PM" },
+    { user: "HBJ HR", action: "added hemanth kumar jain as hiring manager", time: "03 May 2025, 05:51 PM" },
+    { user: "HBJ HR", action: "added hemanth kumar jain as recruiter", time: "03 May 2025, 05:51 PM" },
+    { user: "HBJ HR", action: "added hemanth kumar jain as interviewer", time: "26 Apr 2025, 04:00 PM" },
+    { user: "HBJ HR", action: "added shikhar jain as interviewer", time: "26 Apr 2025, 03:58 PM" },
+    { user: "HBJ HR", action: "updated job details", time: "24 Apr 2025, 05:32 PM" }
+  ];
+
   const activeJobs = [
     ...defaultActiveJobsList,
     ...hiringRequisitions.map(req => ({
@@ -209,7 +267,6 @@ export default function RecruiterView() {
     }))
   ];
 
-  // Handle Create Job Submit
   const handleCreateJobSubmit = (e) => {
     e.preventDefault();
     if (!jobTitle.trim()) {
@@ -236,7 +293,6 @@ export default function RecruiterView() {
     setJobDescription("");
   };
 
-  // Handle Add Candidate Submit
   const handleAddCandidateSubmit = (e) => {
     e.preventDefault();
     if (!candName.trim() || !candPhone.trim()) {
@@ -268,17 +324,14 @@ export default function RecruiterView() {
     setCandSummary("");
   };
 
-  // Filter candidates for selected job & stage chevron
-  const currentJobCandidates = candidates.filter(c => {
-    if (selectedJob) {
-      if (c.appliedReqId && c.appliedReqId !== selectedJob.id && c.appliedReqId !== "req-101" && selectedJob.id === "job-4") {
-        // match default candidates
-      }
-    }
-    return true;
-  });
+  const handleCreateScorecardSubmit = (e) => {
+    e.preventDefault();
+    setToast({ message: `Scorecard '${scorecardSectionName}' saved successfully!`, type: "success" });
+    setShowCreateScorecardModal(false);
+  };
 
-  // Stage mapping helper
+  const currentJobCandidates = candidates;
+
   const getStageNameFromChevron = (chev) => {
     switch (chev) {
       case "Sourced": return "Sourced / Applied";
@@ -293,7 +346,6 @@ export default function RecruiterView() {
   };
 
   const stageCandidatesList = currentJobCandidates.filter(c => {
-    const targetStage = getStageNameFromChevron(activePipelineChevron);
     if (activePipelineChevron === "Sourced") {
       return c.stage === "Sourced / Applied" || c.stage === "Sourced" || !c.stage;
     }
@@ -321,11 +373,10 @@ export default function RecruiterView() {
   return (
     <div className="recruiter-module-wrapper" style={{ background: "#f8fafc", minHeight: "100vh", fontFamily: "'Inter', sans-serif" }}>
       
-      {/* ── TOP Purple Sub-Navbar matching Keka Hire Screenshots ── */}
+      {/* ── TOP Purple Sub-Navbar ── */}
       <div style={{ background: "#ffffff", borderBottom: "1px solid #e2e8f0", padding: "0 24px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", height: "54px" }}>
           
-          {/* Sub-Tabs */}
           <div style={{ display: "flex", alignItems: "center", gap: "28px", height: "100%" }}>
             {[
               { id: "HOME", label: "HOME" },
@@ -363,7 +414,6 @@ export default function RecruiterView() {
             ))}
           </div>
 
-          {/* Top Right Action Button */}
           <button
             onClick={() => setShowCreateJobModal(true)}
             style={{
@@ -389,13 +439,9 @@ export default function RecruiterView() {
       {/* ── MAIN CONTENT AREA ── */}
       <div style={{ padding: "24px 32px", maxWidth: "1600px", margin: "0 auto" }}>
 
-        {/* ============================================================== */}
-        {/* VIEW 1: JOBS DASHBOARD (Matching Screenshot Image 1)           */}
-        {/* ============================================================== */}
+        {/* VIEW 1: JOBS DASHBOARD */}
         {topTab === "JOBS" && !selectedJob && (
           <div>
-            
-            {/* 1. Approved Requisition (1) Section */}
             <div style={{ marginBottom: "32px" }}>
               <div style={{ marginBottom: "12px" }}>
                 <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#5b21b6", margin: 0 }}>
@@ -483,7 +529,7 @@ export default function RecruiterView() {
               </div>
             </div>
 
-            {/* 2. Active Jobs (13) Header & Filter Bar */}
+            {/* Active Jobs Section */}
             <div style={{ marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
                 <div>
@@ -496,7 +542,6 @@ export default function RecruiterView() {
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  {/* Priority Toggle */}
                   <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", fontWeight: "600", color: "#475569", cursor: "pointer" }}>
                     <input
                       type="checkbox"
@@ -507,13 +552,11 @@ export default function RecruiterView() {
                     Show only priority
                   </label>
 
-                  {/* Grid / List Layout Switcher */}
                   <div style={{ display: "flex", background: "#f1f5f9", borderRadius: "6px", padding: "2px" }}>
                     <button style={{ background: "#ffffff", border: "none", borderRadius: "4px", padding: "6px 10px", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>▦</button>
                     <button style={{ background: "none", border: "none", padding: "6px 10px", cursor: "pointer", color: "#64748b" }}>☰</button>
                   </div>
 
-                  {/* Create Job Dropdown */}
                   <button
                     onClick={() => setShowCreateJobModal(true)}
                     style={{
@@ -536,12 +579,10 @@ export default function RecruiterView() {
                 </div>
               </div>
 
-              {/* Filter Bar Dropdowns matching Keka Screenshot */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "10px 16px", display: "grid", gridTemplateColumns: "repeat(6, 1fr) 2fr", gap: "12px", alignItems: "center" }}>
                 <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#475569" }}>
                   <option value="All">Business Unit ∨</option>
                   <option value="Jewellery Retail">Jewellery Retail</option>
-                  <option value="Corporate Audit">Corporate Audit</option>
                 </select>
 
                 <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#475569" }}>
@@ -555,27 +596,21 @@ export default function RecruiterView() {
                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#475569" }}>
                   <option value="All">Status ∨</option>
                   <option value="Online">Online</option>
-                  <option value="Draft">Draft</option>
                 </select>
 
                 <select style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#475569" }}>
                   <option>Hiring Manager ∨</option>
                   <option>Anant Kumar Sarraf</option>
-                  <option>Darla Manikanta</option>
                 </select>
 
                 <select style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#475569" }}>
                   <option>Recruiter ∨</option>
                   <option>HBJ HR</option>
-                  <option>Hemanth Kumar Jain</option>
-                  <option>Shikhar Jain</option>
                 </select>
 
                 <select value={locationFilter} onChange={e => setLocationFilter(e.target.value)} style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#475569" }}>
                   <option value="All">Location ∨</option>
                   <option value="Mehdipatnam">Mehdipatnam</option>
-                  <option value="Delhi">Delhi</option>
-                  <option value="Mumbai">Mumbai</option>
                 </select>
 
                 <div style={{ position: "relative" }}>
@@ -591,7 +626,6 @@ export default function RecruiterView() {
               </div>
             </div>
 
-            {/* 3. Active Jobs Grid Cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
               {activeJobs.filter(job => {
                 if (showOnlyPriority && !job.isPriority) return false;
@@ -622,22 +656,19 @@ export default function RecruiterView() {
                     e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.03)";
                   }}
                 >
-                  {/* Confidential / Lock Icon */}
                   {job.isConfidential && (
                     <span style={{ position: "absolute", right: "20px", top: "20px", color: "#94a3b8", fontSize: "1.1rem" }}>
                       🔒
                     </span>
                   )}
 
-                  {/* Title & Department */}
-                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#1e293b", margin: 0, textTransform: "uppercase", letterSpacing: "-0.01em" }}>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#1e293b", margin: 0, textTransform: "uppercase" }}>
                     {job.title}
                   </h3>
                   <div style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "600", marginTop: "4px" }}>
                     {job.department} <span style={{ color: "#cbd5e1", margin: "0 4px" }}>|</span> {job.location}
                   </div>
 
-                  {/* Target & Openings Row */}
                   <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "20px", fontSize: "0.8rem", color: "#475569" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                       <span>👥</span> <strong>{job.newCandidates}</strong>
@@ -652,8 +683,7 @@ export default function RecruiterView() {
                     </div>
                   </div>
 
-                  {/* Candidates Count Footer */}
-                  <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "20px", paddingTop: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.74rem", color: "#64748b", fontWeight: "700", letterSpacing: "0.04em" }}>
+                  <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "20px", paddingTop: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.74rem", color: "#64748b", fontWeight: "700" }}>
                     <span>{job.newCandidates} NEW CANDIDATES • {job.archived} ARCHIVED</span>
                     <span style={{ display: "flex", alignItems: "center", gap: "6px", color: "#6d28d9" }}>
                       <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#6d28d9" }}></span>
@@ -663,17 +693,12 @@ export default function RecruiterView() {
                 </div>
               ))}
             </div>
-
           </div>
         )}
 
-        {/* ============================================================== */}
-        {/* VIEW 2: JOB SINGLE VIEW (Matching Screenshots 2, 3, 4, 5)     */}
-        {/* ============================================================== */}
+        {/* VIEW 2: SINGLE JOB DETAILED VIEW */}
         {(selectedJob || topTab === "CANDIDATES") && (
           <div>
-            
-            {/* Top Back Navigation Link */}
             <div style={{ marginBottom: "16px" }}>
               <button
                 onClick={() => setSelectedJob(null)}
@@ -683,7 +708,7 @@ export default function RecruiterView() {
               </button>
             </div>
 
-            {/* 1. Job Header Info (Matching Image 2 & 4) */}
+            {/* Header Info */}
             <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px 24px", marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
@@ -730,7 +755,7 @@ export default function RecruiterView() {
               </div>
             </div>
 
-            {/* 2. Job Sub-Tabs Bar */}
+            {/* Sub-Tabs Bar */}
             <div style={{ borderBottom: "1px solid #cbd5e1", marginBottom: "24px" }}>
               <div style={{ display: "flex", gap: "32px" }}>
                 {[
@@ -765,12 +790,11 @@ export default function RecruiterView() {
               </div>
             </div>
 
-            {/* ── SUB TAB 1: CHECKLIST (Matching Image 3) ── */}
+            {/* ── SUB TAB 1: CHECKLIST ── */}
             {jobSubTab === "Checklist" && (
               <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "24px" }}>
                 <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "24px" }}>
                   <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", marginBottom: "20px" }}>Job Onboarding Checklist</h3>
-                  
                   <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <div>
@@ -791,7 +815,7 @@ export default function RecruiterView() {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                       <div>
                         <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "#1e293b" }}>Add hiring team</div>
-                        <div style={{ fontSize: "0.78rem", color: "#64748b" }}>You can add hiring team for this job for managing candidates</div>
+                        <div style={{ fontSize: "0.78rem", color: "#64748b" }}>You can add hiring team for this job</div>
                       </div>
                       <span style={{ background: "#dcfce7", color: "#16a34a", padding: "4px 8px", borderRadius: "50%", fontWeight: "700" }}>✓</span>
                     </div>
@@ -801,20 +825,11 @@ export default function RecruiterView() {
                         <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "#1e293b" }}>Add Scorecards</div>
                         <div style={{ fontSize: "0.78rem", color: "#64748b" }}>Get better feedbacks with scorecards</div>
                       </div>
-                      <button style={{ border: "1px solid #6d28d9", color: "#6d28d9", background: "#fff", padding: "6px 14px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}>Continue</button>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div>
-                        <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "#1e293b" }}>Publish to external job boards</div>
-                        <div style={{ fontSize: "0.78rem", color: "#64748b" }}>Get better reach by publishing in LinkedIn, Naukri, Meta Ads</div>
-                      </div>
-                      <button style={{ border: "1px solid #6d28d9", color: "#6d28d9", background: "#fff", padding: "6px 14px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}>Continue</button>
+                      <button onClick={() => { setJobSubTab("Hiring Setup"); setHiringSetupSubTab("Scorecard"); }} style={{ border: "1px solid #6d28d9", color: "#6d28d9", background: "#fff", padding: "6px 14px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}>Continue</button>
                     </div>
                   </div>
                 </div>
 
-                {/* Right Side Impact Score Card */}
                 <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "24px", textAlign: "center" }}>
                   <div style={{ fontSize: "0.84rem", fontWeight: "700", color: "#64748b", marginBottom: "16px" }}>Impact score</div>
                   <div style={{ position: "relative", width: "120px", height: "120px", margin: "0 auto 16px auto", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", background: "conic-gradient(#eab308 0% 60%, #e2e8f0 60% 100%)" }}>
@@ -830,14 +845,12 @@ export default function RecruiterView() {
               </div>
             )}
 
-            {/* ── SUB TAB 2: CANDIDATES PIPELINE (Matching Images 2, 4, 5) ── */}
+            {/* ── SUB TAB 2: CANDIDATES PIPELINE & ARCHIVED TABLE (Matching Screenshot 1) ── */}
             {jobSubTab === "Candidates" && (
               <div>
                 
-                {/* Chevrons Stage Navigation Bar */}
+                {/* Chevrons Stage Bar */}
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
-                  
-                  {/* Left Pipeline Chevron Bar */}
                   <div style={{ display: "flex", alignItems: "center", gap: "2px", flexGrow: 1, maxWidth: "80%" }}>
                     {[
                       { id: "Sourced", label: "Sourced", count: 4 },
@@ -861,7 +874,6 @@ export default function RecruiterView() {
                             textAlign: "center",
                             fontSize: "0.82rem",
                             fontWeight: "700",
-                            position: "relative",
                             clipPath: index === 0 
                               ? "polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%)" 
                               : "polygon(0% 0%, 90% 0%, 100% 50%, 90% 100%, 0% 100%, 10% 50%)"
@@ -874,7 +886,6 @@ export default function RecruiterView() {
                     })}
                   </div>
 
-                  {/* Right Hired & Archived Badges */}
                   <div style={{ display: "flex", gap: "10px" }}>
                     <button
                       onClick={() => setActivePipelineChevron("Hired")}
@@ -909,55 +920,113 @@ export default function RecruiterView() {
                   </div>
                 </div>
 
-                {/* Sub-Stage Header Title */}
-                <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", marginBottom: "16px" }}>
-                  {activePipelineChevron}
-                </h3>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", margin: 0 }}>
+                    {activePipelineChevron}
+                  </h3>
 
-                {/* Candidate Filters Bar matching Image 4 */}
-                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "10px 16px", marginBottom: "16px", display: "grid", gridTemplateColumns: "repeat(4, 1fr) 2fr 1fr", gap: "12px", alignItems: "center" }}>
-                  <select value={candSourceFilter} onChange={e => setCandSourceFilter(e.target.value)} style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
-                    <option value="All">Source ∨</option>
-                    <option value="NIKHIL GOUD (Referral)">NIKHIL GOUD (Referral)</option>
-                    <option value="POOJA (Referral)">POOJA (Referral)</option>
-                    <option value="LinkedIn">LinkedIn</option>
-                    <option value="Naukri">Naukri</option>
-                  </select>
-
-                  <select value={candExpFilter} onChange={e => setCandExpFilter(e.target.value)} style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
-                    <option value="All">Experience ∨</option>
-                    <option value="1-3 Years">1-3 Years</option>
-                    <option value="3-5 Years">3-5 Years</option>
-                  </select>
-
-                  <select style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
-                    <option>Expected Salary ∨</option>
-                    <option>₹3,00,000 - ₹5,00,000</option>
-                  </select>
-
-                  <select style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
-                    <option>Available To Join ∨</option>
-                    <option>Immediate / 15 Days</option>
-                  </select>
-
-                  <div style={{ position: "relative" }}>
-                    <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }}>🔍</span>
-                    <input
-                      type="text"
-                      placeholder="Search candidates"
-                      value={candSearch}
-                      onChange={e => setCandSearch(e.target.value)}
-                      style={{ width: "100%", padding: "8px 12px 8px 32px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}
-                    />
-                  </div>
-
-                  <button style={{ background: "#6d28d9", color: "#fff", border: "none", borderRadius: "6px", padding: "8px", fontSize: "0.8rem", fontWeight: "700", cursor: "pointer" }}>
-                    Bulk Actions ∨
-                  </button>
+                  {activePipelineChevron === "Archived" && (
+                    <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", fontWeight: "600", color: "#475569", cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={candidatesMovedToPool}
+                        onChange={e => setCandidatesMovedToPool(e.target.checked)}
+                        style={{ accentColor: "#6d28d9", width: "16px", height: "16px" }}
+                      />
+                      Candidates moved to pool
+                    </label>
+                  )}
                 </div>
 
-                {/* Candidate Table matching Screenshot 4 */}
-                {stageCandidatesList.length > 0 ? (
+                {/* ARCHIVED PIPELINE STAGE VIEW (Matching Screenshot 1) */}
+                {activePipelineChevron === "Archived" ? (
+                  <div>
+                    {/* Filters Bar */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "10px 16px", marginBottom: "16px", display: "grid", gridTemplateColumns: "repeat(6, 1fr) 2fr", gap: "12px", alignItems: "center" }}>
+                      <select style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
+                        <option>Source ∨</option>
+                        <option>HBJ HR Referral</option>
+                      </select>
+                      <input type="date" style={{ padding: "7px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }} />
+                      <select style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
+                        <option>Archived From ∨</option>
+                        <option>Sourced</option>
+                      </select>
+                      <select style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
+                        <option>Archive Reason ∨</option>
+                        <option>Candidate Not Interested</option>
+                      </select>
+                      <select style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
+                        <option>Experience ∨</option>
+                      </select>
+                      <select style={{ padding: "8px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }}>
+                        <option>Expected Salary ∨</option>
+                      </select>
+
+                      <div style={{ position: "relative" }}>
+                        <span style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }}>🔍</span>
+                        <input type="text" placeholder="Search" style={{ width: "100%", padding: "8px 12px 8px 32px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem" }} />
+                      </div>
+                    </div>
+
+                    {/* Action Bar */}
+                    <div style={{ display: "flex", gap: "12px", marginBottom: "16px" }}>
+                      <button style={{ background: "#a5b4fc", color: "#ffffff", border: "none", borderRadius: "6px", padding: "8px 18px", fontSize: "0.82rem", fontWeight: "700", cursor: "not-allowed" }}>Rollback</button>
+                      <button style={{ background: "#ffffff", border: "1px solid #cbd5e1", color: "#475569", borderRadius: "6px", padding: "8px 18px", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer" }}>Send Email</button>
+                    </div>
+
+                    {/* Archived Table */}
+                    <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
+                      <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.82rem" }}>
+                        <thead>
+                          <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#64748b", textTransform: "uppercase", fontSize: "0.72rem", fontWeight: "700" }}>
+                            <th style={{ padding: "12px 16px", width: "40px" }}><input type="checkbox" /></th>
+                            <th style={{ padding: "12px 16px" }}>CANDIDATE NAME</th>
+                            <th style={{ padding: "12px 16px" }}>ARCHIVED FROM</th>
+                            <th style={{ padding: "12px 16px" }}>ARCHIVED BY</th>
+                            <th style={{ padding: "12px 16px" }}>ARCHIVED ON</th>
+                            <th style={{ padding: "12px 16px" }}>ARCHIVED REASON</th>
+                            <th style={{ padding: "12px 16px" }}>TAGS</th>
+                            <th style={{ padding: "12px 16px" }}>CONTACT</th>
+                            <th style={{ padding: "12px 16px", textAlign: "right" }}>ACTIONS</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {archivedCandidatesSample.map((cand) => (
+                            <tr key={cand.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                              <td style={{ padding: "14px 16px" }}><input type="checkbox" /></td>
+                              <td style={{ padding: "14px 16px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#10b981", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "0.76rem" }}>
+                                    {cand.name.substring(0, 2)}
+                                  </div>
+                                  <div style={{ fontWeight: "700", color: "#5b21b6" }}>{cand.name}</div>
+                                </div>
+                              </td>
+                              <td style={{ padding: "14px 16px", color: "#475569" }}>{cand.archivedFrom}</td>
+                              <td style={{ padding: "14px 16px", fontWeight: "600", color: "#475569" }}>{cand.archivedBy}</td>
+                              <td style={{ padding: "14px 16px", color: "#475569" }}>{cand.archivedOn}</td>
+                              <td style={{ padding: "14px 16px", color: "#334155", fontWeight: "600" }}>{cand.reason}</td>
+                              <td style={{ padding: "14px 16px", color: "#94a3b8" }}>{cand.tags}</td>
+                              <td style={{ padding: "14px 16px", fontSize: "0.76rem" }}>
+                                <div style={{ fontWeight: "700" }}>{cand.phone}</div>
+                                <div style={{ color: "#64748b" }}>{cand.email}</div>
+                              </td>
+                              <td style={{ padding: "14px 16px", textAlign: "right" }}>
+                                <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px" }}>
+                                  <button style={{ background: "#f1f5f9", border: "none", borderRadius: "4px", padding: "4px 8px", cursor: "pointer" }}>👤+</button>
+                                  <button style={{ background: "#f1f5f9", border: "none", borderRadius: "4px", padding: "4px 8px", cursor: "pointer" }}>💬</button>
+                                  <span style={{ cursor: "pointer", color: "#94a3b8" }}>⋮</span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                ) : (
+                  /* Standard Active Pipeline Table */
                   <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
                     <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.82rem" }}>
                       <thead>
@@ -984,7 +1053,7 @@ export default function RecruiterView() {
                                 </div>
                                 <div>
                                   <div style={{ fontWeight: "700", color: "#6d28d9", fontSize: "0.88rem" }}>{cand.name}</div>
-                                  <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{cand.city} {cand.relocationOk ? "(Relocation OK)" : ""}</div>
+                                  <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{cand.city}</div>
                                 </div>
                               </div>
                             </td>
@@ -1019,30 +1088,177 @@ export default function RecruiterView() {
                       </tbody>
                     </table>
                   </div>
-                ) : (
-                  /* Empty State Matching Screenshot 2 & 5 */
-                  <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "60px 20px", textAlign: "center" }}>
-                    <div style={{ fontSize: "3rem", color: "#cbd5e1", marginBottom: "12px" }}>🗼</div>
-                    <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "#1e293b", margin: 0 }}>No candidates here</h3>
-                    <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "6px 0 20px 0" }}>There are no candidates available to show</p>
-                    
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px" }}>
+                )}
+              </div>
+            )}
+
+            {/* ── SUB TAB 3: JOB INFO (Matching Screenshot 2 & 3) ── */}
+            {jobSubTab === "Job Info" && (
+              <div>
+                <div style={{ borderBottom: "1px solid #e2e8f0", marginBottom: "24px" }}>
+                  <div style={{ display: "flex", gap: "24px" }}>
+                    {["Job details", "Positions", "Activity", "Linked requisitions"].map(sub => (
                       <button
-                        onClick={() => setShowAddCandidateModal(true)}
-                        style={{ background: "#6d28d9", color: "#fff", border: "none", borderRadius: "6px", padding: "10px 20px", fontSize: "0.84rem", fontWeight: "700", cursor: "pointer" }}
+                        key={sub}
+                        onClick={() => setJobInfoSubTab(sub)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          paddingBottom: "10px",
+                          fontSize: "0.82rem",
+                          fontWeight: "700",
+                          color: jobInfoSubTab === sub ? "#5b21b6" : "#64748b",
+                          borderBottom: jobInfoSubTab === sub ? "3px solid #6d28d9" : "3px solid transparent",
+                          cursor: "pointer"
+                        }}
                       >
-                        Add candidate ∨
+                        {sub}
                       </button>
-                      <button
-                        onClick={() => setTopTab("TALENT_POOL")}
-                        style={{ background: "#fff", color: "#6d28d9", border: "1px solid #6d28d9", borderRadius: "6px", padding: "10px 20px", fontSize: "0.84rem", fontWeight: "700", cursor: "pointer" }}
-                      >
-                        Import from talent pool
-                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Activity Log Timeline (Matching Screenshot 2) */}
+                {jobInfoSubTab === "Activity" && (
+                  <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "28px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                      {activityLogsSample.map((log, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: "14px" }}>
+                          <span style={{ color: "#94a3b8", fontSize: "1rem", marginTop: "2px" }}>✎</span>
+                          <div>
+                            <div style={{ fontSize: "0.86rem", color: "#334155" }}>
+                              <strong style={{ color: "#1e293b" }}>{log.user}</strong> {log.action}
+                            </div>
+                            <div style={{ fontSize: "0.74rem", color: "#94a3b8", marginTop: "2px" }}>
+                              {log.time}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
 
+                {/* Linked Requisitions Ghost Illustration (Matching Screenshot 3) */}
+                {jobInfoSubTab === "Linked requisitions" && (
+                  <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "60px 20px", textAlign: "center" }}>
+                    <div style={{ fontSize: "3.5rem", color: "#cbd5e1", marginBottom: "12px" }}>👻</div>
+                    <p style={{ fontSize: "0.84rem", color: "#64748b", maxWidth: "420px", margin: "0 auto 20px auto", lineHeight: "1.5" }}>
+                      Add requisition to ensure that job is aligned with defined requirements, facilitating efficient hiring process
+                    </p>
+                    <button style={{ background: "#6d28d9", color: "#ffffff", border: "none", borderRadius: "6px", padding: "10px 20px", fontSize: "0.84rem", fontWeight: "700", cursor: "pointer" }}>
+                      + Add Requisition
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── SUB TAB 4: HIRING SETUP (Matching Screenshot 4) ── */}
+            {jobSubTab === "Hiring Setup" && (
+              <div>
+                <div style={{ borderBottom: "1px solid #e2e8f0", marginBottom: "24px" }}>
+                  <div style={{ display: "flex", gap: "24px" }}>
+                    {["Application Form", "Hiring Team", "Hiring Flow", "Scorecard"].map(sub => (
+                      <button
+                        key={sub}
+                        onClick={() => setHiringSetupSubTab(sub)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          paddingBottom: "10px",
+                          fontSize: "0.82rem",
+                          fontWeight: "700",
+                          color: hiringSetupSubTab === sub ? "#5b21b6" : "#64748b",
+                          borderBottom: hiringSetupSubTab === sub ? "3px solid #6d28d9" : "3px solid transparent",
+                          cursor: "pointer"
+                        }}
+                      >
+                        {sub}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Scorecard Setup Panel (Matching Screenshot 4) */}
+                {hiringSetupSubTab === "Scorecard" && (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 3fr", gap: "24px" }}>
+                    {/* Left Hiring Flow Sidebar */}
+                    <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "16px" }}>
+                      <h4 style={{ fontSize: "0.82rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", marginBottom: "12px" }}>Hiring flow</h4>
+                      
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <div style={{ background: "#f3e8ff", border: "1px solid #c084fc", borderRadius: "8px", padding: "12px" }}>
+                          <div style={{ fontSize: "0.84rem", fontWeight: "700", color: "#5b21b6" }}>Sourced</div>
+                          <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>◯ No scorecard</div>
+                        </div>
+
+                        <div style={{ border: "1px solid #e2e8f0", borderRadius: "8px", padding: "12px" }}>
+                          <div style={{ fontSize: "0.84rem", fontWeight: "700", color: "#334155" }}>Screening</div>
+                          <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>◯ No scorecard</div>
+                        </div>
+
+                        <div style={{ border: "1px solid #e2e8f0", borderRadius: "8px", padding: "12px" }}>
+                          <div style={{ fontSize: "0.84rem", fontWeight: "700", color: "#334155" }}>Interview - Phase 1</div>
+                          <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>◯ No scorecard</div>
+                        </div>
+
+                        <div style={{ border: "1px solid #e2e8f0", borderRadius: "8px", padding: "12px" }}>
+                          <div style={{ fontSize: "0.84rem", fontWeight: "700", color: "#334155" }}>Interview - Phase 2</div>
+                          <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>◯ No scorecard</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Panel Cards */}
+                    <div>
+                      <h3 style={{ fontSize: "1rem", fontWeight: "700", color: "#1e293b", marginBottom: "20px" }}>Scorecard - Sourced</h3>
+                      
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                        <div
+                          onClick={() => setShowCreateScorecardModal(true)}
+                          style={{
+                            background: "#ffffff",
+                            borderRadius: "12px",
+                            border: "1px solid #e2e8f0",
+                            padding: "40px 24px",
+                            textAlign: "center",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = "#6d28d9"}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = "#e2e8f0"}
+                        >
+                          <div style={{ fontSize: "2rem", color: "#6d28d9", marginBottom: "10px" }}>+</div>
+                          <div style={{ fontSize: "0.95rem", fontWeight: "700", color: "#5b21b6" }}>Create new scorecard</div>
+                          <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "6px", lineHeight: "1.5" }}>
+                            Craft scorecard from scratch or import from our selection of pre-designed templates, the choice is yours!
+                          </div>
+                        </div>
+
+                        <div
+                          style={{
+                            background: "#ffffff",
+                            borderRadius: "12px",
+                            border: "1px solid #e2e8f0",
+                            padding: "40px 24px",
+                            textAlign: "center",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = "#6d28d9"}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = "#e2e8f0"}
+                        >
+                          <div style={{ fontSize: "1.8rem", color: "#6d28d9", marginBottom: "10px" }}>📥</div>
+                          <div style={{ fontSize: "0.95rem", fontWeight: "700", color: "#5b21b6" }}>Import from another job</div>
+                          <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "6px", lineHeight: "1.5" }}>
+                            Import the scorecard as it is from another job, allowing for customisable sections
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1054,37 +1270,13 @@ export default function RecruiterView() {
       {/* ── CREATE JOB MODAL ── */}
       {showCreateJobModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "520px", maxWidth: "90vw", boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }}>
+          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "520px", maxWidth: "90vw" }}>
             <h2 style={{ fontSize: "1.2rem", fontWeight: "800", color: "#1e293b", marginTop: 0 }}>+ Create New Job Opening</h2>
-            
             <form onSubmit={handleCreateJobSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
               <div>
                 <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Job Title</label>
                 <input type="text" value={jobTitle} onChange={e => setJobTitle(e.target.value)} required placeholder="Ex: Store Operations Manager" style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
               </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Department</label>
-                  <input type="text" value={department} onChange={e => setDepartment(e.target.value)} style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Location</label>
-                  <input type="text" value={location} onChange={e => setLocation(e.target.value)} style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Budget CTC</label>
-                  <input type="text" value={offeredBudget} onChange={e => setOfferedBudget(e.target.value)} style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Openings</label>
-                  <input type="number" value={positionsCount} onChange={e => setPositionsCount(e.target.value)} style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
-                </div>
-              </div>
-
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "16px" }}>
                 <button type="button" onClick={() => setShowCreateJobModal(false)} style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}>Cancel</button>
                 <button type="submit" style={{ padding: "8px 20px", borderRadius: "6px", border: "none", background: "#6d28d9", color: "#fff", fontWeight: "700", cursor: "pointer" }}>Create Job</button>
@@ -1094,53 +1286,85 @@ export default function RecruiterView() {
         </div>
       )}
 
-      {/* ── ADD CANDIDATE MODAL ── */}
-      {showAddCandidateModal && (
+      {/* ── CREATE SCORECARD MODAL (Matching Screenshot 5) ── */}
+      {showCreateScorecardModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "520px", maxWidth: "90vw", boxShadow: "0 20px 50px rgba(0,0,0,0.2)" }}>
-            <h2 style={{ fontSize: "1.2rem", fontWeight: "800", color: "#1e293b", marginTop: 0 }}>+ Add New Candidate Lead</h2>
-            
-            <form onSubmit={handleAddCandidateSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "720px", maxWidth: "95vw", boxShadow: "0 20px 50px rgba(0,0,0,0.25)" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+              <h2 style={{ fontSize: "1.2rem", fontWeight: "800", color: "#1e293b", margin: 0 }}>Create Scorecard</h2>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button style={{ border: "1px solid #6d28d9", color: "#6d28d9", background: "#fff", borderRadius: "6px", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}>+ Import from Library</button>
+                <button style={{ border: "1px solid #6d28d9", color: "#6d28d9", background: "#fff", borderRadius: "6px", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}>Save to library</button>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateScorecardSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Candidate Full Name</label>
-                <input type="text" value={candName} onChange={e => setCandName(e.target.value)} required placeholder="Ex: Sheetal Singh Thakur" style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
+                <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Sections</label>
+                <input
+                  type="text"
+                  value={scorecardSectionName}
+                  onChange={e => setScorecardSectionName(e.target.value)}
+                  style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.84rem", marginTop: "4px" }}
+                />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Mobile Phone</label>
-                  <input type="text" value={candPhone} onChange={e => setCandPhone(e.target.value)} required placeholder="+91 98765 43210" style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Email Address</label>
-                  <input type="email" value={candEmail} onChange={e => setCandEmail(e.target.value)} placeholder="candidate@gmail.com" style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }} />
-                </div>
-              </div>
+              <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.8rem" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#64748b", textTransform: "uppercase", fontSize: "0.7rem", fontWeight: "700" }}>
+                    <th style={{ padding: "8px 12px" }}>SKILL / QUESTION</th>
+                    <th style={{ padding: "8px 12px" }}>INSTRUCTIONS TO INTERVIEWER</th>
+                    <th style={{ padding: "8px 12px" }}>RESPONSE TYPE</th>
+                    <th style={{ padding: "8px 12px" }}>MANDATORY</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: "8px 12px" }}>
+                      <input
+                        type="text"
+                        value={scorecardSkill}
+                        onChange={e => setScorecardSkill(e.target.value)}
+                        style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #e2e8f0" }}
+                      />
+                    </td>
+                    <td style={{ padding: "8px 12px" }}>
+                      <input
+                        type="text"
+                        value={scorecardInstruction}
+                        onChange={e => setScorecardInstruction(e.target.value)}
+                        style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #e2e8f0" }}
+                      />
+                    </td>
+                    <td style={{ padding: "8px 12px" }}>
+                      <select
+                        value={scorecardResponseType}
+                        onChange={e => setScorecardResponseType(e.target.value)}
+                        style={{ width: "100%", padding: "6px", borderRadius: "4px", border: "1px solid #6d28d9", color: "#5b21b6", fontWeight: "700" }}
+                      >
+                        <option value="Star rating">⭐ Star rating</option>
+                        <option value="Radio (2-option)">🔘 Radio (2-option)</option>
+                        <option value="Single select">∨ Single select</option>
+                        <option value="Multi select">☑ Multi select</option>
+                        <option value="Text">💬 Text</option>
+                      </select>
+                    </td>
+                    <td style={{ padding: "8px 12px" }}>
+                      <input
+                        type="checkbox"
+                        checked={scorecardMandatory}
+                        onChange={e => setScorecardMandatory(e.target.checked)}
+                        style={{ accentColor: "#6d28d9", width: "18px", height: "18px" }}
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Current City</label>
-                  <select value={candCity} onChange={e => setCandCity(e.target.value)} style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
-                    <option value="Hyderabad">Hyderabad</option>
-                    <option value="Delhi">Delhi</option>
-                    <option value="Mumbai">Mumbai</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ fontSize: "0.78rem", fontWeight: "700", color: "#475569" }}>Sourcing Channel</label>
-                  <select value={candSource} onChange={e => setCandSource(e.target.value)} style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1" }}>
-                    <option value="NIKHIL GOUD (Referral)">NIKHIL GOUD (Referral)</option>
-                    <option value="POOJA (Referral)">POOJA (Referral)</option>
-                    <option value="LinkedIn">LinkedIn</option>
-                    <option value="Naukri">Naukri</option>
-                    <option value="Meta Ads">Meta Ads</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "16px" }}>
-                <button type="button" onClick={() => setShowAddCandidateModal(false)} style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "8px 20px", borderRadius: "6px", border: "none", background: "#6d28d9", color: "#fff", fontWeight: "700", cursor: "pointer" }}>Add Candidate</button>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "24px" }}>
+                <button type="button" onClick={() => setShowCreateScorecardModal(false)} style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer" }}>Cancel</button>
+                <button type="button" style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #6d28d9", color: "#6d28d9", background: "#fff", fontWeight: "700", cursor: "pointer" }}>preview</button>
+                <button type="submit" style={{ padding: "8px 24px", borderRadius: "6px", border: "none", background: "#6d28d9", color: "#fff", fontWeight: "700", cursor: "pointer" }}>Save</button>
               </div>
             </form>
           </div>

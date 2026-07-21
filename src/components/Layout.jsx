@@ -792,7 +792,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
             </div>
             <div className="mobile-user-actions" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <img src={currentUser.avatar} alt={currentUser.name} className="mobile-avatar" onClick={openModal} style={{ cursor: "pointer" }} />
-              <button onClick={() => { logout(); navigate("/HBJ_B/auth/login"); }} style={{ fontSize: "0.75rem", color: "var(--color-error)", border: "1px solid var(--color-error)", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>Log Out</button>
+              <button onClick={() => { logout(); navigate("/auth/login"); }} style={{ fontSize: "0.75rem", color: "var(--color-error)", border: "1px solid var(--color-error)", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>Log Out</button>
             </div>
           </header>
 

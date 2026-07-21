@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import ProjectsView from "./ProjectsView";
+import RecruiterView from "./RecruiterView";
 
 export default function ConsultantView({ activeTab }) {
   const { 
@@ -1020,6 +1021,10 @@ export default function ConsultantView({ activeTab }) {
 
       {activeTab === "projects" && (
         <ProjectsView />
+      )}
+
+      {activeTab === "recruitment" && (
+        <RecruiterView />
       )}
 
       {/* Profile & Petty Cash Allowance Modal */}

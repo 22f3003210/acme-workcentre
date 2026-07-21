@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import LedgerReports from "../components/LedgerReports";
 import ProjectsView from "./ProjectsView";
+import RecruiterView from "./RecruiterView";
 import RegisterView from "./RegisterView";
 import logoImg from "../assets/logo.png";
 
@@ -1538,6 +1539,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
       {activeTab === "projects" && (
         <ProjectsView />
+      )}
+
+      {activeTab === "recruitment" && (
+        <RecruiterView />
       )}
 
       {activeTab === "attendance" && (

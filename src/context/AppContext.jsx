@@ -4,7 +4,9 @@ import {
   initialExpenses,
   initialSettings,
   initialAdvanceRequests,
-  initialProjects
+  initialProjects,
+  initialHiringRequisitions,
+  initialCandidates
 } from "../data/initialData";
 
 const AppContext = createContext();
@@ -33,7 +35,7 @@ const parseTimeToMinutes = (timeStr) => {
 };
 
 // ── Data version: bump this whenever initialData.js changes ──────────────
-const DATA_VERSION = "v7";
+const DATA_VERSION = "v8";
 
 export const AppProvider = ({ children }) => {
   // On every mount, flush stale localStorage if data version changed
@@ -45,7 +47,9 @@ export const AppProvider = ({ children }) => {
         "workcentre_expenses",
         "workcentre_settings",
         "workcentre_advance_requests",
-        "workcentre_projects"
+        "workcentre_projects",
+        "workcentre_hiring_requisitions",
+        "workcentre_candidates"
       ];
       keys.forEach(k => localStorage.removeItem(k));
       localStorage.setItem("workcentre_data_version", DATA_VERSION);
@@ -75,6 +79,16 @@ export const AppProvider = ({ children }) => {
   const [projects, setProjects] = useState(() => {
     const saved = localStorage.getItem("workcentre_projects");
     return saved ? JSON.parse(saved) : initialProjects;
+  });
+
+  const [hiringRequisitions, setHiringRequisitions] = useState(() => {
+    const saved = localStorage.getItem("workcentre_hiring_requisitions");
+    return saved ? JSON.parse(saved) : initialHiringRequisitions;
+  });
+
+  const [candidates, setCandidates] = useState(() => {
+    const saved = localStorage.getItem("workcentre_candidates");
+    return saved ? JSON.parse(saved) : initialCandidates;
   });
 
   const [currentUser, setCurrentUser] = useState(() => {
@@ -109,6 +123,14 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem("workcentre_projects", JSON.stringify(projects));
   }, [projects]);
+
+  useEffect(() => {
+    localStorage.setItem("workcentre_hiring_requisitions", JSON.stringify(hiringRequisitions));
+  }, [hiringRequisitions]);
+
+  useEffect(() => {
+    localStorage.setItem("workcentre_candidates", JSON.stringify(candidates));
+  }, [candidates]);
 
   useEffect(() => {
     localStorage.setItem("workcentre_authenticated", isAuthenticated ? "true" : "false");
@@ -562,6 +584,53 @@ export const AppProvider = ({ children }) => {
     setSettings(prev => ({ ...prev, ...newSettings }));
   };
 
+  // Recruitment Module Handlers
+  const addHiringRequisition = (reqData) => {
+    const newReq = {
+      id: `req-${Date.now()}`,
+      createdDate: new Date().toISOString().split("T")[0],
+      status: "Open",
+      channels: ["LinkedIn", "Naukri", "Meta Ads"],
+      ...reqData
+    };
+    setHiringRequisitions(prev => [newReq, ...prev]);
+    return newReq;
+  };
+
+  const updateHiringRequisition = (reqId, updates) => {
+    setHiringRequisitions(prev => prev.map(r => r.id === reqId ? { ...r, ...updates } : r));
+  };
+
+  const addCandidate = (candData) => {
+    const newCand = {
+      id: `cand-${Date.now()}`,
+      stage: "Sourced / Applied",
+      status: "In Process",
+      updatedDate: new Date().toISOString().split("T")[0],
+      ...candData
+    };
+    setCandidates(prev => [newCand, ...prev]);
+    return newCand;
+  };
+
+  const updateCandidateStage = (candId, stage) => {
+    setCandidates(prev => prev.map(c => c.id === candId ? { ...c, stage, updatedDate: new Date().toISOString().split("T")[0] } : c));
+  };
+
+  const updateCandidateStatus = (candId, status, extraNotes = "") => {
+    setCandidates(prev => prev.map(c => {
+      if (c.id === candId) {
+        return {
+          ...c,
+          status,
+          updatedDate: new Date().toISOString().split("T")[0],
+          summary: extraNotes ? `${c.summary || ''} [Note: ${extraNotes}]` : c.summary
+        };
+      }
+      return c;
+    }));
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -569,6 +638,8 @@ export const AppProvider = ({ children }) => {
         expenses,
         settings,
         projects,
+        hiringRequisitions,
+        candidates,
         currentUser,
         isAuthenticated,
         toast,
@@ -594,7 +665,12 @@ export const AppProvider = ({ children }) => {
         updateSettings,
         addProject,
         updateProject,
-        addProjectDiscussion
+        addProjectDiscussion,
+        addHiringRequisition,
+        updateHiringRequisition,
+        addCandidate,
+        updateCandidateStage,
+        updateCandidateStatus
       }}
     >
       {children}

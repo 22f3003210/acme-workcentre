@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 import LedgerReports from "../components/LedgerReports";
 import ProjectsView from "./ProjectsView";
+import RecruiterView from "./RecruiterView";
 
 export default function AccountsView({ activeTab }) {
   const { 
@@ -520,6 +521,10 @@ export default function AccountsView({ activeTab }) {
 
       {activeTab === "projects" && (
         <ProjectsView />
+      )}
+
+      {activeTab === "recruitment" && (
+        <RecruiterView />
       )}
 
       {activeTab === "reports" && (

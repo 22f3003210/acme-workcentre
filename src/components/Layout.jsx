@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import { getRoutePath } from "../App";
 import logoImg from "../assets/logo.png";
 
 export default function Layout({ children, activeTab, setActiveTab }) {
   const { currentUser, users, logout } = useApp();
+  const navigate = useNavigate();
 
   // Profile modal state
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -303,7 +306,10 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                     <button
                       key={app.name}
                       onClick={() => {
-                        if (app.tabId) setActiveTab(app.tabId);
+                        if (app.tabId) {
+                          if (setActiveTab) setActiveTab(app.tabId);
+                          navigate(getRoutePath(app.tabId));
+                        }
                         setShowAppsMenu(false);
                       }}
                       style={{
@@ -485,7 +491,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                     <div
-                      onClick={() => { setActiveTab("directory"); setIsSearchOpen(false); }}
+                      onClick={() => { if (setActiveTab) setActiveTab("directory"); navigate(getRoutePath("directory")); setIsSearchOpen(false); }}
                       style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "6px", cursor: "pointer" }}
                       onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -498,7 +504,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                     </div>
 
                     <div
-                      onClick={() => { setActiveTab("reports"); setIsSearchOpen(false); }}
+                      onClick={() => { if (setActiveTab) setActiveTab("reports"); navigate(getRoutePath("reports")); setIsSearchOpen(false); }}
                       style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "6px", cursor: "pointer" }}
                       onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -786,7 +792,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
             </div>
             <div className="mobile-user-actions" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <img src={currentUser.avatar} alt={currentUser.name} className="mobile-avatar" onClick={openModal} style={{ cursor: "pointer" }} />
-              <button onClick={logout} style={{ fontSize: "0.75rem", color: "var(--color-error)", border: "1px solid var(--color-error)", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>Log Out</button>
+              <button onClick={() => { logout(); navigate("/HBJ_B/auth/login"); }} style={{ fontSize: "0.75rem", color: "var(--color-error)", border: "1px solid var(--color-error)", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>Log Out</button>
             </div>
           </header>
 
@@ -796,7 +802,14 @@ export default function Layout({ children, activeTab, setActiveTab }) {
 
           <nav className="mobile-bottom-nav">
             {navItems.map((item) => (
-              <button key={item.id} className={`mobile-nav-item ${activeTab === item.id ? "active" : ""}`} onClick={() => setActiveTab(item.id)}>
+              <button
+                key={item.id}
+                className={`mobile-nav-item ${activeTab === item.id ? "active" : ""}`}
+                onClick={() => {
+                  if (setActiveTab) setActiveTab(item.id);
+                  navigate(getRoutePath(item.id));
+                }}
+              >
                 <span className="mobile-nav-icon">{item.icon}</span>
                 <span className="mobile-nav-label">{item.label}</span>
               </button>

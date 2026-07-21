@@ -453,6 +453,16 @@ export default function ConsultantView({ activeTab }) {
                   <button 
                     type="button" 
                     onClick={handlePunchOut}
+                    style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "4px", padding: "8px 14px", fontWeight: "600", fontSize: "0.82rem", cursor: "pointer", width: "100%" }}
+                  >
+                    ✖ Check Out Shift
+                  </button>
+                ) : (
+                  <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "600", textAlign: "center" }}>✓ Shift Completed Today</span>
+                )}
+              </div>
+            </div>
+
             <h3>My Attendance Register</h3>
             <p className="subtitle">Historical record of check-in times and remarks</p>
             <table className="luxury-table">

@@ -347,6 +347,12 @@ button, input, select, textarea {
   margin: 0 auto;
 }
 
+.main-content.recruiting-full-width {
+  padding: 0 0 80px !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
 /* Mobile Top Header & Bottom Nav (Hidden on Desktop) */
 .mobile-header, .mobile-bottom-nav {
   display: none !important;

@@ -796,7 +796,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
             </div>
           </header>
 
-          <main className="main-content">
+          <main className={`main-content ${activeTab === "recruitment" ? "recruiting-full-width" : ""}`}>
             {children}
           </main>
 

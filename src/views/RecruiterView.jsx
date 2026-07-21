@@ -400,7 +400,7 @@ export default function RecruiterView() {
                   border: "none",
                   height: "100%",
                   fontSize: "0.78rem",
-                  fontWeight: "700",
+                  fontWeight: "500",
                   color: topTab === tab.id ? "#5b21b6" : "#64748b",
                   borderBottom: topTab === tab.id ? "3px solid #6d28d9" : "3px solid transparent",
                   cursor: "pointer",
@@ -423,7 +423,7 @@ export default function RecruiterView() {
               borderRadius: "6px",
               padding: "7px 16px",
               fontSize: "0.84rem",
-              fontWeight: "700",
+              fontWeight: "600",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -444,7 +444,7 @@ export default function RecruiterView() {
           <div>
             <div style={{ marginBottom: "32px" }}>
               <div style={{ marginBottom: "12px" }}>
-                <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#5b21b6", margin: 0 }}>
+                <h2 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#5b21b6", margin: 0 }}>
                   Approved requisition (1)
                 </h2>
                 <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>
@@ -455,7 +455,7 @@ export default function RecruiterView() {
               <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.82rem" }}>
                   <thead>
-                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#64748b", textTransform: "uppercase", fontSize: "0.72rem", fontWeight: "700", letterSpacing: "0.05em" }}>
+                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#64748b", textTransform: "uppercase", fontSize: "0.72rem", fontWeight: "600", letterSpacing: "0.05em" }}>
                       <th style={{ padding: "14px 20px" }}>Job Title</th>
                       <th style={{ padding: "14px 20px" }}>Number of Openings</th>
                       <th style={{ padding: "14px 20px" }}>Hiring Due In</th>
@@ -469,23 +469,23 @@ export default function RecruiterView() {
                   <tbody>
                     <tr style={{ borderBottom: "1px solid #f1f5f9" }}>
                       <td style={{ padding: "16px 20px" }}>
-                        <div style={{ fontWeight: "700", color: "#5b21b6", fontSize: "0.88rem" }}>
+                        <div style={{ fontWeight: "600", color: "#5b21b6", fontSize: "0.88rem" }}>
                           {defaultApprovedRequisition.jobTitle}
                         </div>
-                        <div style={{ fontSize: "0.72rem", color: "#64748b", textTransform: "uppercase", marginTop: "2px", fontWeight: "600" }}>
+                        <div style={{ fontSize: "0.72rem", color: "#64748b", textTransform: "uppercase", marginTop: "2px", fontWeight: "500" }}>
                           {defaultApprovedRequisition.department}
                         </div>
                       </td>
-                      <td style={{ padding: "16px 20px", fontWeight: "700", color: "#1e293b" }}>
+                      <td style={{ padding: "16px 20px", fontWeight: "600", color: "#1e293b" }}>
                         {defaultApprovedRequisition.openings}
                       </td>
-                      <td style={{ padding: "16px 20px", color: "#ef4444", fontWeight: "600" }}>
+                      <td style={{ padding: "16px 20px", color: "#ef4444", fontWeight: "500" }}>
                         {defaultApprovedRequisition.dueStatus}
                       </td>
-                      <td style={{ padding: "16px 20px", color: "#334155", fontWeight: "600" }}>
+                      <td style={{ padding: "16px 20px", color: "#334155", fontWeight: "500" }}>
                         {defaultApprovedRequisition.budget}
                       </td>
-                      <td style={{ padding: "16px 20px", color: "#475569", fontWeight: "600" }}>
+                      <td style={{ padding: "16px 20px", color: "#475569", fontWeight: "500" }}>
                         {defaultApprovedRequisition.requestedBy}
                       </td>
                       <td style={{ padding: "16px 20px", color: "#475569" }}>
@@ -514,7 +514,7 @@ export default function RecruiterView() {
                               borderRadius: "6px",
                               padding: "6px 12px",
                               fontSize: "0.8rem",
-                              fontWeight: "700",
+                              fontWeight: "600",
                               cursor: "pointer"
                             }}
                           >
@@ -533,7 +533,7 @@ export default function RecruiterView() {
             <div style={{ marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
                 <div>
-                  <h2 style={{ fontSize: "1.25rem", fontWeight: "700", color: "#5b21b6", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                  <h2 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#5b21b6", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
                     Active Jobs ({activeJobs.length}) <span style={{ fontSize: "0.9rem", color: "#94a3b8" }}>∨</span>
                   </h2>
                   <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>
@@ -542,7 +542,7 @@ export default function RecruiterView() {
                 </div>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", fontWeight: "600", color: "#475569", cursor: "pointer" }}>
+                  <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", fontWeight: "500", color: "#475569", cursor: "pointer" }}>
                     <input
                       type="checkbox"
                       checked={showOnlyPriority}
@@ -566,7 +566,7 @@ export default function RecruiterView() {
                       borderRadius: "6px",
                       padding: "8px 18px",
                       fontSize: "0.84rem",
-                      fontWeight: "700",
+                      fontWeight: "600",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
@@ -662,10 +662,10 @@ export default function RecruiterView() {
                     </span>
                   )}
 
-                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#1e293b", margin: 0, textTransform: "uppercase" }}>
+                  <h3 style={{ fontSize: "1rem", fontWeight: "600", color: "#1e293b", margin: 0, textTransform: "uppercase" }}>
                     {job.title}
                   </h3>
-                  <div style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "600", marginTop: "4px" }}>
+                  <div style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "500", marginTop: "4px" }}>
                     {job.department} <span style={{ color: "#cbd5e1", margin: "0 4px" }}>|</span> {job.location}
                   </div>
 
@@ -683,7 +683,7 @@ export default function RecruiterView() {
                     </div>
                   </div>
 
-                  <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "20px", paddingTop: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.74rem", color: "#64748b", fontWeight: "700" }}>
+                  <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "20px", paddingTop: "14px", display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.74rem", color: "#64748b", fontWeight: "600" }}>
                     <span>{job.newCandidates} NEW CANDIDATES • {job.archived} ARCHIVED</span>
                     <span style={{ display: "flex", alignItems: "center", gap: "6px", color: "#6d28d9" }}>
                       <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#6d28d9" }}></span>
@@ -699,33 +699,24 @@ export default function RecruiterView() {
         {/* VIEW 2: SINGLE JOB DETAILED VIEW */}
         {(selectedJob || topTab === "CANDIDATES") && (
           <div>
-            <div style={{ marginBottom: "16px" }}>
-              <button
-                onClick={() => setSelectedJob(null)}
-                style={{ background: "none", border: "none", color: "#6d28d9", fontWeight: "700", cursor: "pointer", fontSize: "0.84rem", display: "flex", alignItems: "center", gap: "6px" }}
-              >
-                ← Back to Jobs Dashboard
-              </button>
-            </div>
-
             {/* Header Info */}
             <div style={{ background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", padding: "20px 24px", marginBottom: "20px" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <h1 style={{ fontSize: "1.4rem", fontWeight: "800", color: "#1e293b", margin: 0 }}>
+                    <h1 style={{ fontSize: "1.3rem", fontWeight: "600", color: "#1e293b", margin: 0 }}>
                       {selectedJob ? selectedJob.title : "SALES EXECUTIVE"}
                     </h1>
-                    <span style={{ background: "#16a34a", color: "#ffffff", fontSize: "0.68rem", fontWeight: "800", padding: "3px 8px", borderRadius: "4px", textTransform: "uppercase" }}>
+                    <span style={{ background: "#16a34a", color: "#ffffff", fontSize: "0.68rem", fontWeight: "600", padding: "3px 8px", borderRadius: "4px", textTransform: "uppercase" }}>
                       ONLINE ∨
                     </span>
-                    <span style={{ background: "#ef4444", color: "#ffffff", fontSize: "0.68rem", fontWeight: "800", padding: "3px 8px", borderRadius: "4px", textTransform: "uppercase" }}>
+                    <span style={{ background: "#ef4444", color: "#ffffff", fontSize: "0.68rem", fontWeight: "600", padding: "3px 8px", borderRadius: "4px", textTransform: "uppercase" }}>
                       PRIORITY
                     </span>
                   </div>
 
                   <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "6px", fontWeight: "500" }}>
-                    {selectedJob ? `${selectedJob.department} - Full Time - ( ${selectedJob.location} ) - ${selectedJob.experience}` : "SALES - Full Time - ( Mehdipatnam - Nampally ) - 2-4 yrs"}
+                    {selectedJob ? `${selectedJob.department} - Full Time - ( ${selectedJob.location} ) - ${selectedJob.experience}` : "SALES - Full Time - ( Mehdipatnam - Nampally ) - 2-4"}
                   </div>
                 </div>
 
@@ -741,7 +732,7 @@ export default function RecruiterView() {
                       borderRadius: "6px",
                       padding: "8px 16px",
                       fontSize: "0.84rem",
-                      fontWeight: "700",
+                      fontWeight: "600",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
@@ -778,7 +769,7 @@ export default function RecruiterView() {
                       border: "none",
                       paddingBottom: "12px",
                       fontSize: "0.84rem",
-                      fontWeight: "700",
+                      fontWeight: "500",
                       color: jobSubTab === sub ? "#5b21b6" : "#64748b",
                       borderBottom: jobSubTab === sub ? "3px solid #6d28d9" : "3px solid transparent",
                       cursor: "pointer"

@@ -163,7 +163,8 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       )
     },
     {
-      name: "Leave & Attendance",
+      name: "Workforce Management",
+      subtitle: "(Formerly Leave & Attendance)",
       bgColor: "#f3e8ff",
       borderColor: "#e9d5ff",
       iconColor: "#9333ea",

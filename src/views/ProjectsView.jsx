@@ -108,32 +108,23 @@ export default function ProjectsView() {
   const [newBudget, setNewBudget] = useState("");
   const [linkExpensesEnabled, setLinkExpensesEnabled] = useState(true);
 
-  // Effective projects list fallback
-  const effectiveProjectsList = (projects && projects.length > 0) ? projects : initialProjects;
-
   // Filtered projects
-  const filteredProjects = effectiveProjectsList.filter(p => {
-    const status = p.status || "Active";
-    const matchesStatus = 
-      statusFilter === "All" || 
-      status === statusFilter || 
-      (statusFilter === "Active" && (status === "In Progress" || status === "Active"));
-
-    const q = searchQuery.toLowerCase().trim();
+  const filteredProjects = projects.filter(p => {
+    const matchesStatus = statusFilter === "All" || p.status === statusFilter || (statusFilter === "Active" && p.status === "In Progress");
+    const q = searchQuery.toLowerCase();
     const matchesSearch = 
       !q || 
-      (p.name && p.name.toLowerCase().includes(q)) || 
-      (p.code && p.code.toLowerCase().includes(q)) || 
+      p.name.toLowerCase().includes(q) || 
+      p.code.toLowerCase().includes(q) || 
       (p.pocName && p.pocName.toLowerCase().includes(q)) ||
-      (p.client && p.client.toLowerCase().includes(q));
-
+      p.client.toLowerCase().includes(q);
     return matchesStatus && matchesSearch;
   });
 
   // Calculate high-level stats
-  const activeCount = effectiveProjectsList.filter(p => (p.status || "Active") === "Active" || p.status === "In Progress").length;
-  const totalBudget = effectiveProjectsList.reduce((sum, p) => sum + (p.budget || 0), 0);
-  const totalDiscussions = effectiveProjectsList.reduce((sum, p) => sum + (p.discussions?.length || 0), 0);
+  const activeCount = projects.filter(p => p.status === "Active" || p.status === "In Progress").length;
+  const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
+  const totalDiscussions = projects.reduce((sum, p) => sum + (p.discussions?.length || 0), 0);
 
   // Handlers
   const handleCreateProjectSubmit = (e) => {
@@ -801,83 +792,162 @@ export default function ProjectsView() {
             </div>
           )}
 
-          {/* TAB 2: ASSIGNED TEAM (CONSULTANTS & HIRING TEAM) */}
-          {activeProjectTab === "team" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-              
-              {/* SECTION 1: CONSULTING & ADVISORY TEAM */}
-              <div>
-                <div style={{ display: "flex", alignItems: "center", justify: "space-between", marginBottom: "14px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span style={{ fontSize: "1.2rem" }}>💼</span>
-                    <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: "#0f172a" }}>
-                      Consulting & Advisory Team
-                    </h3>
-                  </div>
-                  <span style={{ fontSize: "0.78rem", background: "#eff6ff", color: "#2563eb", fontWeight: "700", padding: "3px 10px", borderRadius: "6px" }}>
-                    On-Site Audits & Strategy Consultants
-                  </span>
-                </div>
+          {/* TAB 2: TEAM (Consultant Team & Hiring Team) */}
+          {activeProjectTab === "team" && (() => {
+            const consultantList = [
+              {
+                id: "c-1",
+                name: "Darla Manikanta",
+                title: "Systems Operator & Lead Auditor",
+                department: "IT & SYSTEMS SUPPORT",
+                phone: "+91-7569099549",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120",
+                badge: "Lead Field Auditor"
+              },
+              {
+                id: "c-2",
+                name: "Shikhar Jain",
+                title: "Retail Sourcing Specialist & Sales Trainer",
+                department: "RETAIL CONSULTING",
+                phone: "+91-9849012345",
+                avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=120",
+                badge: "Sales Floor Trainer"
+              },
+              {
+                id: "c-3",
+                name: "Jyoshna Manuka",
+                title: "Systems & Inventory POS Consultant",
+                department: "IT & SYSTEMS SUPPORT",
+                phone: "+91-9876543210",
+                avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=120",
+                badge: "POS Inventory Specialist"
+              },
+              {
+                id: "c-4",
+                name: "Hemanth Kumar Jain",
+                title: "Managing Director & Principal Consultant",
+                department: "EXECUTIVE ADVISORY",
+                phone: "+91-9849012345",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120",
+                badge: "Principal Advisor"
+              }
+            ];
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                  {consultants.slice(0, 3).map(c => (
-                    <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                        <img src={c.avatar} alt={c.name} style={{ width: "46px", height: "46px", borderRadius: "50%", objectFit: "cover", border: "2px solid #2563eb" }} />
-                        <div>
-                          <strong style={{ fontSize: "0.96rem", display: "block", color: "#0f172a" }}>{c.name}</strong>
-                          <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "500" }}>{c.title} • {c.department}</span>
-                          <span style={{ fontSize: "0.75rem", color: "#2563eb", display: "block", marginTop: "2px" }}>📱 {c.phone}</span>
-                        </div>
-                      </div>
-                      <span style={{ fontSize: "0.74rem", color: "#15803d", fontWeight: "700", background: "#dcfce7", padding: "4px 10px", borderRadius: "6px" }}>
-                        ● Field Consultant
-                      </span>
+            const hiringTeamList = [
+              {
+                id: "h-1",
+                name: "Syed Shafi",
+                title: "Head Recruiter & Sourcing Specialist",
+                specialty: "Candidate Sourcing, Screening & Interview Calls",
+                email: "shafi@acmeworkcentre.com",
+                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120",
+                badge: "Lead Recruiter"
+              },
+              {
+                id: "h-2",
+                name: "Sophia Laurent",
+                title: "HR Director & Candidate Placement Lead",
+                specialty: "Client Interview Coordination & Onboarding",
+                email: "sophia@workcentre.com",
+                avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120",
+                badge: "Placement Director"
+              },
+              {
+                id: "h-3",
+                name: "Praveen",
+                title: "Telecalling & Social Sourcing Specialist",
+                specialty: "Meta Ads & Naukri Resume Screening",
+                email: "praveen@acmeworkcentre.com",
+                avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=120",
+                badge: "Telecaller Lead"
+              },
+              {
+                id: "h-4",
+                name: "Robert Chen",
+                title: "Recruitment Operations Coordinator",
+                specialty: "Outstation Candidate Client Visit Coordination",
+                email: "robert@workcentre.com",
+                avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=120",
+                badge: "Recruitment Operations"
+              }
+            ];
+
+            return (
+              <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+                
+                {/* SECTION 1: BUSINESS & FIELD CONSULTANTS */}
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: "700" }}>
+                        💼 Assigned Business & Field Consultants
+                      </h3>
+                      <p style={{ margin: "2px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                        On-site store auditors, inventory strategists, and sales coaching advisors assigned to this client engagement.
+                      </p>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* SECTION 2: HIRING & RECRUITMENT TEAM */}
-              <div>
-                <div style={{ display: "flex", alignItems: "center", justify: "space-between", marginBottom: "14px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <span style={{ fontSize: "1.2rem" }}>🎧</span>
-                    <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: "#0f172a" }}>
-                      Hiring & Recruitment Team (Telecallers & Sourcing Specialists)
-                    </h3>
+                    <span style={{ background: "#eff6ff", color: "#2563eb", fontSize: "0.75rem", fontWeight: "700", padding: "4px 12px", borderRadius: "20px", border: "1px solid #bfdbfe" }}>
+                      4 Consultants Assigned
+                    </span>
                   </div>
-                  <span style={{ fontSize: "0.78rem", background: "#f0fdf4", color: "#16a34a", fontWeight: "700", padding: "3px 10px", borderRadius: "6px" }}>
-                    Free Client Hiring Services
-                  </span>
-                </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                  {users.filter(u => u.role === "Admin" || u.department?.includes("HUMAN") || u.title?.includes("HR")).map(h => (
-                    <div key={h.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                        <img src={h.avatar} alt={h.name} style={{ width: "46px", height: "46px", borderRadius: "50%", objectFit: "cover", border: "2px solid #16a34a" }} />
-                        <div>
-                          <strong style={{ fontSize: "0.96rem", display: "block", color: "#0f172a" }}>{h.name}</strong>
-                          <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "500" }}>{h.title || "Recruitment Specialist"} • {h.department || "RECRUITING"}</span>
-                          <span style={{ fontSize: "0.75rem", color: "#16a34a", display: "block", marginTop: "2px" }}>📱 {h.phone} • {h.email}</span>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                    {consultantList.map(c => (
+                      <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                          <img src={c.avatar} alt={c.name} style={{ width: "46px", height: "46px", borderRadius: "50%", objectFit: "cover" }} />
+                          <div>
+                            <strong style={{ fontSize: "0.95rem", display: "block", color: "#0f172a" }}>{c.name}</strong>
+                            <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{c.title}</span>
+                            <div style={{ fontSize: "0.76rem", color: "#2563eb", marginTop: "2px" }}>📱 {c.phone}</div>
+                          </div>
                         </div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <span style={{ fontSize: "0.74rem", color: "#047857", fontWeight: "700", background: "#dcfce7", padding: "4px 10px", borderRadius: "6px", display: "inline-block" }}>
-                          ● Telecaller & Recruiter
-                        </span>
-                        <span style={{ fontSize: "0.7rem", color: "#64748b", display: "block", marginTop: "4px" }}>
-                          Screening & Scheduling
+                        <span style={{ fontSize: "0.75rem", color: "#059669", fontWeight: "700", background: "#ecfdf5", padding: "4px 10px", borderRadius: "6px", border: "1px solid #a7f3d0" }}>
+                          ● {c.badge}
                         </span>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-            </div>
-          )}
+                {/* SECTION 2: DEDICATED RECRUITING & HIRING TEAM */}
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: "700" }}>
+                        🎯 Dedicated Recruiting & Hiring Team (Free Client Hiring Desk)
+                      </h3>
+                      <p style={{ margin: "2px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                        Sourcing, telecalling, candidate screening, and interview scheduling team assigned to fulfill client staffing requirements.
+                      </p>
+                    </div>
+                    <span style={{ background: "#f0fdf4", color: "#16a34a", fontSize: "0.75rem", fontWeight: "700", padding: "4px 12px", borderRadius: "20px", border: "1px solid #bbf7d0" }}>
+                      Free Client Hiring Service Included
+                    </span>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                    {hiringTeamList.map(h => (
+                      <div key={h.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                          <img src={h.avatar} alt={h.name} style={{ width: "46px", height: "46px", borderRadius: "50%", objectFit: "cover" }} />
+                          <div>
+                            <strong style={{ fontSize: "0.95rem", display: "block", color: "#0f172a" }}>{h.name}</strong>
+                            <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{h.title}</span>
+                            <div style={{ fontSize: "0.76rem", color: "#059669", marginTop: "2px" }}>✉ {h.email}</div>
+                          </div>
+                        </div>
+                        <span style={{ fontSize: "0.75rem", color: "#7c3aed", fontWeight: "700", background: "#f3e8ff", padding: "4px 10px", borderRadius: "6px", border: "1px solid #ddd6fe" }}>
+                          ● {h.badge}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            );
+          })()}
 
           {/* TAB 3: EXPENSES */}
           {activeProjectTab === "expenses" && (
@@ -1012,7 +1082,7 @@ export default function ProjectsView() {
             TOTAL PROJECTS
           </div>
           <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
-            {effectiveProjectsList.length} <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "500" }}>({activeCount} Active)</span>
+            {projects.length} <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "500" }}>({activeCount} Active)</span>
           </div>
         </div>
 

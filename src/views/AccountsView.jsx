@@ -27,7 +27,7 @@ export default function AccountsView({ activeTab }) {
   const pendingClaims = expenses.filter(e => e.status === "Pending");
   const pendingAdvances = advanceRequests.filter(r => r.status === "Pending");
   const approvedClaims = expenses.filter(e => e.status === "Approved");
-  const totalApprovedAmount = approvedClaims.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+  const totalApprovedAmount = approvedClaims.reduce((sum, e) => sum + e.amount, 0);
   
   // Calculate attendance summaries for consultants
   const getAttendanceSummary = (c) => {

@@ -55,9 +55,8 @@ function MainWorkspace({ initialTab }) {
   const renderActiveView = () => {
     switch (currentUser.role) {
       case "Admin":
-        return <AdminView activeTab={activeTab} setActiveTab={(tab) => navigate(getRoutePath(tab))} />;
       case "Accounts Manager":
-        return <AccountsView activeTab={activeTab} />;
+        return <AdminView activeTab={activeTab} setActiveTab={(tab) => navigate(getRoutePath(tab))} />;
       case "Consultant":
         return <ConsultantView activeTab={activeTab} />;
       default:

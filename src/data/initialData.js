@@ -2,14 +2,14 @@
 export const initialUsers = [
   {
     "id": "emp-hbj001",
-    "name": "Hemanth Kumar Jain",
-    "email": "hemanthbamboli@gmail.com",
+    "name": "Shabbir Vasaya",
+    "email": "shabbir.vasaya@acmeworkcentre.com",
     "phone": "+91-9849012345",
     "role": "Admin",
     "empCode": "HBJ00001",
     "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=120",
     "title": "Founder & CEO",
-    "department": "MANAGEMENT & EXECUTIVE",
+    "department": "ADMINISTRATION",
     "location": "Mehdipatnam",
     "lastLogin": "2026-07-21T09:30:00Z",
     "status": "Active"
@@ -17,12 +17,12 @@ export const initialUsers = [
   {
     "id": "emp-hbj002",
     "name": "Sayyada",
-    "email": "hr.sayyada@workcentre.com",
+    "email": "sayyada@acmeworkcentre.com",
     "phone": "+91-9849099999",
     "role": "Admin",
     "empCode": "HBJ00002",
     "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120",
-    "title": "HR Manager & Telecaller Lead",
+    "title": "HR Manager",
     "department": "HUMAN RESOURCES",
     "location": "Mehdipatnam",
     "lastLogin": "2026-07-21T09:15:00Z",
@@ -59,12 +59,12 @@ export const initialUsers = [
   {
     "id": "admin-1",
     "name": "Sayyada",
-    "email": "sayyada@workcentre.com",
+    "email": "sayyada@acmeworkcentre.com",
     "phone": "+91-9849099999",
     "role": "Admin",
     "empCode": "HBJ00003",
     "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120",
-    "title": "HR Manager & Telecaller Lead",
+    "title": "HR Director",
     "department": "Operations",
     "location": "HQ",
     "lastLogin": "2026-07-18T09:30:00Z",
@@ -73,12 +73,12 @@ export const initialUsers = [
   {
     "id": "accounts-1",
     "name": "Amin Gagani",
-    "email": "amin.gagani@workcentre.com",
-    "phone": "+91-9849077777",
+    "email": "amin.gagani@acmeworkcentre.com",
+    "phone": "+91-9849044444",
     "role": "Accounts Manager",
     "empCode": "HBJ00004",
     "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120",
-    "title": "Accounts & Finance Manager",
+    "title": "Finance & Accounts Head",
     "department": "Finance",
     "location": "HQ",
     "lastLogin": "2026-07-18T09:15:00Z",
@@ -86,9 +86,9 @@ export const initialUsers = [
   },
   {
     "id": "consultant-1",
-    "name": "Syed Shafi (DCB BANK)",
-    "email": "syed.shafi@workcentre.com",
-    "phone": "+91-9849066666",
+    "name": "Ayesha Khan (DCB BANK)",
+    "email": "ayesha@acmeworkcentre.com",
+    "phone": "+91-9849033333",
     "role": "Consultant",
     "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=120",
     "title": "Treasury & Retail Lead",
@@ -4068,7 +4068,7 @@ export const initialProjects = [
         type: "Offline Visit Scheduling",
         date: "2026-08-05",
         time: "10:00 AM",
-        consultant: "Hemanth Kumar Jain & Darla Manikanta",
+        consultant: "Shabbir Vasaya & Darla Manikanta",
         status: "Scheduled",
         notes: "On-site 2-day physical stock verification."
       }
@@ -4108,7 +4108,7 @@ export const initialProjects = [
       },
       {
         id: "disc-2",
-        authorName: "Syed Shafi",
+        authorName: "Ayesha Khan",
         authorRole: "Consultant Lead",
         date: "2026-07-16 04:15 PM",
         category: "Milestone Achieved",
@@ -4169,7 +4169,7 @@ export const initialProjects = [
         type: "Call Scheduling",
         date: "2026-07-26",
         time: "03:00 PM",
-        consultant: "Hemanth Kumar Jain",
+        consultant: "Shabbir Vasaya",
         status: "Scheduled",
         notes: "Review monthly store traffic and sales conversion."
       }
@@ -4192,7 +4192,7 @@ export const initialProjects = [
         startDate: "2026-07-17",
         endDate: "2026-07-19",
         durationDays: 3,
-        visitingConsultants: ["Hemanth Kumar Jain", "Darla Manikanta"],
+        visitingConsultants: ["Shabbir Vasaya", "Darla Manikanta"],
         understandings: "New Indore showroom site requires vault security protocol signoff and VIP bridal lounge styling.",
         workDone: "Inspected vault security, set up VIP lounge greeting workflow, trained 8 new sales executives on bridal ornament presentation.",
         followUpAction: "Client scheduled next follow-up site visit for August."
@@ -4300,7 +4300,7 @@ export const initialProjects = [
         startDate: "2026-06-20",
         endDate: "2026-06-22",
         durationDays: 3,
-        visitingConsultants: ["Hemanth Kumar Jain", "Shikhar Jain"],
+        visitingConsultants: ["Shabbir Vasaya", "Shikhar Jain"],
         understandings: "Discovered physical stock ledger did not match legacy paper registers.",
         workDone: "Audited 950 gold items, digitized paper ledger into Acme Workcentre POS system.",
         followUpAction: "Conduct second audit phase upon client request."

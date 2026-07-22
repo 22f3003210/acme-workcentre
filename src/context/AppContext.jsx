@@ -91,12 +91,10 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : initialCandidates;
   });
 
-  // Current logged in user
   const [currentUser, setCurrentUser] = useState(() => {
-    const saved = localStorage.getItem("workcentre_current_user");
-    if (saved) return JSON.parse(saved);
-    const found = users.find(u => u.name === "Amin Gagani" || u.role === "Accounts Manager");
-    return found || users[0];
+    const savedUserId = localStorage.getItem("workcentre_current_user_id");
+    const found = users.find(u => u.id === savedUserId);
+    return found || users[0]; // Shabbir Vasaya (Founder & CEO) by default
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {

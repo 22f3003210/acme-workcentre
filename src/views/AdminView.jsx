@@ -1439,7 +1439,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   <label>Full Name *</label>
                   <input 
                     type="text" 
-                    placeholder="e.g. Amin Gagani" 
+                    placeholder="e.g. David Vance" 
                     value={empName} 
                     onChange={(e) => setEmpName(e.target.value)} 
                     required
@@ -2713,7 +2713,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                             </td>
                                             <td style={{ padding: "10px 14px", color: "#475569" }}>{u.role === "Admin" ? "2" : `HBJ0000${userIndex + 1}`}</td>
                                             <td style={{ padding: "10px 14px", color: "#475569" }}>{userIndex === 0 ? "Not Available" : userIndex % 2 === 0 ? "PURCHASE" : "ADMINISTRATION"}</td>
-                                            <td style={{ padding: "10px 14px", color: "#475569" }}>Hemanth Kumar Jain</td>
+                                            <td style={{ padding: "10px 14px", color: "#475569" }}>Shabbir Vasaya</td>
                                           </tr>
                                         );
                                       })}
@@ -2934,7 +2934,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                             </td>
                                             <td style={{ padding: "10px 14px", color: "#475569" }}>{u.role === "Admin" ? "2" : `HBJ0000${userIndex + 1}`}</td>
                                             <td style={{ padding: "10px 14px", color: "#475569" }}>{userIndex === 0 ? "Not Available" : userIndex % 2 === 0 ? "PURCHASE" : "ADMINISTRATION"}</td>
-                                            <td style={{ padding: "10px 14px", color: "#475569" }}>Hemanth Kumar Jain</td>
+                                            <td style={{ padding: "10px 14px", color: "#475569" }}>Shabbir Vasaya</td>
                                           </tr>
                                         );
                                       })}
@@ -3079,7 +3079,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                     </td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>{u.role === "Admin" ? "2" : `HBJ0000${idx + 1}`}</td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>{idx === 0 ? "Not Available" : idx % 2 === 0 ? "PURCHASE" : "ADMINISTRATION"}</td>
-                                    <td style={{ padding: "10px 14px", color: "#475569" }}>Hemanth Kumar Jain</td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>Shabbir Vasaya</td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>
                                       <span style={{ fontWeight: employeeAssignments[u.id]?.shift ? "600" : "400", color: employeeAssignments[u.id]?.shift ? "#2563eb" : "#475569" }}>
                                         {assignedShift}

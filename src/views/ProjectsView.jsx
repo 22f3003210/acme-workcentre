@@ -1551,7 +1551,7 @@ export default function ProjectsView() {
                 >
                   <option value="Darla Manikanta">Darla Manikanta</option>
                   <option value="Shikhar Jain">Shikhar Jain</option>
-                  <option value="Hemanth Kumar Jain">Hemanth Kumar Jain</option>
+                  <option value="Shabbir Vasaya">Shabbir Vasaya</option>
                   <option value="Sayyada">Sayyada</option>
                 </select>
               </div>
@@ -1649,7 +1649,7 @@ export default function ProjectsView() {
                   Visiting Team (Select all consultants who visited together) *
                 </label>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", background: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                  {["Darla Manikanta", "Shikhar Jain", "Hemanth Kumar Jain", "Sayyada"].map(name => {
+                  {["Darla Manikanta", "Shikhar Jain", "Shabbir Vasaya", "Sayyada"].map(name => {
                     const isChecked = vConsultants.includes(name);
                     return (
                       <label key={name} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: "#1e293b", cursor: "pointer" }}>

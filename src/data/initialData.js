@@ -3667,6 +3667,201 @@ export const initialExpenses = [
   },
   {
     "id": "exp-consultant-10-jul14-3",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+  {
+    "id": "exp-consultant-3-jul14-3",
+    "employeeId": "consultant-3",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Food",
+    "amount": 350,
+    "reason": "Dinner – Team dinner post client visit",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+  {
+    "id": "exp-consultant-3-jul14-4",
+    "employeeId": "consultant-3",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Accommodation",
+    "amount": 2400,
+    "reason": "Hotel stay – Indore (1 night, GNV client engagement)",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+  {
+    "id": "exp-consultant-3-jul14-5",
+    "employeeId": "consultant-3",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Travel",
+    "amount": 396,
+    "reason": "Uber – Room to Indore Airport",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+  {
+    "id": "exp-consultant-3-jul14-6",
+    "employeeId": "consultant-3",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Travel",
+    "amount": 320,
+    "reason": "Cab – Indore Airport to GNV client office",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+
+  // Consultant-5 (Varun) – Vizag to Hyderabad transit day
+  {
+    "id": "exp-consultant-5-jul14-1",
+    "employeeId": "consultant-5",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Food",
+    "amount": 95,
+    "reason": "Breakfast – Airport lounge, Vizag",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+  {
+    "id": "exp-consultant-5-jul14-2",
+    "employeeId": "consultant-5",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Food",
+    "amount": 210,
+    "reason": "Lunch – Hyderabad transit, Kamat restaurant",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+  {
+    "id": "exp-consultant-5-jul14-3",
+    "employeeId": "consultant-5",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Travel",
+    "amount": 1850,
+    "reason": "Flight – Vizag to Hyderabad (IndiGo)",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+  {
+    "id": "exp-consultant-5-jul14-4",
+    "employeeId": "consultant-5",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Travel",
+    "amount": 280,
+    "reason": "Cab – Hyderabad airport to hotel",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+  {
+    "id": "exp-consultant-5-jul14-5",
+    "employeeId": "consultant-5",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Accommodation",
+    "amount": 1800,
+    "reason": "Hotel stay – Hyderabad, Jewellers Summit prep",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+
+  // Consultant-8 (Abraham) – Indore client day
+  {
+    "id": "exp-consultant-8-jul14-1",
+    "employeeId": "consultant-8",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Food",
+    "amount": 135,
+    "reason": "Breakfast – Hotel restaurant, Indore",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+  {
+    "id": "exp-consultant-8-jul14-2",
+    "employeeId": "consultant-8",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Food",
+    "amount": 320,
+    "reason": "Lunch – Mannalal & Sons client site, Indore",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+  {
+    "id": "exp-consultant-8-jul14-3",
+    "employeeId": "consultant-8",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Travel",
+    "amount": 716,
+    "reason": "Cab – Hotel to Mannalal client (return trip)",
+    "receipt": "",
+    "status": "Approved",
+    "approvedBy": "Robert Chen (Accounts Manager)",
+    "approvedDate": "2026-07-14"
+  },
+
+  // Consultant-10 (Aditya) – Akbarpur client engagement
+  {
+    "id": "exp-consultant-10-jul14-1",
+    "employeeId": "consultant-10",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Food",
+    "amount": 100,
+    "reason": "Breakfast – Dhaba near Akbarpur, kanhiyalal site",
+    "receipt": "",
+    "status": "Pending",
+    "approvedBy": "",
+    "approvedDate": ""
+  },
+  {
+    "id": "exp-consultant-10-jul14-2",
+    "employeeId": "consultant-10",
+    "date": "2026-07-14",
+    "submittedDate": "2026-07-14",
+    "category": "Food",
+    "amount": 240,
+    "reason": "Lunch – kanhiyalal alankar mandir, Akbarpur",
+    "receipt": "",
+    "status": "Pending",
+    "approvedBy": "",
+    "approvedDate": ""
+  },
+  {
+    "id": "exp-consultant-10-jul14-3",
     "employeeId": "consultant-10",
     "date": "2026-07-14",
     "submittedDate": "2026-07-14",
@@ -3780,51 +3975,6 @@ export const initialAdvanceRequests = [
     "date": "2026-07-13",
     "status": "Approved",
     "reviewedBy": "Robert Chen"
-  },
-  {
-    "id": "adv-consultant-7-1",
-    "employeeId": "consultant-7",
-    "amount": 15000.0,
-    "purpose": "ZOTA JEWEL",
-    "date": "2026-07-15",
-    "status": "Approved",
-    "reviewedBy": "Robert Chen"
-  },
-  {
-    "id": "adv-consultant-8-1",
-    "employeeId": "consultant-8",
-    "amount": 5000.0,
-    "purpose": "Room to Airport Uber(396)+Airport to Hotel in Indore(320)",
-    "date": "2026-07-14",
-    "status": "Approved",
-    "reviewedBy": "Robert Chen"
-  },
-  {
-    "id": "adv-consultant-9-1",
-    "employeeId": "consultant-9",
-    "amount": 5000.0,
-    "purpose": "traveling to RK jewels Hathras",
-    "date": "2026-07-15",
-    "status": "Approved",
-    "reviewedBy": "Robert Chen"
-  },
-  {
-    "id": "adv-consultant-10-1",
-    "employeeId": "consultant-10",
-    "amount": 5000.0,
-    "purpose": "kanhiyalal alankar mandir",
-    "date": "2026-07-15",
-    "status": "Approved",
-    "reviewedBy": "Robert Chen"
-  },
-  {
-    "id": "adv-consultant-10-2",
-    "employeeId": "consultant-10",
-    "amount": 5000.0,
-    "purpose": "RKS akbarpur to varanasi kanahiya jewels",
-    "date": "2026-07-18",
-    "status": "Approved",
-    "reviewedBy": "Robert Chen"
   }
 ];
 
@@ -3852,6 +4002,101 @@ export const initialProjects = [
     location: "Mumbai / Showroom Site",
     description: "Business development, store expansion advisory, and high-value gold inventory sourcing strategy for Heerabhai Jewellers.",
     assignedConsultants: ["consultant-1", "consultant-2"],
+    engagementPurpose: "Client approached us for comprehensive showroom stock auditing, loss prevention, bridal marketing campaign optimization, and upselling training for retail sales staff.",
+    checklists: [
+      {
+        category: "📦 Inventory Audit Checklist",
+        items: [
+          { text: "Physical vault stock count & weight reconciliation", completed: true },
+          { text: "Hallmarking purity verification & BIS tag audit", completed: true },
+          { text: "Vault vs POS software ledger discrepancy analysis", completed: false },
+          { text: "High-value diamond & precious stone barcode tagging", completed: false },
+          { text: "Daily gold register & shrinkage log protocol implementation", completed: true }
+        ]
+      },
+      {
+        category: "📣 Marketing Suggestions Checklist",
+        items: [
+          { text: "Local billboard & newspaper ad reach evaluation", completed: true },
+          { text: "Social media & Meta Ads bridal campaign audit", completed: false },
+          { text: "VIP customer bridal preview invite strategy", completed: true },
+          { text: "Wedding season festival discount & cashback scheme review", completed: false }
+        ]
+      },
+      {
+        category: "📈 Revenue & Sales Growth Checklist",
+        items: [
+          { text: "Average transaction ticket size optimization (Gold to Diamond)", completed: true },
+          { text: "Old gold exchange scheme marketing & margin analysis", completed: false },
+          { text: "Solitaire & bridal set cross-selling desk strategy", completed: true },
+          { text: "Repeat customer loyalty points program setup", completed: false }
+        ]
+      },
+      {
+        category: "👥 Customer Experience & Showroom Checklist",
+        items: [
+          { text: "Showroom floor greeter & VIP lounge service standards", completed: true },
+          { text: "Post-purchase thank-you & feedback call workflow", completed: true },
+          { text: "Custom bridal jewellery design consultation experience", completed: false }
+        ]
+      }
+    ],
+    scheduledEvents: [
+      {
+        id: "evt-1",
+        title: "Q3 Retail Performance Review Call",
+        type: "Call Scheduling",
+        date: "2026-07-25",
+        time: "11:00 AM",
+        consultant: "Darla Manikanta",
+        status: "Scheduled",
+        notes: "Review Q2 audit results with Heerabhai Kothari."
+      },
+      {
+        id: "evt-2",
+        title: "Bridal Upselling Workshop",
+        type: "Training Session Scheduling",
+        date: "2026-07-28",
+        time: "02:30 PM",
+        consultant: "Shikhar Jain",
+        status: "Scheduled",
+        notes: "Conduct 3-hour showroom sales floor coaching for 12 sales executives."
+      },
+      {
+        id: "evt-3",
+        title: "August Vault Audit Site Visit",
+        type: "Offline Visit Scheduling",
+        date: "2026-08-05",
+        time: "10:00 AM",
+        consultant: "Hemanth Kumar Jain & Darla Manikanta",
+        status: "Scheduled",
+        notes: "On-site 2-day physical stock verification."
+      }
+    ],
+    clientVisits: [
+      {
+        id: "visit-1",
+        visitTitle: "Visit #1: Initial Store Inspection & Vault Inventory Audit",
+        startDate: "2026-06-10",
+        endDate: "2026-06-12",
+        durationDays: 3,
+        visitingConsultants: ["Darla Manikanta", "Shikhar Jain"],
+        understandings: "Identified 4.2% weight discrepancy in raw gold bars. Found vault logbook was updated manually instead of digital POS entry.",
+        workDone: "Audited 1,250 gold ornament tags, verified 916 hallmarking certificates, trained vault custodian on barcode logging.",
+        followUpAction: "Client agreed to switch to digital barcode logging system."
+      },
+      {
+        id: "visit-2",
+        visitTitle: "Visit #2: Sales Staff Coaching & Bridal Layout Revamp",
+        startDate: "2026-07-02",
+        endDate: "2026-07-03",
+        durationDays: 2,
+        visitingConsultants: ["Shikhar Jain"],
+        understandings: "Sales team was reluctant to offer diamond cross-sells to gold ornament buyers. VIP bridal counter lacked private consultation seating.",
+        workDone: "Re-arranged VIP bridal seating area, conducted 4-hour interactive sales workshop for 12 floor executives, introduced diamond upselling script.",
+        followUpAction: "Track diamond cross-sell ratio over next 30 days."
+      }
+    ],
     discussions: [
       {
         id: "disc-1",

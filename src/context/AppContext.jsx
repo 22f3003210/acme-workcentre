@@ -529,6 +529,60 @@ export const AppProvider = ({ children }) => {
     }));
   };
 
+  const addProjectVisit = (projectId, visitData) => {
+    const newVisit = {
+      id: `visit-${Date.now()}`,
+      ...visitData
+    };
+    setProjects(prev => prev.map(p => {
+      if (p.id === projectId) {
+        return {
+          ...p,
+          clientVisits: [newVisit, ...(p.clientVisits || [])]
+        };
+      }
+      return p;
+    }));
+  };
+
+  const addProjectScheduledEvent = (projectId, eventData) => {
+    const newEvent = {
+      id: `evt-${Date.now()}`,
+      status: "Scheduled",
+      ...eventData
+    };
+    setProjects(prev => prev.map(p => {
+      if (p.id === projectId) {
+        return {
+          ...p,
+          scheduledEvents: [newEvent, ...(p.scheduledEvents || [])]
+        };
+      }
+      return p;
+    }));
+  };
+
+  const toggleProjectChecklistItem = (projectId, categoryIndex, itemIndex) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id === projectId && p.checklists) {
+        const updatedChecklists = p.checklists.map((cat, cIdx) => {
+          if (cIdx === categoryIndex) {
+            const updatedItems = cat.items.map((item, iIdx) => {
+              if (iIdx === itemIndex) {
+                return { ...item, completed: !item.completed };
+              }
+              return item;
+            });
+            return { ...cat, items: updatedItems };
+          }
+          return cat;
+        });
+        return { ...p, checklists: updatedChecklists };
+      }
+      return p;
+    }));
+  };
+
   // Expense Verification (Accounts Manager Only)
   const verifyExpense = (expenseId, status, notes, reviewerName) => {
     setExpenses(prev => prev.map(e => 
@@ -666,6 +720,9 @@ export const AppProvider = ({ children }) => {
         addProject,
         updateProject,
         addProjectDiscussion,
+        addProjectVisit,
+        addProjectScheduledEvent,
+        toggleProjectChecklistItem,
         addHiringRequisition,
         updateHiringRequisition,
         addCandidate,

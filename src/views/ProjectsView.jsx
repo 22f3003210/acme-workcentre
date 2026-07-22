@@ -8,6 +8,9 @@ export default function ProjectsView() {
     addProject, 
     updateProject, 
     addProjectDiscussion, 
+    addProjectVisit,
+    addProjectScheduledEvent,
+    toggleProjectChecklistItem,
     users, 
     expenses, 
     currentUser, 
@@ -19,12 +22,31 @@ export default function ProjectsView() {
 
   // Modal states
   const [selectedProject, setSelectedProject] = useState(null);
-  const [activeProjectTab, setActiveProjectTab] = useState("overview"); // 'overview', 'team', 'expenses', 'discussions'
+  const [activeProjectTab, setActiveProjectTab] = useState("scope"); // 'scope', 'planner', 'visits', 'overview', 'team', 'expenses', 'discussions'
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // New Discussion Form
   const [discText, setDiscText] = useState("");
   const [discCategory, setDiscCategory] = useState("Client Update");
+
+  // Schedule Event Form State
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [evtTitle, setEvtTitle] = useState("");
+  const [evtType, setEvtType] = useState("Call Scheduling");
+  const [evtDate, setEvtDate] = useState("");
+  const [evtTime, setEvtTime] = useState("11:00 AM");
+  const [evtConsultant, setEvtConsultant] = useState("Darla Manikanta");
+  const [evtNotes, setEvtNotes] = useState("");
+
+  // Record Client Visit Form State (supports multi-consultant visiting team!)
+  const [showVisitModal, setShowVisitModal] = useState(false);
+  const [vTitle, setVTitle] = useState("");
+  const [vStart, setVStart] = useState("");
+  const [vEnd, setVEnd] = useState("");
+  const [vConsultants, setVConsultants] = useState(["Darla Manikanta"]);
+  const [vUnderstandings, setVUnderstandings] = useState("");
+  const [vWorkDone, setVWorkDone] = useState("");
+  const [vFollowUp, setVFollowUp] = useState("");
 
   // New Project Form (matches exact Create project drawer design)
   const [newName, setNewName] = useState("");
@@ -114,6 +136,64 @@ export default function ProjectsView() {
     setDiscText("");
   };
 
+  const handleCreateEventSubmit = (e) => {
+    e.preventDefault();
+    if (!evtTitle.trim() || !selectedProject) return;
+
+    addProjectScheduledEvent(selectedProject.id, {
+      title: evtTitle,
+      type: evtType,
+      date: evtDate || new Date().toISOString().split("T")[0],
+      time: evtTime || "11:00 AM",
+      consultant: evtConsultant,
+      notes: evtNotes,
+      status: "Scheduled"
+    });
+
+    const updated = projects.find(p => p.id === selectedProject.id);
+    if (updated) setSelectedProject(updated);
+
+    setToast({ message: `Event '${evtTitle}' scheduled successfully!`, type: "success" });
+    setEvtTitle("");
+    setEvtNotes("");
+    setShowEventModal(false);
+  };
+
+  const handleRecordVisitSubmit = (e) => {
+    e.preventDefault();
+    if (!vTitle.trim() || !selectedProject) return;
+
+    // Calculate duration in days
+    let days = 1;
+    if (vStart && vEnd) {
+      const d1 = new Date(vStart);
+      const d2 = new Date(vEnd);
+      const diffTime = Math.abs(d2 - d1);
+      days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    addProjectVisit(selectedProject.id, {
+      visitTitle: vTitle,
+      startDate: vStart || new Date().toISOString().split("T")[0],
+      endDate: vEnd || vStart || new Date().toISOString().split("T")[0],
+      durationDays: days,
+      visitingConsultants: vConsultants.length > 0 ? vConsultants : ["Darla Manikanta"],
+      understandings: vUnderstandings,
+      workDone: vWorkDone,
+      followUpAction: vFollowUp
+    });
+
+    const updated = projects.find(p => p.id === selectedProject.id);
+    if (updated) setSelectedProject(updated);
+
+    setToast({ message: `Client visit '${vTitle}' recorded successfully!`, type: "success" });
+    setVTitle("");
+    setVUnderstandings("");
+    setVWorkDone("");
+    setVFollowUp("");
+    setShowVisitModal(false);
+  };
+
   const consultants = users.filter(u => u.role === "Consultant");
 
   // ── SEPARATE PAGE VIEW FOR SELECTED PROJECT HUB ──
@@ -178,8 +258,11 @@ export default function ProjectsView() {
           </div>
 
           {/* Hub Sub-Tabs Bar */}
-          <div style={{ display: "flex", gap: "16px", marginTop: "24px", borderBottom: "1px solid rgba(255,255,255,0.15)" }}>
+          <div style={{ display: "flex", gap: "16px", marginTop: "24px", borderBottom: "1px solid rgba(255,255,255,0.15)", overflowX: "auto" }}>
             {[
+              { id: "scope", label: "📋 Purpose & Scope Checklists" },
+              { id: "planner", label: `📅 Task & Event Planner (${selectedProject.scheduledEvents?.length || 0})` },
+              { id: "visits", label: `🚗 Client Visits Timeline (${selectedProject.clientVisits?.length || 0})` },
               { id: "overview", label: "Overview & Details" },
               { id: "team", label: "Assigned Team" },
               { id: "expenses", label: `Linked Expenses (${linkedExps.length})` },
@@ -192,11 +275,12 @@ export default function ProjectsView() {
                   background: "none",
                   border: "none",
                   borderBottom: activeProjectTab === t.id ? "3px solid #60a5fa" : "3px solid transparent",
-                  color: activeProjectTab === t.id ? "#ffffff" : "rgba(255,255,255,0.6)",
+                  color: activeProjectTab === t.id ? "#ffffff" : "rgba(255,255,255,0.7)",
                   fontWeight: activeProjectTab === t.id ? "700" : "500",
-                  padding: "10px 6px",
+                  padding: "10px 10px",
                   cursor: "pointer",
-                  fontSize: "0.9rem"
+                  fontSize: "0.86rem",
+                  whiteSpace: "nowrap"
                 }}
               >
                 {t.label}
@@ -207,6 +291,347 @@ export default function ProjectsView() {
 
         {/* Tab Content Section */}
         <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px", borderRadius: "12px", minHeight: "450px" }}>
+
+          {/* ── TAB: PURPOSE & SCOPE CHECKLISTS ── */}
+          {activeProjectTab === "scope" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              {/* Engagement Purpose Banner */}
+              <div style={{ background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", border: "1px solid #bfdbfe", padding: "20px 24px", borderRadius: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "1.3rem" }}>💡</span>
+                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: "#1e3a8a" }}>
+                    Why / Purpose Client Approached Us
+                  </h3>
+                </div>
+                <p style={{ margin: 0, fontSize: "0.94rem", color: "#1e40af", lineHeight: "1.6", fontWeight: "500" }}>
+                  {selectedProject.engagementPurpose || selectedProject.description || "Client requested consulting advisory for inventory audit, staff upselling, and retail growth."}
+                </p>
+              </div>
+
+              {/* Checklists Grid (4 Domains) */}
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                  <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: "700" }}>
+                    Operational & Strategic Planning Checklists
+                  </h3>
+                  <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                    Click items to toggle completion state
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+                  {(selectedProject.checklists || [
+                    {
+                      category: "📦 Inventory Audit Checklist",
+                      items: [
+                        { text: "Physical vault stock count & weight reconciliation", completed: true },
+                        { text: "Hallmarking purity verification & BIS tag audit", completed: true },
+                        { text: "Vault vs POS software ledger discrepancy analysis", completed: false },
+                        { text: "High-value diamond & precious stone barcode tagging", completed: false }
+                      ]
+                    },
+                    {
+                      category: "📣 Marketing Suggestions Checklist",
+                      items: [
+                        { text: "Local billboard & newspaper ad reach evaluation", completed: true },
+                        { text: "Social media & Meta Ads bridal campaign audit", completed: false },
+                        { text: "VIP customer bridal preview invite strategy", completed: true }
+                      ]
+                    },
+                    {
+                      category: "📈 Revenue & Sales Growth Checklist",
+                      items: [
+                        { text: "Average transaction ticket size optimization (Gold to Diamond)", completed: true },
+                        { text: "Old gold exchange scheme marketing & margin analysis", completed: false },
+                        { text: "Solitaire & bridal set cross-selling desk strategy", completed: true }
+                      ]
+                    },
+                    {
+                      category: "👥 Customer Experience & Showroom Checklist",
+                      items: [
+                        { text: "Showroom floor greeter & VIP lounge service standards", completed: true },
+                        { text: "Post-purchase thank-you & feedback call workflow", completed: true }
+                      ]
+                    }
+                  ]).map((cat, cIdx) => {
+                    const completedCount = cat.items.filter(i => i.completed).length;
+                    const percent = Math.round((completedCount / cat.items.length) * 100) || 0;
+                    return (
+                      <div key={cIdx} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "18px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                          <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "700", color: "#1e293b" }}>
+                            {cat.category}
+                          </h4>
+                          <span style={{ fontSize: "0.76rem", fontWeight: "700", background: percent === 100 ? "#dcfce7" : "#e0f2fe", color: percent === 100 ? "#15803d" : "#0369a1", padding: "3px 8px", borderRadius: "12px" }}>
+                            {completedCount}/{cat.items.length} ({percent}%)
+                          </span>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div style={{ height: "6px", width: "100%", background: "#e2e8f0", borderRadius: "3px", overflow: "hidden", marginBottom: "14px" }}>
+                          <div style={{ height: "100%", width: `${percent}%`, background: percent === 100 ? "#16a34a" : "#2563eb", transition: "width 0.3s ease" }} />
+                        </div>
+
+                        {/* Items list */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                          {cat.items.map((item, iIdx) => (
+                            <label
+                              key={iIdx}
+                              onClick={() => toggleProjectChecklistItem(selectedProject.id, cIdx, iIdx)}
+                              style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                gap: "10px",
+                                cursor: "pointer",
+                                fontSize: "0.85rem",
+                                color: item.completed ? "#64748b" : "#1e293b",
+                                textDecoration: item.completed ? "line-through" : "none",
+                                background: item.completed ? "#f1f5f9" : "#ffffff",
+                                padding: "8px 12px",
+                                borderRadius: "8px",
+                                border: "1px solid #cbd5e1"
+                              }}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={item.completed}
+                                readOnly
+                                style={{ marginTop: "2px", accentColor: "#2563eb" }}
+                              />
+                              <span>{item.text}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── TAB: TASK & EVENT PLANNER ── */}
+          {activeProjectTab === "planner" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: "700" }}>
+                    Project Task & Event Scheduler
+                  </h3>
+                  <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                    Schedule client call updates, on-site store visits, and staff training workshops.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowEventModal(true)}
+                  style={{
+                    background: "#2563eb",
+                    color: "#ffffff",
+                    border: "none",
+                    padding: "10px 18px",
+                    borderRadius: "8px",
+                    fontWeight: "600",
+                    fontSize: "0.86rem",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 6px rgba(37, 99, 235, 0.2)"
+                  }}
+                >
+                  + Schedule Event / Call / Training
+                </button>
+              </div>
+
+              {/* Events Table / Cards List */}
+              {(!selectedProject.scheduledEvents || selectedProject.scheduledEvents.length === 0) ? (
+                <div style={{ textAlign: "center", padding: "40px 20px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                  <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>No upcoming events scheduled yet.</p>
+                  <button
+                    onClick={() => setShowEventModal(true)}
+                    style={{ marginTop: "12px", background: "none", border: "none", color: "#2563eb", fontWeight: "700", cursor: "pointer" }}
+                  >
+                    + Schedule your first event
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {selectedProject.scheduledEvents.map((evt, idx) => (
+                    <div
+                      key={evt.id || idx}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justify: "space-between",
+                        padding: "16px 20px",
+                        background: "#ffffff",
+                        borderRadius: "10px",
+                        border: "1px solid #e2e8f0",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.02)"
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                        <div style={{ background: "#f1f5f9", padding: "10px 14px", borderRadius: "8px", textAlign: "center", minWidth: "90px" }}>
+                          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", display: "block" }}>
+                            {evt.type === "Call Scheduling" ? "📞 CALL" : evt.type === "Offline Visit Scheduling" ? "🏢 VISIT" : "🎓 TRAINING"}
+                          </span>
+                          <strong style={{ fontSize: "0.85rem", color: "#1e293b" }}>{evt.date}</strong>
+                        </div>
+
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <strong style={{ fontSize: "0.98rem", color: "#0f172a" }}>{evt.title}</strong>
+                            <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", padding: "2px 8px", borderRadius: "4px", fontWeight: "700" }}>
+                              {evt.time}
+                            </span>
+                          </div>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "#64748b" }}>
+                            Consultant: <strong>{evt.consultant}</strong> {evt.notes ? `• ${evt.notes}` : ""}
+                          </p>
+                        </div>
+                      </div>
+
+                      <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "0.78rem", fontWeight: "700", padding: "4px 12px", borderRadius: "6px" }}>
+                        ● {evt.status || "Scheduled"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── TAB: OFFLINE CLIENT VISITS TIMELINE ── */}
+          {activeProjectTab === "visits" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              {/* Header Stats Banner */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+                <div style={{ background: "#f8fafc", padding: "16px 20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Total Client Visits</span>
+                  <p style={{ margin: "6px 0 0 0", fontSize: "1.4rem", fontWeight: "800", color: "#0f172a" }}>
+                    {selectedProject.clientVisits?.length || 0} Visits Completed
+                  </p>
+                </div>
+
+                <div style={{ background: "#f8fafc", padding: "16px 20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Total Field Days Spent</span>
+                  <p style={{ margin: "6px 0 0 0", fontSize: "1.4rem", fontWeight: "800", color: "#2563eb" }}>
+                    {(selectedProject.clientVisits || []).reduce((sum, v) => sum + (v.durationDays || 1), 0)} Days On-Site
+                  </p>
+                </div>
+
+                <div style={{ background: "#f8fafc", padding: "16px 20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Visiting Team Support</span>
+                  <p style={{ margin: "6px 0 0 0", fontSize: "0.95rem", fontWeight: "700", color: "#16a34a" }}>
+                    Multi-Consultant Visits Allowed
+                  </p>
+                </div>
+              </div>
+
+              {/* Action Button Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: "700" }}>
+                  Visit-Wise Timeline Tracker
+                </h3>
+
+                <button
+                  onClick={() => setShowVisitModal(true)}
+                  style={{
+                    background: "#059669",
+                    color: "#ffffff",
+                    border: "none",
+                    padding: "10px 18px",
+                    borderRadius: "8px",
+                    fontWeight: "600",
+                    fontSize: "0.86rem",
+                    cursor: "pointer",
+                    boxShadow: "0 2px 6px rgba(5, 150, 105, 0.2)"
+                  }}
+                >
+                  + Record Offline Client Visit
+                </button>
+              </div>
+
+              {/* Timeline List */}
+              {(!selectedProject.clientVisits || selectedProject.clientVisits.length === 0) ? (
+                <div style={{ textAlign: "center", padding: "40px 20px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
+                  <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>No offline client visits recorded yet.</p>
+                  <button
+                    onClick={() => setShowVisitModal(true)}
+                    style={{ marginTop: "12px", background: "none", border: "none", color: "#059669", fontWeight: "700", cursor: "pointer" }}
+                  >
+                    + Record first client visit
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px", position: "relative", paddingLeft: "20px", borderLeft: "3px solid #cbd5e1" }}>
+                  {selectedProject.clientVisits.map((v, idx) => (
+                    <div key={v.id || idx} style={{ position: "relative" }}>
+                      {/* Timeline Dot */}
+                      <div style={{ position: "absolute", left: "-28px", top: "18px", width: "14px", height: "14px", borderRadius: "50%", background: "#059669", border: "3px solid #ffffff", boxShadow: "0 0 0 2px #059669" }} />
+
+                      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
+                        {/* Visit Card Header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "14px" }}>
+                          <div>
+                            <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "700", color: "#0f172a" }}>
+                              {v.visitTitle}
+                            </h4>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px", fontSize: "0.82rem", color: "#64748b" }}>
+                              <span>📅 <strong>{v.startDate}</strong> {v.endDate ? `to ${v.endDate}` : ""}</span>
+                              <span style={{ background: "#f1f5f9", padding: "2px 8px", borderRadius: "4px", fontWeight: "700", color: "#2563eb" }}>
+                                ⏱ {v.durationDays || 1} Day{(v.durationDays || 1) > 1 ? "s" : ""} On-Site
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Visiting Team Members Badge */}
+                          <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", padding: "6px 12px", borderRadius: "8px" }}>
+                            <span style={{ fontSize: "0.7rem", color: "#047857", fontWeight: "700", textTransform: "uppercase", display: "block" }}>
+                              👥 Visiting Team ({Array.isArray(v.visitingConsultants) ? v.visitingConsultants.length : 1})
+                            </span>
+                            <strong style={{ fontSize: "0.84rem", color: "#065f46" }}>
+                              {Array.isArray(v.visitingConsultants) ? v.visitingConsultants.join(" & ") : v.visitingConsultants}
+                            </strong>
+                          </div>
+                        </div>
+
+                        {/* Understandings Section */}
+                        {v.understandings && (
+                          <div style={{ background: "#fffbebf5", border: "1px solid #fde68a", padding: "12px 16px", borderRadius: "8px", marginBottom: "12px" }}>
+                            <strong style={{ fontSize: "0.78rem", color: "#92400e", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
+                              🧠 Key Understandings & Observations:
+                            </strong>
+                            <p style={{ margin: 0, fontSize: "0.88rem", color: "#78350f", lineHeight: "1.5" }}>
+                              {v.understandings}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Work Done Section */}
+                        {v.workDone && (
+                          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "12px 16px", borderRadius: "8px", marginBottom: "10px" }}>
+                            <strong style={{ fontSize: "0.78rem", color: "#334155", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
+                              ✅ Work Done / Accomplishments:
+                            </strong>
+                            <p style={{ margin: 0, fontSize: "0.88rem", color: "#1e293b", lineHeight: "1.5" }}>
+                              {v.workDone}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Follow-up Action */}
+                        {v.followUpAction && (
+                          <div style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "600" }}>
+                            📌 Follow-Up Action: {v.followUpAction}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* TAB 1: OVERVIEW */}
           {activeProjectTab === "overview" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -864,6 +1289,266 @@ export default function ProjectsView() {
                 </button>
               </div>
 
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: SCHEDULE EVENT / CALL / TRAINING ── */}
+      {showEventModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "520px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "700", color: "#0f172a" }}>
+                Schedule Project Event / Call / Training
+              </h3>
+              <button onClick={() => setShowEventModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
+            </div>
+
+            <form onSubmit={handleCreateEventSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Event / Task Category
+                </label>
+                <select
+                  value={evtType}
+                  onChange={e => setEvtType(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                >
+                  <option value="Call Scheduling">📞 Call Scheduling (Phone / Video Discussion)</option>
+                  <option value="Offline Visit Scheduling">🏢 Offline Visit Scheduling (On-Site Store Visit)</option>
+                  <option value="Training Session Scheduling">🎓 Training Session Scheduling (Sales Staff Coaching)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Event Title / Objective *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Q3 Store Performance Review Call"
+                  value={evtTitle}
+                  onChange={e => setEvtTitle(e.target.value)}
+                  required
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                    Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={evtDate}
+                    onChange={e => setEvtDate(e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                    Time *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 11:00 AM"
+                    value={evtTime}
+                    onChange={e => setEvtTime(e.target.value)}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Assigned Consultant / Lead
+                </label>
+                <select
+                  value={evtConsultant}
+                  onChange={e => setEvtConsultant(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                >
+                  <option value="Darla Manikanta">Darla Manikanta</option>
+                  <option value="Shikhar Jain">Shikhar Jain</option>
+                  <option value="Hemanth Kumar Jain">Hemanth Kumar Jain</option>
+                  <option value="Sophia Laurent">Sophia Laurent</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Agenda & Notes
+                </label>
+                <textarea
+                  rows="3"
+                  placeholder="Details of what will be discussed or executed..."
+                  value={evtNotes}
+                  onChange={e => setEvtNotes(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowEventModal(false)}
+                  style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ padding: "10px 22px", background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                >
+                  Schedule Event
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: RECORD OFFLINE CLIENT VISIT (MULTI-CONSULTANT SUPPORT) ── */}
+      {showVisitModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "700", color: "#0f172a" }}>
+                Record Offline Client Visit & Timeline Log
+              </h3>
+              <button onClick={() => setShowVisitModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
+            </div>
+
+            <form onSubmit={handleRecordVisitSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Visit Title / Primary Objective *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Visit #3: Stock Vault Audit & Staff Coaching"
+                  value={vTitle}
+                  onChange={e => setVTitle(e.target.value)}
+                  required
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                    Start Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={vStart}
+                    onChange={e => setVStart(e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                    End Date *
+                  </label>
+                  <input
+                    type="date"
+                    value={vEnd}
+                    onChange={e => setVEnd(e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                  />
+                </div>
+              </div>
+
+              {/* Multi-Consultant Selection (Sometimes 2 people visit at a time!) */}
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Visiting Team (Select all consultants who visited together) *
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", background: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                  {["Darla Manikanta", "Shikhar Jain", "Hemanth Kumar Jain", "Sophia Laurent"].map(name => {
+                    const isChecked = vConsultants.includes(name);
+                    return (
+                      <label key={name} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: "#1e293b", cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setVConsultants(prev => [...prev, name]);
+                            } else {
+                              setVConsultants(prev => prev.filter(n => n !== name));
+                            }
+                          }}
+                          style={{ accentColor: "#059669" }}
+                        />
+                        <span>{name}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Key Understandings & Observations (What was discovered/observed)
+                </label>
+                <textarea
+                  rows="3"
+                  placeholder="e.g., Discovered 4.2% discrepancy in gold ornament weight; sales team lacks bridal upselling techniques."
+                  value={vUnderstandings}
+                  onChange={e => setVUnderstandings(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Work Done / Deliverables Completed in Visit
+                </label>
+                <textarea
+                  rows="3"
+                  placeholder="e.g., Audited 1,250 ornament tags, conducted 4-hour sales floor coaching session, implemented daily ledger logbook."
+                  value={vWorkDone}
+                  onChange={e => setVWorkDone(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Follow-Up Action Item
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Schedule follow-up call on 25th July to review diamond cross-sell ratio."
+                  value={vFollowUp}
+                  onChange={e => setVFollowUp(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowVisitModal(false)}
+                  style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  style={{ padding: "10px 22px", background: "#059669", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                >
+                  Record Client Visit
+                </button>
+              </div>
             </form>
           </div>
         </div>

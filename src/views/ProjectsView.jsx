@@ -20,6 +20,19 @@ export default function ProjectsView() {
   const [statusFilter, setStatusFilter] = useState("All"); // 'All', 'Active', 'Completed', 'On Hold'
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Helper date formatter: e.g. 2026-07-12 -> 12 July 2026
+  const formatDateNice = (dateStr) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   // Modal states
   const [selectedProject, setSelectedProject] = useState(null);
   const [activeProjectTab, setActiveProjectTab] = useState("scope"); // 'scope', 'planner', 'visits', 'overview', 'team', 'expenses', 'discussions'
@@ -528,8 +541,8 @@ export default function ProjectsView() {
 
               {/* Action Button Header */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: "700" }}>
-                  Visit-Wise Timeline Tracker
+                <h3 style={{ margin: 0, fontSize: "1.2rem", color: "#0f172a", fontWeight: "700" }}>
+                  Timeline
                 </h3>
 
                 <button
@@ -550,7 +563,7 @@ export default function ProjectsView() {
                 </button>
               </div>
 
-              {/* Timeline List */}
+              {/* Timeline List (Keka HR Style) */}
               {(!selectedProject.clientVisits || selectedProject.clientVisits.length === 0) ? (
                 <div style={{ textAlign: "center", padding: "40px 20px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
                   <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>No offline client visits recorded yet.</p>
@@ -562,71 +575,144 @@ export default function ProjectsView() {
                   </button>
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "20px", position: "relative", paddingLeft: "20px", borderLeft: "3px solid #cbd5e1" }}>
-                  {selectedProject.clientVisits.map((v, idx) => (
-                    <div key={v.id || idx} style={{ position: "relative" }}>
-                      {/* Timeline Dot */}
-                      <div style={{ position: "absolute", left: "-28px", top: "18px", width: "14px", height: "14px", borderRadius: "50%", background: "#059669", border: "3px solid #ffffff", boxShadow: "0 0 0 2px #059669" }} />
+                <div style={{ position: "relative", paddingLeft: "36px" }}>
+                  {/* Vertical continuous gray timeline bar */}
+                  <div style={{ position: "absolute", left: "15px", top: "0", bottom: "0", width: "2px", background: "#e2e8f0" }} />
 
-                      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "20px", boxShadow: "0 2px 8px rgba(0,0,0,0.03)" }}>
-                        {/* Visit Card Header */}
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "12px", marginBottom: "14px" }}>
-                          <div>
-                            <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "700", color: "#0f172a" }}>
-                              {v.visitTitle}
-                            </h4>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginTop: "6px", fontSize: "0.82rem", color: "#64748b" }}>
-                              <span>📅 <strong>{v.startDate}</strong> {v.endDate ? `to ${v.endDate}` : ""}</span>
-                              <span style={{ background: "#f1f5f9", padding: "2px 8px", borderRadius: "4px", fontWeight: "700", color: "#2563eb" }}>
-                                ⏱ {v.durationDays || 1} Day{(v.durationDays || 1) > 1 ? "s" : ""} On-Site
-                              </span>
+                  {/* Year Header Pill: 2026 */}
+                  <div style={{ position: "relative", marginBottom: "24px", zIndex: 2 }}>
+                    <span style={{
+                      background: "#94a3b8",
+                      color: "#ffffff",
+                      fontSize: "0.74rem",
+                      fontWeight: "700",
+                      padding: "3px 10px",
+                      borderRadius: "4px",
+                      marginLeft: "-36px",
+                      display: "inline-block"
+                    }}>
+                      2026
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
+                    {selectedProject.clientVisits.map((v, idx) => {
+                      const visitNum = selectedProject.clientVisits.length - idx;
+                      const dateRangeFormatted = v.endDate && v.endDate !== v.startDate
+                        ? `${formatDateNice(v.startDate)} - ${formatDateNice(v.endDate)}`
+                        : formatDateNice(v.startDate);
+
+                      const consultantNames = Array.isArray(v.visitingConsultants) ? v.visitingConsultants : [v.visitingConsultants];
+
+                      return (
+                        <div key={v.id || idx} style={{ position: "relative" }}>
+                          {/* Circular Icon Node on Vertical Line */}
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: "-36px",
+                              top: "2px",
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "50%",
+                              background: idx % 2 === 0 ? "#3b82f6" : "#f59e0b",
+                              color: "#ffffff",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "0.9rem",
+                              boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                              border: "2px solid #ffffff"
+                            }}
+                          >
+                            {idx % 2 === 0 ? "🏢" : "🚗"}
+                          </div>
+
+                          {/* Visit Title & Subtitle */}
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                            <div>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: "#1e293b" }}>
+                                  Visit {visitNum}{v.visitTitle ? `: ${v.visitTitle.replace(/^Visit #\d+:\s*/i, '')}` : ""}
+                                </h4>
+                                <span style={{ cursor: "pointer", color: "#94a3b8", fontSize: "0.88rem" }}>🔗</span>
+                                <span style={{ cursor: "pointer", color: "#94a3b8", fontSize: "1rem" }}>⋮</span>
+                              </div>
+                              <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "#64748b", fontWeight: "500" }}>
+                                {dateRangeFormatted} <span style={{ color: "#cbd5e1", margin: "0 4px" }}>•</span> <strong style={{ color: "#2563eb" }}>{v.durationDays || 1} Day{(v.durationDays || 1) > 1 ? "s" : ""} On-Site</strong>
+                              </p>
                             </div>
                           </div>
 
-                          {/* Visiting Team Members Badge */}
-                          <div style={{ background: "#ecfdf5", border: "1px solid #a7f3d0", padding: "6px 12px", borderRadius: "8px" }}>
-                            <span style={{ fontSize: "0.7rem", color: "#047857", fontWeight: "700", textTransform: "uppercase", display: "block" }}>
-                              👥 Visiting Team ({Array.isArray(v.visitingConsultants) ? v.visitingConsultants.length : 1})
-                            </span>
-                            <strong style={{ fontSize: "0.84rem", color: "#065f46" }}>
-                              {Array.isArray(v.visitingConsultants) ? v.visitingConsultants.join(" & ") : v.visitingConsultants}
-                            </strong>
+                          {/* Visiting Consultants Pill (Keka HR Pill Style) */}
+                          <div style={{ marginTop: "12px" }}>
+                            <div style={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              flexWrap: "wrap",
+                              gap: "12px",
+                              background: "#f8fafc",
+                              border: "1px solid #e2e8f0",
+                              padding: "10px 16px",
+                              borderRadius: "10px",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.02)"
+                            }}>
+                              <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", marginRight: "4px" }}>
+                                👥 Visiting Team:
+                              </span>
+
+                              {consultantNames.map(cName => {
+                                const matchedUser = users.find(u => u.name === cName || u.name.includes(cName));
+                                const avatarUrl = matchedUser?.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120";
+                                const userTitle = matchedUser?.title || matchedUser?.role || "Consultant";
+
+                                return (
+                                  <div key={cName} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#ffffff", padding: "4px 10px", borderRadius: "20px", border: "1px solid #cbd5e1" }}>
+                                    <img src={avatarUrl} alt={cName} style={{ width: "26px", height: "26px", borderRadius: "50%", objectFit: "cover" }} />
+                                    <span style={{ fontSize: "0.84rem", fontWeight: "700", color: "#1e293b" }}>{cName}</span>
+                                    <span style={{ fontSize: "0.74rem", color: "#64748b", fontWeight: "500" }}>({userTitle})</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
+
+                          {/* Detailed Findings & Work Done Box */}
+                          {(v.understandings || v.workDone) && (
+                            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "18px", marginTop: "14px", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+                              {v.understandings && (
+                                <div style={{ marginBottom: v.workDone ? "12px" : "0" }}>
+                                  <strong style={{ fontSize: "0.78rem", color: "#92400e", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
+                                    🧠 Key Understandings & Observations:
+                                  </strong>
+                                  <p style={{ margin: 0, fontSize: "0.88rem", color: "#451a03", lineHeight: "1.5" }}>
+                                    {v.understandings}
+                                  </p>
+                                </div>
+                              )}
+
+                              {v.workDone && (
+                                <div>
+                                  <strong style={{ fontSize: "0.78rem", color: "#1e293b", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
+                                    ✅ Work Done / Accomplishments:
+                                  </strong>
+                                  <p style={{ margin: 0, fontSize: "0.88rem", color: "#334155", lineHeight: "1.5" }}>
+                                    {v.workDone}
+                                  </p>
+                                </div>
+                              )}
+
+                              {v.followUpAction && (
+                                <div style={{ marginTop: "10px", fontSize: "0.8rem", color: "#2563eb", fontWeight: "600" }}>
+                                  📌 Follow-Up Action: {v.followUpAction}
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
-
-                        {/* Understandings Section */}
-                        {v.understandings && (
-                          <div style={{ background: "#fffbebf5", border: "1px solid #fde68a", padding: "12px 16px", borderRadius: "8px", marginBottom: "12px" }}>
-                            <strong style={{ fontSize: "0.78rem", color: "#92400e", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
-                              🧠 Key Understandings & Observations:
-                            </strong>
-                            <p style={{ margin: 0, fontSize: "0.88rem", color: "#78350f", lineHeight: "1.5" }}>
-                              {v.understandings}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Work Done Section */}
-                        {v.workDone && (
-                          <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "12px 16px", borderRadius: "8px", marginBottom: "10px" }}>
-                            <strong style={{ fontSize: "0.78rem", color: "#334155", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
-                              ✅ Work Done / Accomplishments:
-                            </strong>
-                            <p style={{ margin: 0, fontSize: "0.88rem", color: "#1e293b", lineHeight: "1.5" }}>
-                              {v.workDone}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Follow-up Action */}
-                        {v.followUpAction && (
-                          <div style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "600" }}>
-                            📌 Follow-Up Action: {v.followUpAction}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>

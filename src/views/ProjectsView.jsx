@@ -108,23 +108,32 @@ export default function ProjectsView() {
   const [newBudget, setNewBudget] = useState("");
   const [linkExpensesEnabled, setLinkExpensesEnabled] = useState(true);
 
+  // Effective projects list fallback
+  const effectiveProjectsList = (projects && projects.length > 0) ? projects : initialProjects;
+
   // Filtered projects
-  const filteredProjects = projects.filter(p => {
-    const matchesStatus = statusFilter === "All" || p.status === statusFilter || (statusFilter === "Active" && p.status === "In Progress");
-    const q = searchQuery.toLowerCase();
+  const filteredProjects = effectiveProjectsList.filter(p => {
+    const status = p.status || "Active";
+    const matchesStatus = 
+      statusFilter === "All" || 
+      status === statusFilter || 
+      (statusFilter === "Active" && (status === "In Progress" || status === "Active"));
+
+    const q = searchQuery.toLowerCase().trim();
     const matchesSearch = 
       !q || 
-      p.name.toLowerCase().includes(q) || 
-      p.code.toLowerCase().includes(q) || 
+      (p.name && p.name.toLowerCase().includes(q)) || 
+      (p.code && p.code.toLowerCase().includes(q)) || 
       (p.pocName && p.pocName.toLowerCase().includes(q)) ||
-      p.client.toLowerCase().includes(q);
+      (p.client && p.client.toLowerCase().includes(q));
+
     return matchesStatus && matchesSearch;
   });
 
   // Calculate high-level stats
-  const activeCount = projects.filter(p => p.status === "Active" || p.status === "In Progress").length;
-  const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
-  const totalDiscussions = projects.reduce((sum, p) => sum + (p.discussions?.length || 0), 0);
+  const activeCount = effectiveProjectsList.filter(p => (p.status || "Active") === "Active" || p.status === "In Progress").length;
+  const totalBudget = effectiveProjectsList.reduce((sum, p) => sum + (p.budget || 0), 0);
+  const totalDiscussions = effectiveProjectsList.reduce((sum, p) => sum + (p.discussions?.length || 0), 0);
 
   // Handlers
   const handleCreateProjectSubmit = (e) => {
@@ -1003,7 +1012,7 @@ export default function ProjectsView() {
             TOTAL PROJECTS
           </div>
           <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
-            {projects.length} <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "500" }}>({activeCount} Active)</span>
+            {effectiveProjectsList.length} <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "500" }}>({activeCount} Active)</span>
           </div>
         </div>
 

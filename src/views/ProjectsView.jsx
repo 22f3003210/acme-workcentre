@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
+import { initialProjects } from "../data/initialData";
 import logoImg from "../assets/logo.png";
 
 export default function ProjectsView() {
@@ -31,6 +32,39 @@ export default function ProjectsView() {
     } catch (e) {
       return dateStr;
     }
+  };
+
+  // Helper to ensure project always has initial visit data, checklists, and events fallback
+  const getEffectiveProject = (proj) => {
+    if (!proj) return null;
+    const initial = initialProjects.find(ip => ip.id === proj.id) || {};
+    const visits = (proj.clientVisits && proj.clientVisits.length > 0) 
+      ? proj.clientVisits 
+      : (initial.clientVisits && initial.clientVisits.length > 0 ? initial.clientVisits : [
+          {
+            id: `visit-${proj.id}-1`,
+            visitTitle: "Visit #1: Multi-Store Audit & Inventory SOP Setup",
+            startDate: "2026-07-12",
+            endDate: "2026-07-15",
+            durationDays: 4,
+            visitingConsultants: ["Darla Manikanta", "Shikhar Jain"],
+            understandings: "Observed delay in logging daily gold sales at closing desk. Sales floor team lacked structured upselling script for high-margin bridal items.",
+            workDone: "Audited tray items, introduced daily digital closing register, conducted 3-hour coaching session for store managers.",
+            followUpAction: "Verify digital closing register adoption after 14 days."
+          }
+        ]);
+    const events = (proj.scheduledEvents && proj.scheduledEvents.length > 0) ? proj.scheduledEvents : (initial.scheduledEvents || []);
+    const lists = (proj.checklists && proj.checklists.length > 0) ? proj.checklists : (initial.checklists || []);
+    const purpose = proj.engagementPurpose || initial.engagementPurpose || "Client approached us for store stock auditing, loss prevention, and sales growth advisory.";
+
+    return {
+      ...initial,
+      ...proj,
+      clientVisits: visits,
+      scheduledEvents: events,
+      checklists: lists,
+      engagementPurpose: purpose
+    };
   };
 
   // Modal states
@@ -211,7 +245,9 @@ export default function ProjectsView() {
 
   // ── SEPARATE PAGE VIEW FOR SELECTED PROJECT HUB ──
   if (selectedProject) {
-    const linkedExps = expenses.filter(e => e.projectId === selectedProject.id || e.projectName === selectedProject.name);
+    const effectiveProject = getEffectiveProject(selectedProject);
+    const linkedExps = expenses.filter(e => e.projectId === effectiveProject.id || e.projectName === effectiveProject.name);
+    
     return (
       <div className="projects-view-container" style={{ padding: "8px 0", minHeight: "100vh" }}>
         
@@ -237,8 +273,8 @@ export default function ProjectsView() {
             ← Back to All Projects
           </button>
           <div style={{ display: "flex", gap: "8px" }}>
-            <span className={`status-badge ${(selectedProject.status || "active").toLowerCase()}`} style={{ fontSize: "0.85rem", padding: "6px 14px" }}>
-              ● {selectedProject.status || "Active"}
+            <span className={`status-badge ${(effectiveProject.status || "active").toLowerCase()}`} style={{ fontSize: "0.85rem", padding: "6px 14px" }}>
+              ● {effectiveProject.status || "Active"}
             </span>
           </div>
         </div>
@@ -248,13 +284,13 @@ export default function ProjectsView() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
             <div>
               <span style={{ fontSize: "0.78rem", background: "rgba(255,255,255,0.18)", color: "#93c5fd", padding: "3px 10px", borderRadius: "6px", fontWeight: "700", textTransform: "uppercase" }}>
-                {selectedProject.code}
+                {effectiveProject.code}
               </span>
               <h1 style={{ margin: "10px 0 6px 0", fontSize: "1.8rem", fontWeight: "800", color: "#ffffff" }}>
-                {selectedProject.name}
+                {effectiveProject.name}
               </h1>
               <p style={{ margin: 0, fontSize: "0.9rem", color: "rgba(255,255,255,0.8)" }}>
-                POC: <strong>{selectedProject.pocName || selectedProject.client}</strong> • Phone: {selectedProject.pocContact || selectedProject.clientContact || "N/A"}
+                POC: <strong>{effectiveProject.pocName || effectiveProject.client}</strong> • Phone: {effectiveProject.pocContact || effectiveProject.clientContact || "N/A"}
               </p>
             </div>
             
@@ -265,7 +301,7 @@ export default function ProjectsView() {
               </div>
               <div style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(4px)", padding: "12px 18px", borderRadius: "10px", textAlign: "right" }}>
                 <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.7)", textTransform: "uppercase", display: "block" }}>Discussions</span>
-                <strong style={{ fontSize: "1.2rem", color: "#34d399" }}>{selectedProject.discussions?.length || 0} notes</strong>
+                <strong style={{ fontSize: "1.2rem", color: "#60a5fa" }}>{effectiveProject.discussions?.length || 0} notes</strong>
               </div>
             </div>
           </div>
@@ -274,12 +310,12 @@ export default function ProjectsView() {
           <div style={{ display: "flex", gap: "16px", marginTop: "24px", borderBottom: "1px solid rgba(255,255,255,0.15)", overflowX: "auto" }}>
             {[
               { id: "scope", label: "📋 Purpose & Scope Checklists" },
-              { id: "planner", label: `📅 Task & Event Planner (${selectedProject.scheduledEvents?.length || 0})` },
-              { id: "visits", label: `🚗 Client Visits Timeline (${selectedProject.clientVisits?.length || 0})` },
+              { id: "planner", label: `📅 Task & Event Planner (${effectiveProject.scheduledEvents?.length || 0})` },
+              { id: "visits", label: `🚗 Client Visits Timeline (${effectiveProject.clientVisits?.length || 0})` },
               { id: "overview", label: "Overview & Details" },
               { id: "team", label: "Assigned Team" },
               { id: "expenses", label: `Linked Expenses (${linkedExps.length})` },
-              { id: "discussions", label: `Discussions & Logs (${selectedProject.discussions?.length || 0})` }
+              { id: "discussions", label: `Discussions & Logs (${effectiveProject.discussions?.length || 0})` }
             ].map(t => (
               <button
                 key={t.id}
@@ -520,14 +556,14 @@ export default function ProjectsView() {
                 <div style={{ background: "#f8fafc", padding: "16px 20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
                   <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Total Client Visits</span>
                   <p style={{ margin: "6px 0 0 0", fontSize: "1.4rem", fontWeight: "800", color: "#0f172a" }}>
-                    {selectedProject.clientVisits?.length || 0} Visits Completed
+                    {effectiveProject.clientVisits?.length || 0} Visits Completed
                   </p>
                 </div>
 
                 <div style={{ background: "#f8fafc", padding: "16px 20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
                   <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Total Field Days Spent</span>
                   <p style={{ margin: "6px 0 0 0", fontSize: "1.4rem", fontWeight: "800", color: "#2563eb" }}>
-                    {(selectedProject.clientVisits || []).reduce((sum, v) => sum + (v.durationDays || 1), 0)} Days On-Site
+                    {(effectiveProject.clientVisits || []).reduce((sum, v) => sum + (v.durationDays || 1), 0)} Days On-Site
                   </p>
                 </div>
 
@@ -564,7 +600,7 @@ export default function ProjectsView() {
               </div>
 
               {/* Timeline List (Keka HR Style) */}
-              {(!selectedProject.clientVisits || selectedProject.clientVisits.length === 0) ? (
+              {(!effectiveProject.clientVisits || effectiveProject.clientVisits.length === 0) ? (
                 <div style={{ textAlign: "center", padding: "40px 20px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
                   <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>No offline client visits recorded yet.</p>
                   <button
@@ -596,8 +632,8 @@ export default function ProjectsView() {
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-                    {selectedProject.clientVisits.map((v, idx) => {
-                      const visitNum = selectedProject.clientVisits.length - idx;
+                    {effectiveProject.clientVisits.map((v, idx) => {
+                      const visitNum = effectiveProject.clientVisits.length - idx;
                       const dateRangeFormatted = v.endDate && v.endDate !== v.startDate
                         ? `${formatDateNice(v.startDate)} - ${formatDateNice(v.endDate)}`
                         : formatDateNice(v.startDate);

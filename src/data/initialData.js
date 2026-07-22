@@ -4131,6 +4131,73 @@ export const initialProjects = [
     location: "Hyderabad / HQ",
     description: "Multi-store business development, retail footfall enhancement, and sales desk training.",
     assignedConsultants: ["consultant-3"],
+    engagementPurpose: "Client approached us for multi-store retail footfall expansion, sales floor desk training, and daily stock audit SOP implementation across Hyderabad & Indore branches.",
+    checklists: [
+      {
+        category: "📦 Inventory Audit Checklist",
+        items: [
+          { text: "Multi-branch vault stock count & weight reconciliation", completed: true },
+          { text: "Barcode POS tagging & tray count alignment", completed: true },
+          { text: "Loss prevention & CCTV vault protocol setup", completed: false }
+        ]
+      },
+      {
+        category: "📣 Marketing Suggestions Checklist",
+        items: [
+          { text: "Regional TV & FM radio ad campaign audit", completed: true },
+          { text: "Social media Meta Ads footfall acquisition campaign", completed: false }
+        ]
+      },
+      {
+        category: "📈 Revenue & Sales Growth Checklist",
+        items: [
+          { text: "Sales executive upselling incentive structure design", completed: true },
+          { text: "Diamond jewellery counter conversion desk setup", completed: false }
+        ]
+      },
+      {
+        category: "👥 Customer Experience & Showroom Checklist",
+        items: [
+          { text: "Showroom floor greeting & lounge hospitality SOP", completed: true }
+        ]
+      }
+    ],
+    scheduledEvents: [
+      {
+        id: "evt-gnv-1",
+        title: "Hyderabad Showroom Footfall Review",
+        type: "Call Scheduling",
+        date: "2026-07-26",
+        time: "03:00 PM",
+        consultant: "Hemanth Kumar Jain",
+        status: "Scheduled",
+        notes: "Review monthly store traffic and sales conversion."
+      }
+    ],
+    clientVisits: [
+      {
+        id: "visit-gnv-1",
+        visitTitle: "Visit #1: Multi-Store Audit & Inventory SOP Setup",
+        startDate: "2026-07-12",
+        endDate: "2026-07-15",
+        durationDays: 4,
+        visitingConsultants: ["Darla Manikanta", "Shikhar Jain"],
+        understandings: "Observed delay in logging daily gold sales at closing desk. Sales floor team lacked structured upselling script for high-margin bridal items.",
+        workDone: "Audited 1,800 tray items, introduced daily digital closing register, conducted 3-hour coaching session for store managers.",
+        followUpAction: "Verify digital closing register adoption after 14 days."
+      },
+      {
+        id: "visit-gnv-2",
+        visitTitle: "Visit #2: Indore Branch Opening & Sales Floor Workshop",
+        startDate: "2026-07-17",
+        endDate: "2026-07-19",
+        durationDays: 3,
+        visitingConsultants: ["Hemanth Kumar Jain", "Darla Manikanta"],
+        understandings: "New Indore showroom site requires vault security protocol signoff and VIP bridal lounge styling.",
+        workDone: "Inspected vault security, set up VIP lounge greeting workflow, trained 8 new sales executives on bridal ornament presentation.",
+        followUpAction: "Client scheduled next follow-up site visit for August."
+      }
+    ],
     discussions: [
       {
         id: "disc-3",
@@ -4157,6 +4224,48 @@ export const initialProjects = [
     location: "Surat / Remote",
     description: "Retail sales process consulting, customer acquisition, and bridal collection marketing strategy.",
     assignedConsultants: ["consultant-4"],
+    engagementPurpose: "Client approached us for retail sales process consulting, customer acquisition, solitaire marketing, and bridal collection expansion in Surat.",
+    checklists: [
+      {
+        category: "📦 Inventory Audit Checklist",
+        items: [
+          { text: "Solitaire diamond certification & GIA tag audit", completed: true },
+          { text: "High-value uncut diamond vault stock reconciliation", completed: false }
+        ]
+      },
+      {
+        category: "📣 Marketing Suggestions Checklist",
+        items: [
+          { text: "Bridal jewellery collection launch strategy", completed: true },
+          { text: "Instagram & influencer marketing partnership audit", completed: false }
+        ]
+      }
+    ],
+    scheduledEvents: [
+      {
+        id: "evt-zota-1",
+        title: "Surat Solitaire Marketing Strategy Call",
+        type: "Call Scheduling",
+        date: "2026-07-27",
+        time: "12:00 PM",
+        consultant: "Shikhar Jain",
+        status: "Scheduled",
+        notes: "Discuss bridal festival campaign launch with Vikram Zota."
+      }
+    ],
+    clientVisits: [
+      {
+        id: "visit-zota-1",
+        visitTitle: "Visit #1: Surat Showroom Sourcing & Solitaire Audit",
+        startDate: "2026-07-05",
+        endDate: "2026-07-08",
+        durationDays: 4,
+        visitingConsultants: ["Shikhar Jain", "Darla Manikanta"],
+        understandings: "Solitaire counter lacked GIA digital certificate scanner; customers requested custom CAD design previews.",
+        workDone: "Audited 450 solitaire stones, verified GIA certificates, implemented 3D CAD design consultation desk.",
+        followUpAction: "Monitor CAD design conversion rate."
+      }
+    ],
     discussions: []
   },
   {
@@ -4173,6 +4282,30 @@ export const initialProjects = [
     location: "Barabanki / UP",
     description: "Jewellery stock audit, supply chain optimization, and legacy store digital modernization.",
     assignedConsultants: ["consultant-5"],
+    engagementPurpose: "Client approached us for legacy jewellery stock audit, gold purity reconciliation, and digital POS store modernization.",
+    checklists: [
+      {
+        category: "📦 Inventory Audit Checklist",
+        items: [
+          { text: "Legacy gold ornament stock weight reconciliation", completed: true },
+          { text: "Purity hallmarking & BIS tag audit", completed: true }
+        ]
+      }
+    ],
+    scheduledEvents: [],
+    clientVisits: [
+      {
+        id: "visit-bpk-1",
+        visitTitle: "Visit #1: Barabanki Store Physical Inventory Verification",
+        startDate: "2026-06-20",
+        endDate: "2026-06-22",
+        durationDays: 3,
+        visitingConsultants: ["Hemanth Kumar Jain", "Shikhar Jain"],
+        understandings: "Discovered physical stock ledger did not match legacy paper registers.",
+        workDone: "Audited 950 gold items, digitized paper ledger into Acme Workcentre POS system.",
+        followUpAction: "Conduct second audit phase upon client request."
+      }
+    ],
     discussions: []
   }
 ];

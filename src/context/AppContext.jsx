@@ -500,6 +500,39 @@ export const AppProvider = ({ children }) => {
       spent: 0,
       discussions: [],
       assignedConsultants: [],
+      engagementPurpose: projectData.description || "Client requested consulting advisory for store operations, inventory audit, and retail growth.",
+      checklists: [
+        {
+          category: "📦 Inventory Audit Checklist",
+          items: [
+            { text: "Physical vault stock count & weight reconciliation", completed: false },
+            { text: "Hallmarking purity verification & BIS tag audit", completed: false },
+            { text: "Vault vs POS software ledger discrepancy analysis", completed: false }
+          ]
+        },
+        {
+          category: "📣 Marketing Suggestions Checklist",
+          items: [
+            { text: "Local billboard & newspaper ad reach evaluation", completed: false },
+            { text: "Social media & Meta Ads bridal campaign audit", completed: false }
+          ]
+        },
+        {
+          category: "📈 Revenue & Sales Growth Checklist",
+          items: [
+            { text: "Average transaction ticket size optimization (Gold to Diamond)", completed: false },
+            { text: "Solitaire & bridal set cross-selling desk strategy", completed: false }
+          ]
+        },
+        {
+          category: "👥 Customer Experience & Showroom Checklist",
+          items: [
+            { text: "Showroom floor greeter & VIP lounge service standards", completed: false }
+          ]
+        }
+      ],
+      scheduledEvents: [],
+      clientVisits: [],
       ...projectData
     };
     setProjects(prev => [newProj, ...prev]);

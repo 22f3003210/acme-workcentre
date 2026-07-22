@@ -3833,33 +3833,6 @@ export const initialExpenses = [
     "approvedDate": "2026-07-14"
   },
 
-  // Consultant-10 (Aditya) – Akbarpur client engagement
-  {
-    "id": "exp-consultant-10-jul14-1",
-    "employeeId": "consultant-10",
-    "date": "2026-07-14",
-    "submittedDate": "2026-07-14",
-    "category": "Food",
-    "amount": 100,
-    "reason": "Breakfast – Dhaba near Akbarpur, kanhiyalal site",
-    "receipt": "",
-    "status": "Pending",
-    "approvedBy": "",
-    "approvedDate": ""
-  },
-  {
-    "id": "exp-consultant-10-jul14-2",
-    "employeeId": "consultant-10",
-    "date": "2026-07-14",
-    "submittedDate": "2026-07-14",
-    "category": "Food",
-    "amount": 240,
-    "reason": "Lunch – kanhiyalal alankar mandir, Akbarpur",
-    "receipt": "",
-    "status": "Pending",
-    "approvedBy": "",
-    "approvedDate": ""
-  },
   {
     "id": "exp-consultant-10-jul14-3",
     "employeeId": "consultant-10",

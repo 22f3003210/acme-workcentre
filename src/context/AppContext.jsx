@@ -35,7 +35,7 @@ const parseTimeToMinutes = (timeStr) => {
 };
 
 // ── Data version: bump this whenever initialData.js changes ──────────────
-const DATA_VERSION = "v9";
+const DATA_VERSION = "v10";
 
 export const AppProvider = ({ children }) => {
   // On every mount, flush stale localStorage if data version changed
@@ -91,10 +91,12 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : initialCandidates;
   });
 
+  // Current logged in user
   const [currentUser, setCurrentUser] = useState(() => {
-    const savedUserId = localStorage.getItem("workcentre_current_user_id");
-    const found = users.find(u => u.id === savedUserId);
-    return found || users[0]; // Sophia Laurent (HR Admin) by default
+    const saved = localStorage.getItem("workcentre_current_user");
+    if (saved) return JSON.parse(saved);
+    const found = users.find(u => u.name === "Amin Gagani" || u.role === "Accounts Manager");
+    return found || users[0];
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {

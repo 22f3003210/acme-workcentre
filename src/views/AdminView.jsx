@@ -364,7 +364,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
       dueDate: new Date().toISOString().split("T")[0], // Due Today!
       status: "Due Today",
       assignedRole: "Accounts Manager",
-      assignedEmployee: "Robert Chen"
+      assignedEmployee: "Amin Gagani"
     },
     {
       id: "task-demo-2",
@@ -374,7 +374,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
       dueDate: "2026-08-15", // Due Later!
       status: "Due Later",
       assignedRole: "HR Admin",
-      assignedEmployee: "Sophia Laurent"
+      assignedEmployee: "Sayyada"
     }
   ]);
 
@@ -1439,7 +1439,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   <label>Full Name *</label>
                   <input 
                     type="text" 
-                    placeholder="e.g. David Vance" 
+                    placeholder="e.g. Amin Gagani" 
                     value={empName} 
                     onChange={(e) => setEmpName(e.target.value)} 
                     required

@@ -2,13 +2,13 @@
 export const initialUsers = [
   {
     "id": "emp-hbj001",
-    "name": "Shabbir Vasaya",
-    "email": "shabbir.vasaya@acmeworkcentre.com",
+    "name": "Hemanth Kumar Jain",
+    "email": "hemanthbamboli@gmail.com",
     "phone": "+91-9849012345",
     "role": "Admin",
     "empCode": "HBJ00001",
     "avatar": "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=120",
-    "title": "Founder & CEO",
+    "title": "CEO",
     "department": "ADMINISTRATION",
     "location": "Mehdipatnam",
     "lastLogin": "2026-07-21T09:30:00Z",
@@ -16,8 +16,8 @@ export const initialUsers = [
   },
   {
     "id": "emp-hbj002",
-    "name": "Sayyada",
-    "email": "sayyada@acmeworkcentre.com",
+    "name": "ADMIN MANAGER#2",
+    "email": "hr@heerabhai.com",
     "phone": "+91-9849099999",
     "role": "Admin",
     "empCode": "HBJ00002",
@@ -58,9 +58,9 @@ export const initialUsers = [
   },
   {
     "id": "admin-1",
-    "name": "Sayyada",
-    "email": "sayyada@acmeworkcentre.com",
-    "phone": "+91-9849099999",
+    "name": "Sophia Laurent",
+    "email": "sophia@workcentre.com",
+    "phone": "+1 (555) 019-9302",
     "role": "Admin",
     "empCode": "HBJ00003",
     "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120",
@@ -72,9 +72,9 @@ export const initialUsers = [
   },
   {
     "id": "accounts-1",
-    "name": "Amin Gagani",
-    "email": "amin.gagani@acmeworkcentre.com",
-    "phone": "+91-9849044444",
+    "name": "Robert Chen",
+    "email": "robert@workcentre.com",
+    "phone": "+1 (555) 019-4820",
     "role": "Accounts Manager",
     "empCode": "HBJ00004",
     "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120",
@@ -86,9 +86,9 @@ export const initialUsers = [
   },
   {
     "id": "consultant-1",
-    "name": "Ayesha Khan (DCB BANK)",
-    "email": "ayesha@acmeworkcentre.com",
-    "phone": "+91-9849033333",
+    "name": "Elena Rostova (DCB BANK)",
+    "email": "elena@workcentre.com",
+    "phone": "+1 (555) 019-2840",
     "role": "Consultant",
     "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=120",
     "title": "Treasury & Retail Lead",
@@ -1716,7 +1716,7 @@ export const initialExpenses = [
     "reason": "Travel expenses",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-02"
   },
   {
@@ -1728,7 +1728,7 @@ export const initialExpenses = [
     "reason": "Tea/pooja saman /mo Recharge /whatsup /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-03"
   },
   {
@@ -1740,7 +1740,7 @@ export const initialExpenses = [
     "reason": "Mo Recharge /Abdul juice /butter milk /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-04"
   },
   {
@@ -1752,7 +1752,7 @@ export const initialExpenses = [
     "reason": "TDS /rasida ben /stationery /mo Recharge /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-06"
   },
   {
@@ -1764,7 +1764,7 @@ export const initialExpenses = [
     "reason": "printer /Awaiz hotel /Mo Recharge /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-07"
   },
   {
@@ -1776,7 +1776,7 @@ export const initialExpenses = [
     "reason": "Asim/Ashram kid's /coconut water /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -1788,7 +1788,7 @@ export const initialExpenses = [
     "reason": "petrol /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-09"
   },
   {
@@ -1800,7 +1800,7 @@ export const initialExpenses = [
     "reason": "water bottle /pooja saman /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-10"
   },
   {
@@ -1812,7 +1812,7 @@ export const initialExpenses = [
     "reason": "Karam petty cash /Ashram kid's /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-11"
   },
   {
@@ -1824,7 +1824,7 @@ export const initialExpenses = [
     "reason": "Ramjan bhai /keahwani",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-12"
   },
   {
@@ -1836,7 +1836,7 @@ export const initialExpenses = [
     "reason": "Milk /Rabbani petty cash /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-13"
   },
   {
@@ -1848,7 +1848,7 @@ export const initialExpenses = [
     "reason": "Ashram kid's / Abraham petty cash",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -1860,7 +1860,7 @@ export const initialExpenses = [
     "reason": "Alisha exp/Abhishek petty cash /water bottle /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-15"
   },
   {
@@ -1872,7 +1872,7 @@ export const initialExpenses = [
     "reason": "Vijay petty cash /Abdul",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -1884,7 +1884,7 @@ export const initialExpenses = [
     "reason": "Aditya petty cash /",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-18"
   },
   {
@@ -1896,7 +1896,7 @@ export const initialExpenses = [
     "reason": "brand kettle  meeting",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-01"
   },
   {
@@ -1908,7 +1908,7 @@ export const initialExpenses = [
     "reason": "brand kettle  meeting",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-01"
   },
   {
@@ -1920,7 +1920,7 @@ export const initialExpenses = [
     "reason": "gupta jewels / traveling to varanasi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-02"
   },
   {
@@ -1932,7 +1932,7 @@ export const initialExpenses = [
     "reason": "gupta jewels / traveling to varanasi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-02"
   },
   {
@@ -1944,7 +1944,7 @@ export const initialExpenses = [
     "reason": "navratan jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-03"
   },
   {
@@ -1956,7 +1956,7 @@ export const initialExpenses = [
     "reason": "navratan jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-03"
   },
   {
@@ -1968,7 +1968,7 @@ export const initialExpenses = [
     "reason": "navratan jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-04"
   },
   {
@@ -1980,7 +1980,7 @@ export const initialExpenses = [
     "reason": "navratan jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-04"
   },
   {
@@ -1992,7 +1992,7 @@ export const initialExpenses = [
     "reason": "navratan jeweller",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-05"
   },
   {
@@ -2004,7 +2004,7 @@ export const initialExpenses = [
     "reason": "navratan jeweller",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-05"
   },
   {
@@ -2016,7 +2016,7 @@ export const initialExpenses = [
     "reason": "navratan jeweller / traveling to delhi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-06"
   },
   {
@@ -2028,7 +2028,7 @@ export const initialExpenses = [
     "reason": "navratan jeweller / traveling to delhi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-06"
   },
   {
@@ -2040,7 +2040,7 @@ export const initialExpenses = [
     "reason": "gupta jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-07"
   },
   {
@@ -2052,7 +2052,7 @@ export const initialExpenses = [
     "reason": "gupta jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-07"
   },
   {
@@ -2064,7 +2064,7 @@ export const initialExpenses = [
     "reason": "traveling to patiala",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -2076,7 +2076,7 @@ export const initialExpenses = [
     "reason": "traveling to patiala",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -2088,7 +2088,7 @@ export const initialExpenses = [
     "reason": "nanak jeweller",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-09"
   },
   {
@@ -2100,7 +2100,7 @@ export const initialExpenses = [
     "reason": "nanak jeweller",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-10"
   },
   {
@@ -2112,7 +2112,7 @@ export const initialExpenses = [
     "reason": "nanak jeweller / traveling to fazilka",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-11"
   },
   {
@@ -2124,7 +2124,7 @@ export const initialExpenses = [
     "reason": "nanak jeweller / traveling to fazilka",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-11"
   },
   {
@@ -2136,7 +2136,7 @@ export const initialExpenses = [
     "reason": "sunehri virasat",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-13"
   },
   {
@@ -2148,7 +2148,7 @@ export const initialExpenses = [
     "reason": "sunehri virasat / traveling to patiala",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-15"
   },
   {
@@ -2160,7 +2160,7 @@ export const initialExpenses = [
     "reason": "Nanak jeweller / traveling to delhi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -2172,7 +2172,7 @@ export const initialExpenses = [
     "reason": "Nanak jeweller / traveling to delhi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -2184,7 +2184,7 @@ export const initialExpenses = [
     "reason": "Gupta jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -2196,7 +2196,7 @@ export const initialExpenses = [
     "reason": "Gupta jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -2208,7 +2208,7 @@ export const initialExpenses = [
     "reason": "Gupta jewels / traveling to jaipur",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-18"
   },
   {
@@ -2220,7 +2220,7 @@ export const initialExpenses = [
     "reason": "jaishree jeweller",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-19"
   },
   {
@@ -2232,7 +2232,7 @@ export const initialExpenses = [
     "reason": "Diamond Jewellery Suryapet",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-01"
   },
   {
@@ -2244,7 +2244,7 @@ export const initialExpenses = [
     "reason": "Suryapet To Office",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-02"
   },
   {
@@ -2256,7 +2256,7 @@ export const initialExpenses = [
     "reason": "Suryapet To Office",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-02"
   },
   {
@@ -2268,7 +2268,7 @@ export const initialExpenses = [
     "reason": "hyd to Shivamogga",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-03"
   },
   {
@@ -2280,7 +2280,7 @@ export const initialExpenses = [
     "reason": "hyd to Shivamogga",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-03"
   },
   {
@@ -2292,7 +2292,7 @@ export const initialExpenses = [
     "reason": "Sign in Chikmagalur",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-04"
   },
   {
@@ -2304,7 +2304,7 @@ export const initialExpenses = [
     "reason": "Travelling to Srikakulam",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -2316,7 +2316,7 @@ export const initialExpenses = [
     "reason": "Travelling to Srikakulam",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -2328,7 +2328,7 @@ export const initialExpenses = [
     "reason": "sign in GNV Jewellers Srikakulam",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-09"
   },
   {
@@ -2340,7 +2340,7 @@ export const initialExpenses = [
     "reason": "sign in GNV Jewellers Srikakulam",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-09"
   },
   {
@@ -2352,7 +2352,7 @@ export const initialExpenses = [
     "reason": "Sign in @GNV JEWELLERS",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-10"
   },
   {
@@ -2364,7 +2364,7 @@ export const initialExpenses = [
     "reason": "Sign in @GNV parlakamundi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-11"
   },
   {
@@ -2376,7 +2376,7 @@ export const initialExpenses = [
     "reason": "Sign in @GNV parlakamundi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-11"
   },
   {
@@ -2388,7 +2388,7 @@ export const initialExpenses = [
     "reason": "Sign @Vizaq",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-12"
   },
   {
@@ -2400,7 +2400,7 @@ export const initialExpenses = [
     "reason": "Sign @Vizaq",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-12"
   },
   {
@@ -2412,7 +2412,7 @@ export const initialExpenses = [
     "reason": "Market Survey Vizaq",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-13"
   },
   {
@@ -2424,7 +2424,7 @@ export const initialExpenses = [
     "reason": "Market Survey Vizaq",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-13"
   },
   {
@@ -2436,7 +2436,7 @@ export const initialExpenses = [
     "reason": "Vizaq to Hyderabad",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -2448,7 +2448,7 @@ export const initialExpenses = [
     "reason": "sign in @office and Vineeth Punjagutta, then Travelling to Bangalore",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -2460,7 +2460,7 @@ export const initialExpenses = [
     "reason": "sign in @office and Vineeth Punjagutta, then Travelling to Bangalore",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -2472,7 +2472,7 @@ export const initialExpenses = [
     "reason": "Bangalore GS Jewellers",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-18"
   },
   {
@@ -2484,7 +2484,7 @@ export const initialExpenses = [
     "reason": "Travelling Bangalore to Hyd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-19"
   },
   {
@@ -2496,7 +2496,7 @@ export const initialExpenses = [
     "reason": "Travelling Bangalore to Hyd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-19"
   },
   {
@@ -2508,7 +2508,7 @@ export const initialExpenses = [
     "reason": "shrut jewels seoni traveling seoni to timarni",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-02"
   },
   {
@@ -2520,7 +2520,7 @@ export const initialExpenses = [
     "reason": "timarni to indore and indore surat traveling",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-07"
   },
   {
@@ -2532,7 +2532,7 @@ export const initialExpenses = [
     "reason": "timarni to indore and indore surat traveling",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-07"
   },
   {
@@ -2544,7 +2544,7 @@ export const initialExpenses = [
     "reason": "zota jewel LLP surat",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -2556,7 +2556,7 @@ export const initialExpenses = [
     "reason": "zota jewel LLP surat",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -2568,7 +2568,7 @@ export const initialExpenses = [
     "reason": "zota jewel LLP surat",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-09"
   },
   {
@@ -2580,7 +2580,7 @@ export const initialExpenses = [
     "reason": "zota jewel LLP surat",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-10"
   },
   {
@@ -2592,7 +2592,7 @@ export const initialExpenses = [
     "reason": "zota jewel LLP surat",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-11"
   },
   {
@@ -2604,7 +2604,7 @@ export const initialExpenses = [
     "reason": "traveling surat to Ahmedabad and Lucknow to barbanki",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-12"
   },
   {
@@ -2616,7 +2616,7 @@ export const initialExpenses = [
     "reason": "traveling surat to Ahmedabad and Lucknow to barbanki",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-12"
   },
   {
@@ -2628,7 +2628,7 @@ export const initialExpenses = [
     "reason": "traveling from barbanki to akbarpur (RKS)",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -2640,7 +2640,7 @@ export const initialExpenses = [
     "reason": "traveling from barbanki to akbarpur (RKS)",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -2652,7 +2652,7 @@ export const initialExpenses = [
     "reason": "Delhi - Brandkatel at Gaurav office & With Karam",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-01"
   },
   {
@@ -2664,7 +2664,7 @@ export const initialExpenses = [
     "reason": "Hyd to Shivamogga , Vimal jewellers",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-03"
   },
   {
@@ -2676,7 +2676,7 @@ export const initialExpenses = [
     "reason": "Hyd to Shivamogga , Vimal jewellers",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-03"
   },
   {
@@ -2688,7 +2688,7 @@ export const initialExpenses = [
     "reason": "GNV Jewellers",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-12"
   },
   {
@@ -2700,7 +2700,7 @@ export const initialExpenses = [
     "reason": "GNV Jewellers Travelling from Vizag to Hyd , Hyd To Indore",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-13"
   },
   {
@@ -2712,7 +2712,7 @@ export const initialExpenses = [
     "reason": "Manalal  - Ronak ji Nagda",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -2724,7 +2724,7 @@ export const initialExpenses = [
     "reason": "Travelling from Nagda to Neemuch & Nandu Sharraf",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -2736,7 +2736,7 @@ export const initialExpenses = [
     "reason": "Travelling from Neemuch to Ujjain to Varanasi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-18"
   },
   {
@@ -2748,7 +2748,7 @@ export const initialExpenses = [
     "reason": "OC - Mumbai",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-01"
   },
   {
@@ -2760,7 +2760,7 @@ export const initialExpenses = [
     "reason": "Office - Hyd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-02"
   },
   {
@@ -2772,7 +2772,7 @@ export const initialExpenses = [
     "reason": "Office - Hyd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-03"
   },
   {
@@ -2784,7 +2784,7 @@ export const initialExpenses = [
     "reason": "Office - Hyd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-03"
   },
   {
@@ -2796,7 +2796,7 @@ export const initialExpenses = [
     "reason": "Office - Hyd & Mumbai",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-04"
   },
   {
@@ -2808,7 +2808,7 @@ export const initialExpenses = [
     "reason": "Office - Hyd & Mumbai",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-04"
   },
   {
@@ -2820,7 +2820,7 @@ export const initialExpenses = [
     "reason": "Taqwa - Mumbra",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-07"
   },
   {
@@ -2832,7 +2832,7 @@ export const initialExpenses = [
     "reason": "Taqwa - Mumbra",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -2844,7 +2844,7 @@ export const initialExpenses = [
     "reason": "Taqwa - Mumbra",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-09"
   },
   {
@@ -2856,7 +2856,7 @@ export const initialExpenses = [
     "reason": "Taqwa - Mumbra",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-10"
   },
   {
@@ -2868,7 +2868,7 @@ export const initialExpenses = [
     "reason": "OC - MUMBAI",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-11"
   },
   {
@@ -2880,7 +2880,7 @@ export const initialExpenses = [
     "reason": "Taqwa - Mumbra",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-12"
   },
   {
@@ -2892,7 +2892,7 @@ export const initialExpenses = [
     "reason": "Suvarna Nagari - Ahmd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-13"
   },
   {
@@ -2904,7 +2904,7 @@ export const initialExpenses = [
     "reason": "Suvarna Nagari - Ahmd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-13"
   },
   {
@@ -2916,7 +2916,7 @@ export const initialExpenses = [
     "reason": "Zota - Surat",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -2928,7 +2928,7 @@ export const initialExpenses = [
     "reason": "OC MUMBAI",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-01"
   },
   {
@@ -2940,7 +2940,7 @@ export const initialExpenses = [
     "reason": "OC MUMBAI",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-04"
   },
   {
@@ -2952,7 +2952,7 @@ export const initialExpenses = [
     "reason": "SUVARNA NAGARI AHEMDABAD",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-05"
   },
   {
@@ -2964,7 +2964,7 @@ export const initialExpenses = [
     "reason": "SUVARNA NAGARI AHEMDABAD",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-05"
   },
   {
@@ -2976,7 +2976,7 @@ export const initialExpenses = [
     "reason": "SUVARNA NAGARI AHEMDABAD",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-06"
   },
   {
@@ -2988,7 +2988,7 @@ export const initialExpenses = [
     "reason": "SUVARNA NAGARI AHEMDABAD",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-07"
   },
   {
@@ -3000,7 +3000,7 @@ export const initialExpenses = [
     "reason": "SUVARNA NAGARI AHEMDABAD",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -3012,7 +3012,7 @@ export const initialExpenses = [
     "reason": "SUVARNA NAGARI AHEMDABAD",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -3024,7 +3024,7 @@ export const initialExpenses = [
     "reason": "SUVARNA NAGARI AHEMDABAD",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-13"
   },
   {
@@ -3036,7 +3036,7 @@ export const initialExpenses = [
     "reason": "SUVARNA NAGARI AHEMDABAD",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-13"
   },
   {
@@ -3048,7 +3048,7 @@ export const initialExpenses = [
     "reason": "ZOTA JEWEL",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3060,7 +3060,7 @@ export const initialExpenses = [
     "reason": "ZOTA JEWEL",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-15"
   },
   {
@@ -3072,7 +3072,7 @@ export const initialExpenses = [
     "reason": "ZOTA JEWEL",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -3084,7 +3084,7 @@ export const initialExpenses = [
     "reason": "ZOTA JEWEL",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -3096,7 +3096,7 @@ export const initialExpenses = [
     "reason": "ZOTA JEWEL",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -3108,7 +3108,7 @@ export const initialExpenses = [
     "reason": "Ashapuri Baroda",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-18"
   },
   {
@@ -3120,7 +3120,7 @@ export const initialExpenses = [
     "reason": "Travel expenses",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-20"
   },
   {
@@ -3132,7 +3132,7 @@ export const initialExpenses = [
     "reason": "Room to Airport Uber(396)+Airport to Hotel in Indore(320)",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3144,7 +3144,7 @@ export const initialExpenses = [
     "reason": "Mrng Breakfast (Abraham + Varun)",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-15"
   },
   {
@@ -3156,7 +3156,7 @@ export const initialExpenses = [
     "reason": "Mannalal and Sons , Nagda, Madhya Pradesh",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -3168,7 +3168,7 @@ export const initialExpenses = [
     "reason": "Mannalal and sons, Returning to Hyd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -3180,7 +3180,7 @@ export const initialExpenses = [
     "reason": "Mannalal and sons, Returning to Hyd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -3192,7 +3192,7 @@ export const initialExpenses = [
     "reason": "Return to hyd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-18"
   },
   {
@@ -3204,7 +3204,7 @@ export const initialExpenses = [
     "reason": "Return to hyd",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-18"
   },
   {
@@ -3216,7 +3216,7 @@ export const initialExpenses = [
     "reason": "traveling to Raamya Gorakhpur",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-05"
   },
   {
@@ -3228,7 +3228,7 @@ export const initialExpenses = [
     "reason": "traveling to Raamya Gorakhpur",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-05"
   },
   {
@@ -3240,7 +3240,7 @@ export const initialExpenses = [
     "reason": "Raamya",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-08"
   },
   {
@@ -3252,7 +3252,7 @@ export const initialExpenses = [
     "reason": "Raamya",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-10"
   },
   {
@@ -3264,7 +3264,7 @@ export const initialExpenses = [
     "reason": "Raamya",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-11"
   },
   {
@@ -3276,7 +3276,7 @@ export const initialExpenses = [
     "reason": "traveling to RK jewels Hathras",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-15"
   },
   {
@@ -3288,7 +3288,7 @@ export const initialExpenses = [
     "reason": "traveling to RK jewels Hathras",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-15"
   },
   {
@@ -3300,7 +3300,7 @@ export const initialExpenses = [
     "reason": "RK JEWELLERS HATHRAS",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -3312,7 +3312,7 @@ export const initialExpenses = [
     "reason": "RK JEWELLERS HATHRAS",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -3324,7 +3324,7 @@ export const initialExpenses = [
     "reason": "traveling to Gupta jwellers New Delhi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -3336,7 +3336,7 @@ export const initialExpenses = [
     "reason": "traveling to Gupta jwellers New Delhi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-17"
   },
   {
@@ -3348,7 +3348,7 @@ export const initialExpenses = [
     "reason": "Gupta jwellers New Delhi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-18"
   },
   {
@@ -3360,7 +3360,7 @@ export const initialExpenses = [
     "reason": "Gupta jwellers New Delhi",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-18"
   },
   {
@@ -3372,7 +3372,7 @@ export const initialExpenses = [
     "reason": "ballia to varanasi kanahiyalal alankar Mandir",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3384,7 +3384,7 @@ export const initialExpenses = [
     "reason": "ballia to varanasi kanahiyalal alankar Mandir",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3396,7 +3396,7 @@ export const initialExpenses = [
     "reason": "kanhiyalal alankar mandir",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-15"
   },
   {
@@ -3408,7 +3408,7 @@ export const initialExpenses = [
     "reason": "kanhiyalal alankar mandir",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-15"
   },
   {
@@ -3420,7 +3420,7 @@ export const initialExpenses = [
     "reason": "varanasi to akbarpur RKS jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -3432,7 +3432,7 @@ export const initialExpenses = [
     "reason": "varanasi to akbarpur RKS jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-16"
   },
   {
@@ -3444,7 +3444,7 @@ export const initialExpenses = [
     "reason": "RKS akbarpur to varanasi kanahiya jewels",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-18"
   },
 
@@ -3461,7 +3461,7 @@ export const initialExpenses = [
     "reason": "Breakfast – Café near hotel, Indore",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3474,7 +3474,7 @@ export const initialExpenses = [
     "reason": "Lunch – GNV Jewellers client meeting, Indore",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3487,7 +3487,7 @@ export const initialExpenses = [
     "reason": "Dinner – Team dinner post client visit",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3500,7 +3500,7 @@ export const initialExpenses = [
     "reason": "Hotel stay – Indore (1 night, GNV client engagement)",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3513,7 +3513,7 @@ export const initialExpenses = [
     "reason": "Uber – Room to Indore Airport",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3526,7 +3526,7 @@ export const initialExpenses = [
     "reason": "Cab – Indore Airport to GNV client office",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
 
@@ -3541,7 +3541,7 @@ export const initialExpenses = [
     "reason": "Breakfast – Airport lounge, Vizag",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3554,7 +3554,7 @@ export const initialExpenses = [
     "reason": "Lunch – Hyderabad transit, Kamat restaurant",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3567,7 +3567,7 @@ export const initialExpenses = [
     "reason": "Flight – Vizag to Hyderabad (IndiGo)",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3580,7 +3580,7 @@ export const initialExpenses = [
     "reason": "Cab – Hyderabad airport to hotel",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3593,7 +3593,7 @@ export const initialExpenses = [
     "reason": "Hotel stay – Hyderabad, Jewellers Summit prep",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
 
@@ -3608,7 +3608,7 @@ export const initialExpenses = [
     "reason": "Breakfast – Hotel restaurant, Indore",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3621,7 +3621,7 @@ export const initialExpenses = [
     "reason": "Lunch – Mannalal & Sons client site, Indore",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3634,7 +3634,7 @@ export const initialExpenses = [
     "reason": "Cab – Hotel to Mannalal client (return trip)",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
 
@@ -3669,7 +3669,7 @@ export const initialExpenses = [
     "id": "exp-consultant-10-jul14-3",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3682,7 +3682,7 @@ export const initialExpenses = [
     "reason": "Dinner – Team dinner post client visit",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3695,7 +3695,7 @@ export const initialExpenses = [
     "reason": "Hotel stay – Indore (1 night, GNV client engagement)",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3708,7 +3708,7 @@ export const initialExpenses = [
     "reason": "Uber – Room to Indore Airport",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3721,7 +3721,7 @@ export const initialExpenses = [
     "reason": "Cab – Indore Airport to GNV client office",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
 
@@ -3736,7 +3736,7 @@ export const initialExpenses = [
     "reason": "Breakfast – Airport lounge, Vizag",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3749,7 +3749,7 @@ export const initialExpenses = [
     "reason": "Lunch – Hyderabad transit, Kamat restaurant",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3762,7 +3762,7 @@ export const initialExpenses = [
     "reason": "Flight – Vizag to Hyderabad (IndiGo)",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3775,7 +3775,7 @@ export const initialExpenses = [
     "reason": "Cab – Hyderabad airport to hotel",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3788,7 +3788,7 @@ export const initialExpenses = [
     "reason": "Hotel stay – Hyderabad, Jewellers Summit prep",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
 
@@ -3803,7 +3803,7 @@ export const initialExpenses = [
     "reason": "Breakfast – Hotel restaurant, Indore",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3816,7 +3816,7 @@ export const initialExpenses = [
     "reason": "Lunch – Mannalal & Sons client site, Indore",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
   {
@@ -3829,7 +3829,7 @@ export const initialExpenses = [
     "reason": "Cab – Hotel to Mannalal client (return trip)",
     "receipt": "",
     "status": "Approved",
-    "approvedBy": "Amin Gagani (Accounts Manager)",
+    "approvedBy": "Robert Chen (Accounts Manager)",
     "approvedDate": "2026-07-14"
   },
 
@@ -3884,7 +3884,7 @@ export const initialAdvanceRequests = [
     "purpose": "Petty Cash Refill",
     "date": "2026-07-02",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   },
   {
     "id": "adv-consultant-1-2",
@@ -3893,7 +3893,7 @@ export const initialAdvanceRequests = [
     "purpose": "water bottle /pooja saman /",
     "date": "2026-07-10",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   },
   {
     "id": "adv-consultant-1-3",
@@ -3902,7 +3902,7 @@ export const initialAdvanceRequests = [
     "purpose": "Milk /Rabbani petty cash /",
     "date": "2026-07-13",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   },
   {
     "id": "adv-consultant-1-4",
@@ -3911,7 +3911,7 @@ export const initialAdvanceRequests = [
     "purpose": "Ashram kid's / Abraham petty cash",
     "date": "2026-07-14",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   },
   {
     "id": "adv-consultant-1-5",
@@ -3920,7 +3920,7 @@ export const initialAdvanceRequests = [
     "purpose": "Vijay petty cash /Abdul",
     "date": "2026-07-17",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   },
   {
     "id": "adv-consultant-2-1",
@@ -3929,7 +3929,7 @@ export const initialAdvanceRequests = [
     "purpose": "nanak jeweller / traveling to fazilka",
     "date": "2026-07-11",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   },
   {
     "id": "adv-consultant-3-1",
@@ -3938,7 +3938,7 @@ export const initialAdvanceRequests = [
     "purpose": "Suryapet To Office",
     "date": "2026-07-02",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   },
   {
     "id": "adv-consultant-3-2",
@@ -3947,7 +3947,7 @@ export const initialAdvanceRequests = [
     "purpose": "sign in @office and Vineeth Punjagutta, then Travelling to Bangalore",
     "date": "2026-07-17",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   },
   {
     "id": "adv-consultant-4-1",
@@ -3956,7 +3956,7 @@ export const initialAdvanceRequests = [
     "purpose": "Bhagauti Prasad Anant kumar Sarraf (barbanki)",
     "date": "2026-07-13",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   },
   {
     "id": "adv-consultant-5-1",
@@ -3965,7 +3965,7 @@ export const initialAdvanceRequests = [
     "purpose": "GNV Jewellers",
     "date": "2026-07-11",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   },
   {
     "id": "adv-consultant-5-2",
@@ -3974,7 +3974,7 @@ export const initialAdvanceRequests = [
     "purpose": "GNV Jewellers Travelling from Vizag to Hyd , Hyd To Indore",
     "date": "2026-07-13",
     "status": "Approved",
-    "reviewedBy": "Amin Gagani"
+    "reviewedBy": "Robert Chen"
   }
 ];
 
@@ -4068,7 +4068,7 @@ export const initialProjects = [
         type: "Offline Visit Scheduling",
         date: "2026-08-05",
         time: "10:00 AM",
-        consultant: "Shabbir Vasaya & Darla Manikanta",
+        consultant: "Hemanth Kumar Jain & Darla Manikanta",
         status: "Scheduled",
         notes: "On-site 2-day physical stock verification."
       }
@@ -4100,7 +4100,7 @@ export const initialProjects = [
     discussions: [
       {
         id: "disc-1",
-        authorName: "Sayyada",
+        authorName: "Sophia Laurent",
         authorRole: "HR Director",
         date: "2026-07-18 10:30 AM",
         category: "Client Meeting Note",
@@ -4108,7 +4108,7 @@ export const initialProjects = [
       },
       {
         id: "disc-2",
-        authorName: "Ayesha Khan",
+        authorName: "Elena Rostova",
         authorRole: "Consultant Lead",
         date: "2026-07-16 04:15 PM",
         category: "Milestone Achieved",
@@ -4169,7 +4169,7 @@ export const initialProjects = [
         type: "Call Scheduling",
         date: "2026-07-26",
         time: "03:00 PM",
-        consultant: "Shabbir Vasaya",
+        consultant: "Hemanth Kumar Jain",
         status: "Scheduled",
         notes: "Review monthly store traffic and sales conversion."
       }
@@ -4192,7 +4192,7 @@ export const initialProjects = [
         startDate: "2026-07-17",
         endDate: "2026-07-19",
         durationDays: 3,
-        visitingConsultants: ["Shabbir Vasaya", "Darla Manikanta"],
+        visitingConsultants: ["Hemanth Kumar Jain", "Darla Manikanta"],
         understandings: "New Indore showroom site requires vault security protocol signoff and VIP bridal lounge styling.",
         workDone: "Inspected vault security, set up VIP lounge greeting workflow, trained 8 new sales executives on bridal ornament presentation.",
         followUpAction: "Client scheduled next follow-up site visit for August."
@@ -4201,7 +4201,7 @@ export const initialProjects = [
     discussions: [
       {
         id: "disc-3",
-        authorName: "Amin Gagani",
+        authorName: "Robert Chen",
         authorRole: "Accounts Manager",
         date: "2026-07-14 02:00 PM",
         category: "Expense Query",
@@ -4300,7 +4300,7 @@ export const initialProjects = [
         startDate: "2026-06-20",
         endDate: "2026-06-22",
         durationDays: 3,
-        visitingConsultants: ["Shabbir Vasaya", "Shikhar Jain"],
+        visitingConsultants: ["Hemanth Kumar Jain", "Shikhar Jain"],
         understandings: "Discovered physical stock ledger did not match legacy paper registers.",
         workDone: "Audited 950 gold items, digitized paper ledger into Acme Workcentre POS system.",
         followUpAction: "Conduct second audit phase upon client request."

@@ -53,6 +53,13 @@ function MainWorkspace({ initialTab }) {
   }
 
   const renderActiveView = () => {
+    if (activeTab === "projects") {
+      return <ProjectsView />;
+    }
+    if (activeTab === "recruitment") {
+      return <RecruiterView />;
+    }
+
     switch (currentUser.role) {
       case "Admin":
         return <AdminView activeTab={activeTab} setActiveTab={(tab) => navigate(getRoutePath(tab))} />;

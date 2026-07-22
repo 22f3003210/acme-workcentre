@@ -792,26 +792,81 @@ export default function ProjectsView() {
             </div>
           )}
 
-          {/* TAB 2: TEAM */}
+          {/* TAB 2: ASSIGNED TEAM (CONSULTANTS & HIRING TEAM) */}
           {activeProjectTab === "team" && (
-            <div>
-              <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem" }}>Assigned Field Consultants</h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                {consultants.map(c => (
-                  <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px", background: "var(--bg-tertiary)", borderRadius: "10px", border: "1px solid var(--border-color)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <img src={c.avatar} alt="" style={{ width: "42px", height: "42px", borderRadius: "50%" }} />
-                      <div>
-                        <strong style={{ fontSize: "0.92rem", display: "block", color: "var(--text-primary)" }}>{c.name}</strong>
-                        <span style={{ fontSize: "0.78rem", color: "var(--text-secondary)" }}>{c.title} • {c.department}</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
+              
+              {/* SECTION 1: CONSULTING & ADVISORY TEAM */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justify: "space-between", marginBottom: "14px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "1.2rem" }}>💼</span>
+                    <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: "#0f172a" }}>
+                      Consulting & Advisory Team
+                    </h3>
+                  </div>
+                  <span style={{ fontSize: "0.78rem", background: "#eff6ff", color: "#2563eb", fontWeight: "700", padding: "3px 10px", borderRadius: "6px" }}>
+                    On-Site Audits & Strategy Consultants
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                  {consultants.slice(0, 3).map(c => (
+                    <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                        <img src={c.avatar} alt={c.name} style={{ width: "46px", height: "46px", borderRadius: "50%", objectFit: "cover", border: "2px solid #2563eb" }} />
+                        <div>
+                          <strong style={{ fontSize: "0.96rem", display: "block", color: "#0f172a" }}>{c.name}</strong>
+                          <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "500" }}>{c.title} • {c.department}</span>
+                          <span style={{ fontSize: "0.75rem", color: "#2563eb", display: "block", marginTop: "2px" }}>📱 {c.phone}</span>
+                        </div>
+                      </div>
+                      <span style={{ fontSize: "0.74rem", color: "#15803d", fontWeight: "700", background: "#dcfce7", padding: "4px 10px", borderRadius: "6px" }}>
+                        ● Field Consultant
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* SECTION 2: HIRING & RECRUITMENT TEAM */}
+              <div>
+                <div style={{ display: "flex", alignItems: "center", justify: "space-between", marginBottom: "14px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "1.2rem" }}>🎧</span>
+                    <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: "#0f172a" }}>
+                      Hiring & Recruitment Team (Telecallers & Sourcing Specialists)
+                    </h3>
+                  </div>
+                  <span style={{ fontSize: "0.78rem", background: "#f0fdf4", color: "#16a34a", fontWeight: "700", padding: "3px 10px", borderRadius: "6px" }}>
+                    Free Client Hiring Services
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                  {users.filter(u => u.role === "Admin" || u.department?.includes("HUMAN") || u.title?.includes("HR")).map(h => (
+                    <div key={h.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", background: "#f8fafc", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                        <img src={h.avatar} alt={h.name} style={{ width: "46px", height: "46px", borderRadius: "50%", objectFit: "cover", border: "2px solid #16a34a" }} />
+                        <div>
+                          <strong style={{ fontSize: "0.96rem", display: "block", color: "#0f172a" }}>{h.name}</strong>
+                          <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "500" }}>{h.title || "Recruitment Specialist"} • {h.department || "RECRUITING"}</span>
+                          <span style={{ fontSize: "0.75rem", color: "#16a34a", display: "block", marginTop: "2px" }}>📱 {h.phone} • {h.email}</span>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <span style={{ fontSize: "0.74rem", color: "#047857", fontWeight: "700", background: "#dcfce7", padding: "4px 10px", borderRadius: "6px", display: "inline-block" }}>
+                          ● Telecaller & Recruiter
+                        </span>
+                        <span style={{ fontSize: "0.7rem", color: "#64748b", display: "block", marginTop: "4px" }}>
+                          Screening & Scheduling
+                        </span>
                       </div>
                     </div>
-                    <span style={{ fontSize: "0.75rem", color: "var(--color-success)", fontWeight: "700", background: "rgba(16, 185, 129, 0.1)", padding: "4px 10px", borderRadius: "6px" }}>
-                      ● Active Lead
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
+
             </div>
           )}
 

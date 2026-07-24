@@ -115,7 +115,7 @@ export const AppProvider = ({ children }) => {
           } else {
             const mappedUsers = data.map(dbU => ({
               id: dbU.id,
-              empCode: dbU.emp_code || dbU.empCode || `HBJ${Math.floor(10000 + Math.random() * 90000)}`,
+              empCode: dbU.emp_code || dbU.empCode || "",
               name: dbU.name,
               email: dbU.email,
               phone: dbU.phone,
@@ -341,7 +341,7 @@ export const AppProvider = ({ children }) => {
   // Employee Directory CRUD (Admin Only)
   const addUser = (userData) => {
     const newId = `${userData.role.toLowerCase().replace(" ", "")}-${Date.now()}`;
-    const empCode = userData.empCode || `HBJ${Math.floor(10000 + Math.random() * 90000)}`;
+    const empCode = userData.empCode || "";
     const newUser = {
       id: newId,
       empCode,
@@ -379,7 +379,7 @@ export const AppProvider = ({ children }) => {
   const onboardConsultantInvite = (primaryData) => {
     const inviteToken = `INV-${Math.floor(10000 + Math.random() * 90000)}`;
     const newId = `consultant-${Date.now()}`;
-    const empCode = `HBJ${Math.floor(10000 + Math.random() * 90000)}`;
+    const empCode = primaryData.empCode || "";
     const newUser = {
       id: newId,
       empCode,

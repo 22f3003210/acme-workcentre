@@ -445,8 +445,8 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                         <div style={{ flex: 1, overflow: "hidden" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span style={{ fontSize: "0.88rem", fontWeight: "700", color: "#0f172a" }}>{emp.name}</span>
-                            <span style={{ fontSize: "0.78rem", color: "#64748b" }}>{emp.title || "Systems Operator"} |</span>
-                            <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#2563eb" }}>#{emp.empCode || "HBJ00007"}</span>
+                            <span style={{ fontSize: "0.78rem", color: "#64748b" }}>{emp.title || "Employee"} |</span>
+                            <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#2563eb" }}>#{emp.empCode || "-"}</span>
                           </div>
                           <div style={{ fontSize: "0.74rem", color: "#64748b", marginTop: "2px", display: "flex", gap: "10px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             <span>👤 {emp.department || "IT & SYSTEMS SUPPORT"}</span>
@@ -837,7 +837,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
           {/* Top Full-Width Header Bar */}
           <div style={{ borderBottom: "1px solid #e2e8f0", padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", height: "48px", flexShrink: 0 }}>
             <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "#334155", letterSpacing: "0.03em", textTransform: "uppercase" }}>
-              EMPLOYEE PROFILE — {viewingProfileUser.empCode || "HBJ00007"}
+              EMPLOYEE PROFILE — {viewingProfileUser.empCode || "-"}
             </span>
             <button
               type="button"
@@ -897,7 +897,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                   <span>✉ {viewingProfileUser.email}</span>
                   <span>📞 {viewingProfileUser.phone || "+91-7569099549"}</span>
                   <span>📍 {viewingProfileUser.location || "Mehdipatnam"}</span>
-                  <span>🪪 {viewingProfileUser.empCode || "HBJ00007"}</span>
+                  <span>🪪 {viewingProfileUser.empCode || "-"}</span>
                 </div>
 
                 {/* Joining / Department / Reporting Manager Strip */}

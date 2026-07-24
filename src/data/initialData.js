@@ -2,7 +2,7 @@
 export const initialUsers = [
   {
     id: "admin-acme",
-    empCode: "HBJ00001",
+    empCode: "",
     name: "ACME Admin",
     email: "acmeadmin",
     phone: "9876543210",

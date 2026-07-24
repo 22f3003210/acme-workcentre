@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useMemo } from "react";
 import {
   initialUsers,
   initialExpenses,
@@ -8,7 +8,18 @@ import {
   initialHiringRequisitions,
   initialCandidates
 } from "../data/initialData";
-import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
+import {
+  supabase,
+  isSupabaseConfigured,
+  supabaseAddExpense,
+  supabaseVerifyExpense,
+  supabaseAddProject,
+  supabaseUpdateProject,
+  supabaseRequestAdvance,
+  supabaseVerifyAdvanceRequest,
+  supabaseAddHiringRequisition,
+  supabaseAddCandidate
+} from "../lib/supabaseClient";
 
 const AppContext = createContext();
 
@@ -39,76 +50,190 @@ const parseTimeToMinutes = (timeStr) => {
 const DATA_VERSION = "v13";
 
 export const AppProvider = ({ children }) => {
-  // On every mount, flush stale localStorage if data version changed
-  (() => {
-    const stored = localStorage.getItem("workcentre_data_version");
-    if (stored !== DATA_VERSION) {
-      const keys = [
-        "workcentre_users",
-        "workcentre_expenses",
-        "workcentre_settings",
-        "workcentre_advance_requests",
-        "workcentre_projects",
-        "workcentre_hiring_requisitions",
-        "workcentre_candidates"
-      ];
-      keys.forEach(k => localStorage.removeItem(k));
-      localStorage.setItem("workcentre_data_version", DATA_VERSION);
-    }
-  })();
-
   const [users, setUsers] = useState(() => {
-    const saved = localStorage.getItem("workcentre_users");
-    return saved ? JSON.parse(saved) : initialUsers;
+    try {
+      const saved = localStorage.getItem("workcentre_users");
+      return saved ? JSON.parse(saved) : initialUsers;
+    } catch (e) {
+      console.error("Error parsing workcentre_users from localStorage:", e);
+      return initialUsers;
+    }
   });
 
   const [expenses, setExpenses] = useState(() => {
-    const saved = localStorage.getItem("workcentre_expenses");
-    return saved ? JSON.parse(saved) : initialExpenses;
+    try {
+      const saved = localStorage.getItem("workcentre_expenses");
+      return saved ? JSON.parse(saved) : initialExpenses;
+    } catch (e) {
+      console.error("Error parsing workcentre_expenses from localStorage:", e);
+      return initialExpenses;
+    }
   });
 
   const [settings, setSettings] = useState(() => {
-    const saved = localStorage.getItem("workcentre_settings");
-    return saved ? JSON.parse(saved) : initialSettings;
+    try {
+      const saved = localStorage.getItem("workcentre_settings");
+      return saved ? JSON.parse(saved) : initialSettings;
+    } catch (e) {
+      console.error("Error parsing workcentre_settings from localStorage:", e);
+      return initialSettings;
+    }
   });
 
   const [advanceRequests, setAdvanceRequests] = useState(() => {
-    const saved = localStorage.getItem("workcentre_advance_requests");
-    return saved ? JSON.parse(saved) : initialAdvanceRequests;
+    try {
+      const saved = localStorage.getItem("workcentre_advance_requests");
+      return saved ? JSON.parse(saved) : initialAdvanceRequests;
+    } catch (e) {
+      console.error("Error parsing workcentre_advance_requests from localStorage:", e);
+      return initialAdvanceRequests;
+    }
   });
 
   const [projects, setProjects] = useState(() => {
-    const saved = localStorage.getItem("workcentre_projects");
-    return saved ? JSON.parse(saved) : initialProjects;
+    try {
+      const saved = localStorage.getItem("workcentre_projects");
+      return saved ? JSON.parse(saved) : initialProjects;
+    } catch (e) {
+      console.error("Error parsing workcentre_projects from localStorage:", e);
+      return initialProjects;
+    }
   });
 
   const [hiringRequisitions, setHiringRequisitions] = useState(() => {
-    const saved = localStorage.getItem("workcentre_hiring_requisitions");
-    return saved ? JSON.parse(saved) : initialHiringRequisitions;
+    try {
+      const saved = localStorage.getItem("workcentre_hiring_requisitions");
+      return saved ? JSON.parse(saved) : initialHiringRequisitions;
+    } catch (e) {
+      console.error("Error parsing workcentre_hiring_requisitions from localStorage:", e);
+      return initialHiringRequisitions;
+    }
   });
 
   const [candidates, setCandidates] = useState(() => {
-    const saved = localStorage.getItem("workcentre_candidates");
-    return saved ? JSON.parse(saved) : initialCandidates;
+    try {
+      const saved = localStorage.getItem("workcentre_candidates");
+      return saved ? JSON.parse(saved) : initialCandidates;
+    } catch (e) {
+      console.error("Error parsing workcentre_candidates from localStorage:", e);
+      return initialCandidates;
+    }
   });
 
-  const [jobTitles, setJobTitles] = useState([]);
-  const [numberSeries, setNumberSeries] = useState([]);
-  const [departments, setDepartments] = useState([]);
-  const [shifts, setShifts] = useState([]);
-  const [weeklyOffs, setWeeklyOffs] = useState([]);
+  const [jobTitles, setJobTitles] = useState(() => {
+    try {
+      const saved = localStorage.getItem("workcentre_job_titles");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Error parsing workcentre_job_titles from localStorage:", e);
+      return [];
+    }
+  });
+
+  const [numberSeries, setNumberSeries] = useState(() => {
+    try {
+      const saved = localStorage.getItem("workcentre_number_series");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Error parsing workcentre_number_series from localStorage:", e);
+      return [];
+    }
+  });
+
+  const [departments, setDepartments] = useState(() => {
+    try {
+      const saved = localStorage.getItem("workcentre_departments");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Error parsing workcentre_departments from localStorage:", e);
+      return [];
+    }
+  });
+
+  const [shifts, setShifts] = useState(() => {
+    try {
+      const saved = localStorage.getItem("workcentre_shifts");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Error parsing workcentre_shifts from localStorage:", e);
+      return [];
+    }
+  });
+
+  const [weeklyOffs, setWeeklyOffs] = useState(() => {
+    try {
+      const saved = localStorage.getItem("workcentre_weekly_offs");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Error parsing workcentre_weekly_offs from localStorage:", e);
+      return [];
+    }
+  });
 
   const [currentUser, setCurrentUser] = useState(() => {
-    const savedUserId = localStorage.getItem("workcentre_current_user_id");
-    const found = users.find(u => u.id === savedUserId);
-    return found || users[0]; // Sophia Laurent (HR Admin) by default
+    try {
+      const savedUserId = localStorage.getItem("workcentre_current_user_id");
+      const found = users.find(u => u.id === savedUserId);
+      return found || users[0];
+    } catch (e) {
+      return users[0];
+    }
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem("workcentre_authenticated") === "true";
+    try {
+      return localStorage.getItem("workcentre_authenticated") === "true";
+    } catch (e) {
+      return false;
+    }
   });
 
   const [toast, setToast] = useState(null);
+
+  // On mount, flush stale localStorage if data version changed (moved from render body into useEffect)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("workcentre_data_version");
+      if (stored && stored !== DATA_VERSION) {
+        const keys = [
+          "workcentre_users",
+          "workcentre_expenses",
+          "workcentre_settings",
+          "workcentre_advance_requests",
+          "workcentre_projects",
+          "workcentre_hiring_requisitions",
+          "workcentre_candidates",
+          "workcentre_job_titles",
+          "workcentre_number_series",
+          "workcentre_departments",
+          "workcentre_shifts",
+          "workcentre_weekly_offs",
+          "workcentre_current_user_id",
+          "workcentre_authenticated"
+        ];
+        keys.forEach(k => localStorage.removeItem(k));
+        localStorage.setItem("workcentre_data_version", DATA_VERSION);
+        setUsers(initialUsers);
+        setExpenses(initialExpenses);
+        setSettings(initialSettings);
+        setAdvanceRequests(initialAdvanceRequests);
+        setProjects(initialProjects);
+        setHiringRequisitions(initialHiringRequisitions);
+        setCandidates(initialCandidates);
+        setJobTitles([]);
+        setNumberSeries([]);
+        setDepartments([]);
+        setShifts([]);
+        setWeeklyOffs([]);
+        setCurrentUser(initialUsers[0]);
+        setIsAuthenticated(false);
+      } else if (!stored) {
+        localStorage.setItem("workcentre_data_version", DATA_VERSION);
+      }
+    } catch (e) {
+      console.error("Error in data version check/clearing:", e);
+    }
+  }, []);
 
   // Supabase Initial Entity Fetches
   useEffect(() => {
@@ -119,27 +244,49 @@ export const AppProvider = ({ children }) => {
           if (data.length === 0) {
             setUsers(initialUsers);
           } else {
-            const mappedUsers = data.map(dbU => ({
-              id: dbU.id,
-              empCode: dbU.emp_code || dbU.empCode || "",
-              name: dbU.name,
-              email: dbU.email,
-              phone: dbU.phone,
-              role: dbU.role,
-              title: dbU.title,
-              department: dbU.department,
-              location: dbU.location,
-              status: dbU.status || "Active",
-              avatar: dbU.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbU.name)}`,
-              advanceAmount: Number(dbU.advance_amount) || 0,
-              shift: dbU.shift || "",
-              weeklyOff: dbU.weekly_off || "",
-              reportingManager: dbU.reporting_manager || ""
-            }));
-            setUsers(mappedUsers);
+            setUsers(prevUsers => {
+              const userMap = new Map(prevUsers.map(u => [u.id, u]));
+              const fetchedIds = new Set();
+              const fetchedEmails = new Set();
+
+              const mergedFetched = data.map(dbU => {
+                const existing = userMap.get(dbU.id) || prevUsers.find(u => u.email?.toLowerCase() === dbU.email?.toLowerCase());
+                if (dbU.id) fetchedIds.add(dbU.id);
+                if (dbU.email) fetchedEmails.add(dbU.email.toLowerCase());
+                return {
+                  ...existing,
+                  id: dbU.id,
+                  empCode: dbU.emp_code || dbU.empCode || existing?.empCode || "",
+                  name: dbU.name || existing?.name || "",
+                  email: dbU.email || existing?.email || "",
+                  phone: dbU.phone || existing?.phone || "",
+                  role: dbU.role || existing?.role || "",
+                  title: dbU.title || existing?.title || "",
+                  department: dbU.department || existing?.department || "",
+                  location: dbU.location || existing?.location || "",
+                  status: dbU.status || existing?.status || "Active",
+                  avatar: dbU.avatar || existing?.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbU.name || "")}`,
+                  advanceAmount: dbU.advance_amount !== undefined && dbU.advance_amount !== null ? Number(dbU.advance_amount) : (existing?.advanceAmount || 0),
+                  shift: dbU.shift || existing?.shift || "",
+                  weeklyOff: dbU.weekly_off || existing?.weeklyOff || "",
+                  reportingManager: dbU.reporting_manager || existing?.reportingManager || "",
+                  // Preserve local attributes so state is not lost
+                  attendance: existing?.attendance || [],
+                  password: existing?.password || "",
+                  specialization: existing?.specialization || "",
+                  emergencyContact: existing?.emergencyContact || "",
+                  bankUpi: existing?.bankUpi || "",
+                  inviteToken: existing?.inviteToken || "",
+                  openingBalance: existing?.openingBalance || 0
+                };
+              });
+
+              const localOnly = prevUsers.filter(u => !fetchedIds.has(u.id) && !fetchedEmails.has(u.email?.toLowerCase()));
+              return [...mergedFetched, ...localOnly];
+            });
           }
         }
-      });
+      }).catch(err => console.error("Supabase fetch users error:", err));
 
       // 2. Expenses
       supabase.from("expenses").select("*").then(({ data, error }) => {
@@ -159,7 +306,7 @@ export const AppProvider = ({ children }) => {
             approvedDate: e.approved_date
           })));
         }
-      });
+      }).catch(err => console.error("Supabase fetch expenses error:", err));
 
       // 3. Advance Requests
       supabase.from("advance_requests").select("*").then(({ data, error }) => {
@@ -174,7 +321,7 @@ export const AppProvider = ({ children }) => {
             reviewedBy: r.reviewed_by
           })));
         }
-      });
+      }).catch(err => console.error("Supabase fetch advance_requests error:", err));
 
       // 4. Hiring Requisitions
       supabase.from("hiring_requisitions").select("*").then(({ data, error }) => {
@@ -190,7 +337,7 @@ export const AppProvider = ({ children }) => {
             status: hr.status
           })));
         }
-      });
+      }).catch(err => console.error("Supabase fetch hiring_requisitions error:", err));
 
       // 5. Candidates
       supabase.from("candidates").select("*").then(({ data, error }) => {
@@ -210,7 +357,7 @@ export const AppProvider = ({ children }) => {
             resumeUrl: c.resume_url
           })));
         }
-      });
+      }).catch(err => console.error("Supabase fetch candidates error:", err));
 
       // 6. Projects
       supabase.from("projects").select("*").then(({ data, error }) => {
@@ -233,7 +380,7 @@ export const AppProvider = ({ children }) => {
             assignedConsultants: p.assigned_consultants || []
           })));
         }
-      });
+      }).catch(err => console.error("Supabase fetch projects error:", err));
 
       // 7. Job Titles
       supabase.from("job_titles").select("*").then(({ data, error }) => {
@@ -245,7 +392,7 @@ export const AppProvider = ({ children }) => {
             status: jt.status || "Active"
           })));
         }
-      });
+      }).catch(err => console.error("Supabase fetch job_titles error:", err));
 
       // 8. Employee Number Series
       supabase.from("employee_number_series").select("*").then(({ data, error }) => {
@@ -262,7 +409,7 @@ export const AppProvider = ({ children }) => {
             status: ns.status || "Active"
           })));
         }
-      });
+      }).catch(err => console.error("Supabase fetch employee_number_series error:", err));
 
       // 9. Departments
       supabase.from("departments").select("*").then(({ data, error }) => {
@@ -274,7 +421,7 @@ export const AppProvider = ({ children }) => {
             location: d.location || ""
           })));
         }
-      });
+      }).catch(err => console.error("Supabase fetch departments error:", err));
 
       // 10. Shifts
       supabase.from("shifts").select("*").then(({ data, error }) => {
@@ -289,7 +436,7 @@ export const AppProvider = ({ children }) => {
             status: s.status || "Active"
           })));
         }
-      });
+      }).catch(err => console.error("Supabase fetch shifts error:", err));
 
       // 11. Weekly Offs
       supabase.from("weekly_offs").select("*").then(({ data, error }) => {
@@ -301,7 +448,7 @@ export const AppProvider = ({ children }) => {
             status: w.status || "Active"
           })));
         }
-      });
+      }).catch(err => console.error("Supabase fetch weekly_offs error:", err));
     }
   }, []);
 
@@ -335,6 +482,26 @@ export const AppProvider = ({ children }) => {
   }, [candidates]);
 
   useEffect(() => {
+    localStorage.setItem("workcentre_job_titles", JSON.stringify(jobTitles));
+  }, [jobTitles]);
+
+  useEffect(() => {
+    localStorage.setItem("workcentre_number_series", JSON.stringify(numberSeries));
+  }, [numberSeries]);
+
+  useEffect(() => {
+    localStorage.setItem("workcentre_departments", JSON.stringify(departments));
+  }, [departments]);
+
+  useEffect(() => {
+    localStorage.setItem("workcentre_shifts", JSON.stringify(shifts));
+  }, [shifts]);
+
+  useEffect(() => {
+    localStorage.setItem("workcentre_weekly_offs", JSON.stringify(weeklyOffs));
+  }, [weeklyOffs]);
+
+  useEffect(() => {
     localStorage.setItem("workcentre_authenticated", isAuthenticated ? "true" : "false");
   }, [isAuthenticated]);
 
@@ -355,7 +522,7 @@ export const AppProvider = ({ children }) => {
     if ((cleanEmail === "acmeadmin" || cleanEmail === "admin" || cleanEmail === "acmeadmin@acmeworkcentre.com") && cleanPassword === "123") {
       user = users.find(u => u.role === "Admin" || u.id === "admin-acme" || u.email === "acmeadmin") || users[0];
     } else {
-      user = users.find(u => u.email.toLowerCase() === cleanEmail);
+      user = users.find(u => u.email?.toLowerCase() === cleanEmail);
     }
     
     if (user) {
@@ -531,7 +698,7 @@ export const AppProvider = ({ children }) => {
         advance_amount: newUser.advanceAmount
       }]).then(({ error }) => {
         if (error) console.error("Supabase insert invite user error:", error);
-      });
+      }).catch(err => console.error("Supabase insert invite user catch error:", err));
     }
 
     return {
@@ -543,49 +710,44 @@ export const AppProvider = ({ children }) => {
 
   // Complete Consultant Registration (Step 2: Candidate self-registers & logs in)
   const completeConsultantRegistration = (data) => {
-    let updatedUser = null;
-    setUsers(prev => prev.map(u => {
-      if (u.id === data.userId || u.inviteToken === data.inviteToken) {
-        updatedUser = {
-          ...u,
-          status: "Active",
-          password: data.password,
-          specialization: data.specialization,
-          emergencyContact: data.emergencyContact,
-          bankUpi: data.bankUpi,
-          location: data.location || u.location,
-          lastLogin: new Date().toISOString()
-        };
-        return updatedUser;
-      }
-      return u;
-    }));
+    const existing = users.find(u => u.id === data.userId || (data.inviteToken && u.inviteToken === data.inviteToken));
+    if (!existing) return false;
 
-    if (updatedUser) {
-      if (isSupabaseConfigured()) {
-        supabase.from("users").update({
-          status: "Active",
-          location: updatedUser.location
-        }).eq("id", updatedUser.id).then(({ error }) => {
-          if (error) console.error("Supabase update registration error:", error);
-        });
-      }
+    const updatedUser = {
+      ...existing,
+      status: "Active",
+      password: data.password,
+      specialization: data.specialization,
+      emergencyContact: data.emergencyContact,
+      bankUpi: data.bankUpi,
+      location: data.location || existing.location,
+      lastLogin: new Date().toISOString()
+    };
 
-      setCurrentUser(updatedUser);
-      setIsAuthenticated(true);
-      return true;
+    setUsers(prev => prev.map(u => (u.id === existing.id ? updatedUser : u)));
+
+    if (isSupabaseConfigured()) {
+      supabase.from("users").update({
+        status: "Active",
+        location: updatedUser.location
+      }).eq("id", updatedUser.id).then(({ error }) => {
+        if (error) console.error("Supabase update registration error:", error);
+      }).catch(err => console.error("Supabase update registration catch error:", err));
     }
-    return false;
+
+    setCurrentUser(updatedUser);
+    setIsAuthenticated(true);
+    return true;
   };
 
   const deleteUser = (userId) => {
-    if (currentUser.id === userId) return false; // Prevent deleting active session
+    if (currentUser?.id === userId) return false; // Prevent deleting active session
     setUsers(prev => prev.filter(u => u.id !== userId));
 
     if (isSupabaseConfigured()) {
       supabase.from("users").delete().eq("id", userId).then(({ error }) => {
         if (error) console.error("Supabase delete user error:", error);
-      });
+      }).catch(err => console.error("Supabase delete user catch error:", err));
     }
 
     return true;
@@ -790,6 +952,10 @@ export const AppProvider = ({ children }) => {
       ...expenseData
     };
     setExpenses(prev => [newExpense, ...prev]);
+
+    if (isSupabaseConfigured()) {
+      supabaseAddExpense(newExpense).catch(err => console.error("Supabase write-back addExpense error:", err));
+    }
   };
 
   // Projects Management
@@ -836,18 +1002,27 @@ export const AppProvider = ({ children }) => {
       ...projectData
     };
     setProjects(prev => [newProj, ...prev]);
+
+    if (isSupabaseConfigured()) {
+      supabaseAddProject(newProj).catch(err => console.error("Supabase write-back addProject error:", err));
+    }
+
     return newProj;
   };
 
   const updateProject = (projectId, updatedFields) => {
     setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...updatedFields } : p));
+
+    if (isSupabaseConfigured()) {
+      supabaseUpdateProject(projectId, updatedFields).catch(err => console.error("Supabase write-back updateProject error:", err));
+    }
   };
 
   const addProjectDiscussion = (projectId, discussionData) => {
     const newDisc = {
       id: `disc-${Date.now()}`,
-      authorName: currentUser.name,
-      authorRole: currentUser.role,
+      authorName: currentUser?.name || "User",
+      authorRole: currentUser?.role || "Consultant",
       date: new Date().toLocaleString([], { dateStyle: "short", timeStyle: "short" }),
       ...discussionData
     };
@@ -929,6 +1104,10 @@ export const AppProvider = ({ children }) => {
           } 
         : e
     ));
+
+    if (isSupabaseConfigured()) {
+      supabaseVerifyExpense(expenseId, status, notes, reviewerName).catch(err => console.error("Supabase write-back verifyExpense error:", err));
+    }
   };
 
   // Cash Advance Requests
@@ -943,6 +1122,10 @@ export const AppProvider = ({ children }) => {
       reviewedBy: ""
     };
     setAdvanceRequests(prev => [newRequest, ...prev]);
+
+    if (isSupabaseConfigured()) {
+      supabaseRequestAdvance(newRequest).catch(err => console.error("Supabase write-back requestAdvance error:", err));
+    }
   };
 
   const verifyAdvanceRequest = (requestId, status, reviewerName) => {
@@ -964,6 +1147,10 @@ export const AppProvider = ({ children }) => {
       }
       return r;
     }));
+
+    if (isSupabaseConfigured()) {
+      supabaseVerifyAdvanceRequest(requestId, status, reviewerName).catch(err => console.error("Supabase write-back verifyAdvanceRequest error:", err));
+    }
   };
 
   // Settings Config (Admin Only)
@@ -981,6 +1168,11 @@ export const AppProvider = ({ children }) => {
       ...reqData
     };
     setHiringRequisitions(prev => [newReq, ...prev]);
+
+    if (isSupabaseConfigured()) {
+      supabaseAddHiringRequisition(newReq).catch(err => console.error("Supabase write-back addHiringRequisition error:", err));
+    }
+
     return newReq;
   };
 
@@ -997,6 +1189,11 @@ export const AppProvider = ({ children }) => {
       ...candData
     };
     setCandidates(prev => [newCand, ...prev]);
+
+    if (isSupabaseConfigured()) {
+      supabaseAddCandidate(newCand).catch(err => console.error("Supabase write-back addCandidate error:", err));
+    }
+
     return newCand;
   };
 
@@ -1024,11 +1221,15 @@ export const AppProvider = ({ children }) => {
     const newTitle = { id: tempId, titleName, department, status: "Active" };
     setJobTitles(prev => [...prev, newTitle]);
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.from("job_titles").insert([{ title_name: titleName, department, status: "Active" }]).select();
-      if (error) {
-        console.error("Supabase insert job_title error:", error);
-      } else if (data && data[0]) {
-        setJobTitles(prev => prev.map(t => t.id === tempId ? { ...t, id: data[0].id } : t));
+      try {
+        const { data, error } = await supabase.from("job_titles").insert([{ title_name: titleName, department, status: "Active" }]).select();
+        if (error) {
+          console.error("Supabase insert job_title error:", error);
+        } else if (data && data[0]) {
+          setJobTitles(prev => prev.map(t => t.id === tempId ? { ...t, id: data[0].id } : t));
+        }
+      } catch (e) {
+        console.error("Supabase insert job_title exception:", e);
       }
     }
     return newTitle;
@@ -1037,8 +1238,12 @@ export const AppProvider = ({ children }) => {
   const deleteJobTitle = async (titleIdOrName) => {
     setJobTitles(prev => prev.filter(t => t.id !== titleIdOrName && t.titleName !== titleIdOrName));
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from("job_titles").delete().or(`id.eq.${titleIdOrName},title_name.eq.${titleIdOrName}`);
-      if (error) console.error("Supabase delete job_title error:", error);
+      try {
+        const { error } = await supabase.from("job_titles").delete().or(`id.eq.${titleIdOrName},title_name.eq.${titleIdOrName}`);
+        if (error) console.error("Supabase delete job_title error:", error);
+      } catch (e) {
+        console.error("Supabase delete job_title exception:", e);
+      }
     }
   };
 
@@ -1048,20 +1253,24 @@ export const AppProvider = ({ children }) => {
     const newSeries = { id: tempId, ...seriesData };
     setNumberSeries(prev => [...prev, newSeries]);
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.from("employee_number_series").insert([{
-        series_name: seriesData.seriesName,
-        description: seriesData.description,
-        department: seriesData.department,
-        prefix: seriesData.prefix,
-        digits: parseInt(seriesData.digits) || 3,
-        suffix: seriesData.suffix,
-        next_number: parseInt(seriesData.nextNumber) || 101,
-        status: seriesData.status ? "Active" : "Inactive"
-      }]).select();
-      if (error) {
-        console.error("Supabase insert number_series error:", error);
-      } else if (data && data[0]) {
-        setNumberSeries(prev => prev.map(s => s.id === tempId ? { ...s, id: data[0].id } : s));
+      try {
+        const { data, error } = await supabase.from("employee_number_series").insert([{
+          series_name: seriesData.seriesName,
+          description: seriesData.description,
+          department: seriesData.department,
+          prefix: seriesData.prefix,
+          digits: parseInt(seriesData.digits) || 3,
+          suffix: seriesData.suffix,
+          next_number: parseInt(seriesData.nextNumber) || 101,
+          status: seriesData.status ? "Active" : "Inactive"
+        }]).select();
+        if (error) {
+          console.error("Supabase insert number_series error:", error);
+        } else if (data && data[0]) {
+          setNumberSeries(prev => prev.map(s => s.id === tempId ? { ...s, id: data[0].id } : s));
+        }
+      } catch (e) {
+        console.error("Supabase insert number_series exception:", e);
       }
     }
     return newSeries;
@@ -1070,8 +1279,12 @@ export const AppProvider = ({ children }) => {
   const deleteNumberSeries = async (seriesId) => {
     setNumberSeries(prev => prev.filter(s => s.id !== seriesId));
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from("employee_number_series").delete().eq("id", seriesId);
-      if (error) console.error("Supabase delete number_series error:", error);
+      try {
+        const { error } = await supabase.from("employee_number_series").delete().eq("id", seriesId);
+        if (error) console.error("Supabase delete number_series error:", error);
+      } catch (e) {
+        console.error("Supabase delete number_series exception:", e);
+      }
     }
   };
 
@@ -1081,11 +1294,15 @@ export const AppProvider = ({ children }) => {
     const newDept = { id: tempId, name: deptName, headName: "", location: "" };
     setDepartments(prev => [...prev, newDept]);
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.from("departments").insert([{ dept_name: deptName }]).select();
-      if (error) {
-        console.error("Supabase insert department error:", error);
-      } else if (data && data[0]) {
-        setDepartments(prev => prev.map(d => d.id === tempId ? { ...d, id: data[0].id } : d));
+      try {
+        const { data, error } = await supabase.from("departments").insert([{ dept_name: deptName }]).select();
+        if (error) {
+          console.error("Supabase insert department error:", error);
+        } else if (data && data[0]) {
+          setDepartments(prev => prev.map(d => d.id === tempId ? { ...d, id: data[0].id } : d));
+        }
+      } catch (e) {
+        console.error("Supabase insert department exception:", e);
       }
     }
     return newDept;
@@ -1094,8 +1311,12 @@ export const AppProvider = ({ children }) => {
   const deleteDepartment = async (deptName) => {
     setDepartments(prev => prev.filter(d => d.name !== deptName && d.id !== deptName));
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from("departments").delete().or(`dept_name.eq.${deptName},id.eq.${deptName}`);
-      if (error) console.error("Supabase delete department error:", error);
+      try {
+        const { error } = await supabase.from("departments").delete().or(`dept_name.eq.${deptName},id.eq.${deptName}`);
+        if (error) console.error("Supabase delete department error:", error);
+      } catch (e) {
+        console.error("Supabase delete department exception:", e);
+      }
     }
   };
 
@@ -1105,17 +1326,21 @@ export const AppProvider = ({ children }) => {
     const newShift = { id: tempId, ...shiftData };
     setShifts(prev => [...prev, newShift]);
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.from("shifts").insert([{
-        name: shiftData.name,
-        code: shiftData.code,
-        timings: shiftData.timings,
-        break_mins: shiftData.break,
-        shift_type: shiftData.type || "fixed"
-      }]).select();
-      if (error) {
-        console.error("Supabase insert shift error:", error);
-      } else if (data && data[0]) {
-        setShifts(prev => prev.map(s => s.id === tempId ? { ...s, id: data[0].id } : s));
+      try {
+        const { data, error } = await supabase.from("shifts").insert([{
+          name: shiftData.name,
+          code: shiftData.code,
+          timings: shiftData.timings,
+          break_mins: shiftData.break,
+          shift_type: shiftData.type || "fixed"
+        }]).select();
+        if (error) {
+          console.error("Supabase insert shift error:", error);
+        } else if (data && data[0]) {
+          setShifts(prev => prev.map(s => s.id === tempId ? { ...s, id: data[0].id } : s));
+        }
+      } catch (e) {
+        console.error("Supabase insert shift exception:", e);
       }
     }
     return newShift;
@@ -1124,8 +1349,12 @@ export const AppProvider = ({ children }) => {
   const deleteShift = async (nameOrId) => {
     setShifts(prev => prev.filter(s => s.name !== nameOrId && s.id !== nameOrId));
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from("shifts").delete().or(`name.eq.${nameOrId},id.eq.${nameOrId}`);
-      if (error) console.error("Supabase delete shift error:", error);
+      try {
+        const { error } = await supabase.from("shifts").delete().or(`name.eq.${nameOrId},id.eq.${nameOrId}`);
+        if (error) console.error("Supabase delete shift error:", error);
+      } catch (e) {
+        console.error("Supabase delete shift exception:", e);
+      }
     }
   };
 
@@ -1135,14 +1364,18 @@ export const AppProvider = ({ children }) => {
     const newWO = { id: tempId, ...weeklyOffData };
     setWeeklyOffs(prev => [...prev, newWO]);
     if (isSupabaseConfigured()) {
-      const { data, error } = await supabase.from("weekly_offs").insert([{
-        name: weeklyOffData.name,
-        days: weeklyOffData.days || []
-      }]).select();
-      if (error) {
-        console.error("Supabase insert weekly_off error:", error);
-      } else if (data && data[0]) {
-        setWeeklyOffs(prev => prev.map(w => w.id === tempId ? { ...w, id: data[0].id } : w));
+      try {
+        const { data, error } = await supabase.from("weekly_offs").insert([{
+          name: weeklyOffData.name,
+          days: weeklyOffData.days || []
+        }]).select();
+        if (error) {
+          console.error("Supabase insert weekly_off error:", error);
+        } else if (data && data[0]) {
+          setWeeklyOffs(prev => prev.map(w => w.id === tempId ? { ...w, id: data[0].id } : w));
+        }
+      } catch (e) {
+        console.error("Supabase insert weekly_off exception:", e);
       }
     }
     return newWO;
@@ -1151,8 +1384,12 @@ export const AppProvider = ({ children }) => {
   const deleteWeeklyOff = async (nameOrId) => {
     setWeeklyOffs(prev => prev.filter(w => w.name !== nameOrId && w.id !== nameOrId));
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from("weekly_offs").delete().or(`name.eq.${nameOrId},id.eq.${nameOrId}`);
-      if (error) console.error("Supabase delete weekly_off error:", error);
+      try {
+        const { error } = await supabase.from("weekly_offs").delete().or(`name.eq.${nameOrId},id.eq.${nameOrId}`);
+        if (error) console.error("Supabase delete weekly_off error:", error);
+      } catch (e) {
+        console.error("Supabase delete weekly_off exception:", e);
+      }
     }
   };
 
@@ -1160,6 +1397,7 @@ export const AppProvider = ({ children }) => {
     <AppContext.Provider
       value={{
         users,
+        setUsers,
         expenses,
         settings,
         projects,

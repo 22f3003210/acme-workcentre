@@ -54,37 +54,14 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [dirDeptFilter, setDirDeptFilter] = useState("All");
   const [dirLocationFilter, setDirLocationFilter] = useState("All");
 
-  // Job Titles Management State (Matching Reference Screenshot)
-  const [jobTitlesList, setJobTitlesList] = useState([
-    "CEO",
-    "Chief Procurement Officer",
-    "Floor Manager",
-    "Cashier",
-    "Systems Manager",
-    "Retail Jewellery BD Consultant",
-    "Systems Operator",
-    "Office Assistant",
-    "Sales Executive",
-    "Admin Manager"
-  ]);
+  // Job Titles Management State (Driven dynamically by user input)
+  const [jobTitlesList, setJobTitlesList] = useState([]);
   const [jobTitleSearchQuery, setJobTitleSearchQuery] = useState("");
   const [showAddJobTitleModal, setShowAddJobTitleModal] = useState(false);
   const [newJobTitleInput, setNewJobTitleInput] = useState("");
 
-  // Employee Number Series Management State (Matching Reference Screenshots 1 & 2)
-  const [numSeriesList, setNumSeriesList] = useState([
-    {
-      id: "ns-1",
-      seriesName: "Default Number Series",
-      description: "This Is Default Number Series.",
-      prefix: "HBJ",
-      digits: 3,
-      suffix: "",
-      nextNumber: 102,
-      department: "All Departments",
-      status: "Active"
-    }
-  ]);
+  // Employee Number Series Management State (Driven dynamically by user input)
+  const [numSeriesList, setNumSeriesList] = useState([]);
   const [numSeriesSearchQuery, setNumSeriesSearchQuery] = useState("");
   const [showAddNumSeriesModal, setShowAddNumSeriesModal] = useState(false);
   const [newSeriesForm, setNewSeriesForm] = useState({
@@ -1445,49 +1422,57 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {jobTitlesList.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).map((titleName, idx) => {
-                      const count = users.filter(u => (u.title || "").toLowerCase() === titleName.toLowerCase() || (u.role || "").toLowerCase() === titleName.toLowerCase()).length;
-                      return (
-                        <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                          <td style={{ padding: "16px 20px", fontWeight: "600", color: "#1e293b" }}>
-                            {titleName}
-                          </td>
-                          <td style={{ padding: "16px 20px", color: "#475569" }}>
-                            <div style={{ fontWeight: "600", color: "#0f172a", fontSize: "0.9rem" }}>{count}</div>
-                            <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{count === 1 ? "employee" : "employees"}</div>
-                          </td>
-                          <td style={{ padding: "16px 20px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "14px", color: "#64748b" }}>
-                              <button
-                                type="button"
-                                title="Edit Job Title"
-                                onClick={() => {
-                                  const edited = prompt("Edit Job Title:", titleName);
-                                  if (edited && edited.trim() !== "") {
-                                    setJobTitlesList(prev => prev.map(t => t === titleName ? edited.trim() : t));
-                                  }
-                                }}
-                                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
-                              >
-                                ✏️
-                              </button>
-                              <button
-                                type="button"
-                                title="Delete Job Title"
-                                onClick={() => {
-                                  if (confirm(`Remove "${titleName}" from Job Titles list?`)) {
-                                    setJobTitlesList(prev => prev.filter(t => t !== titleName));
-                                  }
-                                }}
-                                style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: "0.9rem" }}
-                              >
-                                🗑️
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {jobTitlesList.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).length === 0 ? (
+                      <tr>
+                        <td colSpan={3} style={{ padding: "32px", textAlign: "center", color: "#64748b" }}>
+                          No Job Titles found. Click <strong>+ Add Job Title</strong> to add one.
+                        </td>
+                      </tr>
+                    ) : (
+                      jobTitlesList.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).map((titleName, idx) => {
+                        const count = users.filter(u => (u.title || "").toLowerCase() === titleName.toLowerCase() || (u.role || "").toLowerCase() === titleName.toLowerCase()).length;
+                        return (
+                          <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                            <td style={{ padding: "16px 20px", fontWeight: "600", color: "#1e293b" }}>
+                              {titleName}
+                            </td>
+                            <td style={{ padding: "16px 20px", color: "#475569" }}>
+                              <div style={{ fontWeight: "600", color: "#0f172a", fontSize: "0.9rem" }}>{count}</div>
+                              <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{count === 1 ? "employee" : "employees"}</div>
+                            </td>
+                            <td style={{ padding: "16px 20px" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "14px", color: "#64748b" }}>
+                                <button
+                                  type="button"
+                                  title="Edit Job Title"
+                                  onClick={() => {
+                                    const edited = prompt("Edit Job Title:", titleName);
+                                    if (edited && edited.trim() !== "") {
+                                      setJobTitlesList(prev => prev.map(t => t === titleName ? edited.trim() : t));
+                                    }
+                                  }}
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  type="button"
+                                  title="Delete Job Title"
+                                  onClick={() => {
+                                    if (confirm(`Remove "${titleName}" from Job Titles list?`)) {
+                                      setJobTitlesList(prev => prev.filter(t => t !== titleName));
+                                    }
+                                  }}
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: "0.9rem" }}
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -1621,52 +1606,60 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {numSeriesList.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).map((item) => (
-                      <tr key={item.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: "16px 20px" }}>
-                          <div style={{ fontWeight: "600", color: "#1e293b" }}>{item.seriesName}</div>
-                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{item.description}</div>
-                        </td>
-                        <td style={{ padding: "16px 20px" }}>
-                          <span style={{ background: "#f1f5f9", color: "#475569", padding: "3px 8px", borderRadius: "4px", fontSize: "0.76rem", fontWeight: "500" }}>
-                            {item.department || "All Departments"}
-                          </span>
-                        </td>
-                        <td style={{ padding: "16px 20px", fontWeight: "600", color: "#0f172a" }}>{item.prefix}</td>
-                        <td style={{ padding: "16px 20px", color: "#64748b" }}>{item.suffix || "-"}</td>
-                        <td style={{ padding: "16px 20px", fontWeight: "600", color: "#0f172a" }}>{item.nextNumber}</td>
-                        <td style={{ padding: "16px 20px" }}>
-                          <span style={{ color: item.status === "Active" ? "#16a34a" : "#94a3b8", fontWeight: "600", fontSize: "0.8rem" }}>{item.status}</span>
-                        </td>
-                        <td style={{ padding: "16px 20px" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "12px", color: "#64748b" }}>
-                            <button
-                              type="button"
-                              title="Toggle Active Status"
-                              onClick={() => {
-                                setNumSeriesList(prev => prev.map(s => s.id === item.id ? { ...s, status: s.status === "Active" ? "Inactive" : "Active" } : s));
-                              }}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: item.status === "Active" ? "#2563eb" : "#94a3b8", fontSize: "0.9rem" }}
-                            >
-                              ☑️
-                            </button>
-                            <button
-                              type="button"
-                              title="Edit Series"
-                              onClick={() => {
-                                const edited = prompt("Edit Series Name:", item.seriesName);
-                                if (edited && edited.trim()) {
-                                  setNumSeriesList(prev => prev.map(s => s.id === item.id ? { ...s, seriesName: edited.trim() } : s));
-                                }
-                              }}
-                              style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
-                            >
-                              ✏️
-                            </button>
-                          </div>
+                    {numSeriesList.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).length === 0 ? (
+                      <tr>
+                        <td colSpan={7} style={{ padding: "32px", textAlign: "center", color: "#64748b" }}>
+                          No Employee Number Series found. Click <strong>+Add New Series</strong> to add one.
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      numSeriesList.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).map((item) => (
+                        <tr key={item.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "16px 20px" }}>
+                            <div style={{ fontWeight: "600", color: "#1e293b" }}>{item.seriesName}</div>
+                            <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{item.description}</div>
+                          </td>
+                          <td style={{ padding: "16px 20px" }}>
+                            <span style={{ background: "#f1f5f9", color: "#475569", padding: "3px 8px", borderRadius: "4px", fontSize: "0.76rem", fontWeight: "500" }}>
+                              {item.department || "All Departments"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "16px 20px", fontWeight: "600", color: "#0f172a" }}>{item.prefix}</td>
+                          <td style={{ padding: "16px 20px", color: "#64748b" }}>{item.suffix || "-"}</td>
+                          <td style={{ padding: "16px 20px", fontWeight: "600", color: "#0f172a" }}>{item.nextNumber}</td>
+                          <td style={{ padding: "16px 20px" }}>
+                            <span style={{ color: item.status === "Active" ? "#16a34a" : "#94a3b8", fontWeight: "600", fontSize: "0.8rem" }}>{item.status}</span>
+                          </td>
+                          <td style={{ padding: "16px 20px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px", color: "#64748b" }}>
+                              <button
+                                type="button"
+                                title="Toggle Active Status"
+                                onClick={() => {
+                                  setNumSeriesList(prev => prev.map(s => s.id === item.id ? { ...s, status: s.status === "Active" ? "Inactive" : "Active" } : s));
+                                }}
+                                style={{ background: "none", border: "none", cursor: "pointer", color: item.status === "Active" ? "#2563eb" : "#94a3b8", fontSize: "0.9rem" }}
+                              >
+                                ☑️
+                              </button>
+                              <button
+                                type="button"
+                                title="Edit Series"
+                                onClick={() => {
+                                  const edited = prompt("Edit Series Name:", item.seriesName);
+                                  if (edited && edited.trim()) {
+                                    setNumSeriesList(prev => prev.map(s => s.id === item.id ? { ...s, seriesName: edited.trim() } : s));
+                                  }
+                                }}
+                                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
+                              >
+                                ✏️
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
 

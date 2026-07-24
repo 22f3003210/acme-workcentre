@@ -261,32 +261,52 @@ export default function AdminView({ activeTab, setActiveTab }) {
     const targetIds = selectedUserIdsForAssignment.length > 0 
       ? selectedUserIdsForAssignment 
       : users.map(u => u.id);
+
+    const shiftToSave = modalSelectedShift || (shiftsList[0]?.name || "");
     
-    setUsers(prev => prev.map(u => targetIds.includes(u.id) ? { ...u, shift: modalSelectedShift } : u));
+    setUsers(prev => prev.map(u => targetIds.includes(u.id) ? { ...u, shift: shiftToSave } : u));
     
+    setEmployeeAssignments(prev => {
+      const updated = { ...prev };
+      targetIds.forEach(id => {
+        updated[id] = { ...updated[id], shift: shiftToSave };
+      });
+      return updated;
+    });
+
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from("users").update({ shift: modalSelectedShift }).in("id", targetIds);
+      const { error } = await supabase.from("users").update({ shift: shiftToSave }).in("id", targetIds);
       if (error) console.error("Supabase update shift error:", error);
     }
 
     setShowUpdateShiftModal(false);
-    if (setToast) setToast({ message: `Shift updated to "${modalSelectedShift}" for ${targetIds.length} employee(s)!`, type: "success" });
+    if (setToast) setToast({ message: `Shift updated to "${shiftToSave}" for ${targetIds.length} employee(s)!`, type: "success" });
   };
 
   const handleSaveWeeklyOffAssignment = async () => {
     const targetIds = selectedUserIdsForAssignment.length > 0 
       ? selectedUserIdsForAssignment 
       : users.map(u => u.id);
+
+    const weeklyOffToSave = modalSelectedWeeklyOff || (weeklyOffsList[0]?.name || "");
     
-    setUsers(prev => prev.map(u => targetIds.includes(u.id) ? { ...u, weekly_off: modalSelectedWeeklyOff, weeklyOff: modalSelectedWeeklyOff } : u));
-    
+    setUsers(prev => prev.map(u => targetIds.includes(u.id) ? { ...u, weekly_off: weeklyOffToSave, weeklyOff: weeklyOffToSave } : u));
+
+    setEmployeeAssignments(prev => {
+      const updated = { ...prev };
+      targetIds.forEach(id => {
+        updated[id] = { ...updated[id], weeklyOff: weeklyOffToSave };
+      });
+      return updated;
+    });
+
     if (isSupabaseConfigured()) {
-      const { error } = await supabase.from("users").update({ weekly_off: modalSelectedWeeklyOff }).in("id", targetIds);
+      const { error } = await supabase.from("users").update({ weekly_off: weeklyOffToSave }).in("id", targetIds);
       if (error) console.error("Supabase update weekly_off error:", error);
     }
 
     setShowUpdateWeeklyOffModal(false);
-    if (setToast) setToast({ message: `Weekly Off updated to "${modalSelectedWeeklyOff}" for ${targetIds.length} employee(s)!`, type: "success" });
+    if (setToast) setToast({ message: `Weekly Off updated to "${weeklyOffToSave}" for ${targetIds.length} employee(s)!`, type: "success" });
   };
 
   const [empAdvance, setEmpAdvance] = useState("2000"); // default ₹2000
@@ -3971,7 +3991,9 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           <button 
                             type="button" 
                             onClick={() => {
-                              if (!modalSelectedShift && shiftsList.length > 0) setModalSelectedShift(shiftsList[0].name);
+                              const firstSelected = users.find(u => selectedUserIdsForAssignment.includes(u.id));
+                              const currentShift = firstSelected?.shift || employeeAssignments[firstSelected?.id]?.shift;
+                              setModalSelectedShift(currentShift || shiftsList[0]?.name || "");
                               setShowUpdateShiftModal(true);
                             }}
                             style={{ background: "linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)", border: "none", borderRadius: "6px", padding: "8px 16px", fontSize: "0.82rem", color: "#ffffff", fontWeight: "600", cursor: "pointer", boxShadow: "0 2px 8px rgba(79, 70, 229, 0.25)" }}
@@ -3981,7 +4003,9 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           <button 
                             type="button" 
                             onClick={() => {
-                              if (!modalSelectedWeeklyOff && weeklyOffsList.length > 0) setModalSelectedWeeklyOff(weeklyOffsList[0].name);
+                              const firstSelected = users.find(u => selectedUserIdsForAssignment.includes(u.id));
+                              const currentWeeklyOff = firstSelected?.weekly_off || firstSelected?.weeklyOff || employeeAssignments[firstSelected?.id]?.weeklyOff;
+                              setModalSelectedWeeklyOff(currentWeeklyOff || weeklyOffsList[0]?.name || "");
                               setShowUpdateWeeklyOffModal(true);
                             }}
                             style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)", border: "none", borderRadius: "6px", padding: "8px 16px", fontSize: "0.82rem", color: "#ffffff", fontWeight: "600", cursor: "pointer", boxShadow: "0 2px 8px rgba(124, 58, 237, 0.25)" }}

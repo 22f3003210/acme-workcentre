@@ -71,6 +71,24 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [showAddJobTitleModal, setShowAddJobTitleModal] = useState(false);
   const [newJobTitleInput, setNewJobTitleInput] = useState("");
 
+  // Department Master Management State (Matching Reference Screenshot)
+  const [departmentsList, setDepartmentsList] = useState([
+    { name: "ADMINISTRATION", subDepts: ["Office Ops"], avatar: "A", color: "#8b5cf6" },
+    { name: "PURCHASE", subDepts: ["Procurement Division"], avatar: "P", color: "#84cc16" },
+    { name: "SALES", subDepts: ["Retail Sales Division"], avatar: "S", color: "#84cc16" },
+    { name: "FINANCE & ACCOUNTING", subDepts: ["Accounts & Tax"], avatar: "FA", color: "#a855f7" },
+    { name: "IT & SYSTEMS SUPPORT", subDepts: ["Infrastructure & Software"], avatar: "IS", color: "#ef4444" },
+    { name: "CUSTOMER RELATIONS", subDepts: ["Client Support"], avatar: "CR", color: "#eab308" },
+    { name: "OPERATIONS", subDepts: ["Logistics & Vault"], avatar: "O", color: "#a1a1aa" },
+    { name: "CASHIER AND BILLING", subDepts: ["Point of Sale"], avatar: "CB", color: "#06b6d4" },
+    { name: "Human Resources", subDepts: ["Talent & Payroll"], avatar: "HR", color: "#f43f5e" }
+  ]);
+  const [selectedDeptIndex, setSelectedDeptIndex] = useState(2); // Default to SALES
+  const [deptSearchQuery, setDeptSearchQuery] = useState("");
+  const [deptDetailTab, setDeptDetailTab] = useState("Summary"); // "Summary" | "Employees" | "Settings"
+  const [showAddDeptModal, setShowAddDeptModal] = useState(false);
+  const [newDeptInput, setNewDeptInput] = useState("");
+
   // Shifts & Weekly Offs Sub-Navigation State (Holidays & Shift Allowance removed as requested)
   const [shiftsSubTab, setShiftsSubTab] = useState("Shift & Weekly Offs"); // "Shift & Weekly Offs" | "Assignments"
   const [shiftsInnerTab, setShiftsInnerTab] = useState("Shifts"); // "Shifts" | "Weekly Offs" | "Shift & Weekly Off Rules"
@@ -1558,34 +1576,316 @@ export default function AdminView({ activeTab, setActiveTab }) {
             </div>
           )}
 
-          {/* VIEW: EMPLOYEES -> Departments */}
+          {/* VIEW: EMPLOYEES -> Departments (Matching Reference Screenshot) */}
           {hrMainTab === "EMPLOYEES" && hrEmployeesSubTab === "Departments" && (
             <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Departments & Units</h3>
+              {/* Header Bar */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <h3 style={{ fontSize: "1.3rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Department</h3>
+                  <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>
+                    Departments are basic functional building blocks in an organisation
+                  </p>
+                </div>
                 <button
-                  onClick={() => setShowOnboardModal(true)}
-                  style={{ backgroundColor: "#4c478a", color: "#ffffff", padding: "8px 18px", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer", fontSize: "0.82rem" }}
+                  onClick={() => setShowAddDeptModal(true)}
+                  style={{
+                    backgroundColor: "#5b50a1",
+                    color: "#ffffff",
+                    padding: "8px 20px",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    fontSize: "0.82rem"
+                  }}
                 >
                   + Add Department
                 </button>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
-                {["Advisory", "IT & Systems Support", "Administration", "Purchase", "Sales", "Cashier and Billing"].map((dept, idx) => {
-                  const count = users.filter(u => u.department && u.department.toLowerCase() === dept.toLowerCase()).length;
+              {/* Two-Column Master Detail Split Layout */}
+              <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: "20px", width: "100%", alignItems: "start" }}>
+                
+                {/* Left Sidebar: Active Departments List */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div style={{ position: "relative" }}>
+                    <input
+                      type="text"
+                      placeholder="Search"
+                      value={deptSearchQuery}
+                      onChange={e => setDeptSearchQuery(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "8px 12px 8px 32px",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "4px",
+                        fontSize: "0.82rem",
+                        outline: "none"
+                      }}
+                    />
+                    <span style={{ position: "absolute", left: "10px", top: "8px", color: "#94a3b8", fontSize: "0.82rem" }}>🔍</span>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.72rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    <span>ACTIVE DEPARTMENTS ({departmentsList.length})</span>
+                    <span>▲</span>
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "4px", maxHeight: "560px", overflowY: "auto" }}>
+                    {departmentsList.filter(d => !deptSearchQuery || d.name.toLowerCase().includes(deptSearchQuery.toLowerCase())).map((dept, idx) => {
+                      const isSelected = selectedDeptIndex === idx;
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => setSelectedDeptIndex(idx)}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "10px 12px",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            background: isSelected ? "#f5f3ff" : "transparent",
+                            border: isSelected ? "1px solid #ddd6fe" : "1px solid transparent",
+                            transition: "all 0.15s ease"
+                          }}
+                        >
+                          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: dept.color, color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "0.76rem" }}>
+                            {dept.avatar}
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
+                            <span style={{ fontWeight: isSelected ? "700" : "600", fontSize: "0.84rem", color: isSelected ? "#4c478a" : "#1e293b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              {dept.name}
+                            </span>
+                            <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>Department</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Right Panel: Selected Department Details */}
+                {departmentsList[selectedDeptIndex] && (() => {
+                  const currentDept = departmentsList[selectedDeptIndex];
+                  const deptUsers = users.filter(u => u.department && u.department.toLowerCase() === currentDept.name.toLowerCase());
                   return (
-                    <div key={idx} style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-                      <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.04em" }}>DEPARTMENT</div>
-                      <h4 style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a", margin: "4px 0 12px 0" }}>{dept}</h4>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
-                        <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Active Members</span>
-                        <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#4c478a" }}>{count}</span>
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                      
+                      {/* Department Title & Actions Header */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <h2 style={{ fontSize: "1.4rem", fontWeight: "700", color: "#0f172a", margin: 0, textTransform: "uppercase" }}>
+                            {currentDept.name}
+                          </h2>
+                          <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Department</span>
+                        </div>
+                        <span style={{ cursor: "pointer", color: "#64748b", fontWeight: "700", fontSize: "1.1rem" }}>⋮</span>
                       </div>
+
+                      {/* Detail Inner Navigation Tabs */}
+                      <div style={{ display: "flex", gap: "24px", borderBottom: "1px solid #e2e8f0" }}>
+                        {["Summary", "Employees", "Settings"].map(tab => {
+                          const isActive = deptDetailTab === tab;
+                          return (
+                            <button
+                              key={tab}
+                              type="button"
+                              onClick={() => setDeptDetailTab(tab)}
+                              style={{
+                                padding: "8px 0 12px 0",
+                                background: "none",
+                                border: "none",
+                                borderBottom: isActive ? "2px solid #5b50a1" : "2px solid transparent",
+                                color: isActive ? "#5b50a1" : "#64748b",
+                                fontWeight: isActive ? "700" : "500",
+                                fontSize: "0.85rem",
+                                cursor: "pointer"
+                              }}
+                            >
+                              {tab}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Tab Content: Summary */}
+                      {deptDetailTab === "Summary" && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+                          
+                          {/* Department Head */}
+                          <div>
+                            <label style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500", display: "block", marginBottom: "6px" }}>
+                              Department Head
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="Search employee"
+                              style={{
+                                width: "100%",
+                                padding: "8px 12px",
+                                border: "none",
+                                borderBottom: "1px solid #cbd5e1",
+                                fontSize: "0.85rem",
+                                outline: "none"
+                              }}
+                            />
+                          </div>
+
+                          {/* Email Alias */}
+                          <div>
+                            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500", display: "flex", alignItems: "center", gap: "4px" }}>
+                              <span>Email Alias</span>
+                              <span style={{ fontSize: "0.75rem", cursor: "help" }}>ⓘ</span>
+                            </div>
+                            <div style={{ fontSize: "0.85rem", color: "#334155", marginTop: "4px" }}>-N/A-</div>
+                          </div>
+
+                          {/* Description */}
+                          <div>
+                            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Description</div>
+                            <div style={{ fontSize: "0.85rem", color: "#334155", marginTop: "4px" }}>-N/A-</div>
+                          </div>
+
+                          {/* Sub-Departments */}
+                          <div>
+                            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500", marginBottom: "8px" }}>Sub-Departments</div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                              {currentDept.subDepts.map((sub, sIdx) => (
+                                <span key={sIdx} style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", color: "#334155", padding: "4px 14px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: "500" }}>
+                                  {sub}
+                                </span>
+                              ))}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newSub = prompt(`Add Sub-department under ${currentDept.name}:`);
+                                  if (newSub && newSub.trim()) {
+                                    setDepartmentsList(prev => prev.map((d, i) => i === selectedDeptIndex ? { ...d, subDepts: [...d.subDepts, newSub.trim()] } : d));
+                                  }
+                                }}
+                                style={{ background: "#ffffff", border: "1px solid #5b50a1", color: "#5b50a1", padding: "4px 14px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer" }}
+                              >
+                                + Add
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Department Stats */}
+                          <div>
+                            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500", marginBottom: "8px" }}>Department Stats</div>
+                            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "16px 20px", display: "inline-flex", flexDirection: "column", gap: "4px", minWidth: "120px" }}>
+                              <span style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a" }}>{deptUsers.length}</span>
+                              <span style={{ fontSize: "0.78rem", color: "#64748b" }}>Employees</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Tab Content: Employees */}
+                      {deptDetailTab === "Employees" && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem", color: "#0f172a" }}>Department Members ({deptUsers.length})</h4>
+                          {deptUsers.length === 0 ? (
+                            <div style={{ padding: "20px", textAlign: "center", color: "#94a3b8", fontSize: "0.85rem" }}>
+                              No active employees assigned to this department yet.
+                            </div>
+                          ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                              {deptUsers.map(u => (
+                                <div key={u.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", border: "1px solid #f1f5f9", borderRadius: "6px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                    <img src={u.avatar} alt={u.name} style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }} />
+                                    <div>
+                                      <div style={{ fontWeight: "600", fontSize: "0.85rem", color: "#0f172a" }}>{u.name}</div>
+                                      <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{u.role} • {u.location || "Hyderabad"}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Tab Content: Settings */}
+                      {deptDetailTab === "Settings" && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                          <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem", color: "#0f172a" }}>Department Configuration</h4>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const renamed = prompt("Rename Department:", currentDept.name);
+                              if (renamed && renamed.trim()) {
+                                setDepartmentsList(prev => prev.map((d, i) => i === selectedDeptIndex ? { ...d, name: renamed.trim().toUpperCase() } : d));
+                              }
+                            }}
+                            style={{ width: "max-content", padding: "8px 16px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer" }}
+                          >
+                            Rename Department
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
-                })}
+                })()}
               </div>
+
+              {/* Add Department Modal Overlay */}
+              {showAddDeptModal && (
+                <div className="task-modal-overlay">
+                  <div className="task-modal" style={{ maxWidth: "440px" }}>
+                    <div className="task-modal-header" style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "12px", marginBottom: "16px" }}>
+                      <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Add New Department</h3>
+                      <button type="button" onClick={() => setShowAddDeptModal(false)} className="close-btn">&times;</button>
+                    </div>
+
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if (newDeptInput.trim()) {
+                        const newName = newDeptInput.trim().toUpperCase();
+                        setDepartmentsList(prev => [
+                          ...prev,
+                          { name: newName, subDepts: ["General"], avatar: newName.substring(0, 2), color: "#5b50a1" }
+                        ]);
+                        setNewDeptInput("");
+                        setShowAddDeptModal(false);
+                      }
+                    }}>
+                      <div className="form-group" style={{ marginBottom: "20px" }}>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Department Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. MARKETING & BRANDING"
+                          value={newDeptInput}
+                          onChange={e => setNewDeptInput(e.target.value)}
+                          style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem" }}
+                        />
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddDeptModal(false)}
+                          style={{ padding: "8px 16px", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "4px", color: "#475569", fontWeight: "600", cursor: "pointer" }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          style={{ padding: "8px 20px", background: "#5b50a1", border: "none", borderRadius: "4px", color: "#ffffff", fontWeight: "600", cursor: "pointer" }}
+                        >
+                          Save Department
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

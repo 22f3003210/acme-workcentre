@@ -83,14 +83,15 @@ function MainWorkspace({ initialTab }) {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const activeTab = initialTab || getTabFromPath(location.pathname, currentUser ? currentUser.role : "Admin");
+  const activeTab = initialTab || getTabFromPath(location.pathname, currentUser?.role || "Admin");
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !currentUser) {
     return <Navigate to="/auth/login" replace />;
   }
 
   const renderActiveView = () => {
-    switch (currentUser.role) {
+    const role = currentUser?.role || "Admin";
+    switch (role) {
       case "Admin":
       case "Accounts Manager":
         return <AdminView activeTab={activeTab} setActiveTab={(tab) => navigate(getRoutePath(tab))} />;

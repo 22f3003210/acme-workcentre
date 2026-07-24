@@ -1098,7 +1098,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
         </div>
       )}
 
-      {activeTab === "directory" && (
+      {(["directory", "departments", "job-titles", "number-series", "org-tree", "logins", "profile-changes", "probation"].includes(activeTab)) && (
         <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
           
           {/* Double-Tier Sub-Navigation Header Bar (Matching Reference Screenshots 1 & 2) */}

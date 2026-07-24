@@ -49,12 +49,12 @@ export default function Layout({ children, activeTab, setActiveTab }) {
 
   // Edit profile form
   const [profileForm, setProfileForm] = useState({
-    name: currentUser?.name || "",
-    email: currentUser?.email || "",
-    phone: currentUser?.phone || "",
-    address: currentUser?.address || "",
-    city: currentUser?.city || "",
-    pinCode: currentUser?.pinCode || "",
+    name: currentUser.name || "",
+    email: currentUser.email || "",
+    phone: currentUser.phone || "",
+    address: currentUser.address || "",
+    city: currentUser.city || "",
+    pinCode: currentUser.pinCode || "",
   });
 
   // Password form
@@ -77,7 +77,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       </svg>
     );
 
-    switch (currentUser?.role || "Admin") {
+    switch (currentUser.role) {
       case "Admin":
         return [
           { id: "dashboard", label: "Home", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>) },
@@ -140,7 +140,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       bgColor: "#ecfeff",
       borderColor: "#a5f3fc",
       iconColor: "#0891b2",
-      tabId: currentUser?.role === "Admin" ? "directory" : "dashboard",
+      tabId: currentUser.role === "Admin" ? "directory" : "dashboard",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
@@ -168,7 +168,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       bgColor: "#f3e8ff",
       borderColor: "#e9d5ff",
       iconColor: "#9333ea",
-      tabId: currentUser?.role === "Consultant" ? "punch" : "attendance",
+      tabId: currentUser.role === "Consultant" ? "punch" : "attendance",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
@@ -213,7 +213,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       bgColor: "#fffbeb",
       borderColor: "#fde68a",
       iconColor: "#d97706",
-      tabId: currentUser?.role === "Consultant" ? "expenses" : "reports",
+      tabId: currentUser.role === "Consultant" ? "expenses" : "reports",
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="1" x2="12" y2="23" />
@@ -224,7 +224,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
   ];
 
   return (
-    <div className={`app-container ${currentUser?.role === "Admin" ? "theme-admin" : ""}`} style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+    <div className={`app-container ${currentUser.role === "Admin" ? "theme-admin" : ""}`} style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
       <div className="sea-top-navbar" style={{ position: "sticky", top: 0, zIndex: 900 }}>
         <div className="sea-nav-left" style={{ display: "flex", alignItems: "center", gap: "14px", position: "relative" }}>
           
@@ -530,9 +530,9 @@ export default function Layout({ children, activeTab, setActiveTab }) {
         </div>
         <div className="sea-nav-right">
           <img
-            src={currentUser?.avatar}
+            src={currentUser.avatar}
             className="sea-user-avatar"
-            alt={`${currentUser?.name || ""} avatar`}
+            alt={`${currentUser.name} avatar`}
             onClick={openModal}
             style={{ cursor: "pointer" }}
           />
@@ -571,15 +571,15 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
                     <img
-                      src={currentUser?.avatar}
-                      alt={currentUser?.name || ""}
+                      src={currentUser.avatar}
+                      alt={currentUser.name}
                       style={{ width: "72px", height: "72px", borderRadius: "10px", objectFit: "cover", border: "2px solid rgba(255,255,255,0.3)" }}
                     />
                     <div>
                       <div style={{ fontSize: "1.5rem", fontWeight: "800", letterSpacing: "0.04em" }}>
-                        {currentUser?.role?.toUpperCase()}
+                        {currentUser.role?.toUpperCase()}
                       </div>
-                      <div style={{ fontSize: "0.82rem", opacity: 0.7, marginTop: "2px" }}>{currentUser?.name}</div>
+                      <div style={{ fontSize: "0.82rem", opacity: 0.7, marginTop: "2px" }}>{currentUser.name}</div>
                     </div>
                   </div>
                 </div>
@@ -663,7 +663,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                 <div style={{ padding: "16px 20px 20px", maxHeight: "70vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: "12px" }}>
                   {/* Avatar row */}
                   <div style={{ display: "flex", gap: "12px", alignItems: "flex-start", marginBottom: "4px" }}>
-                    <img src={currentUser?.avatar} alt="" style={{ width: "80px", height: "80px", borderRadius: "8px", objectFit: "cover", border: "1px solid #e5e7eb" }} />
+                    <img src={currentUser.avatar} alt="" style={{ width: "80px", height: "80px", borderRadius: "8px", objectFit: "cover", border: "1px solid #e5e7eb" }} />
                     <div style={{ flex: 1, border: "1.5px dashed #d1d5db", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px 12px", cursor: "pointer", color: "#374151", fontSize: "0.88rem", fontWeight: "500", gap: "8px" }}>
                       <span>⬆</span> Upload Profile Image
                     </div>
@@ -707,7 +707,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                     </div>
                     <div>
                       <label style={labelStyle}>Role</label>
-                      <input style={{ ...fieldStyle, background: "#f9fafb", color: "#9ca3af" }} value={currentUser?.role || ""} readOnly />
+                      <input style={{ ...fieldStyle, background: "#f9fafb", color: "#9ca3af" }} value={currentUser.role} readOnly />
                     </div>
                   </div>
                 </div>
@@ -791,7 +791,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
               <h1>Acme</h1>
             </div>
             <div className="mobile-user-actions" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <img src={currentUser?.avatar} alt={currentUser?.name || ""} className="mobile-avatar" onClick={openModal} style={{ cursor: "pointer" }} />
+              <img src={currentUser.avatar} alt={currentUser.name} className="mobile-avatar" onClick={openModal} style={{ cursor: "pointer" }} />
               <button onClick={() => { logout(); navigate("/auth/login"); }} style={{ fontSize: "0.75rem", color: "var(--color-error)", border: "1px solid var(--color-error)", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>Log Out</button>
             </div>
           </header>

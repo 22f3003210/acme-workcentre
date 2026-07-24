@@ -63,35 +63,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
   // Workforce Sub-Navigation Header State (Matching Reference Screenshot)
   const [subModuleTab, setSubModuleTab] = useState("DASHBOARD");
-
-  useEffect(() => {
-    if (activeTab === "time-dashboard" || activeTab === "attendance") {
-      setSubModuleTab("DASHBOARD");
-    } else if (activeTab === "time-approvals") {
-      setSubModuleTab("APPROVALS");
-    } else if (activeTab === "time-shifts") {
-      setSubModuleTab("SHIFTS");
-      setShiftsSubTab("Shift & Weekly Offs");
-      setShiftsInnerTab("Shifts");
-    } else if (activeTab === "time-assignments") {
-      setSubModuleTab("SHIFTS");
-      setShiftsSubTab("Assignments");
-    } else if (activeTab === "time-weekly-offs") {
-      setSubModuleTab("SHIFTS");
-      setShiftsSubTab("Shift & Weekly Offs");
-      setShiftsInnerTab("Weekly Offs");
-    } else if (activeTab === "time-shift-rules") {
-      setSubModuleTab("SHIFTS");
-      setShiftsSubTab("Shift & Weekly Offs");
-      setShiftsInnerTab("Shift & Weekly Off Rules");
-    } else if (activeTab === "time-leave") {
-      setSubModuleTab("LEAVE");
-    } else if (activeTab === "time-reports") {
-      setSubModuleTab("REPORTS");
-    } else if (activeTab === "time-settings") {
-      setSubModuleTab("SETTINGS");
-    }
-  }, [activeTab]);
   const [dashboardSubTab, setDashboardSubTab] = useState("Attendance Summary");
 
   // HR Module Double-Tier Navigation State (Matching Reference Screenshots 1 & 2)
@@ -2486,7 +2457,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
         <RecruiterView />
       )}
 
-      {["attendance", "time-dashboard", "time-approvals", "time-shifts", "time-assignments", "time-weekly-offs", "time-shift-rules", "time-leave", "time-reports", "time-settings"].includes(activeTab) && (
+      {activeTab === "attendance" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           
           {/* Double-Tier Sub-Navigation Header Bar (Matching Reference Screenshot) */}
@@ -2510,17 +2481,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   <button
                     key={tab.id}
                     type="button"
-                    onClick={() => {
-                      setSubModuleTab(tab.id);
-                      if (setActiveTab) {
-                        if (tab.id === "DASHBOARD") setActiveTab("time-dashboard");
-                        else if (tab.id === "APPROVALS") setActiveTab("time-approvals");
-                        else if (tab.id === "SHIFTS") setActiveTab("time-shifts");
-                        else if (tab.id === "LEAVE") setActiveTab("time-leave");
-                        else if (tab.id === "REPORTS") setActiveTab("time-reports");
-                        else if (tab.id === "SETTINGS") setActiveTab("time-settings");
-                      }
-                    }}
+                    onClick={() => setSubModuleTab(tab.id)}
                     style={{
                       padding: "12px 0",
                       background: "none",
@@ -2595,13 +2556,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     <button
                       key={subTab}
                       type="button"
-                      onClick={() => {
-                        setShiftsSubTab(subTab);
-                        if (setActiveTab) {
-                          if (subTab === "Assignments") setActiveTab("time-assignments");
-                          else setActiveTab("time-shifts");
-                        }
-                      }}
+                      onClick={() => setShiftsSubTab(subTab)}
                       style={{
                         padding: "4px 0 8px 0",
                         background: "none",
@@ -3468,31 +3423,25 @@ export default function AdminView({ activeTab, setActiveTab }) {
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               
               {/* Row 3 Pills: Shifts | Weekly Offs | Shift & Weekly Off Rules */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "10px 16px", display: "flex", gap: "10px", alignItems: "center" }}>
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "8px 14px", display: "flex", gap: "10px", alignItems: "center", boxShadow: "0 2px 8px rgba(15, 23, 42, 0.04)" }}>
                 {["Shifts", "Weekly Offs", "Shift & Weekly Off Rules"].map(tab => {
                   const isActive = shiftsInnerTab === tab;
                   return (
                     <button
                       key={tab}
                       type="button"
-                      onClick={() => {
-                        setShiftsInnerTab(tab);
-                        if (setActiveTab) {
-                          if (tab === "Weekly Offs") setActiveTab("time-weekly-offs");
-                          else if (tab === "Shift & Weekly Off Rules") setActiveTab("time-shift-rules");
-                          else setActiveTab("time-shifts");
-                        }
-                      }}
+                      onClick={() => setShiftsInnerTab(tab)}
                       style={{
-                        padding: "6px 14px",
-                        background: isActive ? "#f3e8ff" : "#ffffff",
-                        color: isActive ? "#6b21a8" : "#475569",
-                        border: isActive ? "1px solid #d8b4fe" : "1px solid #e2e8f0",
-                        borderRadius: "0px",
-                        fontWeight: isActive ? "600" : "400",
-                        fontSize: "0.82rem",
+                        padding: "8px 18px",
+                        background: isActive ? "linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)" : "#f8fafc",
+                        color: isActive ? "#ffffff" : "#475569",
+                        border: isActive ? "1px solid #3730a3" : "1px solid #e2e8f0",
+                        borderRadius: "8px",
+                        fontWeight: isActive ? "600" : "500",
+                        fontSize: "0.83rem",
                         cursor: "pointer",
-                        transition: "all 0.15s ease"
+                        boxShadow: isActive ? "0 4px 12px rgba(79, 70, 229, 0.3)" : "none",
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
                       }}
                     >
                       {tab}
@@ -3519,7 +3468,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       <button 
                         type="button" 
                         onClick={() => setShowAddShiftPage(true)}
-                        style={{ background: "#4c478a", color: "#ffffff", border: "none", borderRadius: "0px", padding: "10px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+                        style={{ background: "linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)", color: "#ffffff", border: "none", borderRadius: "8px", padding: "10px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.25)" }}
                       >
                         +Add shifts ▾
                       </button>
@@ -3527,26 +3476,26 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   </div>
 
                   {/* 2 Column Layout */}
-                  <div style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: "20px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "270px 1fr", gap: "20px" }}>
                     
                     {/* Left Sidebar List */}
-                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)" }}>
                       <div style={{ position: "relative" }}>
                         <input
                           type="text"
-                          placeholder="Search"
+                          placeholder="Search shifts..."
                           value={shiftSearchQuery}
                           onChange={(e) => setShiftSearchQuery(e.target.value)}
-                          style={{ width: "100%", padding: "8px 12px 8px 32px", border: "1px solid #cbd5e1", borderRadius: "0px", fontSize: "0.82rem", outline: "none" }}
+                          style={{ width: "100%", padding: "8px 12px 8px 32px", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "0.82rem", outline: "none" }}
                         />
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: "absolute", left: "10px", top: "10px" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                       </div>
 
-                      <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                         {shiftsList.length > 0 ? (
                           shiftsList.filter(s => s.name.toLowerCase().includes(shiftSearchQuery.toLowerCase())).map(item => {
                             const isSelected = selectedShift === item.name;
-                            const assignedUsersCount = users.filter(u => employeeAssignments[u.id]?.shift === item.name).length;
+                            const assignedUsersCount = users.filter(u => employeeAssignments[u.id]?.shift === item.name || u.shift === item.name).length;
                             const countText = `${assignedUsersCount} ${assignedUsersCount === 1 ? "employee" : "employees"}`;
 
                             return (
@@ -3555,18 +3504,21 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                 onClick={() => setSelectedShift(item.name)}
                                 style={{
                                   padding: "12px 14px",
-                                  background: isSelected ? "#f1f5f9" : "#ffffff",
-                                  borderLeft: isSelected ? "3px solid #4c478a" : "3px solid transparent",
+                                  background: isSelected ? "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)" : "#ffffff",
+                                  borderLeft: isSelected ? "4px solid #6366f1" : "4px solid transparent",
+                                  border: isSelected ? "1px solid #c7d2fe" : "1px solid #f1f5f9",
+                                  borderRadius: "8px",
                                   cursor: "pointer",
-                                  transition: "all 0.15s ease",
+                                  transition: "all 0.2s ease",
                                   display: "flex",
                                   justifyContent: "space-between",
-                                  alignItems: "center"
+                                  alignItems: "center",
+                                  boxShadow: isSelected ? "0 2px 8px rgba(99, 102, 241, 0.15)" : "none"
                                 }}
                               >
                                 <div>
-                                  <div style={{ fontWeight: isSelected ? "600" : "500", fontSize: "0.85rem", color: "#1e293b" }}>{item.name}</div>
-                                  <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>{countText}</div>
+                                  <div style={{ fontWeight: isSelected ? "700" : "500", fontSize: "0.85rem", color: isSelected ? "#4338ca" : "#1e293b" }}>{item.name}</div>
+                                  <div style={{ fontSize: "0.75rem", color: isSelected ? "#6366f1" : "#64748b", marginTop: "2px" }}>{countText}</div>
                                 </div>
                                 <button
                                   type="button"
@@ -3779,21 +3731,25 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                 onClick={() => setSelectedWeeklyOff(item.name)}
                                 style={{
                                   padding: "12px 14px",
-                                  background: isSelected ? "#f1f5f9" : "#ffffff",
-                                  borderLeft: isSelected ? "3px solid #4c478a" : "3px solid transparent",
+                                  background: isSelected ? "linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)" : "#ffffff",
+                                  borderLeft: isSelected ? "4px solid #6366f1" : "4px solid transparent",
+                                  border: isSelected ? "1px solid #c7d2fe" : "1px solid #f1f5f9",
+                                  borderRadius: "8px",
                                   cursor: "pointer",
+                                  transition: "all 0.2s ease",
                                   display: "flex",
                                   justifyContent: "space-between",
-                                  alignItems: "center"
+                                  alignItems: "center",
+                                  boxShadow: isSelected ? "0 2px 8px rgba(99, 102, 241, 0.15)" : "none"
                                 }}
                               >
                                 <div>
-                                  <div style={{ fontWeight: isSelected ? "600" : "500", fontSize: "0.85rem", color: "#1e293b" }}>{item.name}</div>
-                                  <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>{countText}</div>
+                                  <div style={{ fontWeight: isSelected ? "700" : "500", fontSize: "0.85rem", color: isSelected ? "#4338ca" : "#1e293b" }}>{item.name}</div>
+                                  <div style={{ fontSize: "0.75rem", color: isSelected ? "#6366f1" : "#64748b", marginTop: "2px" }}>{countText}</div>
                                 </div>
                                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                   {item.isDefault && (
-                                    <span style={{ fontSize: "0.65rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase" }}>DEFAULT</span>
+                                    <span style={{ fontSize: "0.65rem", color: "#4f46e5", background: "#e0e7ff", padding: "2px 6px", borderRadius: "4px", fontWeight: "700", textTransform: "uppercase" }}>DEFAULT</span>
                                   )}
                                   <button
                                     type="button"
@@ -3821,7 +3777,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </div>
 
                     {/* Right Details Panel */}
-                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "24px", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)" }}>
                       {(() => {
                         const activeWeeklyOffObj = weeklyOffsList.find(w => w.name === selectedWeeklyOff) || weeklyOffsList[0];
                         if (!activeWeeklyOffObj) {
@@ -3834,7 +3790,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                               <button 
                                 type="button" 
                                 onClick={() => setShowAddWeeklyOffDrawer(true)}
-                                style={{ background: "#4c478a", color: "#ffffff", border: "none", padding: "10px 20px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer", marginTop: "8px" }}
+                                style={{ background: "linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)", color: "#ffffff", border: "none", borderRadius: "8px", padding: "10px 20px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer", marginTop: "8px", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.25)" }}
                               >
                                 + Add Weekly Off
                               </button>
@@ -3842,7 +3798,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           );
                         }
 
-                        const assignedWeeklyOffUsers = users.filter(u => employeeAssignments[u.id]?.weeklyOff === activeWeeklyOffObj.name);
+                        const assignedWeeklyOffUsers = users.filter(u => employeeAssignments[u.id]?.weeklyOff === activeWeeklyOffObj.name || u.weeklyOff === activeWeeklyOffObj.name || u.weekly_off === activeWeeklyOffObj.name);
 
                         return (
                           <>
@@ -3852,13 +3808,13 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             <div style={{ borderBottom: "1px solid #e2e8f0", display: "flex", gap: "24px", marginBottom: "20px" }}>
                               <span 
                                 onClick={() => setWeeklyOffDetailTab("Summary")}
-                                style={{ padding: "8px 0", borderBottom: weeklyOffDetailTab === "Summary" ? "2px solid #4c478a" : "2px solid transparent", color: weeklyOffDetailTab === "Summary" ? "#1e293b" : "#64748b", fontWeight: weeklyOffDetailTab === "Summary" ? "600" : "400", fontSize: "0.85rem", cursor: "pointer" }}
+                                style={{ padding: "8px 0", borderBottom: weeklyOffDetailTab === "Summary" ? "2px solid #4f46e5" : "2px solid transparent", color: weeklyOffDetailTab === "Summary" ? "#4f46e5" : "#64748b", fontWeight: weeklyOffDetailTab === "Summary" ? "600" : "400", fontSize: "0.85rem", cursor: "pointer" }}
                               >
                                 Summary
                               </span>
                               <span 
                                 onClick={() => setWeeklyOffDetailTab("Employees")}
-                                style={{ padding: "8px 0", borderBottom: weeklyOffDetailTab === "Employees" ? "2px solid #4c478a" : "2px solid transparent", color: weeklyOffDetailTab === "Employees" ? "#1e293b" : "#64748b", fontWeight: weeklyOffDetailTab === "Employees" ? "600" : "400", fontSize: "0.85rem", cursor: "pointer" }}
+                                style={{ padding: "8px 0", borderBottom: weeklyOffDetailTab === "Employees" ? "2px solid #4f46e5" : "2px solid transparent", color: weeklyOffDetailTab === "Employees" ? "#4f46e5" : "#64748b", fontWeight: weeklyOffDetailTab === "Employees" ? "600" : "400", fontSize: "0.85rem", cursor: "pointer" }}
                               >
                                 Employees ({assignedWeeklyOffUsers.length})
                               </span>
@@ -3867,7 +3823,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             {/* Tab 1: Summary Table & Right Card */}
                             {weeklyOffDetailTab === "Summary" && (
                               <div style={{ display: "grid", gridTemplateColumns: "1fr 260px", gap: "20px" }}>
-                                <div style={{ border: "1px solid #e2e8f0" }}>
+                                <div style={{ border: "1px solid #e2e8f0", borderRadius: "8px", overflow: "hidden" }}>
                                   <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
                                     <thead>
                                       <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
@@ -3885,12 +3841,14 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                 </div>
 
                                 {/* Rule based assignment card */}
-                                <div style={{ border: "1px solid #e2e8f0", padding: "18px", background: "#f8fafc", display: "flex", flexDirection: "column", gap: "12px" }}>
-                                  <h5 style={{ margin: 0, fontSize: "0.9rem", fontWeight: "600", color: "#0f172a" }}>Rule based assignment</h5>
-                                  <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b", lineHeight: 1.4 }}>
+                                <div style={{ border: "1px solid #bfdbfe", padding: "18px", borderRadius: "8px", background: "linear-gradient(135deg, #f8fafc 0%, #eff6ff 100%)", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 2px 8px rgba(59, 130, 246, 0.08)" }}>
+                                  <h5 style={{ margin: 0, fontSize: "0.9rem", fontWeight: "600", color: "#1e40af", display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <span>⚙️</span> Rule based assignment
+                                  </h5>
+                                  <p style={{ margin: 0, fontSize: "0.78rem", color: "#3b82f6", lineHeight: 1.4 }}>
                                     Employees following this rule will be added to this weekly off policy automatically.
                                   </p>
-                                  <button type="button" style={{ marginTop: "auto", background: "#ffffff", border: "1px solid #4c478a", color: "#4c478a", padding: "6px 14px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer" }}>
+                                  <button type="button" style={{ marginTop: "auto", background: "#ffffff", border: "1px solid #3b82f6", borderRadius: "6px", color: "#2563eb", padding: "6px 14px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer", boxShadow: "0 1px 3px rgba(37, 99, 235, 0.1)" }}>
                                     Add rule
                                   </button>
                                 </div>
@@ -3946,9 +3904,19 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
               {/* View 1.3: Shift & Weekly Off Rules */}
               {shiftsInnerTab === "Shift & Weekly Off Rules" && (
-                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
-                  <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", margin: "0 0 12px 0" }}>Shift & Weekly Off Rules</h3>
-                  <p style={{ fontSize: "0.85rem", color: "#64748b" }}>No active rules set. Create automatic assignment rules for new joiners.</p>
+                <div style={{ background: "linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "28px", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)", display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "linear-gradient(135deg, #818cf8 0%, #4f46e5 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff", fontSize: "1.2rem", boxShadow: "0 4px 10px rgba(79, 70, 229, 0.25)" }}>⚡</div>
+                    <div>
+                      <h3 style={{ fontSize: "1.15rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>Shift & Weekly Off Rules</h3>
+                      <p style={{ fontSize: "0.83rem", color: "#64748b", margin: "2px 0 0 0" }}>Create automatic assignment rules for new joiners based on department, designation, or employment type.</p>
+                    </div>
+                  </div>
+                  <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px", display: "flex", justifyContent: "flex-end" }}>
+                    <button type="button" style={{ background: "linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)", color: "#ffffff", border: "none", borderRadius: "8px", padding: "10px 20px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.25)" }}>
+                      + Create Assignment Rule
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -3960,7 +3928,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               
               {/* Main Content Area */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px", boxShadow: "0 4px 16px rgba(15, 23, 42, 0.04)" }}>
                 
                 <h3 style={{ fontSize: "1.2rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Shift & weekly offs assignment</h3>
 
@@ -4006,7 +3974,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                               if (!modalSelectedShift && shiftsList.length > 0) setModalSelectedShift(shiftsList[0].name);
                               setShowUpdateShiftModal(true);
                             }}
-                            style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", fontWeight: "500", cursor: "pointer" }}
+                            style={{ background: "linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)", border: "none", borderRadius: "6px", padding: "8px 16px", fontSize: "0.82rem", color: "#ffffff", fontWeight: "600", cursor: "pointer", boxShadow: "0 2px 8px rgba(79, 70, 229, 0.25)" }}
                           >
                             Update Shift {selectedUserIdsForAssignment.length > 0 && `(${selectedUserIdsForAssignment.length})`}
                           </button>
@@ -4016,7 +3984,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                               if (!modalSelectedWeeklyOff && weeklyOffsList.length > 0) setModalSelectedWeeklyOff(weeklyOffsList[0].name);
                               setShowUpdateWeeklyOffModal(true);
                             }}
-                            style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", fontWeight: "500", cursor: "pointer" }}
+                            style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)", border: "none", borderRadius: "6px", padding: "8px 16px", fontSize: "0.82rem", color: "#ffffff", fontWeight: "600", cursor: "pointer", boxShadow: "0 2px 8px rgba(124, 58, 237, 0.25)" }}
                           >
                             Update Weekly Off {selectedUserIdsForAssignment.length > 0 && `(${selectedUserIdsForAssignment.length})`}
                           </button>
@@ -4101,161 +4069,13 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 })()}
 
               </div>
+
             </div>
           )}
+
         </div>
       )}
 
-          {/* APPROVALS View */}
-          {subModuleTab === "APPROVALS" && (
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", marginBottom: "8px" }}>Attendance & Leave Approvals</h3>
-              <p style={{ fontSize: "0.83rem", color: "#64748b", marginBottom: "20px" }}>Review and take action on pending attendance regularization and leave requests.</p>
-              <div style={{ overflowX: "auto", border: "1px solid #e2e8f0" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", textAlign: "left" }}>
-                  <thead>
-                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
-                      <th style={{ padding: "10px 14px" }}>EMPLOYEE</th>
-                      <th style={{ padding: "10px 14px" }}>TYPE</th>
-                      <th style={{ padding: "10px 14px" }}>DATE / PERIOD</th>
-                      <th style={{ padding: "10px 14px" }}>REASON</th>
-                      <th style={{ padding: "10px 14px" }}>STATUS</th>
-                      <th style={{ padding: "10px 14px" }}>ACTION</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(users || []).map((u, idx) => (
-                      <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>{u.name}</td>
-                        <td style={{ padding: "10px 14px", color: "#475569" }}>{idx % 2 === 0 ? "Leave Application" : "Attendance Regularization"}</td>
-                        <td style={{ padding: "10px 14px", color: "#475569" }}>2026-07-25</td>
-                        <td style={{ padding: "10px 14px", color: "#475569" }}>Personal Work / Client Meeting</td>
-                        <td style={{ padding: "10px 14px" }}>
-                          <span style={{ background: "#fef3c7", color: "#d97706", padding: "2px 8px", borderRadius: "10px", fontSize: "0.74rem", fontWeight: "600" }}>Pending</span>
-                        </td>
-                        <td style={{ padding: "10px 14px" }}>
-                          <div style={{ display: "flex", gap: "6px" }}>
-                            <button type="button" onClick={() => setToast && setToast({ message: "Approved successfully", type: "success" })} style={{ background: "#22c55e", color: "#ffffff", border: "none", padding: "4px 10px", fontSize: "0.76rem", borderRadius: "4px", cursor: "pointer" }}>Approve</button>
-                            <button type="button" onClick={() => setToast && setToast({ message: "Rejected request", type: "info" })} style={{ background: "#ef4444", color: "#ffffff", border: "none", padding: "4px 10px", fontSize: "0.76rem", borderRadius: "4px", cursor: "pointer" }}>Reject</button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* LEAVE View */}
-          {subModuleTab === "LEAVE" && (
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", marginBottom: "8px" }}>Leave Management & Balances</h3>
-              <p style={{ fontSize: "0.83rem", color: "#64748b", marginBottom: "20px" }}>Track employee leave quotas, accrued balances, and policy rules.</p>
-              <div style={{ overflowX: "auto", border: "1px solid #e2e8f0" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", textAlign: "left" }}>
-                  <thead>
-                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
-                      <th style={{ padding: "10px 14px" }}>EMPLOYEE</th>
-                      <th style={{ padding: "10px 14px" }}>DEPARTMENT</th>
-                      <th style={{ padding: "10px 14px" }}>CASUAL LEAVE</th>
-                      <th style={{ padding: "10px 14px" }}>SICK LEAVE</th>
-                      <th style={{ padding: "10px 14px" }}>EARNED LEAVE</th>
-                      <th style={{ padding: "10px 14px" }}>TOTAL REMAINING</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(users || []).map((u) => (
-                      <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>{u.name}</td>
-                        <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "—"}</td>
-                        <td style={{ padding: "10px 14px", color: "#475569" }}>6 / 12 Days</td>
-                        <td style={{ padding: "10px 14px", color: "#475569" }}>5 / 6 Days</td>
-                        <td style={{ padding: "10px 14px", color: "#475569" }}>10 / 15 Days</td>
-                        <td style={{ padding: "10px 14px", fontWeight: "600", color: "#16a34a" }}>21 Days Available</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* REPORTS View */}
-          {subModuleTab === "REPORTS" && (
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", marginBottom: "8px" }}>Attendance & Time Reports</h3>
-              <p style={{ fontSize: "0.83rem", color: "#64748b", marginBottom: "20px" }}>Export monthly attendance logs, late mark summaries, and overtime records.</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-                <div style={{ border: "1px solid #e2e8f0", padding: "16px", background: "#f8fafc" }}>
-                  <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem" }}>Monthly Attendance Ledger</h4>
-                  <p style={{ fontSize: "0.78rem", color: "#64748b" }}>Complete month-wise check-in & check-out logs per employee.</p>
-                  <button type="button" onClick={() => setToast && setToast({ message: "Exporting Monthly Attendance Ledger CSV...", type: "success" })} style={{ background: "#5b50a1", color: "#fff", border: "none", padding: "6px 14px", fontSize: "0.78rem", cursor: "pointer", marginTop: "8px" }}>Export CSV</button>
-                </div>
-                <div style={{ border: "1px solid #e2e8f0", padding: "16px", background: "#f8fafc" }}>
-                  <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem" }}>Late Arrivals & Penalties</h4>
-                  <p style={{ fontSize: "0.78rem", color: "#64748b" }}>Breakdown of grace time breaches and penalization deductions.</p>
-                  <button type="button" onClick={() => setToast && setToast({ message: "Exporting Late Arrivals Report CSV...", type: "success" })} style={{ background: "#5b50a1", color: "#fff", border: "none", padding: "6px 14px", fontSize: "0.78rem", cursor: "pointer", marginTop: "8px" }}>Export CSV</button>
-                </div>
-                <div style={{ border: "1px solid #e2e8f0", padding: "16px", background: "#f8fafc" }}>
-                  <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem" }}>Leave Balance Report</h4>
-                  <p style={{ fontSize: "0.78rem", color: "#64748b" }}>Annual leave usage, carry-forward, and encashment report.</p>
-                  <button type="button" onClick={() => setToast && setToast({ message: "Exporting Leave Report CSV...", type: "success" })} style={{ background: "#5b50a1", color: "#fff", border: "none", padding: "6px 14px", fontSize: "0.78rem", cursor: "pointer", marginTop: "8px" }}>Export CSV</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* SETTINGS View */}
-          {subModuleTab === "SETTINGS" && (
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", marginBottom: "8px" }}>Time & Attendance Rules & Settings</h3>
-              <p style={{ fontSize: "0.83rem", color: "#64748b", marginBottom: "20px" }}>Configure shifts grace limits, IP restrictions, and auto-checkout rules.</p>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", maxWidth: "800px" }}>
-                <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155" }}>Grace Period (Minutes)</label>
-                  <input type="number" defaultValue="15" style={{ width: "100%", padding: "8px", border: "1px solid #cbd5e1", marginTop: "4px" }} />
-                </div>
-                <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155" }}>Auto-Checkout Time</label>
-                  <input type="time" defaultValue="20:00" style={{ width: "100%", padding: "8px", border: "1px solid #cbd5e1", marginTop: "4px" }} />
-                </div>
-                <div style={{ gridColumn: "1 / -1" }}>
-                  <button type="button" onClick={() => setToast && setToast({ message: "Time & Attendance Settings updated successfully", type: "success" })} style={{ background: "#5b50a1", color: "#fff", border: "none", padding: "8px 20px", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer" }}>Save Settings</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Leave Summary & Analytics Sub-Tabs under DASHBOARD */}
-          {subModuleTab === "DASHBOARD" && (dashboardSubTab === "Leave Summary" || dashboardSubTab === "Leave Analytics") && (
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", marginBottom: "8px" }}>{dashboardSubTab}</h3>
-              <p style={{ fontSize: "0.83rem", color: "#64748b", marginBottom: "20px" }}>Overview of employee leave applications and historical leave usage.</p>
-              <div style={{ overflowX: "auto", border: "1px solid #e2e8f0" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", textAlign: "left" }}>
-                  <thead>
-                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
-                      <th style={{ padding: "10px 14px" }}>EMPLOYEE</th>
-                      <th style={{ padding: "10px 14px" }}>DEPARTMENT</th>
-                      <th style={{ padding: "10px 14px" }}>TOTAL LEAVES TAKEN</th>
-                      <th style={{ padding: "10px 14px" }}>STATUS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(users || []).map(u => (
-                      <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>{u.name}</td>
-                        <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "—"}</td>
-                        <td style={{ padding: "10px 14px", color: "#475569" }}>2 Days</td>
-                        <td style={{ padding: "10px 14px", color: "#16a34a", fontWeight: "600" }}>Active</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -4651,7 +4471,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                     <button
                                       onClick={() => {
                                         if (confirm(`Approve cash refill of ₹${r.amount} for ${emp.name}?`)) {
-                                          verifyAdvanceRequest(r.id, "Approved", currentUser?.name || "Admin");
+                                          verifyAdvanceRequest(r.id, "Approved", currentUser.name);
                                           setToast({ message: "Petty cash advance request approved!", type: "success" });
                                         }
                                       }}
@@ -4663,7 +4483,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                     <button
                                       onClick={() => {
                                         if (confirm(`Reject cash refill request of ₹${r.amount} for ${emp.name}?`)) {
-                                          verifyAdvanceRequest(r.id, "Rejected", currentUser?.name || "Admin");
+                                          verifyAdvanceRequest(r.id, "Rejected", currentUser.name);
                                           setToast({ message: "Refill request rejected.", type: "info" });
                                         }
                                       }}

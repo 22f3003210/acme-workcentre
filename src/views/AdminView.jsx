@@ -225,8 +225,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [selectedUserIdsForAssignment, setSelectedUserIdsForAssignment] = useState([]);
   const [showUpdateShiftModal, setShowUpdateShiftModal] = useState(false);
   const [showUpdateWeeklyOffModal, setShowUpdateWeeklyOffModal] = useState(false);
-  const [modalSelectedShift, setModalSelectedShift] = useState("Back -End Shift");
-  const [modalSelectedWeeklyOff, setModalSelectedWeeklyOff] = useState("Sunday");
+  const [modalSelectedShift, setModalSelectedShift] = useState("");
+  const [modalSelectedWeeklyOff, setModalSelectedWeeklyOff] = useState("");
 
   // Daily Report / Employee Swipes State
   const initialSwipes = [];
@@ -3950,14 +3950,20 @@ export default function AdminView({ activeTab, setActiveTab }) {
                         <div style={{ display: "flex", gap: "10px" }}>
                           <button 
                             type="button" 
-                            onClick={() => setShowUpdateShiftModal(true)}
+                            onClick={() => {
+                              if (!modalSelectedShift && shiftsList.length > 0) setModalSelectedShift(shiftsList[0].name);
+                              setShowUpdateShiftModal(true);
+                            }}
                             style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", fontWeight: "500", cursor: "pointer" }}
                           >
                             Update Shift {selectedUserIdsForAssignment.length > 0 && `(${selectedUserIdsForAssignment.length})`}
                           </button>
                           <button 
                             type="button" 
-                            onClick={() => setShowUpdateWeeklyOffModal(true)}
+                            onClick={() => {
+                              if (!modalSelectedWeeklyOff && weeklyOffsList.length > 0) setModalSelectedWeeklyOff(weeklyOffsList[0].name);
+                              setShowUpdateWeeklyOffModal(true);
+                            }}
                             style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", fontSize: "0.82rem", color: "#475569", fontWeight: "500", cursor: "pointer" }}
                           >
                             Update Weekly Off {selectedUserIdsForAssignment.length > 0 && `(${selectedUserIdsForAssignment.length})`}
@@ -4001,8 +4007,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             {filteredAssignmentUsers.length > 0 ? (
                               filteredAssignmentUsers.map((u, idx) => {
                                 const isChecked = selectedUserIdsForAssignment.includes(u.id);
-                                const assignedShift = u.shift || employeeAssignments[u.id]?.shift || "General Shift";
-                                const assignedWeeklyOff = u.weekly_off || u.weeklyOff || employeeAssignments[u.id]?.weeklyOff || "Sunday";
+                                const assignedShift = u.shift || employeeAssignments[u.id]?.shift || "—";
+                                const assignedWeeklyOff = u.weekly_off || u.weeklyOff || employeeAssignments[u.id]?.weeklyOff || "—";
                                 return (
                                   <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9", background: isChecked ? "#f0f9ff" : "transparent" }}>
                                     <td style={{ padding: "10px 14px" }}>
@@ -4013,15 +4019,15 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                       <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{u.title || u.role}</div>
                                     </td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>{u.empCode || u.emp_code || `EMP-${idx + 1}`}</td>
-                                    <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "General"}</td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "—"}</td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>{u.reportingManager || u.reporting_manager || "—"}</td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>
-                                      <span style={{ fontWeight: u.shift ? "600" : "400", color: u.shift ? "#2563eb" : "#475569" }}>
+                                      <span style={{ fontWeight: assignedShift !== "—" ? "600" : "400", color: assignedShift !== "—" ? "#2563eb" : "#94a3b8" }}>
                                         {assignedShift}
                                       </span>
                                     </td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>
-                                      <span style={{ fontWeight: u.weeklyOff || u.weekly_off ? "600" : "400", color: u.weeklyOff || u.weekly_off ? "#2563eb" : "#475569" }}>
+                                      <span style={{ fontWeight: assignedWeeklyOff !== "—" ? "600" : "400", color: assignedWeeklyOff !== "—" ? "#2563eb" : "#94a3b8" }}>
                                         {assignedWeeklyOff}
                                       </span>
                                     </td>

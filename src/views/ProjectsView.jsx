@@ -34,36 +34,15 @@ export default function ProjectsView() {
     }
   };
 
-  // Helper to ensure project always has initial visit data, checklists, and events fallback
+  // Helper to ensure project properties are structured cleanly
   const getEffectiveProject = (proj) => {
     if (!proj) return null;
-    const initial = initialProjects.find(ip => ip.id === proj.id) || {};
-    const visits = (proj.clientVisits && proj.clientVisits.length > 0) 
-      ? proj.clientVisits 
-      : (initial.clientVisits && initial.clientVisits.length > 0 ? initial.clientVisits : [
-          {
-            id: `visit-${proj.id}-1`,
-            visitTitle: "Visit #1: Multi-Store Audit & Inventory SOP Setup",
-            startDate: "2026-07-12",
-            endDate: "2026-07-15",
-            durationDays: 4,
-            visitingConsultants: ["Darla Manikanta", "Shikhar Jain"],
-            understandings: "Observed delay in logging daily gold sales at closing desk. Sales floor team lacked structured upselling script for high-margin bridal items.",
-            workDone: "Audited tray items, introduced daily digital closing register, conducted 3-hour coaching session for store managers.",
-            followUpAction: "Verify digital closing register adoption after 14 days."
-          }
-        ]);
-    const events = (proj.scheduledEvents && proj.scheduledEvents.length > 0) ? proj.scheduledEvents : (initial.scheduledEvents || []);
-    const lists = (proj.checklists && proj.checklists.length > 0) ? proj.checklists : (initial.checklists || []);
-    const purpose = proj.engagementPurpose || initial.engagementPurpose || "Client approached us for store stock auditing, loss prevention, and sales growth advisory.";
-
     return {
-      ...initial,
       ...proj,
-      clientVisits: visits,
-      scheduledEvents: events,
-      checklists: lists,
-      engagementPurpose: purpose
+      clientVisits: proj.clientVisits || [],
+      scheduledEvents: proj.scheduledEvents || [],
+      checklists: proj.checklists || [],
+      engagementPurpose: proj.engagementPurpose || "Client approached us for consulting advisory, audit, and growth strategy."
     };
   };
 

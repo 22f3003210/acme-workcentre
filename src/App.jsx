@@ -8,12 +8,14 @@ import AdminView from "./views/AdminView";
 import AccountsView from "./views/AccountsView";
 import ConsultantView from "./views/ConsultantView";
 import RegisterView from "./views/RegisterView";
+import AddEmployeeWizard from "./views/AddEmployeeWizard";
 
 // Clean Production Route Path Mapping
 export const getRoutePath = (tabId) => {
   switch (tabId) {
     case "dashboard": return "/dashboard";
     case "directory": return "/employee/directory";
+    case "add-employee": return "/employee/add";
     case "job-titles": return "/employee/job-titles";
     case "number-series": return "/employee/number-series";
     case "departments": return "/employee/departments";
@@ -117,6 +119,7 @@ function AppRoutes() {
       <Route path="/dashboard" element={<MainWorkspace initialTab="dashboard" />} />
       <Route path="/employee" element={<MainWorkspace initialTab="directory" />} />
       <Route path="/employee/directory" element={<MainWorkspace initialTab="directory" />} />
+      <Route path="/employee/add" element={<AddEmployeeWizard />} />
       <Route path="/employee/job-titles" element={<MainWorkspace initialTab="job-titles" />} />
       <Route path="/employee/number-series" element={<MainWorkspace initialTab="number-series" />} />
       <Route path="/employee/departments" element={<MainWorkspace initialTab="departments" />} />

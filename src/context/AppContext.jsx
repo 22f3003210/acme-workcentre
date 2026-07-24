@@ -384,13 +384,13 @@ export const AppProvider = ({ children }) => {
   };
 
   // Employee Directory CRUD (Admin Only)
-  const addUser = (userData) => {
-    const newId = `${userData.role.toLowerCase().replace(" ", "")}-${Date.now()}`;
+  const addUser = async (userData) => {
+    const newId = `${(userData.role || "employee").toLowerCase().replace(/\s+/g, "")}-${Date.now()}`;
     const empCode = userData.empCode || "";
     const newUser = {
       id: newId,
       empCode,
-      avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.name)}`,
+      avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.name || "Employee")}`,
       lastLogin: "",
       attendance: userData.role === "Consultant" ? [] : undefined,
       advanceAmount: userData.role === "Consultant" ? (parseFloat(userData.advanceAmount) || 0) : undefined,
@@ -399,22 +399,48 @@ export const AppProvider = ({ children }) => {
     setUsers(prev => [...prev, newUser]);
 
     if (isSupabaseConfigured()) {
-      supabase.from("users").insert([{
+      const payload = {
         id: newUser.id,
         emp_code: newUser.empCode,
         name: newUser.name,
         email: newUser.email,
         phone: newUser.phone,
-        role: newUser.role,
+        role: newUser.role || "Consultant",
         title: newUser.title,
         department: newUser.department,
         location: newUser.location,
         status: newUser.status || "Active",
         avatar: newUser.avatar,
-        advance_amount: newUser.advanceAmount || 0
-      }]).then(({ error }) => {
-        if (error) console.error("Supabase insert user error:", error);
-      });
+        advance_amount: newUser.advanceAmount || 0,
+        first_name: newUser.firstName,
+        middle_name: newUser.middleName,
+        last_name: newUser.lastName,
+        display_name: newUser.displayName,
+        gender: newUser.gender,
+        dob: newUser.dob,
+        nationality: newUser.nationality,
+        work_country: newUser.workCountry,
+        joining_date: newUser.joiningDate,
+        secondary_job_title: newUser.secondaryJobTitle,
+        time_type: newUser.timeType,
+        invite_to_login: newUser.inviteToLogin,
+        enable_onboarding: newUser.enableOnboarding,
+        leave_plan: newUser.leavePlan,
+        holiday_list: newUser.holidayList,
+        attendance_tracking: newUser.attendanceTracking,
+        shift: newUser.shift,
+        weekly_off: newUser.weeklyOff,
+        attendance_number: newUser.attendanceNumber,
+        time_tracking_policy: newUser.timeTrackingPolicy,
+        penalization_policy: newUser.penalizationPolicy,
+        overtime_policy: newUser.overtimePolicy,
+        expense_policy: newUser.expensePolicy,
+        annual_ctc: newUser.annualCtc || 0,
+        currency: newUser.currency || "INR"
+      };
+
+      const { error } = await supabase.from("users").insert([payload]);
+      if (error) console.error("Supabase insert user error:", error);
     }
 
     return newUser;

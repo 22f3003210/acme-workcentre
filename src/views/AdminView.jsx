@@ -1232,7 +1232,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Employee Directory</h3>
                 <button
-                  onClick={() => setShowOnboardModal(true)}
+                  onClick={() => setActiveTab && setActiveTab("add-employee")}
                   className="luxury-button"
                   style={{
                     backgroundColor: "#4c478a",

@@ -4124,7 +4124,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((u, idx) => (
+                    {(users || []).map((u, idx) => (
                       <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>{u.name}</td>
                         <td style={{ padding: "10px 14px", color: "#475569" }}>{idx % 2 === 0 ? "Leave Application" : "Attendance Regularization"}</td>
@@ -4165,7 +4165,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((u) => (
+                    {(users || []).map((u) => (
                       <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>{u.name}</td>
                         <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "—"}</td>
@@ -4243,7 +4243,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map(u => (
+                    {(users || []).map(u => (
                       <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>{u.name}</td>
                         <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "—"}</td>

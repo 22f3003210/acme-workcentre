@@ -63,14 +63,13 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [dirDeptFilter, setDirDeptFilter] = useState("All");
   const [dirLocationFilter, setDirLocationFilter] = useState("All");
 
-  // Job Titles Management State (Driven dynamically by user input)
-  const [jobTitlesList, setJobTitlesList] = useState([]);
+  // Job Titles, Number Series, Departments are managed via AppContext (persisted in localStorage + Supabase)
+  // Use jobTitles, numberSeries, departments from useApp() directly — do NOT use local state for these
   const [jobTitleSearchQuery, setJobTitleSearchQuery] = useState("");
   const [showAddJobTitleModal, setShowAddJobTitleModal] = useState(false);
   const [newJobTitleInput, setNewJobTitleInput] = useState("");
 
-  // Employee Number Series Management State (Driven dynamically by user input)
-  const [numSeriesList, setNumSeriesList] = useState([]);
+  // Employee Number Series Management State
   const [numSeriesSearchQuery, setNumSeriesSearchQuery] = useState("");
   const [showAddNumSeriesModal, setShowAddNumSeriesModal] = useState(false);
   const [newSeriesForm, setNewSeriesForm] = useState({
@@ -84,8 +83,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
     status: true
   });
 
-  // Departments Management State (Driven dynamically by user input)
-  const [departmentsList, setDepartmentsList] = useState([]);
+  // Departments Management Modal State
   const [showAddDeptModal, setShowAddDeptModal] = useState(false);
   const [newDeptNameInput, setNewDeptNameInput] = useState("");
 
@@ -1418,7 +1416,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "8px", fontSize: "0.78rem", color: "#64748b" }}>
-                  <span>Total: {jobTitlesList.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).length}</span>
+                  <span>Total: {jobTitles.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).length}</span>
                   <span style={{ cursor: "pointer", color: "#64748b", fontWeight: "700" }}>⋮</span>
                 </div>
               </div>
@@ -1434,14 +1432,14 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {jobTitlesList.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).length === 0 ? (
+                    {jobTitles.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).length === 0 ? (
                       <tr>
                         <td colSpan={3} style={{ padding: "32px", textAlign: "center", color: "#64748b" }}>
                           No Job Titles found. Click <strong>+ Add Job Title</strong> to add one.
                         </td>
                       </tr>
                     ) : (
-                      jobTitlesList.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).map((titleName, idx) => {
+                      jobTitles.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).map((titleName, idx) => {
                         const count = users.filter(u => (u.title || "").toLowerCase() === titleName.toLowerCase() || (u.role || "").toLowerCase() === titleName.toLowerCase()).length;
                         return (
                           <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
@@ -1460,7 +1458,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                   onClick={() => {
                                     const edited = prompt("Edit Job Title:", titleName);
                                     if (edited && edited.trim() !== "") {
-                                      setJobTitlesList(prev => prev.map(t => t === titleName ? edited.trim() : t));
+                                      setjobTitles(prev => prev.map(t => t === titleName ? edited.trim() : t));
                                     }
                                   }}
                                   style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
@@ -1472,7 +1470,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                   title="Delete Job Title"
                                   onClick={() => {
                                     if (confirm(`Remove "${titleName}" from Job Titles list?`)) {
-                                      setJobTitlesList(prev => prev.filter(t => t !== titleName));
+                                      setjobTitles(prev => prev.filter(t => t !== titleName));
                                     }
                                   }}
                                   style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: "0.9rem" }}
@@ -1501,7 +1499,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (newJobTitleInput.trim()) {
-                        setJobTitlesList(prev => [...prev, newJobTitleInput.trim()]);
+                        setjobTitles(prev => [...prev, newJobTitleInput.trim()]);
                         addJobTitle(newJobTitleInput.trim());
                         setNewJobTitleInput("");
                         setShowAddJobTitleModal(false);
@@ -1600,7 +1598,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "8px", fontSize: "0.78rem", color: "#64748b" }}>
-                  <span>Total: {numSeriesList.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).length}</span>
+                  <span>Total: {numberSeries.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).length}</span>
                 </div>
               </div>
 
@@ -1619,14 +1617,14 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {numSeriesList.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).length === 0 ? (
+                    {numberSeries.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).length === 0 ? (
                       <tr>
                         <td colSpan={7} style={{ padding: "32px", textAlign: "center", color: "#64748b" }}>
                           No Employee Number Series found. Click <strong>+Add New Series</strong> to add one.
                         </td>
                       </tr>
                     ) : (
-                      numSeriesList.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).map((item) => (
+                      numberSeries.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).map((item) => (
                         <tr key={item.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                           <td style={{ padding: "16px 20px" }}>
                             <div style={{ fontWeight: "600", color: "#1e293b" }}>{item.seriesName}</div>
@@ -1649,7 +1647,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                 type="button"
                                 title="Toggle Active Status"
                                 onClick={() => {
-                                  setNumSeriesList(prev => prev.map(s => s.id === item.id ? { ...s, status: s.status === "Active" ? "Inactive" : "Active" } : s));
+                                  setnumberSeries(prev => prev.map(s => s.id === item.id ? { ...s, status: s.status === "Active" ? "Inactive" : "Active" } : s));
                                 }}
                                 style={{ background: "none", border: "none", cursor: "pointer", color: item.status === "Active" ? "#2563eb" : "#94a3b8", fontSize: "0.9rem" }}
                               >
@@ -1661,7 +1659,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                 onClick={() => {
                                   const edited = prompt("Edit Series Name:", item.seriesName);
                                   if (edited && edited.trim()) {
-                                    setNumSeriesList(prev => prev.map(s => s.id === item.id ? { ...s, seriesName: edited.trim() } : s));
+                                    setnumberSeries(prev => prev.map(s => s.id === item.id ? { ...s, seriesName: edited.trim() } : s));
                                   }
                                 }}
                                 style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
@@ -1678,7 +1676,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
                 {/* Table Footer Pagination */}
                 <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "16px", padding: "12px 20px", borderTop: "1px solid #f1f5f9", fontSize: "0.78rem", color: "#64748b" }}>
-                  <span>1 to {numSeriesList.length} of {numSeriesList.length}</span>
+                  <span>1 to {numberSeries.length} of {numberSeries.length}</span>
                   <span>Page 1 of 1</span>
                 </div>
               </div>
@@ -1706,7 +1704,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           department: newSeriesForm.department,
                           status: newSeriesForm.status ? "Active" : "Inactive"
                         };
-                        setNumSeriesList(prev => [...prev, newEntry]);
+                        setnumberSeries(prev => [...prev, newEntry]);
                         addNumberSeries(newEntry);
                         setNewSeriesForm({
                           seriesName: "",
@@ -1910,13 +1908,13 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 </button>
               </div>
 
-              {departmentsList.length === 0 ? (
+              {departments.length === 0 ? (
                 <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "40px 20px", textAlign: "center", borderRadius: "6px", color: "#64748b" }}>
                   No Departments found. Click <strong>+ Add Department</strong> to create one.
                 </div>
               ) : (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
-                  {departmentsList.map((dept, idx) => {
+                  {departments.map((dept, idx) => {
                     const count = users.filter(u => u.department && u.department.toLowerCase() === (typeof dept === "string" ? dept : dept.name).toLowerCase()).length;
                     const name = typeof dept === "string" ? dept : dept.name;
                     return (
@@ -1927,7 +1925,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             type="button"
                             onClick={() => {
                               if (confirm(`Remove "${name}" department?`)) {
-                                setDepartmentsList(prev => prev.filter(d => (typeof d === "string" ? d : d.name) !== name));
+                                setdepartments(prev => prev.filter(d => (typeof d === "string" ? d : d.name) !== name));
                                 deleteDepartment(name);
                               }
                             }}
@@ -1959,7 +1957,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (newDeptNameInput.trim()) {
-                        setDepartmentsList(prev => [...prev, newDeptNameInput.trim()]);
+                        setdepartments(prev => [...prev, newDeptNameInput.trim()]);
                         addDepartment(newDeptNameInput.trim());
                         setNewDeptNameInput("");
                         setShowAddDeptModal(false);
@@ -4966,3 +4964,4 @@ export default function AdminView({ activeTab, setActiveTab }) {
     </div>
   );
 }
+

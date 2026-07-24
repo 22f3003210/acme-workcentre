@@ -75,6 +75,11 @@ export default function AdminView({ activeTab, setActiveTab }) {
     status: true
   });
 
+  // Departments Management State (Driven dynamically by user input)
+  const [departmentsList, setDepartmentsList] = useState([]);
+  const [showAddDeptModal, setShowAddDeptModal] = useState(false);
+  const [newDeptNameInput, setNewDeptNameInput] = useState("");
+
   // Shifts & Weekly Offs Sub-Navigation State (Holidays & Shift Allowance removed as requested)
   const [shiftsSubTab, setShiftsSubTab] = useState("Shift & Weekly Offs"); // "Shift & Weekly Offs" | "Assignments"
   const [shiftsInnerTab, setShiftsInnerTab] = useState("Shifts"); // "Shifts" | "Weekly Offs" | "Shift & Weekly Off Rules"
@@ -1885,30 +1890,105 @@ export default function AdminView({ activeTab, setActiveTab }) {
           {hrMainTab === "EMPLOYEES" && hrEmployeesSubTab === "Departments" && (
             <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Departments & Units</h3>
+                <div>
+                  <h3 style={{ fontSize: "1.3rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Departments & Units</h3>
+                  <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>Manage organizational departments and team member counts.</p>
+                </div>
                 <button
-                  onClick={() => setShowOnboardModal(true)}
-                  style={{ backgroundColor: "#4c478a", color: "#ffffff", padding: "8px 18px", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer", fontSize: "0.82rem" }}
+                  type="button"
+                  onClick={() => setShowAddDeptModal(true)}
+                  style={{ backgroundColor: "#5b50a1", color: "#ffffff", padding: "8px 20px", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer", fontSize: "0.82rem" }}
                 >
                   + Add Department
                 </button>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
-                {["Advisory", "IT & Systems Support", "Administration", "Purchase", "Sales", "Cashier and Billing"].map((dept, idx) => {
-                  const count = users.filter(u => u.department && u.department.toLowerCase() === dept.toLowerCase()).length;
-                  return (
-                    <div key={idx} style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-                      <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.04em" }}>DEPARTMENT</div>
-                      <h4 style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a", margin: "4px 0 12px 0" }}>{dept}</h4>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
-                        <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Active Members</span>
-                        <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#4c478a" }}>{count}</span>
+              {departmentsList.length === 0 ? (
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "40px 20px", textAlign: "center", borderRadius: "6px", color: "#64748b" }}>
+                  No Departments found. Click <strong>+ Add Department</strong> to create one.
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+                  {departmentsList.map((dept, idx) => {
+                    const count = users.filter(u => u.department && u.department.toLowerCase() === (typeof dept === "string" ? dept : dept.name).toLowerCase()).length;
+                    const name = typeof dept === "string" ? dept : dept.name;
+                    return (
+                      <div key={idx} style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px", borderRadius: "6px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.04em" }}>DEPARTMENT</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Remove "${name}" department?`)) {
+                                setDepartmentsList(prev => prev.filter(d => (typeof d === "string" ? d : d.name) !== name));
+                              }
+                            }}
+                            style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.85rem" }}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                        <h4 style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a", margin: "8px 0 16px 0" }}>{name}</h4>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
+                          <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Active Members</span>
+                          <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#5b50a1" }}>{count}</span>
+                        </div>
                       </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Add Department Modal Overlay */}
+              {showAddDeptModal && (
+                <div className="task-modal-overlay">
+                  <div className="task-modal" style={{ maxWidth: "440px" }}>
+                    <div className="task-modal-header" style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "12px", marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "600" }}>Add New Department</h3>
+                      <button type="button" onClick={() => setShowAddDeptModal(false)} className="close-btn" style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer" }}>&times;</button>
                     </div>
-                  );
-                })}
-              </div>
+
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if (newDeptNameInput.trim()) {
+                        setDepartmentsList(prev => [...prev, newDeptNameInput.trim()]);
+                        setNewDeptNameInput("");
+                        setShowAddDeptModal(false);
+                      }
+                    }}>
+                      <div className="form-group" style={{ marginBottom: "20px" }}>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Department Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Sales, Advisory, IT & Systems"
+                          value={newDeptNameInput}
+                          onChange={e => setNewDeptNameInput(e.target.value)}
+                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
+                        />
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddDeptModal(false)}
+                          style={{ padding: "8px 16px", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "4px", color: "#475569", fontWeight: "600", cursor: "pointer" }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          style={{ padding: "8px 20px", background: "#5b50a1", border: "none", borderRadius: "4px", color: "#ffffff", fontWeight: "600", cursor: "pointer" }}
+                        >
+                          Save Department
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

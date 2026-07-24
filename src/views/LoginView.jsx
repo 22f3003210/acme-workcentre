@@ -146,7 +146,7 @@ export default function LoginView({ onOpenRegister }) {
                   <input
                     id="email-input"
                     type="text"
-                    placeholder="name@workcentre.com"
+                    placeholder="acmeadmin"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     style={{ paddingLeft: "14px" }}
@@ -161,13 +161,25 @@ export default function LoginView({ onOpenRegister }) {
                   <input
                     id="password-input"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="123"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     style={{ paddingLeft: "14px" }}
                     required
                   />
                 </div>
+              </div>
+
+              {/* Quick Login Badge */}
+              <div style={{ marginBottom: "14px", background: "rgba(37, 99, 235, 0.08)", border: "1px solid rgba(37, 99, 235, 0.2)", padding: "6px 12px", borderRadius: "6px", fontSize: "0.78rem", color: "#2563eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span>🔑 Admin Login: <strong>acmeadmin</strong> / <strong>123</strong></span>
+                <button
+                  type="button"
+                  onClick={() => { setEmail("acmeadmin"); setPassword("123"); }}
+                  style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "4px", padding: "2px 8px", fontSize: "0.72rem", cursor: "pointer", fontWeight: "700" }}
+                >
+                  Auto Fill
+                </button>
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", width: "100%" }}>

@@ -36,7 +36,7 @@ const parseTimeToMinutes = (timeStr) => {
 };
 
 // ── Data version: bump this whenever initialData.js changes ──────────────
-const DATA_VERSION = "v11";
+const DATA_VERSION = "v12";
 
 export const AppProvider = ({ children }) => {
   // On every mount, flush stale localStorage if data version changed
@@ -248,8 +248,8 @@ export const AppProvider = ({ children }) => {
     const cleanPassword = password ? password.trim() : "";
     
     let user;
-    if (cleanEmail === "admin" && cleanPassword === "123") {
-      user = users.find(u => u.role === "Admin" || u.id === "admin-1");
+    if ((cleanEmail === "acmeadmin" || cleanEmail === "admin" || cleanEmail === "acmeadmin@acmeworkcentre.com") && cleanPassword === "123") {
+      user = users.find(u => u.role === "Admin" || u.id === "admin-acme" || u.email === "acmeadmin") || users[0];
     } else {
       user = users.find(u => u.email.toLowerCase() === cleanEmail);
     }

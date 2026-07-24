@@ -1440,14 +1440,17 @@ export default function AdminView({ activeTab, setActiveTab }) {
             
             {/* Row 1: Module Main Tabs */}
             <div style={{ display: "flex", alignItems: "center", gap: "24px", borderBottom: "1px solid #e2e8f0", overflowX: "auto" }}>
-              {[
-                { id: "DASHBOARD", label: "DASHBOARD" },
-                { id: "APPROVALS", label: "APPROVALS", badge: 31 },
-                { id: "SHIFTS", label: "SHIFTS/WEEKLY OFFS & HOLIDAYS" },
-                { id: "LEAVE", label: "LEAVE" },
-                { id: "REPORTS", label: "REPORTS" },
-                { id: "SETTINGS", label: "SETTINGS" }
-              ].map(tab => {
+              {(() => {
+                const pendingBadgeCount = (expenses || []).filter(e => e.status === "Pending").length + (advanceRequests || []).filter(r => r.status === "Pending").length;
+                return [
+                  { id: "DASHBOARD", label: "DASHBOARD" },
+                  { id: "APPROVALS", label: "APPROVALS", badge: pendingBadgeCount > 0 ? pendingBadgeCount : null },
+                  { id: "SHIFTS", label: "SHIFTS/WEEKLY OFFS & HOLIDAYS" },
+                  { id: "LEAVE", label: "LEAVE" },
+                  { id: "REPORTS", label: "REPORTS" },
+                  { id: "SETTINGS", label: "SETTINGS" }
+                ];
+              })().map(tab => {
                 const isActive = subModuleTab === tab.id;
                 return (
                   <button
@@ -1577,14 +1580,18 @@ export default function AdminView({ activeTab, setActiveTab }) {
               <h4 style={{ fontSize: "0.95rem", fontWeight: "500", color: "#334155", margin: "0 0 14px 0" }}>Not in yet today</h4>
               
               <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                {users.filter(u => u.role === "Consultant").slice(0, 4).map(c => (
-                  <div key={c.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-                    <img src={c.avatar} alt={c.name} style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover", border: "2px solid #e2e8f0" }} />
-                    <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: "400", maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {c.name.split(" ")[0]}...
-                    </span>
-                  </div>
-                ))}
+                {users.filter(u => u.role === "Consultant").length === 0 ? (
+                  <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: "400" }}>No consultants onboarded yet.</span>
+                ) : (
+                  users.filter(u => u.role === "Consultant").slice(0, 4).map(c => (
+                    <div key={c.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                      <img src={c.avatar} alt={c.name} style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover", border: "2px solid #e2e8f0" }} />
+                      <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: "400", maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {c.name.split(" ")[0]}...
+                      </span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -1595,28 +1602,36 @@ export default function AdminView({ activeTab, setActiveTab }) {
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#06b6d4" }} />
               <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Employees On Time today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
+                {swipeRecords.filter(r => r.status === "Approved" || r.status === "On Time" || r.status === "Present").length}
+              </span>
             </div>
 
             {/* Stat 2: Late Arrivals */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#c026d3" }} />
               <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Late Arrivals today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
+                {swipeRecords.filter(r => r.status === "Late").length}
+              </span>
             </div>
 
             {/* Stat 3: Employees on Leave today */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#84cc16" }} />
               <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Employees on Leave today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
+                {users.filter(u => (u.attendance || []).some(a => a.status === "Leave" || a.status === "On Leave")).length}
+              </span>
             </div>
 
             {/* Stat 4: Remote Clock-ins */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#f97316" }} />
               <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Remote Clock-ins today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>0</span>
+              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
+                {swipeRecords.filter(r => r.door && r.door.toLowerCase().includes("mobile")).length}
+              </span>
             </div>
           </div>
 

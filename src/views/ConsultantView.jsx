@@ -127,16 +127,23 @@ export default function ConsultantView({ activeTab }) {
     }
   }
 
-  // Generate July 2026 Calendar days
-  const generateJulyCalendar = () => {
+  // Dynamic Month Calendar Generator
+  const generateMonthCalendar = () => {
     const calendarDays = [];
-    // July 2026 starts on Wednesday, so Mon & Tue are empty paddings
-    calendarDays.push({ day: null, status: "empty" });
-    calendarDays.push({ day: null, status: "empty" });
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7; // Monday-based index
 
-    for (let d = 1; d <= 31; d++) {
-      const dateStr = `2026-07-${d < 10 ? "0" + d : d}`;
-      const isWeekOff = [6, 0].includes(new Date(2026, 6, d).getDay());
+    for (let i = 0; i < firstDayIndex; i++) {
+      calendarDays.push({ day: null, status: "empty" });
+    }
+
+    const todayDayNum = now.getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      const isWeekOff = [0, 6].includes(new Date(year, month, d).getDay());
       const record = myAttendance.find(a => a.date === dateStr);
       let status = "unmarked";
 
@@ -148,8 +155,8 @@ export default function ConsultantView({ activeTab }) {
         }
       } else if (isWeekOff) {
         status = "weekoff";
-      } else if (d < 19) {
-        status = "absent"; // Past weekdays without check-in are LOP absences
+      } else if (d < todayDayNum) {
+        status = "absent";
       }
 
       calendarDays.push({ day: d, dateStr, status });
@@ -157,7 +164,7 @@ export default function ConsultantView({ activeTab }) {
     return calendarDays;
   };
 
-  const calendarDays = generateJulyCalendar();
+  const calendarDays = generateMonthCalendar();
 
   // Filter expenses and advances submitted by this user
   const myExpenses = expenses.filter(e => e.employeeId === currentUser.id);

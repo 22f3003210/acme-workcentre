@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import LedgerReports from "../components/LedgerReports";
 import ProjectsView from "./ProjectsView";
@@ -342,7 +343,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
   // SEA Style Dashboard views & task states
   const [adminViewMode, setAdminViewMode] = useState("dashboard"); // 'dashboard', 'tasks'
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
-  const [showOnboardModal, setShowOnboardModal] = useState(false);
   const [activeExpenseTab, setActiveExpenseTab] = useState("manage_expenses"); // 'manage_expenses', 'manage_petty_cash'
   const [activePettyCashTab, setActivePettyCashTab] = useState("past_advances"); // 'past_advances', 'pending_payments'
   const [showDirectAdvanceModal, setShowDirectAdvanceModal] = useState(false);
@@ -352,8 +352,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [tasksBoardTab, setTasksBoardTab] = useState("Received"); // 'Received', 'Entrusted', 'Query Raised'
   const [taskFormTab, setTaskFormTab] = useState("task"); // 'task', 'query'
   const [taskDurationTab, setTaskDurationTab] = useState("One Time");
-  
-  // Create task form inputs
   const [newSubject, setNewSubject] = useState("");
   const [newDescription, setNewDescription] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
@@ -2156,7 +2154,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px" }}>
                   <h4 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#334155", margin: "0 0 16px 0" }}>Quicklinks</h4>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.83rem" }}>
-                    <button onClick={() => setShowOnboardModal(true)} style={{ background: "none", border: "none", color: "#4c478a", textAlign: "left", cursor: "pointer", fontWeight: "600" }}>+ New Employee</button>
+                    <button onClick={() => navigate('/employee/add')} style={{ background: "none", border: "none", color: "#4c478a", textAlign: "left", cursor: "pointer", fontWeight: "600" }}>+ New Employee</button>
                     <span style={{ color: "#64748b", cursor: "pointer" }}>Employee Custom Fields</span>
                     <span style={{ color: "#64748b", cursor: "pointer" }}>Org Directory</span>
                     <span style={{ color: "#64748b", cursor: "pointer" }}>Org Tree</span>
@@ -2189,131 +2187,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Onboard Staff Modal Overlay */}
-      {showOnboardModal && (
-        <div className="task-modal-overlay">
-          <div className="task-modal-card" style={{ maxWidth: "540px" }}>
-            <div className="task-modal-header">
-              <h3 style={{ margin: 0 }}>Onboard New Employee</h3>
-              <button
-                type="button"
-                onClick={() => setShowOnboardModal(false)}
-                style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleOnboardEmployee} className="luxury-form">
-              <p style={{ fontSize: "0.85rem", color: "#64748b", margin: "0 0 16px 0" }}>
-                Enter employee details below to add and save their record directly into the database.
-              </p>
-
-              <div className="form-group">
-                <label>Full Name *</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. Chaitanya Kumar" 
-                  value={empName} 
-                  onChange={(e) => setEmpName(e.target.value)} 
-                  required
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Email Address *</label>
-                  <input 
-                    type="email" 
-                    placeholder="employee@acmeconsulting.com" 
-                    value={empEmail} 
-                    onChange={(e) => setEmpEmail(e.target.value)} 
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Mobile Number (10 Digits) *</label>
-                  <input 
-                    type="text" 
-                    placeholder="Enter 10-digit mobile" 
-                    value={empPhone} 
-                    maxLength={10}
-                    onChange={(e) => setEmpPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} 
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Designation (Title)</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. Retail Jewellery BD Consultant" 
-                    value={empTitle} 
-                    onChange={(e) => setEmpTitle(e.target.value)} 
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Initial Cash Advance (₹)</label>
-                  <input 
-                    type="number" 
-                    placeholder="2000" 
-                    value={empAdvance} 
-                    onChange={(e) => setEmpAdvance(e.target.value)} 
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Department</label>
-                  <select value={empDept} onChange={(e) => setEmpDept(e.target.value)} className="luxury-select">
-                    {departments.length === 0 ? (
-                      <option value="">No departments added yet</option>
-                    ) : (
-                      departments.map((d, i) => {
-                        const name = typeof d === "string" ? d : d.name;
-                        return <option key={i} value={name}>{name}</option>;
-                      })
-                    )}
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label>Primary Site Location</label>
-                  <select value={empLocation} onChange={(e) => setEmpLocation(e.target.value)} className="luxury-select">
-                    <option value="Mumbai / Showroom Site">Mumbai / Showroom Site</option>
-                    <option value="Hyderabad / HQ">Hyderabad / HQ</option>
-                    <option value="Bengaluru / South Region">Bengaluru / South Region</option>
-                    <option value="Surat / Diamond Desk">Surat / Diamond Desk</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid #e2e8f0", paddingTop: "16px", marginTop: "16px" }}>
-                <button
-                  type="button"
-                  onClick={() => setShowOnboardModal(false)}
-                  className="luxury-button"
-                  style={{ backgroundColor: "transparent", border: "1px solid #cbd5e1", color: "#475569", padding: "8px 16px" }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="luxury-button"
-                  style={{ backgroundColor: "#2563eb", color: "#fff" }}
-                >
-                  Save Employee Record ➔
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
 

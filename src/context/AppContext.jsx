@@ -430,11 +430,9 @@ export const AppProvider = ({ children }) => {
         attendance_tracking: newUser.attendanceTracking,
         shift: newUser.shift,
         weekly_off: newUser.weeklyOff,
-        attendance_number: newUser.attendanceNumber,
         time_tracking_policy: newUser.timeTrackingPolicy,
-        penalization_policy: newUser.penalizationPolicy,
-        overtime_policy: newUser.overtimePolicy,
         expense_policy: newUser.expensePolicy,
+        advance_policy: newUser.advancePolicy,
         annual_ctc: newUser.annualCtc || 0,
         currency: newUser.currency || "INR"
       };

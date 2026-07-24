@@ -38,17 +38,13 @@ export default function AddEmployeeWizard() {
 
   // Step 3: Work Details
   const [inviteToLogin, setInviteToLogin] = useState(false);
-  const [enableOnboarding, setEnableOnboarding] = useState(true);
   const [leavePlan, setLeavePlan] = useState("Standard Leave Plan");
-  const [holidayList, setHolidayList] = useState("HBJ HOLIDAY - PLAN");
   const [attendanceTracking, setAttendanceTracking] = useState(true);
   const [shift, setShift] = useState("General Shift (9 AM - 6 PM)");
   const [weeklyOff, setWeeklyOff] = useState("Sunday");
-  const [attendanceNumber, setAttendanceNumber] = useState("");
   const [timeTrackingPolicy, setTimeTrackingPolicy] = useState("Attendance Capture Scheme");
-  const [penalizationPolicy, setPenalizationPolicy] = useState("New Penalisation Policy");
-  const [overtimePolicy, setOvertimePolicy] = useState("No Overtime");
   const [expensePolicy, setExpensePolicy] = useState("Standard Expense Policy");
+  const [advancePolicy, setAdvancePolicy] = useState("Standard Advance Policy");
 
   // Step 4: Compensation
   const [currency, setCurrency] = useState("INR");
@@ -139,11 +135,9 @@ export default function AddEmployeeWizard() {
       attendanceTracking,
       shift,
       weeklyOff,
-      attendanceNumber,
       timeTrackingPolicy,
-      penalizationPolicy,
-      overtimePolicy,
       expensePolicy,
+      advancePolicy,
       annualCtc: Number(annualCtc) || 0,
       currency
     };
@@ -404,11 +398,6 @@ export default function AddEmployeeWizard() {
                 <input type="checkbox" checked={inviteToLogin} onChange={e => setInviteToLogin(e.target.checked)} style={{ width: "16px", height: "16px", accentColor: "#5b50a1" }} />
                 Invite employee to login ℹ️
               </label>
-
-              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.88rem", color: "#1e293b", cursor: "pointer" }}>
-                <input type="checkbox" checked={enableOnboarding} onChange={e => setEnableOnboarding(e.target.checked)} style={{ width: "16px", height: "16px", accentColor: "#5b50a1" }} />
-                Enable onboarding flow ℹ️ <span style={{ color: "#5b50a1", fontWeight: "600", fontSize: "0.82rem", marginLeft: "8px" }}>Customise</span>
-              </label>
             </div>
 
             <h3 style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a", marginBottom: "16px" }}>Leave Settings</h3>
@@ -418,14 +407,6 @@ export default function AddEmployeeWizard() {
                 <select value={leavePlan} onChange={e => setLeavePlan(e.target.value)} style={selectStyle}>
                   <option value="Standard Leave Plan">Standard Leave Plan</option>
                   <option value="Executive Leave Plan">Executive Leave Plan</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={labelStyle}>Holiday List *</label>
-                <select value={holidayList} onChange={e => setHolidayList(e.target.value)} style={selectStyle}>
-                  <option value="HBJ HOLIDAY - PLAN">HBJ HOLIDAY - PLAN</option>
-                  <option value="Corporate Holiday List 2026">Corporate Holiday List 2026</option>
                 </select>
               </div>
             </div>
@@ -458,42 +439,30 @@ export default function AddEmployeeWizard() {
               </div>
 
               <div>
-                <label style={labelStyle}>Attendance Number</label>
-                <input type="text" placeholder="Attendance Number" value={attendanceNumber} onChange={e => setAttendanceNumber(e.target.value)} style={inputStyle} />
-              </div>
-
-              <div>
                 <label style={labelStyle}>Time Tracking Policy *</label>
                 <select value={timeTrackingPolicy} onChange={e => setTimeTrackingPolicy(e.target.value)} style={selectStyle}>
                   <option value="Attendance Capture Scheme">Attendance Capture Scheme</option>
                   <option value="Flexible Timing Policy">Flexible Timing Policy</option>
                 </select>
               </div>
-
-              <div>
-                <label style={labelStyle}>Penalization Policy *</label>
-                <select value={penalizationPolicy} onChange={e => setPenalizationPolicy(e.target.value)} style={selectStyle}>
-                  <option value="New Penalisation Policy">New Penalisation Policy</option>
-                  <option value="Standard Penalisation Policy">Standard Penalisation Policy</option>
-                </select>
-              </div>
-
-              <div>
-                <label style={labelStyle}>Overtime</label>
-                <select value={overtimePolicy} onChange={e => setOvertimePolicy(e.target.value)} style={selectStyle}>
-                  <option value="No Overtime">No Overtime</option>
-                  <option value="Standard Overtime Policy">Standard Overtime Policy</option>
-                </select>
-              </div>
             </div>
 
-            <h3 style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a", marginBottom: "16px" }}>Expense Settings</h3>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a", marginBottom: "16px" }}>Expense & Advance Settings</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", marginBottom: "32px" }}>
               <div>
                 <label style={labelStyle}>Expense Policy</label>
                 <select value={expensePolicy} onChange={e => setExpensePolicy(e.target.value)} style={selectStyle}>
                   <option value="Standard Expense Policy">Standard Expense Policy</option>
                   <option value="Executive Expense Policy">Executive Expense Policy</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Advance Policy</label>
+                <select value={advancePolicy} onChange={e => setAdvancePolicy(e.target.value)} style={selectStyle}>
+                  <option value="Standard Advance Policy">Standard Advance Policy (Up to ₹50,000)</option>
+                  <option value="Executive Advance Policy">Executive Advance Policy (Up to ₹2,000,000)</option>
+                  <option value="No Advance">No Advance Allowed</option>
                 </select>
               </div>
             </div>

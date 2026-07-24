@@ -72,6 +72,7 @@ ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS penalization_policy TEXT,
   ADD COLUMN IF NOT EXISTS overtime_policy TEXT,
   ADD COLUMN IF NOT EXISTS expense_policy TEXT,
+  ADD COLUMN IF NOT EXISTS advance_policy TEXT,
   ADD COLUMN IF NOT EXISTS annual_ctc NUMERIC DEFAULT 0,
   ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'INR';
 

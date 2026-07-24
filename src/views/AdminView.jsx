@@ -1212,12 +1212,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     <div style={{ fontSize: "0.68rem", fontWeight: "700", color: "#94a3b8", marginBottom: "3px", letterSpacing: "0.04em" }}>DEPARTMENT</div>
                     <select value={dirDeptFilter} onChange={e => setDirDeptFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#334155", background: "#ffffff", outline: "none" }}>
                       <option value="All">All Departments</option>
-                      <option value="Advisory">Advisory</option>
-                      <option value="IT & SYSTEMS SUPPORT">IT & SYSTEMS SUPPORT</option>
-                      <option value="ADMINISTRATION">ADMINISTRATION</option>
-                      <option value="PURCHASE">PURCHASE</option>
-                      <option value="SALES">SALES</option>
-                      <option value="CASHIER AND BILLING">CASHIER AND BILLING</option>
+                      {departments.map((d, i) => {
+                        const name = typeof d === "string" ? d : d.name;
+                        return <option key={i} value={name}>{name}</option>;
+                      })}
                     </select>
                   </div>
 
@@ -1763,12 +1761,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", background: "#ffffff", outline: "none" }}
                         >
                           <option value="All Departments">All Departments</option>
-                          <option value="Advisory">Advisory</option>
-                          <option value="IT & Systems Support">IT & Systems Support</option>
-                          <option value="Administration">Administration</option>
-                          <option value="Purchase">Purchase</option>
-                          <option value="Sales">Sales</option>
-                          <option value="Cashier and Billing">Cashier and Billing</option>
+                          {departments.map((d, i) => {
+                            const name = typeof d === "string" ? d : d.name;
+                            return <option key={i} value={name}>{name}</option>;
+                          })}
                         </select>
                       </div>
 
@@ -2336,10 +2332,14 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   <div className="form-group">
                     <label>Department</label>
                     <select value={empDept} onChange={(e) => setEmpDept(e.target.value)} className="luxury-select">
-                      <option value="Advisory">Advisory</option>
-                      <option value="Finance">Finance</option>
-                      <option value="Operations">Operations</option>
-                      <option value="Sales">Sales</option>
+                      {departments.length === 0 ? (
+                        <option value="">No departments added yet</option>
+                      ) : (
+                        departments.map((d, i) => {
+                          const name = typeof d === "string" ? d : d.name;
+                          return <option key={i} value={name}>{name}</option>;
+                        })
+                      )}
                     </select>
                   </div>
                   <div className="form-group">

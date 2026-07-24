@@ -22,9 +22,11 @@ export default function AdminView({ activeTab, setActiveTab }) {
     verifyAdvanceRequest,
     requestAdvance,
     jobTitles,
+    setJobTitles,
     addJobTitle,
     deleteJobTitle,
     numberSeries,
+    setNumberSeries,
     addNumberSeries,
     deleteNumberSeries,
     departments,
@@ -1458,7 +1460,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                   onClick={() => {
                                     const edited = prompt("Edit Job Title:", titleName);
                                     if (edited && edited.trim() !== "") {
-                                      setjobTitles(prev => prev.map(t => t === titleName ? edited.trim() : t));
+                                      setJobTitles(prev => prev.map(t => t === titleName ? edited.trim() : t));
                                     }
                                   }}
                                   style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
@@ -1470,7 +1472,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                   title="Delete Job Title"
                                   onClick={() => {
                                     if (confirm(`Remove "${titleName}" from Job Titles list?`)) {
-                                      setjobTitles(prev => prev.filter(t => t !== titleName));
+                                      deleteJobTitle(titleName);
                                     }
                                   }}
                                   style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: "0.9rem" }}
@@ -1499,7 +1501,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (newJobTitleInput.trim()) {
-                        setjobTitles(prev => [...prev, newJobTitleInput.trim()]);
                         addJobTitle(newJobTitleInput.trim());
                         setNewJobTitleInput("");
                         setShowAddJobTitleModal(false);
@@ -1647,7 +1648,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                 type="button"
                                 title="Toggle Active Status"
                                 onClick={() => {
-                                  setnumberSeries(prev => prev.map(s => s.id === item.id ? { ...s, status: s.status === "Active" ? "Inactive" : "Active" } : s));
+                                  setNumberSeries(prev => prev.map(s => s.id === item.id ? { ...s, status: s.status === "Active" ? "Inactive" : "Active" } : s));
                                 }}
                                 style={{ background: "none", border: "none", cursor: "pointer", color: item.status === "Active" ? "#2563eb" : "#94a3b8", fontSize: "0.9rem" }}
                               >
@@ -1659,7 +1660,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                 onClick={() => {
                                   const edited = prompt("Edit Series Name:", item.seriesName);
                                   if (edited && edited.trim()) {
-                                    setnumberSeries(prev => prev.map(s => s.id === item.id ? { ...s, seriesName: edited.trim() } : s));
+                                    setNumberSeries(prev => prev.map(s => s.id === item.id ? { ...s, seriesName: edited.trim() } : s));
                                   }
                                 }}
                                 style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
@@ -1704,7 +1705,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           department: newSeriesForm.department,
                           status: newSeriesForm.status ? "Active" : "Inactive"
                         };
-                        setnumberSeries(prev => [...prev, newEntry]);
                         addNumberSeries(newEntry);
                         setNewSeriesForm({
                           seriesName: "",
@@ -1925,7 +1925,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             type="button"
                             onClick={() => {
                               if (confirm(`Remove "${name}" department?`)) {
-                                setdepartments(prev => prev.filter(d => (typeof d === "string" ? d : d.name) !== name));
                                 deleteDepartment(name);
                               }
                             }}
@@ -1957,7 +1956,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       if (newDeptNameInput.trim()) {
-                        setdepartments(prev => [...prev, newDeptNameInput.trim()]);
                         addDepartment(newDeptNameInput.trim());
                         setNewDeptNameInput("");
                         setShowAddDeptModal(false);

@@ -8,6 +8,7 @@ import {
   initialHiringRequisitions,
   initialCandidates
 } from "../data/initialData";
+import { supabase, isSupabaseConfigured } from "../lib/supabaseClient";
 
 const AppContext = createContext();
 
@@ -102,6 +103,31 @@ export const AppProvider = ({ children }) => {
   });
 
   const [toast, setToast] = useState(null);
+
+  // Supabase Initial User Fetch
+  useEffect(() => {
+    if (isSupabaseConfigured()) {
+      supabase.from("users").select("*").then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          const mappedUsers = data.map(dbU => ({
+            id: dbU.id,
+            empCode: dbU.emp_code || dbU.empCode || `HBJ${Math.floor(10000 + Math.random() * 90000)}`,
+            name: dbU.name,
+            email: dbU.email,
+            phone: dbU.phone,
+            role: dbU.role,
+            title: dbU.title,
+            department: dbU.department,
+            location: dbU.location,
+            status: dbU.status || "Active",
+            avatar: dbU.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbU.name)}`,
+            advanceAmount: Number(dbU.advance_amount) || 0
+          }));
+          setUsers(mappedUsers);
+        }
+      });
+    }
+  }, []);
 
   // Sync to localStorage
   useEffect(() => {
@@ -216,8 +242,10 @@ export const AppProvider = ({ children }) => {
   // Employee Directory CRUD (Admin Only)
   const addUser = (userData) => {
     const newId = `${userData.role.toLowerCase().replace(" ", "")}-${Date.now()}`;
+    const empCode = userData.empCode || `HBJ${Math.floor(10000 + Math.random() * 90000)}`;
     const newUser = {
       id: newId,
+      empCode,
       avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.name)}`,
       lastLogin: "",
       attendance: userData.role === "Consultant" ? [] : undefined,
@@ -225,6 +253,26 @@ export const AppProvider = ({ children }) => {
       ...userData
     };
     setUsers(prev => [...prev, newUser]);
+
+    if (isSupabaseConfigured()) {
+      supabase.from("users").insert([{
+        id: newUser.id,
+        emp_code: newUser.empCode,
+        name: newUser.name,
+        email: newUser.email,
+        phone: newUser.phone,
+        role: newUser.role,
+        title: newUser.title,
+        department: newUser.department,
+        location: newUser.location,
+        status: newUser.status || "Active",
+        avatar: newUser.avatar,
+        advance_amount: newUser.advanceAmount || 0
+      }]).then(({ error }) => {
+        if (error) console.error("Supabase insert user error:", error);
+      });
+    }
+
     return newUser;
   };
 
@@ -232,8 +280,10 @@ export const AppProvider = ({ children }) => {
   const onboardConsultantInvite = (primaryData) => {
     const inviteToken = `INV-${Math.floor(10000 + Math.random() * 90000)}`;
     const newId = `consultant-${Date.now()}`;
+    const empCode = `HBJ${Math.floor(10000 + Math.random() * 90000)}`;
     const newUser = {
       id: newId,
+      empCode,
       name: primaryData.name,
       email: primaryData.email,
       phone: (primaryData.phone || "").replace(/\D/g, "").slice(0, 10),
@@ -250,6 +300,26 @@ export const AppProvider = ({ children }) => {
     };
 
     setUsers(prev => [...prev, newUser]);
+
+    if (isSupabaseConfigured()) {
+      supabase.from("users").insert([{
+        id: newUser.id,
+        emp_code: newUser.empCode,
+        name: newUser.name,
+        email: newUser.email,
+        phone: newUser.phone,
+        role: newUser.role,
+        title: newUser.title,
+        department: newUser.department,
+        location: newUser.location,
+        status: newUser.status,
+        avatar: newUser.avatar,
+        advance_amount: newUser.advanceAmount
+      }]).then(({ error }) => {
+        if (error) console.error("Supabase insert invite user error:", error);
+      });
+    }
+
     return {
       user: newUser,
       inviteToken,
@@ -278,6 +348,15 @@ export const AppProvider = ({ children }) => {
     }));
 
     if (updatedUser) {
+      if (isSupabaseConfigured()) {
+        supabase.from("users").update({
+          status: "Active",
+          location: updatedUser.location
+        }).eq("id", updatedUser.id).then(({ error }) => {
+          if (error) console.error("Supabase update registration error:", error);
+        });
+      }
+
       setCurrentUser(updatedUser);
       setIsAuthenticated(true);
       return true;
@@ -288,6 +367,13 @@ export const AppProvider = ({ children }) => {
   const deleteUser = (userId) => {
     if (currentUser.id === userId) return false; // Prevent deleting active session
     setUsers(prev => prev.filter(u => u.id !== userId));
+
+    if (isSupabaseConfigured()) {
+      supabase.from("users").delete().eq("id", userId).then(({ error }) => {
+        if (error) console.error("Supabase delete user error:", error);
+      });
+    }
+
     return true;
   };
 

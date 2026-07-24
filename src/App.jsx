@@ -14,6 +14,13 @@ export const getRoutePath = (tabId) => {
   switch (tabId) {
     case "dashboard": return "/dashboard";
     case "directory": return "/employee/directory";
+    case "job-titles": return "/employee/job-titles";
+    case "number-series": return "/employee/number-series";
+    case "departments": return "/employee/departments";
+    case "org-tree": return "/employee/org-tree";
+    case "logins": return "/employee/logins";
+    case "profile-changes": return "/employee/profile-changes";
+    case "probation": return "/employee/probation";
     case "reports":
     case "expenses": return "/expenses";
     case "attendance":
@@ -30,6 +37,13 @@ export const getRoutePath = (tabId) => {
 const getTabFromPath = (pathname, role) => {
   const p = pathname.toLowerCase().replace(/\/$/, "");
   if (p === "" || p === "/" || p.includes("dashboard")) return role === "Consultant" ? "punch" : "dashboard";
+  if (p.includes("job-titles")) return "job-titles";
+  if (p.includes("number-series")) return "number-series";
+  if (p.includes("departments")) return "departments";
+  if (p.includes("org-tree")) return "org-tree";
+  if (p.includes("logins")) return "logins";
+  if (p.includes("profile-changes")) return "profile-changes";
+  if (p.includes("probation")) return "probation";
   if (p.includes("projects")) return "projects";
   if (p.includes("expenses") || p.includes("payroll") || p.includes("reports")) return role === "Consultant" ? "expenses" : "reports";
   if (p.includes("employee") || p.includes("directory")) return "directory";
@@ -103,6 +117,13 @@ function AppRoutes() {
       <Route path="/dashboard" element={<MainWorkspace initialTab="dashboard" />} />
       <Route path="/employee" element={<MainWorkspace initialTab="directory" />} />
       <Route path="/employee/directory" element={<MainWorkspace initialTab="directory" />} />
+      <Route path="/employee/job-titles" element={<MainWorkspace initialTab="job-titles" />} />
+      <Route path="/employee/number-series" element={<MainWorkspace initialTab="number-series" />} />
+      <Route path="/employee/departments" element={<MainWorkspace initialTab="departments" />} />
+      <Route path="/employee/org-tree" element={<MainWorkspace initialTab="org-tree" />} />
+      <Route path="/employee/logins" element={<MainWorkspace initialTab="logins" />} />
+      <Route path="/employee/profile-changes" element={<MainWorkspace initialTab="profile-changes" />} />
+      <Route path="/employee/probation" element={<MainWorkspace initialTab="probation" />} />
       <Route path="/payroll" element={<MainWorkspace initialTab="reports" />} />
       <Route path="/expenses" element={<MainWorkspace initialTab="reports" />} />
       <Route path="/time/attendance" element={<MainWorkspace initialTab="attendance" />} />

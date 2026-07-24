@@ -60,6 +60,46 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [hrEmployeesSubTab, setHrEmployeesSubTab] = useState("Employee Directory");
   const [hrDashboardSubTab, setHrDashboardSubTab] = useState("Summary");
 
+  // Sync route activeTab prop to HR sub-tabs
+  React.useEffect(() => {
+    switch (activeTab) {
+      case "departments":
+        setHrMainTab("EMPLOYEES");
+        setHrEmployeesSubTab("Departments");
+        break;
+      case "job-titles":
+        setHrMainTab("EMPLOYEES");
+        setHrEmployeesSubTab("Job Titles");
+        break;
+      case "number-series":
+        setHrMainTab("EMPLOYEES");
+        setHrEmployeesSubTab("Employee Code");
+        break;
+      case "directory":
+        setHrMainTab("EMPLOYEES");
+        setHrEmployeesSubTab("Employee Directory");
+        break;
+      case "org-tree":
+        setHrMainTab("EMPLOYEES");
+        setHrEmployeesSubTab("Organization Tree");
+        break;
+      case "logins":
+        setHrMainTab("EMPLOYEES");
+        setHrEmployeesSubTab("Logins");
+        break;
+      case "profile-changes":
+        setHrMainTab("EMPLOYEES");
+        setHrEmployeesSubTab("Profile Changes");
+        break;
+      case "probation":
+        setHrMainTab("EMPLOYEES");
+        setHrEmployeesSubTab("Probation");
+        break;
+      default:
+        break;
+    }
+  }, [activeTab]);
+
   const [dirSearchQuery, setDirSearchQuery] = useState("");
   const [dirBusinessUnit, setDirBusinessUnit] = useState("Unassigned");
   const [dirDeptFilter, setDirDeptFilter] = useState("All");
@@ -1150,7 +1190,22 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     <button
                       key={subTab}
                       type="button"
-                      onClick={() => setHrEmployeesSubTab(subTab)}
+                      onClick={() => {
+                        setHrEmployeesSubTab(subTab);
+                        if (setActiveTab) {
+                          const tabIdMap = {
+                            "Employee Directory": "directory",
+                            "Job Titles": "job-titles",
+                            "Employee Code": "number-series",
+                            "Departments": "departments",
+                            "Organization Tree": "org-tree",
+                            "Logins": "logins",
+                            "Profile Changes": "profile-changes",
+                            "Probation": "probation"
+                          };
+                          setActiveTab(tabIdMap[subTab] || "directory");
+                        }
+                      }}
                       style={{
                         padding: "4px 0 8px 0",
                         background: "none",

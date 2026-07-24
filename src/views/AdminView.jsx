@@ -1027,7 +1027,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
         <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
           
           {/* Double-Tier Sub-Navigation Header Bar (Matching Reference Screenshots 1 & 2) */}
-          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", margin: "-12px 0 4px 0", padding: "0 20px" }}>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", margin: "-28px 0 4px 0", padding: "0 20px" }}>
             
             {/* Row 1: Module Main Tabs */}
             <div style={{ display: "flex", alignItems: "center", gap: "24px", borderBottom: "1px solid #e2e8f0", overflowX: "auto" }}>
@@ -1040,7 +1040,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 "EXPENSES & TRAVEL",
                 "DOCUMENTS",
                 "ENGAGE",
-                "ASSETS",
                 "SETTINGS"
               ].map(tab => {
                 const isActive = hrMainTab === tab;
@@ -1105,11 +1104,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   "Employee Directory",
                   "Organization Tree",
                   "Logins",
-                  "Contingent Staff",
                   "Profile Changes",
-                  "Private Profiles",
-                  "Probation",
-                  "Settings"
+                  "Probation"
                 ].map(subTab => {
                   const isActive = hrEmployeesSubTab === subTab;
                   return (

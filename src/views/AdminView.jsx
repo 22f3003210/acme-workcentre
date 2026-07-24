@@ -1418,7 +1418,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 </div>
 
                 <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "8px", fontSize: "0.78rem", color: "#64748b" }}>
-                  <span>Total: {jobTitles.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).length}</span>
+                  <span>Total: {jobTitles.filter(t => {
+                    const name = typeof t === "string" ? t : (t.titleName || t.name || "");
+                    return !jobTitleSearchQuery || name.toLowerCase().includes(jobTitleSearchQuery.toLowerCase());
+                  }).length}</span>
                   <span style={{ cursor: "pointer", color: "#64748b", fontWeight: "700" }}>⋮</span>
                 </div>
               </div>
@@ -1434,14 +1437,22 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {jobTitles.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).length === 0 ? (
+                    {jobTitles.filter(t => {
+                      const name = typeof t === "string" ? t : (t.titleName || t.name || "");
+                      return !jobTitleSearchQuery || name.toLowerCase().includes(jobTitleSearchQuery.toLowerCase());
+                    }).length === 0 ? (
                       <tr>
                         <td colSpan={3} style={{ padding: "32px", textAlign: "center", color: "#64748b" }}>
                           No Job Titles found. Click <strong>+ Add Job Title</strong> to add one.
                         </td>
                       </tr>
                     ) : (
-                      jobTitles.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).map((titleName, idx) => {
+                      jobTitles.filter(t => {
+                        const name = typeof t === "string" ? t : (t.titleName || t.name || "");
+                        return !jobTitleSearchQuery || name.toLowerCase().includes(jobTitleSearchQuery.toLowerCase());
+                      }).map((jtItem, idx) => {
+                        const titleName = typeof jtItem === "string" ? jtItem : (jtItem.titleName || jtItem.name || "");
+                        const titleId = typeof jtItem === "string" ? jtItem : (jtItem.id || jtItem.titleName || jtItem.name);
                         const count = users.filter(u => (u.title || "").toLowerCase() === titleName.toLowerCase() || (u.role || "").toLowerCase() === titleName.toLowerCase()).length;
                         return (
                           <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
@@ -1460,7 +1471,13 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                   onClick={() => {
                                     const edited = prompt("Edit Job Title:", titleName);
                                     if (edited && edited.trim() !== "") {
-                                      setJobTitles(prev => prev.map(t => t === titleName ? edited.trim() : t));
+                                      setJobTitles(prev => prev.map(t => {
+                                        const curName = typeof t === "string" ? t : (t.titleName || t.name || "");
+                                        if (curName === titleName) {
+                                          return typeof t === "string" ? edited.trim() : { ...t, titleName: edited.trim() };
+                                        }
+                                        return t;
+                                      }));
                                     }
                                   }}
                                   style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
@@ -1472,7 +1489,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                   title="Delete Job Title"
                                   onClick={() => {
                                     if (confirm(`Remove "${titleName}" from Job Titles list?`)) {
-                                      deleteJobTitle(titleName);
+                                      deleteJobTitle(titleId || titleName);
                                     }
                                   }}
                                   style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: "0.9rem" }}

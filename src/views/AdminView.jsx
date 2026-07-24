@@ -4651,7 +4651,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                     <button
                                       onClick={() => {
                                         if (confirm(`Approve cash refill of ₹${r.amount} for ${emp.name}?`)) {
-                                          verifyAdvanceRequest(r.id, "Approved", currentUser.name);
+                                          verifyAdvanceRequest(r.id, "Approved", currentUser?.name || "Admin");
                                           setToast({ message: "Petty cash advance request approved!", type: "success" });
                                         }
                                       }}
@@ -4663,7 +4663,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                     <button
                                       onClick={() => {
                                         if (confirm(`Reject cash refill request of ₹${r.amount} for ${emp.name}?`)) {
-                                          verifyAdvanceRequest(r.id, "Rejected", currentUser.name);
+                                          verifyAdvanceRequest(r.id, "Rejected", currentUser?.name || "Admin");
                                           setToast({ message: "Refill request rejected.", type: "info" });
                                         }
                                       }}

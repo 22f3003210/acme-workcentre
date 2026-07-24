@@ -105,7 +105,8 @@ export const AppProvider = ({ children }) => {
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem("workcentre_authenticated") === "true";
+    const saved = localStorage.getItem("workcentre_authenticated");
+    return saved !== null ? saved === "true" : true;
   });
 
   const [toast, setToast] = useState(null);

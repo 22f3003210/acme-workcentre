@@ -1105,7 +1105,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   "Organization Tree",
                   "Logins",
                   "Profile Changes",
-                  "Probation"
+                  "Probation",
+                  "Job Titles",
+                  "Employee Code",
+                  "Departments"
                 ].map(subTab => {
                   const isActive = hrEmployeesSubTab === subTab;
                   return (
@@ -1323,6 +1326,123 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             View Profile
                           </button>
                         </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* VIEW: EMPLOYEES -> Job Titles */}
+          {hrMainTab === "EMPLOYEES" && hrEmployeesSubTab === "Job Titles" && (
+            <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Job Titles & Designations</h3>
+                <button
+                  onClick={() => setShowOnboardModal(true)}
+                  style={{ backgroundColor: "#4c478a", color: "#ffffff", padding: "8px 18px", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer", fontSize: "0.82rem" }}
+                >
+                  + Add Job Title
+                </button>
+              </div>
+
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #cbd5e1", color: "#475569", textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: "0.04em" }}>
+                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Job Title</th>
+                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Department</th>
+                      <th style={{ padding: "12px 16px", textAlign: "center" }}>Assigned Employees</th>
+                      <th style={{ padding: "12px 16px", textAlign: "center" }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Array.from(new Set(users.map(u => u.title || `${u.role} Lead`))).map((title, idx) => {
+                      const count = users.filter(u => (u.title || `${u.role} Lead`) === title).length;
+                      const sampleDept = users.find(u => (u.title || `${u.role} Lead`) === title)?.department || "Advisory";
+                      return (
+                        <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "12px 16px", fontWeight: "600", color: "#0f172a" }}>{title}</td>
+                          <td style={{ padding: "12px 16px", color: "#475569" }}>{sampleDept}</td>
+                          <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                            <span style={{ background: "#f5f3ff", color: "#4c478a", padding: "3px 10px", borderRadius: "12px", fontWeight: "600", fontSize: "0.76rem" }}>{count}</span>
+                          </td>
+                          <td style={{ padding: "12px 16px", textAlign: "center" }}>
+                            <span style={{ color: "#16a34a", fontWeight: "600", fontSize: "0.76rem" }}>Active</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* VIEW: EMPLOYEES -> Employee Code */}
+          {hrMainTab === "EMPLOYEES" && hrEmployeesSubTab === "Employee Code" && (
+            <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Employee Code Directory</h3>
+                <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Format Prefix: <strong>ACME / HBJ</strong></span>
+              </div>
+
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #cbd5e1", color: "#475569", textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: "0.04em" }}>
+                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Employee Code</th>
+                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Employee Name</th>
+                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Role</th>
+                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Department</th>
+                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Location</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => (
+                      <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ padding: "12px 16px", fontWeight: "700", color: "#4c478a", fontFamily: "monospace" }}>{u.empCode || `ACME00${u.id.substring(0, 3)}`}</td>
+                        <td style={{ padding: "12px 16px", fontWeight: "600", color: "#0f172a" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <img src={u.avatar} alt={u.name} style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover" }} />
+                            <span>{u.name}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: "12px 16px", color: "#475569" }}>{u.role}</td>
+                        <td style={{ padding: "12px 16px", color: "#475569" }}>{u.department || "Advisory"}</td>
+                        <td style={{ padding: "12px 16px", color: "#475569" }}>{u.location || "Hyderabad"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* VIEW: EMPLOYEES -> Departments */}
+          {hrMainTab === "EMPLOYEES" && hrEmployeesSubTab === "Departments" && (
+            <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Departments & Units</h3>
+                <button
+                  onClick={() => setShowOnboardModal(true)}
+                  style={{ backgroundColor: "#4c478a", color: "#ffffff", padding: "8px 18px", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer", fontSize: "0.82rem" }}
+                >
+                  + Add Department
+                </button>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+                {["Advisory", "IT & Systems Support", "Administration", "Purchase", "Sales", "Cashier and Billing"].map((dept, idx) => {
+                  const count = users.filter(u => u.department && u.department.toLowerCase() === dept.toLowerCase()).length;
+                  return (
+                    <div key={idx} style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                      <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.04em" }}>DEPARTMENT</div>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a", margin: "4px 0 12px 0" }}>{dept}</h4>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
+                        <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Active Members</span>
+                        <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#4c478a" }}>{count}</span>
                       </div>
                     </div>
                   );

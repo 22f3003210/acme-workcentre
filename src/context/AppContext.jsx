@@ -133,7 +133,8 @@ export const AppProvider = ({ children }) => {
               avatar: dbU.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbU.name)}`,
               advanceAmount: Number(dbU.advance_amount) || 0,
               shift: dbU.shift || "",
-              weeklyOff: dbU.weekly_off || ""
+              weeklyOff: dbU.weekly_off || "",
+              reportingManager: dbU.reporting_manager || ""
             }));
             setUsers(mappedUsers);
           }
@@ -439,6 +440,7 @@ export const AppProvider = ({ children }) => {
         role: newUser.role || "Consultant",
         title: newUser.title,
         department: newUser.department,
+        reporting_manager: newUser.reportingManager || "",
         location: newUser.location,
         status: newUser.status || "Active",
         avatar: newUser.avatar,

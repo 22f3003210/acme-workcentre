@@ -5,6 +5,7 @@ import { useApp } from "../context/AppContext";
 export default function AddEmployeeWizard() {
   const navigate = useNavigate();
   const {
+    users,
     jobTitles,
     departments,
     numberSeries,
@@ -36,6 +37,7 @@ export default function AddEmployeeWizard() {
   const [secondaryJobTitle, setSecondaryJobTitle] = useState("");
   const [showSecondaryJobTitle, setShowSecondaryJobTitle] = useState(false);
   const [department, setDepartment] = useState("");
+  const [reportingManager, setReportingManager] = useState("");
   const [timeType, setTimeType] = useState("Full Time");
 
   // Step 3: Work Details
@@ -128,6 +130,7 @@ export default function AddEmployeeWizard() {
       nationality,
       workCountry,
       joiningDate,
+      reportingManager,
       timeType,
       secondaryJobTitle,
       inviteToLogin,
@@ -371,6 +374,16 @@ export default function AddEmployeeWizard() {
                     const name = typeof d === "string" ? d : (d.dept_name || d.name);
                     return <option key={idx} value={name}>{name}</option>;
                   })}
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Reporting Manager</label>
+                <select value={reportingManager} onChange={e => setReportingManager(e.target.value)} style={selectStyle}>
+                  <option value="">Select Reporting Manager</option>
+                  {users.map((u, idx) => (
+                    <option key={idx} value={u.name}>{u.name} ({u.title || u.role})</option>
+                  ))}
                 </select>
               </div>
 

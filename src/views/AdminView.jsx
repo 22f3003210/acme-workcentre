@@ -3648,9 +3648,9 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                               <div>{u.name}</div>
                                               <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{u.title || u.role}</div>
                                             </td>
-                                            <td style={{ padding: "10px 14px", color: "#475569" }}>{u.role === "Admin" ? "2" : `HBJ0000${userIndex + 1}`}</td>
-                                            <td style={{ padding: "10px 14px", color: "#475569" }}>{userIndex === 0 ? "Not Available" : userIndex % 2 === 0 ? "PURCHASE" : "ADMINISTRATION"}</td>
-                                            <td style={{ padding: "10px 14px", color: "#475569" }}>Shabbir Vasaya</td>
+                                            <td style={{ padding: "10px 14px", color: "#475569" }}>{u.empCode || u.emp_code || `EMP-${userIndex + 1}`}</td>
+                                            <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "—"}</td>
+                                            <td style={{ padding: "10px 14px", color: "#475569" }}>{u.reportingManager || u.reporting_manager || "—"}</td>
                                           </tr>
                                         );
                                       })}
@@ -3867,9 +3867,9 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                               <div>{u.name}</div>
                                               <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{u.title || u.role}</div>
                                             </td>
-                                            <td style={{ padding: "10px 14px", color: "#475569" }}>{u.role === "Admin" ? "2" : `HBJ0000${userIndex + 1}`}</td>
-                                            <td style={{ padding: "10px 14px", color: "#475569" }}>{userIndex === 0 ? "Not Available" : userIndex % 2 === 0 ? "PURCHASE" : "ADMINISTRATION"}</td>
-                                            <td style={{ padding: "10px 14px", color: "#475569" }}>Shabbir Vasaya</td>
+                                            <td style={{ padding: "10px 14px", color: "#475569" }}>{u.empCode || u.emp_code || `EMP-${userIndex + 1}`}</td>
+                                            <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "—"}</td>
+                                            <td style={{ padding: "10px 14px", color: "#475569" }}>{u.reportingManager || u.reporting_manager || "—"}</td>
                                           </tr>
                                         );
                                       })}
@@ -4014,7 +4014,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                     </td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>{u.empCode || u.emp_code || `EMP-${idx + 1}`}</td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "General"}</td>
-                                    <td style={{ padding: "10px 14px", color: "#475569" }}>Reporting Manager</td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>{u.reportingManager || u.reporting_manager || "—"}</td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>
                                       <span style={{ fontWeight: u.shift ? "600" : "400", color: u.shift ? "#2563eb" : "#475569" }}>
                                         {assignedShift}

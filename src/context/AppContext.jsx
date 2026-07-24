@@ -417,18 +417,31 @@ export const AppProvider = ({ children }) => {
 
   // Employee Directory CRUD (Admin Only)
   const addUser = async (userData) => {
-    const newId = `${(userData.role || "employee").toLowerCase().replace(/\s+/g, "")}-${Date.now()}`;
+    const newId = userData.id || `emp-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`;
     const empCode = userData.empCode || `EMP-${Date.now().toString().slice(-4)}`;
+    const userEmail = userData.email ? userData.email.trim().toLowerCase() : `employee_${Date.now()}@acme.com`;
+    const userName = userData.name || `${userData.firstName || ""} ${userData.lastName || ""}`.trim() || "Employee";
+
     const newUser = {
       id: newId,
       empCode,
-      avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.name || "Employee")}`,
+      avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userName)}`,
       lastLogin: "",
       attendance: userData.role === "Consultant" ? [] : undefined,
       advanceAmount: userData.role === "Consultant" ? (parseFloat(userData.advanceAmount) || 0) : undefined,
-      ...userData
+      ...userData,
+      id: newId,
+      name: userName,
+      email: userEmail
     };
-    setUsers(prev => [...prev, newUser]);
+
+    setUsers(prev => {
+      const exists = prev.some(u => u.id === newUser.id || u.email === newUser.email);
+      if (exists) {
+        return prev.map(u => (u.id === newUser.id || u.email === newUser.email) ? { ...u, ...newUser } : u);
+      }
+      return [...prev, newUser];
+    });
 
     if (isSupabaseConfigured()) {
       const payload = {
@@ -436,40 +449,41 @@ export const AppProvider = ({ children }) => {
         emp_code: newUser.empCode,
         name: newUser.name,
         email: newUser.email,
-        phone: newUser.phone,
+        phone: newUser.phone || "",
         role: newUser.role || "Consultant",
-        title: newUser.title,
-        department: newUser.department,
+        title: newUser.title || "Consultant",
+        department: newUser.department || "General",
         reporting_manager: newUser.reportingManager || "",
-        location: newUser.location,
+        location: newUser.location || "Mumbai / HQ",
         status: newUser.status || "Active",
         avatar: newUser.avatar,
-        advance_amount: newUser.advanceAmount || 0,
-        joining_date: newUser.joiningDate || "",
+        advance_amount: Number(newUser.advanceAmount) || 0,
+        joining_date: newUser.joiningDate && newUser.joiningDate.trim() !== "" ? newUser.joiningDate : null,
+        dob: newUser.dob && newUser.dob.trim() !== "" ? newUser.dob : null,
         shift: newUser.shift || "",
         weekly_off: newUser.weeklyOff || "",
-        annual_ctc: newUser.annualCtc || 0,
+        annual_ctc: Number(newUser.annualCtc) || 0,
         currency: newUser.currency || "INR"
       };
 
-      const { error } = await supabase.from("users").insert([payload]);
+      const { error } = await supabase.from("users").upsert([payload], { onConflict: "id" });
       if (error) {
-        console.error("Supabase full insert user error:", error);
-        // Fallback insert with core columns in case extended columns are missing in remote DB
+        console.error("Supabase full upsert user error:", error);
+        // Fallback upsert with core columns in case extended columns are missing in remote DB
         const corePayload = {
           id: newUser.id,
           emp_code: newUser.empCode,
           name: newUser.name,
           email: newUser.email,
-          phone: newUser.phone,
+          phone: newUser.phone || "",
           role: newUser.role || "Consultant",
-          title: newUser.title,
-          department: newUser.department,
-          location: newUser.location,
+          title: newUser.title || "Consultant",
+          department: newUser.department || "General",
+          location: newUser.location || "Mumbai / HQ",
           status: newUser.status || "Active"
         };
-        const { error: coreErr } = await supabase.from("users").insert([corePayload]);
-        if (coreErr) console.error("Supabase core insert error:", coreErr);
+        const { error: coreErr } = await supabase.from("users").upsert([corePayload], { onConflict: "id" });
+        if (coreErr) console.error("Supabase core upsert error:", coreErr);
       }
     }
 

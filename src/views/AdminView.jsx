@@ -63,6 +63,35 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
   // Workforce Sub-Navigation Header State (Matching Reference Screenshot)
   const [subModuleTab, setSubModuleTab] = useState("DASHBOARD");
+
+  useEffect(() => {
+    if (activeTab === "time-dashboard" || activeTab === "attendance") {
+      setSubModuleTab("DASHBOARD");
+    } else if (activeTab === "time-approvals") {
+      setSubModuleTab("APPROVALS");
+    } else if (activeTab === "time-shifts") {
+      setSubModuleTab("SHIFTS");
+      setShiftsSubTab("Shift & Weekly Offs");
+      setShiftsInnerTab("Shifts");
+    } else if (activeTab === "time-assignments") {
+      setSubModuleTab("SHIFTS");
+      setShiftsSubTab("Assignments");
+    } else if (activeTab === "time-weekly-offs") {
+      setSubModuleTab("SHIFTS");
+      setShiftsSubTab("Shift & Weekly Offs");
+      setShiftsInnerTab("Weekly Offs");
+    } else if (activeTab === "time-shift-rules") {
+      setSubModuleTab("SHIFTS");
+      setShiftsSubTab("Shift & Weekly Offs");
+      setShiftsInnerTab("Shift & Weekly Off Rules");
+    } else if (activeTab === "time-leave") {
+      setSubModuleTab("LEAVE");
+    } else if (activeTab === "time-reports") {
+      setSubModuleTab("REPORTS");
+    } else if (activeTab === "time-settings") {
+      setSubModuleTab("SETTINGS");
+    }
+  }, [activeTab]);
   const [dashboardSubTab, setDashboardSubTab] = useState("Attendance Summary");
 
   // HR Module Double-Tier Navigation State (Matching Reference Screenshots 1 & 2)
@@ -2457,7 +2486,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
         <RecruiterView />
       )}
 
-      {activeTab === "attendance" && (
+      {["attendance", "time-dashboard", "time-approvals", "time-shifts", "time-assignments", "time-weekly-offs", "time-shift-rules", "time-leave", "time-reports", "time-settings"].includes(activeTab) && (
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           
           {/* Double-Tier Sub-Navigation Header Bar (Matching Reference Screenshot) */}
@@ -2481,7 +2510,17 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   <button
                     key={tab.id}
                     type="button"
-                    onClick={() => setSubModuleTab(tab.id)}
+                    onClick={() => {
+                      setSubModuleTab(tab.id);
+                      if (setActiveTab) {
+                        if (tab.id === "DASHBOARD") setActiveTab("time-dashboard");
+                        else if (tab.id === "APPROVALS") setActiveTab("time-approvals");
+                        else if (tab.id === "SHIFTS") setActiveTab("time-shifts");
+                        else if (tab.id === "LEAVE") setActiveTab("time-leave");
+                        else if (tab.id === "REPORTS") setActiveTab("time-reports");
+                        else if (tab.id === "SETTINGS") setActiveTab("time-settings");
+                      }
+                    }}
                     style={{
                       padding: "12px 0",
                       background: "none",
@@ -2556,7 +2595,13 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     <button
                       key={subTab}
                       type="button"
-                      onClick={() => setShiftsSubTab(subTab)}
+                      onClick={() => {
+                        setShiftsSubTab(subTab);
+                        if (setActiveTab) {
+                          if (subTab === "Assignments") setActiveTab("time-assignments");
+                          else setActiveTab("time-shifts");
+                        }
+                      }}
                       style={{
                         padding: "4px 0 8px 0",
                         background: "none",
@@ -3430,7 +3475,14 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     <button
                       key={tab}
                       type="button"
-                      onClick={() => setShiftsInnerTab(tab)}
+                      onClick={() => {
+                        setShiftsInnerTab(tab);
+                        if (setActiveTab) {
+                          if (tab === "Weekly Offs") setActiveTab("time-weekly-offs");
+                          else if (tab === "Shift & Weekly Off Rules") setActiveTab("time-shift-rules");
+                          else setActiveTab("time-shifts");
+                        }
+                      }}
                       style={{
                         padding: "6px 14px",
                         background: isActive ? "#f3e8ff" : "#ffffff",

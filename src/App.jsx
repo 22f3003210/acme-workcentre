@@ -11,6 +11,7 @@ import RegisterView from "./views/RegisterView";
 import AddEmployeeWizard from "./views/AddEmployeeWizard";
 
 // Clean Production Route Path Mapping
+// Clean Production Route Path Mapping
 export const getRoutePath = (tabId) => {
   switch (tabId) {
     case "dashboard": return "/dashboard";
@@ -23,9 +24,17 @@ export const getRoutePath = (tabId) => {
     case "logins": return "/employee/logins";
     case "profile-changes": return "/employee/profile-changes";
     case "probation": return "/employee/probation";
-    case "reports":
     case "expenses": return "/expenses";
     case "attendance":
+    case "time-dashboard": return "/time/dashboard";
+    case "time-approvals": return "/time/approvals";
+    case "time-shifts": return "/time/shifts";
+    case "time-assignments": return "/time/shifts/assignments";
+    case "time-weekly-offs": return "/time/shifts/weekly-offs";
+    case "time-shift-rules": return "/time/shifts/rules";
+    case "time-leave": return "/time/leave";
+    case "time-reports": return "/time/reports";
+    case "time-settings": return "/time/settings";
     case "punch": return "/time/attendance";
     case "projects": return "/projects";
     case "recruitment": return "/recruiting";
@@ -38,7 +47,7 @@ export const getRoutePath = (tabId) => {
 // Route to ActiveTab Mapping
 const getTabFromPath = (pathname, role) => {
   const p = pathname.toLowerCase().replace(/\/$/, "");
-  if (p === "" || p === "/" || p.includes("dashboard")) return role === "Consultant" ? "punch" : "dashboard";
+  if (p === "" || p === "/") return role === "Consultant" ? "punch" : "dashboard";
   if (p.includes("job-titles")) return "job-titles";
   if (p.includes("number-series")) return "number-series";
   if (p.includes("departments")) return "departments";
@@ -47,9 +56,21 @@ const getTabFromPath = (pathname, role) => {
   if (p.includes("profile-changes")) return "profile-changes";
   if (p.includes("probation")) return "probation";
   if (p.includes("projects")) return "projects";
-  if (p.includes("expenses") || p.includes("payroll") || p.includes("reports")) return role === "Consultant" ? "expenses" : "reports";
+  if (p.includes("expenses") || p.includes("payroll")) return role === "Consultant" ? "expenses" : "reports";
   if (p.includes("employee") || p.includes("directory")) return "directory";
-  if (p.includes("attendance") || p.includes("punch")) return role === "Consultant" ? "punch" : "attendance";
+
+  // Time & Attendance Sub-Routes
+  if (p.includes("shifts/assignments") || p === "/time/assignments") return "time-assignments";
+  if (p.includes("shifts/weekly-offs") || p === "/time/weekly-offs") return "time-weekly-offs";
+  if (p.includes("shifts/rules") || p === "/time/shift-rules") return "time-shift-rules";
+  if (p.includes("time/approvals")) return "time-approvals";
+  if (p.includes("time/shifts")) return "time-shifts";
+  if (p.includes("time/leave")) return "time-leave";
+  if (p.includes("time/reports")) return "time-reports";
+  if (p.includes("time/settings")) return "time-settings";
+  if (p.includes("time/dashboard") || p.includes("attendance") || p.includes("punch")) return role === "Consultant" ? "punch" : "time-dashboard";
+  if (p.includes("dashboard")) return role === "Consultant" ? "punch" : "dashboard";
+
   if (p.includes("recruiting") || p.includes("recruitment")) return "recruitment";
   if (p.includes("settings")) return "settings";
   if (p.includes("ledger")) return "ledger";
@@ -129,8 +150,28 @@ function AppRoutes() {
       <Route path="/employee/probation" element={<MainWorkspace initialTab="probation" />} />
       <Route path="/payroll" element={<MainWorkspace initialTab="reports" />} />
       <Route path="/expenses" element={<MainWorkspace initialTab="reports" />} />
-      <Route path="/time/attendance" element={<MainWorkspace initialTab="attendance" />} />
-      <Route path="/attendance" element={<MainWorkspace initialTab="attendance" />} />
+
+      {/* Time & Attendance Sub-Routes */}
+      <Route path="/time/attendance" element={<MainWorkspace initialTab="time-dashboard" />} />
+      <Route path="/time/dashboard" element={<MainWorkspace initialTab="time-dashboard" />} />
+      <Route path="/time/approvals" element={<MainWorkspace initialTab="time-approvals" />} />
+      <Route path="/time/shifts" element={<MainWorkspace initialTab="time-shifts" />} />
+      <Route path="/time/shifts/assignments" element={<MainWorkspace initialTab="time-assignments" />} />
+      <Route path="/time/assignments" element={<MainWorkspace initialTab="time-assignments" />} />
+      <Route path="/time/shifts/weekly-offs" element={<MainWorkspace initialTab="time-weekly-offs" />} />
+      <Route path="/time/weekly-offs" element={<MainWorkspace initialTab="time-weekly-offs" />} />
+      <Route path="/time/shifts/rules" element={<MainWorkspace initialTab="time-shift-rules" />} />
+      <Route path="/time/shift-rules" element={<MainWorkspace initialTab="time-shift-rules" />} />
+      <Route path="/time/leave" element={<MainWorkspace initialTab="time-leave" />} />
+      <Route path="/time/reports" element={<MainWorkspace initialTab="time-reports" />} />
+      <Route path="/time/settings" element={<MainWorkspace initialTab="time-settings" />} />
+      <Route path="/attendance" element={<MainWorkspace initialTab="time-dashboard" />} />
+
+      <Route path="/projects" element={<MainWorkspace initialTab="projects" />} />
+      <Route path="/recruiting" element={<MainWorkspace initialTab="recruitment" />} />
+      <Route path="/recruitment" element={<MainWorkspace initialTab="recruitment" />} />
+      <Route path="/settings" element={<MainWorkspace initialTab="settings" />} />
+      <Route path="/ledger" element={<MainWorkspace initialTab="ledger" />} />
       <Route path="/projects" element={<MainWorkspace initialTab="projects" />} />
       <Route path="/recruiting" element={<MainWorkspace initialTab="recruitment" />} />
       <Route path="/recruitment" element={<MainWorkspace initialTab="recruitment" />} />

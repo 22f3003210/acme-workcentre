@@ -1041,8 +1041,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 "DOCUMENTS",
                 "ENGAGE",
                 "ASSETS",
-                "HELPDESK",
-                "HIRING",
                 "SETTINGS"
               ].map(tab => {
                 const isActive = hrMainTab === tab;

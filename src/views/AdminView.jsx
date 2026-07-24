@@ -44,6 +44,16 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [subModuleTab, setSubModuleTab] = useState("DASHBOARD");
   const [dashboardSubTab, setDashboardSubTab] = useState("Attendance Summary");
 
+  // HR Module Double-Tier Navigation State (Matching Reference Screenshots 1 & 2)
+  const [hrMainTab, setHrMainTab] = useState("EMPLOYEES");
+  const [hrEmployeesSubTab, setHrEmployeesSubTab] = useState("Employee Directory");
+  const [hrDashboardSubTab, setHrDashboardSubTab] = useState("Summary");
+
+  const [dirSearchQuery, setDirSearchQuery] = useState("");
+  const [dirBusinessUnit, setDirBusinessUnit] = useState("Unassigned");
+  const [dirDeptFilter, setDirDeptFilter] = useState("All");
+  const [dirLocationFilter, setDirLocationFilter] = useState("All");
+
   // Shifts & Weekly Offs Sub-Navigation State (Holidays & Shift Allowance removed as requested)
   const [shiftsSubTab, setShiftsSubTab] = useState("Shift & Weekly Offs"); // "Shift & Weekly Offs" | "Assignments"
   const [shiftsInnerTab, setShiftsInnerTab] = useState("Shifts"); // "Shifts" | "Weekly Offs" | "Shift & Weekly Off Rules"
@@ -1014,144 +1024,418 @@ export default function AdminView({ activeTab, setActiveTab }) {
       )}
 
       {activeTab === "directory" && (
-        <div className="glass-card" style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-            <div>
-              <h3 style={{ margin: 0 }}>Employee Directory</h3>
-              <p className="subtitle" style={{ margin: "4px 0 0 0" }}>Manage system accounts and monitor activity</p>
-            </div>
-            <button
-              onClick={() => setShowOnboardModal(true)}
-              className="luxury-button"
-              style={{
-                backgroundColor: "#2563eb",
-                color: "#ffffff",
-                padding: "8px 16px",
-                border: "none",
-                borderRadius: "6px",
-                fontWeight: "700",
-                cursor: "pointer",
-                transition: "all 0.15s",
-                fontSize: "0.82rem"
-              }}
-            >
-              + Onboard Staff
-            </button>
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
           
-          <div className="directory-cards-grid" style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: "20px",
-            maxHeight: "720px",
-            overflowY: "auto",
-            paddingRight: "6px"
-          }}>
-            {users.map((u) => {
-              const mockLocation = u.location || (u.id.charCodeAt(u.id.length - 1) % 2 === 0 ? "Mehdipatnam" : "Nampally");
-              return (
-                <div key={u.id} className="directory-card" style={{
-                  backgroundColor: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  borderRadius: "0", /* Sharp corners */
-                  padding: "16px",
-                  display: "flex",
-                  gap: "14px",
-                  position: "relative",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
-                  transition: "all 0.2s ease"
-                }}>
-                  {/* Left Column: Avatar */}
-                  <div style={{ flexShrink: 0 }}>
-                    <img 
-                      src={u.avatar} 
-                      alt={u.name} 
-                      style={{ width: "64px", height: "64px", borderRadius: "50%", objectFit: "cover", border: "1px solid #cbd5e1" }} 
-                    />
+          {/* Double-Tier Sub-Navigation Header Bar (Matching Reference Screenshots 1 & 2) */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", margin: "-12px 0 4px 0", padding: "0 20px" }}>
+            
+            {/* Row 1: Module Main Tabs */}
+            <div style={{ display: "flex", alignItems: "center", gap: "24px", borderBottom: "1px solid #e2e8f0", overflowX: "auto" }}>
+              {[
+                "DASHBOARD",
+                "EMPLOYEES",
+                "ORG STRUCTURE",
+                "ONBOARDING",
+                "EXITS",
+                "EXPENSES & TRAVEL",
+                "DOCUMENTS",
+                "ENGAGE",
+                "ASSETS",
+                "HELPDESK",
+                "HIRING",
+                "SETTINGS"
+              ].map(tab => {
+                const isActive = hrMainTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setHrMainTab(tab)}
+                    style={{
+                      padding: "12px 0",
+                      background: "none",
+                      border: "none",
+                      borderBottom: isActive ? "3px solid #5b50a1" : "3px solid transparent",
+                      color: isActive ? "#5b50a1" : "#64748b",
+                      fontWeight: isActive ? "700" : "500",
+                      fontSize: "0.76rem",
+                      letterSpacing: "0.04em",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    {tab}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Row 2: Sub-Tabs when DASHBOARD is selected */}
+            {hrMainTab === "DASHBOARD" && (
+              <div style={{ display: "flex", alignItems: "center", gap: "28px", padding: "10px 0 6px 0", overflowX: "auto" }}>
+                {["Summary", "Analytics", "Employee Reports", "Audit Logs"].map(subTab => {
+                  const isActive = hrDashboardSubTab === subTab;
+                  return (
+                    <button
+                      key={subTab}
+                      type="button"
+                      onClick={() => setHrDashboardSubTab(subTab)}
+                      style={{
+                        padding: "4px 0 8px 0",
+                        background: "none",
+                        border: "none",
+                        borderBottom: isActive ? "2px solid #5b50a1" : "2px solid transparent",
+                        color: isActive ? "#1e293b" : "#64748b",
+                        fontWeight: isActive ? "600" : "400",
+                        fontSize: "0.84rem",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {subTab}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Row 2: Sub-Tabs when EMPLOYEES is selected */}
+            {hrMainTab === "EMPLOYEES" && (
+              <div style={{ display: "flex", alignItems: "center", gap: "28px", padding: "10px 0 6px 0", overflowX: "auto" }}>
+                {[
+                  "Employee Directory",
+                  "Organization Tree",
+                  "Logins",
+                  "Contingent Staff",
+                  "Profile Changes",
+                  "Private Profiles",
+                  "Probation",
+                  "Settings"
+                ].map(subTab => {
+                  const isActive = hrEmployeesSubTab === subTab;
+                  return (
+                    <button
+                      key={subTab}
+                      type="button"
+                      onClick={() => setHrEmployeesSubTab(subTab)}
+                      style={{
+                        padding: "4px 0 8px 0",
+                        background: "none",
+                        border: "none",
+                        borderBottom: isActive ? "2px solid #5b50a1" : "2px solid transparent",
+                        color: isActive ? "#1e293b" : "#64748b",
+                        fontWeight: isActive ? "600" : "400",
+                        fontSize: "0.84rem",
+                        cursor: "pointer",
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {subTab}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* VIEW 1: EMPLOYEES -> Employee Directory (Matching Reference Screenshot 1) */}
+          {hrMainTab === "EMPLOYEES" && hrEmployeesSubTab === "Employee Directory" && (
+            <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Employee Directory</h3>
+                <button
+                  onClick={() => setShowOnboardModal(true)}
+                  className="luxury-button"
+                  style={{
+                    backgroundColor: "#4c478a",
+                    color: "#ffffff",
+                    padding: "8px 18px",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    fontSize: "0.82rem"
+                  }}
+                >
+                  + Onboard Staff
+                </button>
+              </div>
+
+              {/* Filter Bar (Matching Reference Screenshot 1) */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "14px 18px", display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap", justifyContent: "space-between", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap", flexGrow: 1 }}>
+                  {/* BUSINESS UNIT */}
+                  <div style={{ minWidth: "140px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: "700", color: "#94a3b8", marginBottom: "3px", letterSpacing: "0.04em" }}>BUSINESS UNIT</div>
+                    <select value={dirBusinessUnit} onChange={e => setDirBusinessUnit(e.target.value)} style={{ width: "100%", padding: "6px 10px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#334155", background: "#ffffff", outline: "none" }}>
+                      <option value="Unassigned">Unassigned</option>
+                      <option value="ACME Advisory">ACME Advisory</option>
+                      <option value="ACME Retail">ACME Retail</option>
+                    </select>
                   </div>
 
-                  {/* Right Column: Details */}
-                  <div style={{ flexGrow: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                      <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 16px 2px 0", wordBreak: "break-word" }}>
-                        {u.name}
-                      </h4>
-                      
-                      {/* Action menu trigger (Deletes user) */}
-                      <button
-                        onClick={() => {
-                          if (confirm(`Confirm account deletion for ${u.name}?`)) {
-                            deleteUser(u.id);
-                          }
-                        }}
-                        title="Delete Employee"
-                        style={{
-                          background: "#f1f5f9",
-                          border: "none",
-                          color: "#64748b",
-                          cursor: "pointer",
-                          fontSize: "0.75rem",
-                          fontWeight: "700",
-                          padding: "3px 8px",
-                          borderRadius: "4px",
-                          lineHeight: "1.2",
-                          position: "absolute",
-                          top: "14px",
-                          right: "14px",
-                          transition: "all 0.15s"
-                        }}
-                      >
-                        •••
-                      </button>
+                  {/* Department */}
+                  <div style={{ minWidth: "150px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: "700", color: "#94a3b8", marginBottom: "3px", letterSpacing: "0.04em" }}>DEPARTMENT</div>
+                    <select value={dirDeptFilter} onChange={e => setDirDeptFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#334155", background: "#ffffff", outline: "none" }}>
+                      <option value="All">All Departments</option>
+                      <option value="Advisory">Advisory</option>
+                      <option value="IT & SYSTEMS SUPPORT">IT & SYSTEMS SUPPORT</option>
+                      <option value="ADMINISTRATION">ADMINISTRATION</option>
+                      <option value="PURCHASE">PURCHASE</option>
+                      <option value="SALES">SALES</option>
+                      <option value="CASHIER AND BILLING">CASHIER AND BILLING</option>
+                    </select>
+                  </div>
+
+                  {/* Location */}
+                  <div style={{ minWidth: "140px" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: "700", color: "#94a3b8", marginBottom: "3px", letterSpacing: "0.04em" }}>LOCATION</div>
+                    <select value={dirLocationFilter} onChange={e => setDirLocationFilter(e.target.value)} style={{ width: "100%", padding: "6px 10px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#334155", background: "#ffffff", outline: "none" }}>
+                      <option value="All">All Locations</option>
+                      <option value="Hyderabad">Hyderabad</option>
+                      <option value="Mehdipatnam">Mehdipatnam</option>
+                      <option value="Nampally">Nampally</option>
+                    </select>
+                  </div>
+
+                  {/* Search */}
+                  <div style={{ flexGrow: 1, minWidth: "220px", position: "relative" }}>
+                    <div style={{ fontSize: "0.68rem", fontWeight: "700", color: "#94a3b8", marginBottom: "3px", letterSpacing: "0.04em" }}>SEARCH</div>
+                    <input
+                      type="text"
+                      placeholder="Search Employee..."
+                      value={dirSearchQuery}
+                      onChange={e => setDirSearchQuery(e.target.value)}
+                      style={{ width: "100%", padding: "6px 10px 6px 30px", border: "1px solid #cbd5e1", fontSize: "0.8rem", color: "#334155", outline: "none" }}
+                    />
+                    <span style={{ position: "absolute", left: "10px", top: "24px", color: "#94a3b8", fontSize: "0.8rem" }}>🔍</span>
+                  </div>
+                </div>
+
+                <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500", alignSelf: "flex-end", marginBottom: "4px" }}>
+                  Showing {users.filter(u => {
+                    const matchesSearch = !dirSearchQuery || u.name.toLowerCase().includes(dirSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(dirSearchQuery.toLowerCase()) || (u.title && u.title.toLowerCase().includes(dirSearchQuery.toLowerCase()));
+                    const matchesDept = dirDeptFilter === "All" || (u.department && u.department.toUpperCase() === dirDeptFilter.toUpperCase());
+                    const matchesLoc = dirLocationFilter === "All" || (u.location && u.location.toLowerCase() === dirLocationFilter.toLowerCase());
+                    return matchesSearch && matchesDept && matchesLoc;
+                  }).length} of {users.length}
+                </div>
+              </div>
+
+              {/* Directory Cards Grid (Matching Reference Screenshot 1) */}
+              <div className="directory-cards-grid" style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                gap: "20px",
+                maxHeight: "720px",
+                overflowY: "auto",
+                paddingRight: "4px"
+              }}>
+                {users.filter(u => {
+                  const matchesSearch = !dirSearchQuery || u.name.toLowerCase().includes(dirSearchQuery.toLowerCase()) || u.email.toLowerCase().includes(dirSearchQuery.toLowerCase()) || (u.title && u.title.toLowerCase().includes(dirSearchQuery.toLowerCase()));
+                  const matchesDept = dirDeptFilter === "All" || (u.department && u.department.toUpperCase() === dirDeptFilter.toUpperCase());
+                  const matchesLoc = dirLocationFilter === "All" || (u.location && u.location.toLowerCase() === dirLocationFilter.toLowerCase());
+                  return matchesSearch && matchesDept && matchesLoc;
+                }).map((u) => {
+                  const displayLocation = u.location || "Hyderabad";
+                  return (
+                    <div key={u.id} className="directory-card" style={{
+                      backgroundColor: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "0",
+                      padding: "18px",
+                      display: "flex",
+                      gap: "16px",
+                      position: "relative",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                      transition: "all 0.2s ease"
+                    }}>
+                      <div style={{ flexShrink: 0 }}>
+                        <img 
+                          src={u.avatar} 
+                          alt={u.name} 
+                          style={{ width: "68px", height: "68px", borderRadius: "50%", objectFit: "cover", border: "1px solid #cbd5e1" }} 
+                        />
+                      </div>
+
+                      <div style={{ flexGrow: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                          <h4 style={{ fontSize: "0.98rem", fontWeight: "700", color: "#0f172a", margin: "0 20px 2px 0", wordBreak: "break-word" }}>
+                            {u.name}
+                          </h4>
+                          
+                          <button
+                            onClick={() => {
+                              if (confirm(`Confirm account deletion for ${u.name}?`)) {
+                                deleteUser(u.id);
+                              }
+                            }}
+                            title="Delete Employee"
+                            style={{
+                              background: "#f1f5f9",
+                              border: "none",
+                              color: "#64748b",
+                              cursor: "pointer",
+                              fontSize: "0.75rem",
+                              fontWeight: "700",
+                              padding: "2px 6px",
+                              borderRadius: "3px",
+                              position: "absolute",
+                              top: "14px",
+                              right: "14px"
+                            }}
+                          >
+                            •••
+                          </button>
+                        </div>
+
+                        <p style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "600", margin: "0 0 10px 0" }}>
+                          {u.title || `${u.role} Lead`}
+                        </p>
+
+                        <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.73rem", color: "#475569" }}>
+                          <div>
+                            <span style={{ color: "#94a3b8" }}>Department : </span>
+                            <span style={{ fontWeight: "600", textTransform: "uppercase" }}>{u.department || "Advisory"}</span>
+                          </div>
+                          <div>
+                            <span style={{ color: "#94a3b8" }}>Location : </span>
+                            <span style={{ fontWeight: "500" }}>{displayLocation}</span>
+                          </div>
+                          <div style={{ wordBreak: "break-all" }}>
+                            <span style={{ color: "#94a3b8" }}>Email : </span>
+                            <span style={{ fontWeight: "500", textTransform: "none" }}>{u.email}</span>
+                          </div>
+                        </div>
+
+                        <div style={{ marginTop: "12px" }}>
+                          <button
+                            onClick={() => {
+                              window.dispatchEvent(new CustomEvent("open-employee-profile", { detail: { user: u } }));
+                            }}
+                            style={{
+                              padding: "4px 12px",
+                              fontSize: "0.74rem",
+                              fontWeight: "600",
+                              border: "1px solid #4c478a",
+                              color: "#4c478a",
+                              backgroundColor: "#f5f3ff",
+                              borderRadius: "4px",
+                              cursor: "pointer"
+                            }}
+                          >
+                            View Profile
+                          </button>
+                        </div>
+                      </div>
                     </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-                    {/* Designation Title */}
-                    <p style={{ fontSize: "0.76rem", color: "#475569", fontWeight: "600", margin: "0 0 10px 0" }}>
-                      {u.title || `${u.role} Lead`}
-                    </p>
-
-                    {/* Attributes */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.72rem", color: "#475569" }}>
-                      <div>
-                        <span style={{ color: "#94a3b8" }}>Department : </span>
-                        <span style={{ fontWeight: "600", textTransform: "uppercase" }}>{u.department}</span>
-                      </div>
-                      <div>
-                        <span style={{ color: "#94a3b8" }}>Location : </span>
-                        <span style={{ fontWeight: "500" }}>{mockLocation}</span>
-                      </div>
-                      <div style={{ wordBreak: "break-all" }}>
-                        <span style={{ color: "#94a3b8" }}>Email : </span>
-                        <span style={{ fontWeight: "500", textTransform: "none" }}>{u.email}</span>
-                      </div>
+          {/* VIEW 2: DASHBOARD -> Summary (Matching Reference Screenshot 2) */}
+          {hrMainTab === "DASHBOARD" && hrDashboardSubTab === "Summary" && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px", width: "100%" }}>
+              {/* Top Row: Employees & Pending Actions Cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: "20px" }}>
+                {/* Employees Summary Card */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#334155", margin: "0 0 16px 0" }}>Employees</h4>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: "24px" }}>
+                    <div>
+                      <span style={{ fontSize: "1.8rem", fontWeight: "700", color: "#0f172a" }}>{users.length}</span>
+                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>Total headcount</div>
                     </div>
-
-                    {/* View Profile small action button */}
-                    <div style={{ marginTop: "12px" }}>
-                      <button
-                        onClick={() => {
-                          window.dispatchEvent(new CustomEvent("open-employee-profile", { detail: { user: u } }));
-                        }}
-                        style={{
-                          padding: "4px 10px",
-                          fontSize: "0.74rem",
-                          fontWeight: "600",
-                          border: "1px solid #3b82f6",
-                          color: "#2563eb",
-                          backgroundColor: "#eff6ff",
-                          borderRadius: "4px",
-                          cursor: "pointer",
-                          transition: "all 0.15s"
-                        }}
-                      >
-                        View Profile
-                      </button>
+                    <div>
+                      <span style={{ fontSize: "1.4rem", fontWeight: "600", color: "#334155" }}>{users.filter(u => u.status === "Active").length}</span>
+                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>Registered</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "1.4rem", fontWeight: "600", color: "#334155" }}>0</span>
+                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>Not invited</div>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "1.4rem", fontWeight: "600", color: "#334155" }}>{users.filter(u => u.status !== "Active").length}</span>
+                      <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "2px" }}>Yet to register</div>
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* Pending Actions Card */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#334155", margin: "0 0 16px 0" }}>Pending Actions</h4>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "12px", textAlign: "center" }}>
+                    <div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#4c478a" }}>0</div>
+                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>Documents</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#16a34a" }}>{(expenses || []).filter(e => e.status === "Pending").length}</div>
+                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>Expenses</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#ea580c" }}>0</div>
+                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>Probations</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#ca8a04" }}>0</div>
+                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>Onboarding Tasks</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#4c478a" }}>0</div>
+                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>Exit Tasks</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#64748b" }}>0</div>
+                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>Profile changes</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Middle Row: Quicklinks & Login Summary */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "20px" }}>
+                {/* Quicklinks */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px" }}>
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#334155", margin: "0 0 16px 0" }}>Quicklinks</h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.83rem" }}>
+                    <button onClick={() => setShowOnboardModal(true)} style={{ background: "none", border: "none", color: "#4c478a", textAlign: "left", cursor: "pointer", fontWeight: "600" }}>+ New Employee</button>
+                    <span style={{ color: "#64748b", cursor: "pointer" }}>Employee Custom Fields</span>
+                    <span style={{ color: "#64748b", cursor: "pointer" }}>Org Directory</span>
+                    <span style={{ color: "#64748b", cursor: "pointer" }}>Org Tree</span>
+                  </div>
+
+                  <h4 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#334155", margin: "24px 0 14px 0" }}>Bulk operations</h4>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.8rem", color: "#64748b" }}>
+                    <span>Add Employees in Bulk</span>
+                    <span>Update Employees in Bulk</span>
+                    <span>Bulk invite employees</span>
+                  </div>
+                </div>
+
+                {/* Employee Login Summary Chart */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                    <h4 style={{ fontSize: "0.95rem", fontWeight: "600", color: "#334155", margin: 0 }}>Employee Login Summary</h4>
+                    <span style={{ fontSize: "0.78rem", border: "1px solid #cbd5e1", padding: "4px 10px", color: "#475569" }}>Last 14 days</span>
+                  </div>
+
+                  <div style={{ height: "200px", display: "flex", alignItems: "flex-end", gap: "16px", padding: "20px 10px 0 10px", borderBottom: "1px solid #e2e8f0" }}>
+                    {[0, 0, 1, 2, 0, 0, 1, 1, 0, 0, 0].map((count, idx) => (
+                      <div key={idx} style={{ flexGrow: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
+                        <div style={{ height: `${Math.max(count * 50, 4)}px`, background: count > 0 ? "#84cc16" : "#e2e8f0", width: "100%", transition: "all 0.3s ease" }} />
+                        <span style={{ fontSize: "0.65rem", color: "#94a3b8" }}>{14 + idx} Jul</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

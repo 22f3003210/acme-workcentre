@@ -452,62 +452,46 @@ export default function AdminView({ activeTab, setActiveTab }) {
   });
 
   // Handlers
-  const handleOnboardEmployee = (e) => {
+  const handleOnboardEmployee = async (e) => {
     e.preventDefault();
     if (!empName.trim() || !empEmail.trim()) {
-      setToast({ message: "Please fill candidate name and email address.", type: "error" });
+      if (setToast) setToast({ message: "Please fill candidate name and email address.", type: "error" });
       return;
     }
 
     if (empPhone && empPhone.length !== 10) {
-      setToast({ message: "Mobile number must be exactly 10 digits.", type: "error" });
+      if (setToast) setToast({ message: "Mobile number must be exactly 10 digits.", type: "error" });
       return;
     }
 
-    const inviteResult = onboardConsultantInvite({
-      name: empName,
-      email: empEmail,
+    const newEmpData = {
+      empCode: `EMP-${Date.now().toString().slice(-4)}`,
+      name: empName.trim(),
+      email: empEmail.trim().toLowerCase(),
       phone: empPhone,
+      role: "Consultant",
       title: empTitle || "Retail Jewellery BD Consultant",
-      department: empDept,
-      location: empLocation,
-      advanceAmount: empAdvance
-    });
+      department: empDept || (departments[0] ? (typeof departments[0] === "string" ? departments[0] : departments[0].name) : "Consulting"),
+      location: empLocation || "Mumbai / Showroom Site",
+      status: "Active",
+      advanceAmount: parseFloat(empAdvance) || 0
+    };
 
-    // Generate mailto and Gmail compose links for real email dispatch
-    const rawSubject = "Welcome to ACME Consulting! Start Your Onboarding";
-    const rawBody = `Dear ${empName},\n\nWe are excited to invite you to join ACME Consulting as a ${empTitle || "Retail Jewellery BD Consultant"}.\n\nPlease click the link below to set your account password and start your onboarding:\n${inviteResult.inviteLink}\n\nBest regards,\nHR Admin Team\nACME Consulting`;
-    
-    const subject = encodeURIComponent(rawSubject);
-    const body = encodeURIComponent(rawBody);
-    const mailtoUrl = `mailto:${empEmail}?subject=${subject}&body=${body}`;
-    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(empEmail)}&su=${subject}&body=${body}`;
-
-    // Auto-trigger Gmail compose window or system mail app directly
-    try {
-      if (empEmail.toLowerCase().includes("gmail")) {
-        window.open(gmailUrl, "_blank");
-      } else {
-        window.location.href = mailtoUrl;
-      }
-    } catch (err) {
-      console.log("Email dispatch auto-trigger note:", err);
+    if (addUser) {
+      await addUser(newEmpData);
     }
 
-    setGeneratedInviteResult({
-      ...inviteResult,
-      mailtoUrl,
-      gmailUrl,
-      emailSentTo: empEmail
-    });
-
-    setToast({ message: `Opening email dispatch for ${empEmail}!`, type: "success" });
+    setShowOnboardModal(false);
     setEmpName("");
     setEmpEmail("");
     setEmpPhone("");
     setEmpTitle("Retail Jewellery BD Consultant");
-    setEmpDept("Advisory");
+    setEmpDept("Consulting");
     setEmpAdvance("2000");
+
+    if (setToast) {
+      setToast({ type: "success", message: `Employee record for ${newEmpData.name} saved to database successfully!` });
+    }
   };
 
   const handleDirectAdvanceSubmit = (e) => {
@@ -2213,270 +2197,122 @@ export default function AdminView({ activeTab, setActiveTab }) {
         <div className="task-modal-overlay">
           <div className="task-modal-card" style={{ maxWidth: "540px" }}>
             <div className="task-modal-header">
-              <h3 style={{ margin: 0 }}>Onboard New Consultant</h3>
+              <h3 style={{ margin: 0 }}>Onboard New Employee</h3>
               <button
                 type="button"
-                onClick={() => { setShowOnboardModal(false); setGeneratedInviteResult(null); }}
+                onClick={() => setShowOnboardModal(false)}
                 style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}
               >
                 ✕
               </button>
             </div>
 
-            {generatedInviteResult ? (
-              <div style={{ padding: "12px 0 0 0", display: "flex", flexDirection: "column", gap: "14px" }}>
-                
-                {/* Simulated Sent Email Header Banner */}
-                <div style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "14px 16px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", color: "#475569", marginBottom: "6px" }}>
-                    <span>📧 <strong>From:</strong> HR Admin &lt;onboarding@acmeworkcentre.com&gt;</span>
-                    <span style={{ color: "#15803d", fontWeight: "700", background: "#dcfce7", border: "1px solid #86efac", padding: "2px 8px", borderRadius: "4px", fontSize: "0.75rem" }}>
-                      ✓ Email Sent Successfully
-                    </span>
-                  </div>
-                  <div style={{ fontSize: "0.85rem", color: "#0f172a", marginBottom: "4px" }}>
-                    <strong>To:</strong> {generatedInviteResult.user.name} &lt;{generatedInviteResult.user.email}&gt;
-                  </div>
-                  <div style={{ fontSize: "0.88rem", fontWeight: "800", color: "#1e293b", borderTop: "1px solid #e2e8f0", paddingTop: "8px", marginTop: "6px" }}>
-                    Subject: Welcome to ACME Consulting! Start Your Onboarding
-                  </div>
-                </div>
+            <form onSubmit={handleOnboardEmployee} className="luxury-form">
+              <p style={{ fontSize: "0.85rem", color: "#64748b", margin: "0 0 16px 0" }}>
+                Enter employee details below to add and save their record directly into the database.
+              </p>
 
-                {/* Email Body Card */}
-                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "20px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-                    <img src={logoImg} alt="ACME Logo" style={{ height: "26px", objectFit: "contain" }} />
-                    <span style={{ fontSize: "0.72rem", fontWeight: "800", color: "#2563eb", background: "#eff6ff", padding: "3px 8px", borderRadius: "4px" }}>
-                      OFFICIAL INVITATION
-                    </span>
-                  </div>
-
-                  <p style={{ fontSize: "0.9rem", color: "#1e293b", margin: "0 0 10px 0" }}>
-                    Dear <strong>{generatedInviteResult.user.name}</strong>,
-                  </p>
-                  <p style={{ fontSize: "0.85rem", color: "#475569", lineHeight: "1.5", margin: "0 0 18px 0" }}>
-                    We are excited to invite you to join ACME Consulting as a <strong>{generatedInviteResult.user.title}</strong>. Please click the button below to set your account password and start your onboarding.
-                  </p>
-
-                  {/* START ONBOARDING CTA BUTTON */}
-                  <div style={{ textAlign: "center", margin: "16px 0" }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRegisterToken(generatedInviteResult.inviteToken);
-                        setShowRegisterPortal(true);
-                        setShowOnboardModal(false);
-                      }}
-                      style={{
-                        background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-                        color: "#ffffff",
-                        border: "none",
-                        borderRadius: "8px",
-                        padding: "12px 28px",
-                        fontSize: "0.95rem",
-                        fontWeight: "800",
-                        cursor: "pointer",
-                        boxShadow: "0 4px 14px rgba(37, 99, 235, 0.3)",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "8px"
-                      }}
-                    >
-                      <span>Start Onboarding</span> ➔
-                    </button>
-                  </div>
-
-                  <div style={{ background: "#f8fafc", padding: "10px", borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.78rem", color: "#64748b", wordBreak: "break-all", marginTop: "14px" }}>
-                    <strong>Direct Link:</strong> {generatedInviteResult.inviteLink}
-                  </div>
-                </div>
-
-                {/* Footer Buttons */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #e2e8f0", paddingTop: "14px", flexWrap: "wrap", gap: "10px" }}>
-                  <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (generatedInviteResult.gmailUrl) {
-                          window.open(generatedInviteResult.gmailUrl, "_blank");
-                        }
-                      }}
-                      style={{
-                        background: "#ea4335",
-                        color: "#ffffff",
-                        border: "none",
-                        padding: "8px 14px",
-                        borderRadius: "6px",
-                        fontSize: "0.82rem",
-                        fontWeight: "700",
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px"
-                      }}
-                    >
-                      <span>✉ Send via Gmail</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (generatedInviteResult.mailtoUrl) {
-                          window.location.href = generatedInviteResult.mailtoUrl;
-                        }
-                      }}
-                      style={{
-                        background: "#0f172a",
-                        color: "#ffffff",
-                        border: "none",
-                        padding: "8px 14px",
-                        borderRadius: "6px",
-                        fontSize: "0.82rem",
-                        fontWeight: "700",
-                        cursor: "pointer"
-                      }}
-                    >
-                      📫 Send via Mail App
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(generatedInviteResult.inviteLink);
-                        setToast({ message: "Registration link copied to clipboard!", type: "success" });
-                      }}
-                      style={{
-                        background: "#eff6ff",
-                        color: "#2563eb",
-                        border: "1px solid #bfdbfe",
-                        padding: "8px 14px",
-                        borderRadius: "6px",
-                        fontSize: "0.82rem",
-                        fontWeight: "700",
-                        cursor: "pointer"
-                      }}
-                    >
-                      📋 Copy Link
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => { setShowOnboardModal(false); setGeneratedInviteResult(null); }}
-                    style={{ padding: "8px 18px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "#fff", cursor: "pointer", fontWeight: "600" }}
-                  >
-                    Done
-                  </button>
-                </div>
+              <div className="form-group">
+                <label>Full Name *</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Chaitanya Kumar" 
+                  value={empName} 
+                  onChange={(e) => setEmpName(e.target.value)} 
+                  required
+                />
               </div>
-            ) : (
-              <form onSubmit={handleOnboardEmployee} className="luxury-form">
-                <p style={{ fontSize: "0.85rem", color: "#64748b", margin: "0 0 16px 0" }}>
-                  Enter the candidate's primary details. An onboarding invite link will be generated for them to complete self-registration.
-                </p>
 
+              <div className="form-row">
                 <div className="form-group">
-                  <label>Full Name *</label>
+                  <label>Email Address *</label>
                   <input 
-                    type="text" 
-                    placeholder="e.g. David Vance" 
-                    value={empName} 
-                    onChange={(e) => setEmpName(e.target.value)} 
+                    type="email" 
+                    placeholder="employee@acmeconsulting.com" 
+                    value={empEmail} 
+                    onChange={(e) => setEmpEmail(e.target.value)} 
                     required
                   />
                 </div>
-
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Email Address *</label>
-                    <input 
-                      type="email" 
-                      placeholder="name@jewelconsulting.com" 
-                      value={empEmail} 
-                      onChange={(e) => setEmpEmail(e.target.value)} 
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Mobile Number (10 Digits) *</label>
-                    <input 
-                      type="text" 
-                      placeholder="Enter 10-digit mobile" 
-                      value={empPhone} 
-                      maxLength={10}
-                      onChange={(e) => setEmpPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} 
-                      required
-                    />
-                  </div>
+                <div className="form-group">
+                  <label>Mobile Number (10 Digits) *</label>
+                  <input 
+                    type="text" 
+                    placeholder="Enter 10-digit mobile" 
+                    value={empPhone} 
+                    maxLength={10}
+                    onChange={(e) => setEmpPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} 
+                    required
+                  />
                 </div>
+              </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Designation (Title)</label>
-                    <input 
-                      type="text" 
-                      placeholder="e.g. Retail Jewellery BD Consultant" 
-                      value={empTitle} 
-                      onChange={(e) => setEmpTitle(e.target.value)} 
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Initial Cash Advance (₹)</label>
-                    <input 
-                      type="number" 
-                      placeholder="2000" 
-                      value={empAdvance} 
-                      onChange={(e) => setEmpAdvance(e.target.value)} 
-                      required
-                    />
-                  </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Designation (Title)</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Retail Jewellery BD Consultant" 
+                    value={empTitle} 
+                    onChange={(e) => setEmpTitle(e.target.value)} 
+                    required
+                  />
                 </div>
+                <div className="form-group">
+                  <label>Initial Cash Advance (₹)</label>
+                  <input 
+                    type="number" 
+                    placeholder="2000" 
+                    value={empAdvance} 
+                    onChange={(e) => setEmpAdvance(e.target.value)} 
+                    required
+                  />
+                </div>
+              </div>
 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Department</label>
-                    <select value={empDept} onChange={(e) => setEmpDept(e.target.value)} className="luxury-select">
-                      {departments.length === 0 ? (
-                        <option value="">No departments added yet</option>
-                      ) : (
-                        departments.map((d, i) => {
-                          const name = typeof d === "string" ? d : d.name;
-                          return <option key={i} value={name}>{name}</option>;
-                        })
-                      )}
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label>Primary Site Location</label>
-                    <select value={empLocation} onChange={(e) => setEmpLocation(e.target.value)} className="luxury-select">
-                      <option value="Mumbai / Showroom Site">Mumbai / Showroom Site</option>
-                      <option value="Hyderabad / HQ">Hyderabad / HQ</option>
-                      <option value="Bengaluru / South Region">Bengaluru / South Region</option>
-                      <option value="Surat / Diamond Desk">Surat / Diamond Desk</option>
-                    </select>
-                  </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Department</label>
+                  <select value={empDept} onChange={(e) => setEmpDept(e.target.value)} className="luxury-select">
+                    {departments.length === 0 ? (
+                      <option value="">No departments added yet</option>
+                    ) : (
+                      departments.map((d, i) => {
+                        const name = typeof d === "string" ? d : d.name;
+                        return <option key={i} value={name}>{name}</option>;
+                      })
+                    )}
+                  </select>
                 </div>
+                <div className="form-group">
+                  <label>Primary Site Location</label>
+                  <select value={empLocation} onChange={(e) => setEmpLocation(e.target.value)} className="luxury-select">
+                    <option value="Mumbai / Showroom Site">Mumbai / Showroom Site</option>
+                    <option value="Hyderabad / HQ">Hyderabad / HQ</option>
+                    <option value="Bengaluru / South Region">Bengaluru / South Region</option>
+                    <option value="Surat / Diamond Desk">Surat / Diamond Desk</option>
+                  </select>
+                </div>
+              </div>
 
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid #e2e8f0", paddingTop: "16px", marginTop: "16px" }}>
-                  <button
-                    type="button"
-                    onClick={() => setShowOnboardModal(false)}
-                    className="luxury-button"
-                    style={{ backgroundColor: "transparent", border: "1px solid #cbd5e1", color: "#475569", padding: "8px 16px" }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="luxury-button"
-                    style={{ backgroundColor: "#2563eb", color: "#fff" }}
-                  >
-                    Send Onboarding Invite Link ➔
-                  </button>
-                </div>
-              </form>
-            )}
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid #e2e8f0", paddingTop: "16px", marginTop: "16px" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowOnboardModal(false)}
+                  className="luxury-button"
+                  style={{ backgroundColor: "transparent", border: "1px solid #cbd5e1", color: "#475569", padding: "8px 16px" }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="luxury-button"
+                  style={{ backgroundColor: "#2563eb", color: "#fff" }}
+                >
+                  Save Employee Record ➔
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

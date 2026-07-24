@@ -190,7 +190,7 @@ export const AppProvider = ({ children }) => {
             currentCity: c.current_city,
             preferredCities: c.preferred_cities || [],
             experienceYears: c.experience_years,
-            currentRole: c.current_role,
+            currentRole: c.candidate_role || c.current_role,
             expectedCtc: Number(c.expected_ctc) || 0,
             status: c.status,
             assignedRecruiter: c.assigned_recruiter,

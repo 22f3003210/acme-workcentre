@@ -131,7 +131,9 @@ export const AppProvider = ({ children }) => {
               location: dbU.location,
               status: dbU.status || "Active",
               avatar: dbU.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbU.name)}`,
-              advanceAmount: Number(dbU.advance_amount) || 0
+              advanceAmount: Number(dbU.advance_amount) || 0,
+              shift: dbU.shift || "",
+              weeklyOff: dbU.weekly_off || ""
             }));
             setUsers(mappedUsers);
           }

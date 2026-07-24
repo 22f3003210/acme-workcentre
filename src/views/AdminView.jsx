@@ -9,6 +9,7 @@ import logoImg from "../assets/logo.png";
 export default function AdminView({ activeTab, setActiveTab }) {
   const {
     users,
+    setUsers,
     expenses,
     advanceRequests,
     settings,
@@ -256,36 +257,34 @@ export default function AdminView({ activeTab, setActiveTab }) {
     setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
   };
 
-  const handleSaveShiftAssignment = () => {
-    const updated = { ...employeeAssignments };
+  const handleSaveShiftAssignment = async () => {
     const targetIds = selectedUserIdsForAssignment.length > 0 
       ? selectedUserIdsForAssignment 
       : users.map(u => u.id);
     
-    targetIds.forEach(id => {
-      updated[id] = {
-        ...updated[id],
-        shift: modalSelectedShift
-      };
-    });
-    setEmployeeAssignments(updated);
+    setUsers(prev => prev.map(u => targetIds.includes(u.id) ? { ...u, shift: modalSelectedShift } : u));
+    
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from("users").update({ shift: modalSelectedShift }).in("id", targetIds);
+      if (error) console.error("Supabase update shift error:", error);
+    }
+
     setShowUpdateShiftModal(false);
     if (setToast) setToast({ message: `Shift updated to "${modalSelectedShift}" for ${targetIds.length} employee(s)!`, type: "success" });
   };
 
-  const handleSaveWeeklyOffAssignment = () => {
-    const updated = { ...employeeAssignments };
+  const handleSaveWeeklyOffAssignment = async () => {
     const targetIds = selectedUserIdsForAssignment.length > 0 
       ? selectedUserIdsForAssignment 
       : users.map(u => u.id);
     
-    targetIds.forEach(id => {
-      updated[id] = {
-        ...updated[id],
-        weeklyOff: modalSelectedWeeklyOff
-      };
-    });
-    setEmployeeAssignments(updated);
+    setUsers(prev => prev.map(u => targetIds.includes(u.id) ? { ...u, weekly_off: modalSelectedWeeklyOff, weeklyOff: modalSelectedWeeklyOff } : u));
+    
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from("users").update({ weekly_off: modalSelectedWeeklyOff }).in("id", targetIds);
+      if (error) console.error("Supabase update weekly_off error:", error);
+    }
+
     setShowUpdateWeeklyOffModal(false);
     if (setToast) setToast({ message: `Weekly Off updated to "${modalSelectedWeeklyOff}" for ${targetIds.length} employee(s)!`, type: "success" });
   };
@@ -4002,8 +4001,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             {filteredAssignmentUsers.length > 0 ? (
                               filteredAssignmentUsers.map((u, idx) => {
                                 const isChecked = selectedUserIdsForAssignment.includes(u.id);
-                                const assignedShift = employeeAssignments[u.id]?.shift || (idx === 0 ? "Not Available" : idx % 3 === 0 ? "Back -End Shift" : "UTC");
-                                const assignedWeeklyOff = employeeAssignments[u.id]?.weeklyOff || (idx === 0 ? "Not Available" : idx % 4 === 0 ? "Friday" : idx % 5 === 0 ? "Monday" : "Sunday");
+                                const assignedShift = u.shift || employeeAssignments[u.id]?.shift || "General Shift";
+                                const assignedWeeklyOff = u.weekly_off || u.weeklyOff || employeeAssignments[u.id]?.weeklyOff || "Sunday";
                                 return (
                                   <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9", background: isChecked ? "#f0f9ff" : "transparent" }}>
                                     <td style={{ padding: "10px 14px" }}>
@@ -4013,16 +4012,16 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                       <div>{u.name}</div>
                                       <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{u.title || u.role}</div>
                                     </td>
-                                    <td style={{ padding: "10px 14px", color: "#475569" }}>{u.role === "Admin" ? "2" : `HBJ0000${idx + 1}`}</td>
-                                    <td style={{ padding: "10px 14px", color: "#475569" }}>{idx === 0 ? "Not Available" : idx % 2 === 0 ? "PURCHASE" : "ADMINISTRATION"}</td>
-                                    <td style={{ padding: "10px 14px", color: "#475569" }}>Shabbir Vasaya</td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>{u.empCode || u.emp_code || `EMP-${idx + 1}`}</td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "General"}</td>
+                                    <td style={{ padding: "10px 14px", color: "#475569" }}>Reporting Manager</td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>
-                                      <span style={{ fontWeight: employeeAssignments[u.id]?.shift ? "600" : "400", color: employeeAssignments[u.id]?.shift ? "#2563eb" : "#475569" }}>
+                                      <span style={{ fontWeight: u.shift ? "600" : "400", color: u.shift ? "#2563eb" : "#475569" }}>
                                         {assignedShift}
                                       </span>
                                     </td>
                                     <td style={{ padding: "10px 14px", color: "#475569" }}>
-                                      <span style={{ fontWeight: employeeAssignments[u.id]?.weeklyOff ? "600" : "400", color: employeeAssignments[u.id]?.weeklyOff ? "#2563eb" : "#475569" }}>
+                                      <span style={{ fontWeight: u.weeklyOff || u.weekly_off ? "600" : "400", color: u.weeklyOff || u.weekly_off ? "#2563eb" : "#475569" }}>
                                         {assignedWeeklyOff}
                                       </span>
                                     </td>

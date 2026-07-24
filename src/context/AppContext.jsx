@@ -418,7 +418,7 @@ export const AppProvider = ({ children }) => {
   // Employee Directory CRUD (Admin Only)
   const addUser = async (userData) => {
     const newId = `${(userData.role || "employee").toLowerCase().replace(/\s+/g, "")}-${Date.now()}`;
-    const empCode = userData.empCode || "";
+    const empCode = userData.empCode || `EMP-${Date.now().toString().slice(-4)}`;
     const newUser = {
       id: newId,
       empCode,
@@ -445,33 +445,32 @@ export const AppProvider = ({ children }) => {
         status: newUser.status || "Active",
         avatar: newUser.avatar,
         advance_amount: newUser.advanceAmount || 0,
-        first_name: newUser.firstName,
-        middle_name: newUser.middleName,
-        last_name: newUser.lastName,
-        display_name: newUser.displayName,
-        gender: newUser.gender,
-        dob: newUser.dob,
-        nationality: newUser.nationality,
-        work_country: newUser.workCountry,
-        joining_date: newUser.joiningDate,
-        secondary_job_title: newUser.secondaryJobTitle,
-        time_type: newUser.timeType,
-        invite_to_login: newUser.inviteToLogin,
-        enable_onboarding: newUser.enableOnboarding,
-        leave_plan: newUser.leavePlan,
-        holiday_list: newUser.holidayList,
-        attendance_tracking: newUser.attendanceTracking,
-        shift: newUser.shift,
-        weekly_off: newUser.weeklyOff,
-        time_tracking_policy: newUser.timeTrackingPolicy,
-        expense_policy: newUser.expensePolicy,
-        advance_policy: newUser.advancePolicy,
+        joining_date: newUser.joiningDate || "",
+        shift: newUser.shift || "",
+        weekly_off: newUser.weeklyOff || "",
         annual_ctc: newUser.annualCtc || 0,
         currency: newUser.currency || "INR"
       };
 
       const { error } = await supabase.from("users").insert([payload]);
-      if (error) console.error("Supabase insert user error:", error);
+      if (error) {
+        console.error("Supabase full insert user error:", error);
+        // Fallback insert with core columns in case extended columns are missing in remote DB
+        const corePayload = {
+          id: newUser.id,
+          emp_code: newUser.empCode,
+          name: newUser.name,
+          email: newUser.email,
+          phone: newUser.phone,
+          role: newUser.role || "Consultant",
+          title: newUser.title,
+          department: newUser.department,
+          location: newUser.location,
+          status: newUser.status || "Active"
+        };
+        const { error: coreErr } = await supabase.from("users").insert([corePayload]);
+        if (coreErr) console.error("Supabase core insert error:", coreErr);
+      }
     }
 
     return newUser;

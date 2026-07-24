@@ -262,6 +262,11 @@ export default function AdminView({ activeTab, setActiveTab }) {
       ? selectedUserIdsForAssignment 
       : users.map(u => u.id);
 
+    if (targetIds.length === 0) {
+      if (setToast) setToast({ message: "Please select at least one employee to update shift.", type: "error" });
+      return;
+    }
+
     const shiftToSave = modalSelectedShift || (shiftsList[0]?.name || "");
     
     setUsers(prev => prev.map(u => targetIds.includes(u.id) ? { ...u, shift: shiftToSave } : u));
@@ -279,6 +284,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
       if (error) console.error("Supabase update shift error:", error);
     }
 
+    setSelectedUserIdsForAssignment([]);
     setShowUpdateShiftModal(false);
     if (setToast) setToast({ message: `Shift updated to "${shiftToSave}" for ${targetIds.length} employee(s)!`, type: "success" });
   };
@@ -287,6 +293,11 @@ export default function AdminView({ activeTab, setActiveTab }) {
     const targetIds = selectedUserIdsForAssignment.length > 0 
       ? selectedUserIdsForAssignment 
       : users.map(u => u.id);
+
+    if (targetIds.length === 0) {
+      if (setToast) setToast({ message: "Please select at least one employee to update weekly off.", type: "error" });
+      return;
+    }
 
     const weeklyOffToSave = modalSelectedWeeklyOff || (weeklyOffsList[0]?.name || "");
     
@@ -305,6 +316,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
       if (error) console.error("Supabase update weekly_off error:", error);
     }
 
+    setSelectedUserIdsForAssignment([]);
     setShowUpdateWeeklyOffModal(false);
     if (setToast) setToast({ message: `Weekly Off updated to "${weeklyOffToSave}" for ${targetIds.length} employee(s)!`, type: "success" });
   };

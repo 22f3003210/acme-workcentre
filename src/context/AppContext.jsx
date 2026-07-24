@@ -36,7 +36,7 @@ const parseTimeToMinutes = (timeStr) => {
 };
 
 // ── Data version: bump this whenever initialData.js changes ──────────────
-const DATA_VERSION = "v12";
+const DATA_VERSION = "v13";
 
 export const AppProvider = ({ children }) => {
   // On every mount, flush stale localStorage if data version changed
@@ -109,28 +109,32 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured()) {
       // 1. Users
       supabase.from("users").select("*").then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
-          const mappedUsers = data.map(dbU => ({
-            id: dbU.id,
-            empCode: dbU.emp_code || dbU.empCode || `HBJ${Math.floor(10000 + Math.random() * 90000)}`,
-            name: dbU.name,
-            email: dbU.email,
-            phone: dbU.phone,
-            role: dbU.role,
-            title: dbU.title,
-            department: dbU.department,
-            location: dbU.location,
-            status: dbU.status || "Active",
-            avatar: dbU.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbU.name)}`,
-            advanceAmount: Number(dbU.advance_amount) || 0
-          }));
-          setUsers(mappedUsers);
+        if (!error && data) {
+          if (data.length === 0) {
+            setUsers(initialUsers);
+          } else {
+            const mappedUsers = data.map(dbU => ({
+              id: dbU.id,
+              empCode: dbU.emp_code || dbU.empCode || `HBJ${Math.floor(10000 + Math.random() * 90000)}`,
+              name: dbU.name,
+              email: dbU.email,
+              phone: dbU.phone,
+              role: dbU.role,
+              title: dbU.title,
+              department: dbU.department,
+              location: dbU.location,
+              status: dbU.status || "Active",
+              avatar: dbU.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(dbU.name)}`,
+              advanceAmount: Number(dbU.advance_amount) || 0
+            }));
+            setUsers(mappedUsers);
+          }
         }
       });
 
       // 2. Expenses
       supabase.from("expenses").select("*").then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           setExpenses(data.map(e => ({
             id: e.id,
             employeeId: e.employee_id,
@@ -150,7 +154,7 @@ export const AppProvider = ({ children }) => {
 
       // 3. Advance Requests
       supabase.from("advance_requests").select("*").then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           setAdvanceRequests(data.map(r => ({
             id: r.id,
             employeeId: r.employee_id,
@@ -165,7 +169,7 @@ export const AppProvider = ({ children }) => {
 
       // 4. Hiring Requisitions
       supabase.from("hiring_requisitions").select("*").then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           setHiringRequisitions(data.map(hr => ({
             id: hr.id,
             projectId: hr.project_id,
@@ -181,7 +185,7 @@ export const AppProvider = ({ children }) => {
 
       // 5. Candidates
       supabase.from("candidates").select("*").then(({ data, error }) => {
-        if (!error && data && data.length > 0) {
+        if (!error && data) {
           setCandidates(data.map(c => ({
             id: c.id,
             fullName: c.full_name,
@@ -195,6 +199,29 @@ export const AppProvider = ({ children }) => {
             status: c.status,
             assignedRecruiter: c.assigned_recruiter,
             resumeUrl: c.resume_url
+          })));
+        }
+      });
+
+      // 6. Projects
+      supabase.from("projects").select("*").then(({ data, error }) => {
+        if (!error && data) {
+          setProjects(data.map(p => ({
+            id: p.id,
+            code: p.code,
+            name: p.name,
+            client: p.client,
+            pocName: p.poc_name,
+            pocContact: p.poc_contact,
+            clientContact: p.client_contact,
+            status: p.status,
+            startDate: p.start_date,
+            budget: Number(p.budget) || 0,
+            spent: Number(p.spent) || 0,
+            location: p.location,
+            description: p.description,
+            engagementPurpose: p.engagement_purpose,
+            assignedConsultants: p.assigned_consultants || []
           })));
         }
       });

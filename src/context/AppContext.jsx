@@ -92,6 +92,16 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : initialCandidates;
   });
 
+  const [jobTitles, setJobTitles] = useState(() => {
+    const saved = localStorage.getItem("workcentre_job_titles");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [numberSeries, setNumberSeries] = useState(() => {
+    const saved = localStorage.getItem("workcentre_number_series");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [currentUser, setCurrentUser] = useState(() => {
     const savedUserId = localStorage.getItem("workcentre_current_user_id");
     const found = users.find(u => u.id === savedUserId);
@@ -222,6 +232,35 @@ export const AppProvider = ({ children }) => {
             description: p.description,
             engagementPurpose: p.engagement_purpose,
             assignedConsultants: p.assigned_consultants || []
+          })));
+        }
+      });
+
+      // 7. Job Titles
+      supabase.from("job_titles").select("*").then(({ data, error }) => {
+        if (!error && data) {
+          setJobTitles(data.map(jt => ({
+            id: jt.id,
+            titleName: jt.title_name || jt.titleName,
+            department: jt.department,
+            status: jt.status || "Active"
+          })));
+        }
+      });
+
+      // 8. Employee Number Series
+      supabase.from("employee_number_series").select("*").then(({ data, error }) => {
+        if (!error && data) {
+          setNumberSeries(data.map(ns => ({
+            id: ns.id,
+            seriesName: ns.series_name || ns.seriesName,
+            description: ns.description,
+            department: ns.department || "All Departments",
+            prefix: ns.prefix || "",
+            digits: ns.digits || 3,
+            suffix: ns.suffix || "",
+            nextNumber: ns.next_number || ns.nextNumber || 101,
+            status: ns.status || "Active"
           })));
         }
       });
@@ -912,6 +951,10 @@ export const AppProvider = ({ children }) => {
         projects,
         hiringRequisitions,
         candidates,
+        jobTitles,
+        setJobTitles,
+        numberSeries,
+        setNumberSeries,
         currentUser,
         isAuthenticated,
         toast,

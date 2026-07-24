@@ -71,23 +71,32 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [showAddJobTitleModal, setShowAddJobTitleModal] = useState(false);
   const [newJobTitleInput, setNewJobTitleInput] = useState("");
 
-  // Department Master Management State (Matching Reference Screenshot)
-  const [departmentsList, setDepartmentsList] = useState([
-    { name: "ADMINISTRATION", subDepts: ["Office Ops"], avatar: "A", color: "#8b5cf6" },
-    { name: "PURCHASE", subDepts: ["Procurement Division"], avatar: "P", color: "#84cc16" },
-    { name: "SALES", subDepts: ["Retail Sales Division"], avatar: "S", color: "#84cc16" },
-    { name: "FINANCE & ACCOUNTING", subDepts: ["Accounts & Tax"], avatar: "FA", color: "#a855f7" },
-    { name: "IT & SYSTEMS SUPPORT", subDepts: ["Infrastructure & Software"], avatar: "IS", color: "#ef4444" },
-    { name: "CUSTOMER RELATIONS", subDepts: ["Client Support"], avatar: "CR", color: "#eab308" },
-    { name: "OPERATIONS", subDepts: ["Logistics & Vault"], avatar: "O", color: "#a1a1aa" },
-    { name: "CASHIER AND BILLING", subDepts: ["Point of Sale"], avatar: "CB", color: "#06b6d4" },
-    { name: "Human Resources", subDepts: ["Talent & Payroll"], avatar: "HR", color: "#f43f5e" }
+  // Employee Number Series Management State (Matching Reference Screenshots 1 & 2)
+  const [numSeriesList, setNumSeriesList] = useState([
+    {
+      id: "ns-1",
+      seriesName: "Default Number Series",
+      description: "This Is Default Number Series.",
+      prefix: "HBJ",
+      digits: 3,
+      suffix: "",
+      nextNumber: 102,
+      department: "All Departments",
+      status: "Active"
+    }
   ]);
-  const [selectedDeptIndex, setSelectedDeptIndex] = useState(2); // Default to SALES
-  const [deptSearchQuery, setDeptSearchQuery] = useState("");
-  const [deptDetailTab, setDeptDetailTab] = useState("Summary"); // "Summary" | "Employees" | "Settings"
-  const [showAddDeptModal, setShowAddDeptModal] = useState(false);
-  const [newDeptInput, setNewDeptInput] = useState("");
+  const [numSeriesSearchQuery, setNumSeriesSearchQuery] = useState("");
+  const [showAddNumSeriesModal, setShowAddNumSeriesModal] = useState(false);
+  const [newSeriesForm, setNewSeriesForm] = useState({
+    seriesName: "",
+    description: "",
+    prefix: "",
+    digits: "3",
+    suffix: "",
+    nextNumber: "101",
+    department: "All Departments",
+    status: true
+  });
 
   // Shifts & Weekly Offs Sub-Navigation State (Holidays & Shift Allowance removed as requested)
   const [shiftsSubTab, setShiftsSubTab] = useState("Shift & Weekly Offs"); // "Shift & Weekly Offs" | "Assignments"
@@ -1536,59 +1545,20 @@ export default function AdminView({ activeTab, setActiveTab }) {
             </div>
           )}
 
-          {/* VIEW: EMPLOYEES -> Employee Code */}
+          {/* VIEW: EMPLOYEES -> Employee Code / Employee Number Series (Matching Reference Screenshots 1 & 2) */}
           {hrMainTab === "EMPLOYEES" && hrEmployeesSubTab === "Employee Code" && (
-            <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Employee Code Directory</h3>
-                <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Format Prefix: <strong>ACME / HBJ</strong></span>
-              </div>
-
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
-                  <thead>
-                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #cbd5e1", color: "#475569", textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: "0.04em" }}>
-                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Employee Code</th>
-                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Employee Name</th>
-                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Role</th>
-                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Department</th>
-                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Location</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((u) => (
-                      <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: "12px 16px", fontWeight: "700", color: "#4c478a", fontFamily: "monospace" }}>{u.empCode || `ACME00${u.id.substring(0, 3)}`}</td>
-                        <td style={{ padding: "12px 16px", fontWeight: "600", color: "#0f172a" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <img src={u.avatar} alt={u.name} style={{ width: "28px", height: "28px", borderRadius: "50%", objectFit: "cover" }} />
-                            <span>{u.name}</span>
-                          </div>
-                        </td>
-                        <td style={{ padding: "12px 16px", color: "#475569" }}>{u.role}</td>
-                        <td style={{ padding: "12px 16px", color: "#475569" }}>{u.department || "Advisory"}</td>
-                        <td style={{ padding: "12px 16px", color: "#475569" }}>{u.location || "Hyderabad"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* VIEW: EMPLOYEES -> Departments (Matching Reference Screenshot) */}
-          {hrMainTab === "EMPLOYEES" && hrEmployeesSubTab === "Departments" && (
             <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
               {/* Header Bar */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div>
-                  <h3 style={{ fontSize: "1.3rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Department</h3>
+                  <h3 style={{ fontSize: "1.3rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Employee Number Series</h3>
                   <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>
-                    Departments are basic functional building blocks in an organisation
+                    You can specify employee number series here.
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowAddDeptModal(true)}
+                  type="button"
+                  onClick={() => setShowAddNumSeriesModal(true)}
                   style={{
                     backgroundColor: "#5b50a1",
                     color: "#ffffff",
@@ -1597,295 +1567,355 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     borderRadius: "4px",
                     fontWeight: "600",
                     cursor: "pointer",
-                    fontSize: "0.82rem"
+                    fontSize: "0.82rem",
+                    transition: "all 0.15s ease"
                   }}
                 >
-                  + Add Department
+                  +Add New Series
                 </button>
               </div>
 
-              {/* Two-Column Master Detail Split Layout */}
-              <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: "20px", width: "100%", alignItems: "start" }}>
-                
-                {/* Left Sidebar: Active Departments List */}
-                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "16px", display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <div style={{ position: "relative" }}>
-                    <input
-                      type="text"
-                      placeholder="Search"
-                      value={deptSearchQuery}
-                      onChange={e => setDeptSearchQuery(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "8px 12px 8px 32px",
-                        border: "1px solid #e2e8f0",
-                        borderRadius: "4px",
-                        fontSize: "0.82rem",
-                        outline: "none"
-                      }}
-                    />
-                    <span style={{ position: "absolute", left: "10px", top: "8px", color: "#94a3b8", fontSize: "0.82rem" }}>🔍</span>
-                  </div>
-
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.72rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                    <span>ACTIVE DEPARTMENTS ({departmentsList.length})</span>
-                    <span>▲</span>
-                  </div>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "4px", maxHeight: "560px", overflowY: "auto" }}>
-                    {departmentsList.filter(d => !deptSearchQuery || d.name.toLowerCase().includes(deptSearchQuery.toLowerCase())).map((dept, idx) => {
-                      const isSelected = selectedDeptIndex === idx;
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => setSelectedDeptIndex(idx)}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                            padding: "10px 12px",
-                            borderRadius: "6px",
-                            cursor: "pointer",
-                            background: isSelected ? "#f5f3ff" : "transparent",
-                            border: isSelected ? "1px solid #ddd6fe" : "1px solid transparent",
-                            transition: "all 0.15s ease"
-                          }}
-                        >
-                          <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: dept.color, color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700", fontSize: "0.76rem" }}>
-                            {dept.avatar}
-                          </div>
-                          <div style={{ display: "flex", flexDirection: "column", flex: 1, minWidth: 0 }}>
-                            <span style={{ fontWeight: isSelected ? "700" : "600", fontSize: "0.84rem", color: isSelected ? "#4c478a" : "#1e293b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                              {dept.name}
-                            </span>
-                            <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>Department</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Right Panel: Selected Department Details */}
-                {departmentsList[selectedDeptIndex] && (() => {
-                  const currentDept = departmentsList[selectedDeptIndex];
-                  const deptUsers = users.filter(u => u.department && u.department.toLowerCase() === currentDept.name.toLowerCase());
-                  return (
-                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                      
-                      {/* Department Title & Actions Header */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                        <div>
-                          <h2 style={{ fontSize: "1.4rem", fontWeight: "700", color: "#0f172a", margin: 0, textTransform: "uppercase" }}>
-                            {currentDept.name}
-                          </h2>
-                          <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Department</span>
-                        </div>
-                        <span style={{ cursor: "pointer", color: "#64748b", fontWeight: "700", fontSize: "1.1rem" }}>⋮</span>
-                      </div>
-
-                      {/* Detail Inner Navigation Tabs */}
-                      <div style={{ display: "flex", gap: "24px", borderBottom: "1px solid #e2e8f0" }}>
-                        {["Summary", "Employees", "Settings"].map(tab => {
-                          const isActive = deptDetailTab === tab;
-                          return (
-                            <button
-                              key={tab}
-                              type="button"
-                              onClick={() => setDeptDetailTab(tab)}
-                              style={{
-                                padding: "8px 0 12px 0",
-                                background: "none",
-                                border: "none",
-                                borderBottom: isActive ? "2px solid #5b50a1" : "2px solid transparent",
-                                color: isActive ? "#5b50a1" : "#64748b",
-                                fontWeight: isActive ? "700" : "500",
-                                fontSize: "0.85rem",
-                                cursor: "pointer"
-                              }}
-                            >
-                              {tab}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Tab Content: Summary */}
-                      {deptDetailTab === "Summary" && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                          
-                          {/* Department Head */}
-                          <div>
-                            <label style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500", display: "block", marginBottom: "6px" }}>
-                              Department Head
-                            </label>
-                            <input
-                              type="text"
-                              placeholder="Search employee"
-                              style={{
-                                width: "100%",
-                                padding: "8px 12px",
-                                border: "none",
-                                borderBottom: "1px solid #cbd5e1",
-                                fontSize: "0.85rem",
-                                outline: "none"
-                              }}
-                            />
-                          </div>
-
-                          {/* Email Alias */}
-                          <div>
-                            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500", display: "flex", alignItems: "center", gap: "4px" }}>
-                              <span>Email Alias</span>
-                              <span style={{ fontSize: "0.75rem", cursor: "help" }}>ⓘ</span>
-                            </div>
-                            <div style={{ fontSize: "0.85rem", color: "#334155", marginTop: "4px" }}>-N/A-</div>
-                          </div>
-
-                          {/* Description */}
-                          <div>
-                            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500" }}>Description</div>
-                            <div style={{ fontSize: "0.85rem", color: "#334155", marginTop: "4px" }}>-N/A-</div>
-                          </div>
-
-                          {/* Sub-Departments */}
-                          <div>
-                            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500", marginBottom: "8px" }}>Sub-Departments</div>
-                            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                              {currentDept.subDepts.map((sub, sIdx) => (
-                                <span key={sIdx} style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", color: "#334155", padding: "4px 14px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: "500" }}>
-                                  {sub}
-                                </span>
-                              ))}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newSub = prompt(`Add Sub-department under ${currentDept.name}:`);
-                                  if (newSub && newSub.trim()) {
-                                    setDepartmentsList(prev => prev.map((d, i) => i === selectedDeptIndex ? { ...d, subDepts: [...d.subDepts, newSub.trim()] } : d));
-                                  }
-                                }}
-                                style={{ background: "#ffffff", border: "1px solid #5b50a1", color: "#5b50a1", padding: "4px 14px", borderRadius: "16px", fontSize: "0.8rem", fontWeight: "600", cursor: "pointer" }}
-                              >
-                                + Add
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* Department Stats */}
-                          <div>
-                            <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "500", marginBottom: "8px" }}>Department Stats</div>
-                            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "16px 20px", display: "inline-flex", flexDirection: "column", gap: "4px", minWidth: "120px" }}>
-                              <span style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a" }}>{deptUsers.length}</span>
-                              <span style={{ fontSize: "0.78rem", color: "#64748b" }}>Employees</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Tab Content: Employees */}
-                      {deptDetailTab === "Employees" && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                          <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem", color: "#0f172a" }}>Department Members ({deptUsers.length})</h4>
-                          {deptUsers.length === 0 ? (
-                            <div style={{ padding: "20px", textAlign: "center", color: "#94a3b8", fontSize: "0.85rem" }}>
-                              No active employees assigned to this department yet.
-                            </div>
-                          ) : (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                              {deptUsers.map(u => (
-                                <div key={u.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", border: "1px solid #f1f5f9", borderRadius: "6px" }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                    <img src={u.avatar} alt={u.name} style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }} />
-                                    <div>
-                                      <div style={{ fontWeight: "600", fontSize: "0.85rem", color: "#0f172a" }}>{u.name}</div>
-                                      <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{u.role} • {u.location || "Hyderabad"}</div>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Tab Content: Settings */}
-                      {deptDetailTab === "Settings" && (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                          <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem", color: "#0f172a" }}>Department Configuration</h4>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const renamed = prompt("Rename Department:", currentDept.name);
-                              if (renamed && renamed.trim()) {
-                                setDepartmentsList(prev => prev.map((d, i) => i === selectedDeptIndex ? { ...d, name: renamed.trim().toUpperCase() } : d));
-                              }
-                            }}
-                            style={{ width: "max-content", padding: "8px 16px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer" }}
-                          >
-                            Rename Department
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+              {/* Alert Recommendation Banner */}
+              <div style={{ background: "#e0f2fe", border: "1px solid #bae6fd", color: "#0369a1", padding: "12px 16px", borderRadius: "6px", fontSize: "0.82rem" }}>
+                It is recommended to use only one employee number series unless really required.
               </div>
 
-              {/* Add Department Modal Overlay */}
-              {showAddDeptModal && (
+              {/* Search & Info Toolbar */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "12px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ position: "relative", width: "100%" }}>
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={numSeriesSearchQuery}
+                    onChange={e => setNumSeriesSearchQuery(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px 8px 32px",
+                      border: "none",
+                      borderBottom: "1px solid #e2e8f0",
+                      fontSize: "0.85rem",
+                      color: "#334155",
+                      outline: "none"
+                    }}
+                  />
+                  <span style={{ position: "absolute", left: "8px", top: "8px", color: "#94a3b8", fontSize: "0.85rem" }}>🔍</span>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "8px", fontSize: "0.78rem", color: "#64748b" }}>
+                  <span>Total: {numSeriesList.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).length}</span>
+                </div>
+              </div>
+
+              {/* Employee Number Series Table */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.84rem" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#64748b", textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: "0.04em" }}>
+                      <th style={{ padding: "12px 20px", textAlign: "left", fontWeight: "600" }}>SERIES NAME</th>
+                      <th style={{ padding: "12px 20px", textAlign: "left", fontWeight: "600" }}>DEPARTMENT</th>
+                      <th style={{ padding: "12px 20px", textAlign: "left", fontWeight: "600" }}>PREFIX</th>
+                      <th style={{ padding: "12px 20px", textAlign: "left", fontWeight: "600" }}>SUFFIX</th>
+                      <th style={{ padding: "12px 20px", textAlign: "left", fontWeight: "600" }}>NEXT NUMBER</th>
+                      <th style={{ padding: "12px 20px", textAlign: "left", fontWeight: "600" }}>STATUS</th>
+                      <th style={{ padding: "12px 20px", textAlign: "left", fontWeight: "600" }}>ACTIONS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {numSeriesList.filter(s => !numSeriesSearchQuery || s.seriesName.toLowerCase().includes(numSeriesSearchQuery.toLowerCase()) || s.prefix.toLowerCase().includes(numSeriesSearchQuery.toLowerCase())).map((item) => (
+                      <tr key={item.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ padding: "16px 20px" }}>
+                          <div style={{ fontWeight: "600", color: "#1e293b" }}>{item.seriesName}</div>
+                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{item.description}</div>
+                        </td>
+                        <td style={{ padding: "16px 20px" }}>
+                          <span style={{ background: "#f1f5f9", color: "#475569", padding: "3px 8px", borderRadius: "4px", fontSize: "0.76rem", fontWeight: "500" }}>
+                            {item.department || "All Departments"}
+                          </span>
+                        </td>
+                        <td style={{ padding: "16px 20px", fontWeight: "600", color: "#0f172a" }}>{item.prefix}</td>
+                        <td style={{ padding: "16px 20px", color: "#64748b" }}>{item.suffix || "-"}</td>
+                        <td style={{ padding: "16px 20px", fontWeight: "600", color: "#0f172a" }}>{item.nextNumber}</td>
+                        <td style={{ padding: "16px 20px" }}>
+                          <span style={{ color: item.status === "Active" ? "#16a34a" : "#94a3b8", fontWeight: "600", fontSize: "0.8rem" }}>{item.status}</span>
+                        </td>
+                        <td style={{ padding: "16px 20px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px", color: "#64748b" }}>
+                            <button
+                              type="button"
+                              title="Toggle Active Status"
+                              onClick={() => {
+                                setNumSeriesList(prev => prev.map(s => s.id === item.id ? { ...s, status: s.status === "Active" ? "Inactive" : "Active" } : s));
+                              }}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: item.status === "Active" ? "#2563eb" : "#94a3b8", fontSize: "0.9rem" }}
+                            >
+                              ☑️
+                            </button>
+                            <button
+                              type="button"
+                              title="Edit Series"
+                              onClick={() => {
+                                const edited = prompt("Edit Series Name:", item.seriesName);
+                                if (edited && edited.trim()) {
+                                  setNumSeriesList(prev => prev.map(s => s.id === item.id ? { ...s, seriesName: edited.trim() } : s));
+                                }
+                              }}
+                              style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
+                            >
+                              ✏️
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                {/* Table Footer Pagination */}
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "16px", padding: "12px 20px", borderTop: "1px solid #f1f5f9", fontSize: "0.78rem", color: "#64748b" }}>
+                  <span>1 to {numSeriesList.length} of {numSeriesList.length}</span>
+                  <span>Page 1 of 1</span>
+                </div>
+              </div>
+
+              {/* Add Employee Number Series Modal Overlay (Matching Reference Screenshot 2) */}
+              {showAddNumSeriesModal && (
                 <div className="task-modal-overlay">
-                  <div className="task-modal" style={{ maxWidth: "440px" }}>
-                    <div className="task-modal-header" style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "12px", marginBottom: "16px" }}>
-                      <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Add New Department</h3>
-                      <button type="button" onClick={() => setShowAddDeptModal(false)} className="close-btn">&times;</button>
+                  <div className="task-modal" style={{ maxWidth: "620px", padding: "24px" }}>
+                    <div className="task-modal-header" style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "14px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "600", color: "#0f172a" }}>Add Employee Number Series</h3>
+                      <button type="button" onClick={() => setShowAddNumSeriesModal(false)} className="close-btn" style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "#64748b" }}>&times;</button>
                     </div>
 
                     <form onSubmit={(e) => {
                       e.preventDefault();
-                      if (newDeptInput.trim()) {
-                        const newName = newDeptInput.trim().toUpperCase();
-                        setDepartmentsList(prev => [
-                          ...prev,
-                          { name: newName, subDepts: ["General"], avatar: newName.substring(0, 2), color: "#5b50a1" }
-                        ]);
-                        setNewDeptInput("");
-                        setShowAddDeptModal(false);
+                      if (newSeriesForm.seriesName.trim()) {
+                        const newEntry = {
+                          id: `ns-${Date.now()}`,
+                          seriesName: newSeriesForm.seriesName.trim(),
+                          description: newSeriesForm.description.trim(),
+                          prefix: newSeriesForm.prefix.trim(),
+                          digits: parseInt(newSeriesForm.digits) || 3,
+                          suffix: newSeriesForm.suffix.trim(),
+                          nextNumber: parseInt(newSeriesForm.nextNumber) || 101,
+                          department: newSeriesForm.department,
+                          status: newSeriesForm.status ? "Active" : "Inactive"
+                        };
+                        setNumSeriesList(prev => [...prev, newEntry]);
+                        setNewSeriesForm({
+                          seriesName: "",
+                          description: "",
+                          prefix: "",
+                          digits: "3",
+                          suffix: "",
+                          nextNumber: "101",
+                          department: "All Departments",
+                          status: true
+                        });
+                        setShowAddNumSeriesModal(false);
                       }
                     }}>
-                      <div className="form-group" style={{ marginBottom: "20px" }}>
+                      {/* Series Name */}
+                      <div className="form-group" style={{ marginBottom: "16px" }}>
                         <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
-                          Department Name *
+                          Series Name
                         </label>
                         <input
                           type="text"
                           required
-                          placeholder="e.g. MARKETING & BRANDING"
-                          value={newDeptInput}
-                          onChange={e => setNewDeptInput(e.target.value)}
-                          style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem" }}
+                          placeholder="Series Name"
+                          value={newSeriesForm.seriesName}
+                          onChange={e => setNewSeriesForm({ ...newSeriesForm, seriesName: e.target.value })}
+                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
                         />
                       </div>
 
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                      {/* Description */}
+                      <div className="form-group" style={{ marginBottom: "16px" }}>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Description
+                        </label>
+                        <textarea
+                          placeholder="Description"
+                          rows={2}
+                          value={newSeriesForm.description}
+                          onChange={e => setNewSeriesForm({ ...newSeriesForm, description: e.target.value })}
+                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", resize: "vertical", outline: "none" }}
+                        />
+                      </div>
+
+                      {/* Department Select (Added per user requirement) */}
+                      <div className="form-group" style={{ marginBottom: "16px" }}>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Department
+                        </label>
+                        <select
+                          value={newSeriesForm.department}
+                          onChange={e => setNewSeriesForm({ ...newSeriesForm, department: e.target.value })}
+                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", background: "#ffffff", outline: "none" }}
+                        >
+                          <option value="All Departments">All Departments</option>
+                          <option value="Advisory">Advisory</option>
+                          <option value="IT & Systems Support">IT & Systems Support</option>
+                          <option value="Administration">Administration</option>
+                          <option value="Purchase">Purchase</option>
+                          <option value="Sales">Sales</option>
+                          <option value="Cashier and Billing">Cashier and Billing</option>
+                        </select>
+                      </div>
+
+                      {/* Row: Prefix, Digits In Number, Suffix */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+                        <div>
+                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
+                            Prefix
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Prefix"
+                            value={newSeriesForm.prefix}
+                            onChange={e => setNewSeriesForm({ ...newSeriesForm, prefix: e.target.value })}
+                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
+                            Digits In Number
+                          </label>
+                          <select
+                            value={newSeriesForm.digits}
+                            onChange={e => setNewSeriesForm({ ...newSeriesForm, digits: e.target.value })}
+                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", background: "#ffffff", outline: "none" }}
+                          >
+                            <option value="2">2 Digits</option>
+                            <option value="3">3 Digits</option>
+                            <option value="4">4 Digits</option>
+                            <option value="5">5 Digits</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
+                            Suffix
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Suffix"
+                            value={newSeriesForm.suffix}
+                            onChange={e => setNewSeriesForm({ ...newSeriesForm, suffix: e.target.value })}
+                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Row: Next Number, Number Preview */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
+                        <div>
+                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
+                            Next Number
+                          </label>
+                          <input
+                            type="number"
+                            placeholder="Next number"
+                            value={newSeriesForm.nextNumber}
+                            onChange={e => setNewSeriesForm({ ...newSeriesForm, nextNumber: e.target.value })}
+                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
+                            Number Preview
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value={`${newSeriesForm.prefix}${String(newSeriesForm.nextNumber || 101).padStart(parseInt(newSeriesForm.digits) || 3, "0")}${newSeriesForm.suffix}`}
+                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #e2e8f0", borderRadius: "4px", fontSize: "0.85rem", background: "#f8fafc", color: "#475569", fontWeight: "700" }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Status Active Toggle Switch */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
                         <button
                           type="button"
-                          onClick={() => setShowAddDeptModal(false)}
-                          style={{ padding: "8px 16px", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "4px", color: "#475569", fontWeight: "600", cursor: "pointer" }}
+                          onClick={() => setNewSeriesForm({ ...newSeriesForm, status: !newSeriesForm.status })}
+                          style={{
+                            width: "44px",
+                            height: "22px",
+                            borderRadius: "12px",
+                            background: newSeriesForm.status ? "#5b50a1" : "#cbd5e1",
+                            border: "none",
+                            position: "relative",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          <div style={{
+                            width: "16px",
+                            height: "16px",
+                            borderRadius: "50%",
+                            background: "#ffffff",
+                            position: "absolute",
+                            top: "3px",
+                            left: newSeriesForm.status ? "25px" : "3px",
+                            transition: "all 0.2s ease"
+                          }} />
+                        </button>
+                        <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155" }}>
+                          Status : {newSeriesForm.status ? "Active" : "Inactive"}
+                        </span>
+                      </div>
+
+                      {/* Modal Action Buttons */}
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddNumSeriesModal(false)}
+                          style={{ padding: "9px 20px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", color: "#475569", fontWeight: "600", cursor: "pointer", fontSize: "0.85rem" }}
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          style={{ padding: "8px 20px", background: "#5b50a1", border: "none", borderRadius: "4px", color: "#ffffff", fontWeight: "600", cursor: "pointer" }}
+                          style={{ padding: "9px 24px", background: "#5b50a1", border: "none", borderRadius: "4px", color: "#ffffff", fontWeight: "600", cursor: "pointer", fontSize: "0.85rem" }}
                         >
-                          Save Department
+                          Save
                         </button>
                       </div>
                     </form>
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* VIEW: EMPLOYEES -> Departments */}
+          {hrMainTab === "EMPLOYEES" && hrEmployeesSubTab === "Departments" && (
+            <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Departments & Units</h3>
+                <button
+                  onClick={() => setShowOnboardModal(true)}
+                  style={{ backgroundColor: "#4c478a", color: "#ffffff", padding: "8px 18px", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer", fontSize: "0.82rem" }}
+                >
+                  + Add Department
+                </button>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+                {["Advisory", "IT & Systems Support", "Administration", "Purchase", "Sales", "Cashier and Billing"].map((dept, idx) => {
+                  const count = users.filter(u => u.department && u.department.toLowerCase() === dept.toLowerCase()).length;
+                  return (
+                    <div key={idx} style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                      <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.04em" }}>DEPARTMENT</div>
+                      <h4 style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a", margin: "4px 0 12px 0" }}>{dept}</h4>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
+                        <span style={{ fontSize: "0.8rem", color: "#64748b" }}>Active Members</span>
+                        <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#4c478a" }}>{count}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 

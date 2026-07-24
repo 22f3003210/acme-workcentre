@@ -1714,24 +1714,36 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       <tbody>
                         {users.map((emp, uIdx) => {
                           const getDayStatus = (dayNum, isWeekend) => {
-                            if (isWeekend) return { code: "OFF", bg: "transparent", color: "#64748b" };
-                            
-                            if (uIdx === 0) {
-                              if (dayNum === 8 || dayNum === 10 || dayNum === 14) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
-                              if (dayNum === 12) return { code: "L", bg: "#e0f2fe", color: "#0369a1" };
-                              return { code: "P", bg: "transparent", color: "#334155" };
-                            } else if (uIdx === 1) {
-                              if (dayNum <= 12) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
-                              return { code: "P", bg: "transparent", color: "#334155" };
-                            } else if (uIdx === 2) {
-                              if (dayNum === 1 || dayNum === 4 || dayNum === 7 || dayNum === 11 || dayNum === 13) return { code: "HD", bg: "#bae6fd", color: "#0284c7" };
-                              if (dayNum === 3 || dayNum === 9 || dayNum === 16) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
-                              return { code: "P", bg: "transparent", color: "#334155" };
-                            } else {
-                              if (dayNum % 4 === 0) return { code: "A", bg: "#e0f2fe", color: "#0369a1" };
-                              if (dayNum % 7 === 0) return { code: "HD", bg: "#bae6fd", color: "#0284c7" };
-                              return { code: "P", bg: "transparent", color: "#334155" };
+                            const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+                            const todayStr = new Date().toISOString().split("T")[0];
+
+                            const empAttendance = emp.attendance || [];
+                            const rec = empAttendance.find(a => a.date === dateStr);
+
+                            if (rec) {
+                              if (rec.status === "Present" || rec.status === "Late") {
+                                return { code: "P", bg: "transparent", color: "#334155" };
+                              }
+                              if (rec.status === "Half Day" || (rec.hoursWorked && rec.hoursWorked < 4)) {
+                                return { code: "HD", bg: "#bae6fd", color: "#0284c7" };
+                              }
+                              if (rec.status === "Leave" || rec.status === "On Leave") {
+                                return { code: "L", bg: "#e0f2fe", color: "#0369a1" };
+                              }
+                              if (rec.status === "Absent") {
+                                return { code: "A", bg: "#ffe4e6", color: "#e11d48" };
+                              }
                             }
+
+                            if (isWeekend) {
+                              return { code: "OFF", bg: "transparent", color: "#64748b" };
+                            }
+
+                            if (dateStr < todayStr) {
+                              return { code: "A", bg: "#ffe4e6", color: "#e11d48" };
+                            }
+
+                            return { code: "-", bg: "transparent", color: "#94a3b8" };
                           };
 
                           let pCount = 0, aCount = 0, hdCount = 0, lCount = 0, offCount = 0;

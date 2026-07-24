@@ -102,6 +102,11 @@ export const AppProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [departments, setDepartments] = useState(() => {
+    const saved = localStorage.getItem("workcentre_departments");
+    return saved ? JSON.parse(saved) : [];
+  });
+
   const [currentUser, setCurrentUser] = useState(() => {
     const savedUserId = localStorage.getItem("workcentre_current_user_id");
     const found = users.find(u => u.id === savedUserId);
@@ -264,6 +269,18 @@ export const AppProvider = ({ children }) => {
           })));
         }
       });
+
+      // 9. Departments
+      supabase.from("departments").select("*").then(({ data, error }) => {
+        if (!error && data) {
+          setDepartments(data.map(d => ({
+            id: d.id,
+            name: d.dept_name || d.name,
+            headName: d.head_name || "",
+            location: d.location || ""
+          })));
+        }
+      });
     }
   }, []);
 
@@ -295,6 +312,18 @@ export const AppProvider = ({ children }) => {
   useEffect(() => {
     localStorage.setItem("workcentre_candidates", JSON.stringify(candidates));
   }, [candidates]);
+
+  useEffect(() => {
+    localStorage.setItem("workcentre_job_titles", JSON.stringify(jobTitles));
+  }, [jobTitles]);
+
+  useEffect(() => {
+    localStorage.setItem("workcentre_number_series", JSON.stringify(numberSeries));
+  }, [numberSeries]);
+
+  useEffect(() => {
+    localStorage.setItem("workcentre_departments", JSON.stringify(departments));
+  }, [departments]);
 
   useEffect(() => {
     localStorage.setItem("workcentre_authenticated", isAuthenticated ? "true" : "false");
@@ -942,6 +971,71 @@ export const AppProvider = ({ children }) => {
     }));
   };
 
+  // Job Titles CRUD & Supabase Sync
+  const addJobTitle = (titleName, department = "Advisory") => {
+    const newTitle = { id: `jt-${Date.now()}`, titleName, department, status: "Active" };
+    setJobTitles(prev => [...prev, newTitle]);
+    if (isSupabaseConfigured()) {
+      supabase.from("job_titles").insert([{ title_name: titleName, department, status: "Active" }])
+        .then(({ error }) => error && console.error("Supabase insert job_title error:", error));
+    }
+    return newTitle;
+  };
+
+  const deleteJobTitle = (titleIdOrName) => {
+    setJobTitles(prev => prev.filter(t => t.id !== titleIdOrName && t.titleName !== titleIdOrName));
+    if (isSupabaseConfigured()) {
+      supabase.from("job_titles").delete().or(`id.eq.${titleIdOrName},title_name.eq.${titleIdOrName}`)
+        .then(({ error }) => error && console.error("Supabase delete job_title error:", error));
+    }
+  };
+
+  // Employee Number Series CRUD & Supabase Sync
+  const addNumberSeries = (seriesData) => {
+    const newSeries = { id: `ns-${Date.now()}`, ...seriesData };
+    setNumberSeries(prev => [...prev, newSeries]);
+    if (isSupabaseConfigured()) {
+      supabase.from("employee_number_series").insert([{
+        series_name: seriesData.seriesName,
+        description: seriesData.description,
+        department: seriesData.department,
+        prefix: seriesData.prefix,
+        digits: parseInt(seriesData.digits) || 3,
+        suffix: seriesData.suffix,
+        next_number: parseInt(seriesData.nextNumber) || 101,
+        status: seriesData.status ? "Active" : "Inactive"
+      }]).then(({ error }) => error && console.error("Supabase insert number_series error:", error));
+    }
+    return newSeries;
+  };
+
+  const deleteNumberSeries = (seriesId) => {
+    setNumberSeries(prev => prev.filter(s => s.id !== seriesId));
+    if (isSupabaseConfigured()) {
+      supabase.from("employee_number_series").delete().eq("id", seriesId)
+        .then(({ error }) => error && console.error("Supabase delete number_series error:", error));
+    }
+  };
+
+  // Departments CRUD & Supabase Sync
+  const addDepartment = (deptName) => {
+    const newDept = { id: `dept-${Date.now()}`, name: deptName, headName: "", location: "" };
+    setDepartments(prev => [...prev, newDept]);
+    if (isSupabaseConfigured()) {
+      supabase.from("departments").insert([{ dept_name: deptName }])
+        .then(({ error }) => error && console.error("Supabase insert department error:", error));
+    }
+    return newDept;
+  };
+
+  const deleteDepartment = (deptName) => {
+    setDepartments(prev => prev.filter(d => d.name !== deptName));
+    if (isSupabaseConfigured()) {
+      supabase.from("departments").delete().eq("dept_name", deptName)
+        .then(({ error }) => error && console.error("Supabase delete department error:", error));
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -953,8 +1047,16 @@ export const AppProvider = ({ children }) => {
         candidates,
         jobTitles,
         setJobTitles,
+        addJobTitle,
+        deleteJobTitle,
         numberSeries,
         setNumberSeries,
+        addNumberSeries,
+        deleteNumberSeries,
+        departments,
+        setDepartments,
+        addDepartment,
+        deleteDepartment,
         currentUser,
         isAuthenticated,
         toast,

@@ -119,6 +119,32 @@ CREATE POLICY "Allow public update access" ON public.users FOR UPDATE USING (tru
 
 CREATE POLICY "Allow public read job_titles" ON public.job_titles FOR SELECT USING (true);
 CREATE POLICY "Allow public insert job_titles" ON public.job_titles FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update job_titles" ON public.job_titles FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete job_titles" ON public.job_titles FOR DELETE USING (true);
 
 CREATE POLICY "Allow public read number_series" ON public.employee_number_series FOR SELECT USING (true);
 CREATE POLICY "Allow public insert number_series" ON public.employee_number_series FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update number_series" ON public.employee_number_series FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete number_series" ON public.employee_number_series FOR DELETE USING (true);
+
+CREATE POLICY "Allow public read departments" ON public.departments FOR SELECT USING (true);
+CREATE POLICY "Allow public insert departments" ON public.departments FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update departments" ON public.departments FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete departments" ON public.departments FOR DELETE USING (true);
+
+CREATE POLICY "Allow public read attendance" ON public.attendance FOR SELECT USING (true);
+CREATE POLICY "Allow public insert attendance" ON public.attendance FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update attendance" ON public.attendance FOR UPDATE USING (true);
+
+CREATE POLICY "Allow public read expenses" ON public.expenses FOR SELECT USING (true);
+CREATE POLICY "Allow public insert expenses" ON public.expenses FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update expenses" ON public.expenses FOR UPDATE USING (true);
+
+CREATE POLICY "Allow public read advance_requests" ON public.advance_requests FOR SELECT USING (true);
+CREATE POLICY "Allow public insert advance_requests" ON public.advance_requests FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update advance_requests" ON public.advance_requests FOR UPDATE USING (true);
+
+CREATE POLICY "Allow public read projects" ON public.projects FOR SELECT USING (true);
+CREATE POLICY "Allow public insert projects" ON public.projects FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update projects" ON public.projects FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete projects" ON public.projects FOR DELETE USING (true);

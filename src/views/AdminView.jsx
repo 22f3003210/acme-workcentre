@@ -21,6 +21,15 @@ export default function AdminView({ activeTab, setActiveTab }) {
     verifyExpense,
     verifyAdvanceRequest,
     requestAdvance,
+    jobTitles,
+    addJobTitle,
+    deleteJobTitle,
+    numberSeries,
+    addNumberSeries,
+    deleteNumberSeries,
+    departments,
+    addDepartment,
+    deleteDepartment,
     setToast
   } = useApp();
 
@@ -1495,6 +1504,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       e.preventDefault();
                       if (newJobTitleInput.trim()) {
                         setJobTitlesList(prev => [...prev, newJobTitleInput.trim()]);
+                        addJobTitle(newJobTitleInput.trim());
                         setNewJobTitleInput("");
                         setShowAddJobTitleModal(false);
                       }
@@ -1699,6 +1709,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           status: newSeriesForm.status ? "Active" : "Inactive"
                         };
                         setNumSeriesList(prev => [...prev, newEntry]);
+                        addNumberSeries(newEntry);
                         setNewSeriesForm({
                           seriesName: "",
                           description: "",
@@ -1921,6 +1932,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             onClick={() => {
                               if (confirm(`Remove "${name}" department?`)) {
                                 setDepartmentsList(prev => prev.filter(d => (typeof d === "string" ? d : d.name) !== name));
+                                deleteDepartment(name);
                               }
                             }}
                             style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.85rem" }}
@@ -1952,6 +1964,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       e.preventDefault();
                       if (newDeptNameInput.trim()) {
                         setDepartmentsList(prev => [...prev, newDeptNameInput.trim()]);
+                        addDepartment(newDeptNameInput.trim());
                         setNewDeptNameInput("");
                         setShowAddDeptModal(false);
                       }

@@ -4101,13 +4101,161 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 })()}
 
               </div>
-
             </div>
           )}
-
         </div>
       )}
 
+          {/* APPROVALS View */}
+          {subModuleTab === "APPROVALS" && (
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", marginBottom: "8px" }}>Attendance & Leave Approvals</h3>
+              <p style={{ fontSize: "0.83rem", color: "#64748b", marginBottom: "20px" }}>Review and take action on pending attendance regularization and leave requests.</p>
+              <div style={{ overflowX: "auto", border: "1px solid #e2e8f0" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", textAlign: "left" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
+                      <th style={{ padding: "10px 14px" }}>EMPLOYEE</th>
+                      <th style={{ padding: "10px 14px" }}>TYPE</th>
+                      <th style={{ padding: "10px 14px" }}>DATE / PERIOD</th>
+                      <th style={{ padding: "10px 14px" }}>REASON</th>
+                      <th style={{ padding: "10px 14px" }}>STATUS</th>
+                      <th style={{ padding: "10px 14px" }}>ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((u, idx) => (
+                      <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>{u.name}</td>
+                        <td style={{ padding: "10px 14px", color: "#475569" }}>{idx % 2 === 0 ? "Leave Application" : "Attendance Regularization"}</td>
+                        <td style={{ padding: "10px 14px", color: "#475569" }}>2026-07-25</td>
+                        <td style={{ padding: "10px 14px", color: "#475569" }}>Personal Work / Client Meeting</td>
+                        <td style={{ padding: "10px 14px" }}>
+                          <span style={{ background: "#fef3c7", color: "#d97706", padding: "2px 8px", borderRadius: "10px", fontSize: "0.74rem", fontWeight: "600" }}>Pending</span>
+                        </td>
+                        <td style={{ padding: "10px 14px" }}>
+                          <div style={{ display: "flex", gap: "6px" }}>
+                            <button type="button" onClick={() => setToast && setToast({ message: "Approved successfully", type: "success" })} style={{ background: "#22c55e", color: "#ffffff", border: "none", padding: "4px 10px", fontSize: "0.76rem", borderRadius: "4px", cursor: "pointer" }}>Approve</button>
+                            <button type="button" onClick={() => setToast && setToast({ message: "Rejected request", type: "info" })} style={{ background: "#ef4444", color: "#ffffff", border: "none", padding: "4px 10px", fontSize: "0.76rem", borderRadius: "4px", cursor: "pointer" }}>Reject</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* LEAVE View */}
+          {subModuleTab === "LEAVE" && (
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", marginBottom: "8px" }}>Leave Management & Balances</h3>
+              <p style={{ fontSize: "0.83rem", color: "#64748b", marginBottom: "20px" }}>Track employee leave quotas, accrued balances, and policy rules.</p>
+              <div style={{ overflowX: "auto", border: "1px solid #e2e8f0" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", textAlign: "left" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
+                      <th style={{ padding: "10px 14px" }}>EMPLOYEE</th>
+                      <th style={{ padding: "10px 14px" }}>DEPARTMENT</th>
+                      <th style={{ padding: "10px 14px" }}>CASUAL LEAVE</th>
+                      <th style={{ padding: "10px 14px" }}>SICK LEAVE</th>
+                      <th style={{ padding: "10px 14px" }}>EARNED LEAVE</th>
+                      <th style={{ padding: "10px 14px" }}>TOTAL REMAINING</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => (
+                      <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>{u.name}</td>
+                        <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "—"}</td>
+                        <td style={{ padding: "10px 14px", color: "#475569" }}>6 / 12 Days</td>
+                        <td style={{ padding: "10px 14px", color: "#475569" }}>5 / 6 Days</td>
+                        <td style={{ padding: "10px 14px", color: "#475569" }}>10 / 15 Days</td>
+                        <td style={{ padding: "10px 14px", fontWeight: "600", color: "#16a34a" }}>21 Days Available</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* REPORTS View */}
+          {subModuleTab === "REPORTS" && (
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", marginBottom: "8px" }}>Attendance & Time Reports</h3>
+              <p style={{ fontSize: "0.83rem", color: "#64748b", marginBottom: "20px" }}>Export monthly attendance logs, late mark summaries, and overtime records.</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+                <div style={{ border: "1px solid #e2e8f0", padding: "16px", background: "#f8fafc" }}>
+                  <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem" }}>Monthly Attendance Ledger</h4>
+                  <p style={{ fontSize: "0.78rem", color: "#64748b" }}>Complete month-wise check-in & check-out logs per employee.</p>
+                  <button type="button" onClick={() => setToast && setToast({ message: "Exporting Monthly Attendance Ledger CSV...", type: "success" })} style={{ background: "#5b50a1", color: "#fff", border: "none", padding: "6px 14px", fontSize: "0.78rem", cursor: "pointer", marginTop: "8px" }}>Export CSV</button>
+                </div>
+                <div style={{ border: "1px solid #e2e8f0", padding: "16px", background: "#f8fafc" }}>
+                  <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem" }}>Late Arrivals & Penalties</h4>
+                  <p style={{ fontSize: "0.78rem", color: "#64748b" }}>Breakdown of grace time breaches and penalization deductions.</p>
+                  <button type="button" onClick={() => setToast && setToast({ message: "Exporting Late Arrivals Report CSV...", type: "success" })} style={{ background: "#5b50a1", color: "#fff", border: "none", padding: "6px 14px", fontSize: "0.78rem", cursor: "pointer", marginTop: "8px" }}>Export CSV</button>
+                </div>
+                <div style={{ border: "1px solid #e2e8f0", padding: "16px", background: "#f8fafc" }}>
+                  <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem" }}>Leave Balance Report</h4>
+                  <p style={{ fontSize: "0.78rem", color: "#64748b" }}>Annual leave usage, carry-forward, and encashment report.</p>
+                  <button type="button" onClick={() => setToast && setToast({ message: "Exporting Leave Report CSV...", type: "success" })} style={{ background: "#5b50a1", color: "#fff", border: "none", padding: "6px 14px", fontSize: "0.78rem", cursor: "pointer", marginTop: "8px" }}>Export CSV</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* SETTINGS View */}
+          {subModuleTab === "SETTINGS" && (
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", marginBottom: "8px" }}>Time & Attendance Rules & Settings</h3>
+              <p style={{ fontSize: "0.83rem", color: "#64748b", marginBottom: "20px" }}>Configure shifts grace limits, IP restrictions, and auto-checkout rules.</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", maxWidth: "800px" }}>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155" }}>Grace Period (Minutes)</label>
+                  <input type="number" defaultValue="15" style={{ width: "100%", padding: "8px", border: "1px solid #cbd5e1", marginTop: "4px" }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155" }}>Auto-Checkout Time</label>
+                  <input type="time" defaultValue="20:00" style={{ width: "100%", padding: "8px", border: "1px solid #cbd5e1", marginTop: "4px" }} />
+                </div>
+                <div style={{ gridColumn: "1 / -1" }}>
+                  <button type="button" onClick={() => setToast && setToast({ message: "Time & Attendance Settings updated successfully", type: "success" })} style={{ background: "#5b50a1", color: "#fff", border: "none", padding: "8px 20px", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer" }}>Save Settings</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Leave Summary & Analytics Sub-Tabs under DASHBOARD */}
+          {subModuleTab === "DASHBOARD" && (dashboardSubTab === "Leave Summary" || dashboardSubTab === "Leave Analytics") && (
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", marginBottom: "8px" }}>{dashboardSubTab}</h3>
+              <p style={{ fontSize: "0.83rem", color: "#64748b", marginBottom: "20px" }}>Overview of employee leave applications and historical leave usage.</p>
+              <div style={{ overflowX: "auto", border: "1px solid #e2e8f0" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", textAlign: "left" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#475569" }}>
+                      <th style={{ padding: "10px 14px" }}>EMPLOYEE</th>
+                      <th style={{ padding: "10px 14px" }}>DEPARTMENT</th>
+                      <th style={{ padding: "10px 14px" }}>TOTAL LEAVES TAKEN</th>
+                      <th style={{ padding: "10px 14px" }}>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map(u => (
+                      <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ padding: "10px 14px", fontWeight: "500", color: "#0f172a" }}>{u.name}</td>
+                        <td style={{ padding: "10px 14px", color: "#475569" }}>{u.department || "—"}</td>
+                        <td style={{ padding: "10px 14px", color: "#475569" }}>2 Days</td>
+                        <td style={{ padding: "10px 14px", color: "#16a34a", fontWeight: "600" }}>Active</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

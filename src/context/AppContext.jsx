@@ -104,9 +104,10 @@ export const AppProvider = ({ children }) => {
 
   const [toast, setToast] = useState(null);
 
-  // Supabase Initial User Fetch
+  // Supabase Initial Entity Fetches
   useEffect(() => {
     if (isSupabaseConfigured()) {
+      // 1. Users
       supabase.from("users").select("*").then(({ data, error }) => {
         if (!error && data && data.length > 0) {
           const mappedUsers = data.map(dbU => ({
@@ -124,6 +125,77 @@ export const AppProvider = ({ children }) => {
             advanceAmount: Number(dbU.advance_amount) || 0
           }));
           setUsers(mappedUsers);
+        }
+      });
+
+      // 2. Expenses
+      supabase.from("expenses").select("*").then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setExpenses(data.map(e => ({
+            id: e.id,
+            employeeId: e.employee_id,
+            projectId: e.project_id,
+            date: e.date,
+            submittedDate: e.submitted_date,
+            category: e.category,
+            amount: Number(e.amount) || 0,
+            reason: e.reason,
+            receipt: e.receipt,
+            status: e.status,
+            approvedBy: e.approved_by,
+            approvedDate: e.approved_date
+          })));
+        }
+      });
+
+      // 3. Advance Requests
+      supabase.from("advance_requests").select("*").then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setAdvanceRequests(data.map(r => ({
+            id: r.id,
+            employeeId: r.employee_id,
+            amount: Number(r.amount) || 0,
+            purpose: r.purpose,
+            date: r.date,
+            status: r.status,
+            reviewedBy: r.reviewed_by
+          })));
+        }
+      });
+
+      // 4. Hiring Requisitions
+      supabase.from("hiring_requisitions").select("*").then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setHiringRequisitions(data.map(hr => ({
+            id: hr.id,
+            projectId: hr.project_id,
+            clientName: hr.client_name,
+            positionTitle: hr.position_title,
+            location: hr.location,
+            minExperienceYears: hr.min_experience_years,
+            budgetAnnual: Number(hr.budget_annual) || 0,
+            status: hr.status
+          })));
+        }
+      });
+
+      // 5. Candidates
+      supabase.from("candidates").select("*").then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setCandidates(data.map(c => ({
+            id: c.id,
+            fullName: c.full_name,
+            email: c.email,
+            phone: c.phone,
+            currentCity: c.current_city,
+            preferredCities: c.preferred_cities || [],
+            experienceYears: c.experience_years,
+            currentRole: c.current_role,
+            expectedCtc: Number(c.expected_ctc) || 0,
+            status: c.status,
+            assignedRecruiter: c.assigned_recruiter,
+            resumeUrl: c.resume_url
+          })));
         }
       });
     }

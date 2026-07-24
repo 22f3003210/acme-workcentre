@@ -95,6 +95,8 @@ export const AppProvider = ({ children }) => {
   const [jobTitles, setJobTitles] = useState([]);
   const [numberSeries, setNumberSeries] = useState([]);
   const [departments, setDepartments] = useState([]);
+  const [shifts, setShifts] = useState([]);
+  const [weeklyOffs, setWeeklyOffs] = useState([]);
 
   const [currentUser, setCurrentUser] = useState(() => {
     const savedUserId = localStorage.getItem("workcentre_current_user_id");
@@ -267,6 +269,33 @@ export const AppProvider = ({ children }) => {
             name: d.dept_name || d.name,
             headName: d.head_name || "",
             location: d.location || ""
+          })));
+        }
+      });
+
+      // 10. Shifts
+      supabase.from("shifts").select("*").then(({ data, error }) => {
+        if (!error && data) {
+          setShifts(data.map(s => ({
+            id: s.id,
+            name: s.name,
+            code: s.code,
+            timings: s.timings,
+            break: s.break_mins || s.break || "0 mins",
+            type: s.shift_type || "fixed",
+            status: s.status || "Active"
+          })));
+        }
+      });
+
+      // 11. Weekly Offs
+      supabase.from("weekly_offs").select("*").then(({ data, error }) => {
+        if (!error && data) {
+          setWeeklyOffs(data.map(w => ({
+            id: w.id,
+            name: w.name,
+            days: w.days || [],
+            status: w.status || "Active"
           })));
         }
       });
@@ -1053,6 +1082,63 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Shifts CRUD & Supabase Sync
+  const addShift = async (shiftData) => {
+    const tempId = `shift-${Date.now()}`;
+    const newShift = { id: tempId, ...shiftData };
+    setShifts(prev => [...prev, newShift]);
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.from("shifts").insert([{
+        name: shiftData.name,
+        code: shiftData.code,
+        timings: shiftData.timings,
+        break_mins: shiftData.break,
+        shift_type: shiftData.type || "fixed"
+      }]).select();
+      if (error) {
+        console.error("Supabase insert shift error:", error);
+      } else if (data && data[0]) {
+        setShifts(prev => prev.map(s => s.id === tempId ? { ...s, id: data[0].id } : s));
+      }
+    }
+    return newShift;
+  };
+
+  const deleteShift = async (nameOrId) => {
+    setShifts(prev => prev.filter(s => s.name !== nameOrId && s.id !== nameOrId));
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from("shifts").delete().or(`name.eq.${nameOrId},id.eq.${nameOrId}`);
+      if (error) console.error("Supabase delete shift error:", error);
+    }
+  };
+
+  // Weekly Offs CRUD & Supabase Sync
+  const addWeeklyOff = async (weeklyOffData) => {
+    const tempId = `wo-${Date.now()}`;
+    const newWO = { id: tempId, ...weeklyOffData };
+    setWeeklyOffs(prev => [...prev, newWO]);
+    if (isSupabaseConfigured()) {
+      const { data, error } = await supabase.from("weekly_offs").insert([{
+        name: weeklyOffData.name,
+        days: weeklyOffData.days || []
+      }]).select();
+      if (error) {
+        console.error("Supabase insert weekly_off error:", error);
+      } else if (data && data[0]) {
+        setWeeklyOffs(prev => prev.map(w => w.id === tempId ? { ...w, id: data[0].id } : w));
+      }
+    }
+    return newWO;
+  };
+
+  const deleteWeeklyOff = async (nameOrId) => {
+    setWeeklyOffs(prev => prev.filter(w => w.name !== nameOrId && w.id !== nameOrId));
+    if (isSupabaseConfigured()) {
+      const { error } = await supabase.from("weekly_offs").delete().or(`name.eq.${nameOrId},id.eq.${nameOrId}`);
+      if (error) console.error("Supabase delete weekly_off error:", error);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1074,6 +1160,14 @@ export const AppProvider = ({ children }) => {
         setDepartments,
         addDepartment,
         deleteDepartment,
+        shifts,
+        setShifts,
+        addShift,
+        deleteShift,
+        weeklyOffs,
+        setWeeklyOffs,
+        addWeeklyOff,
+        deleteWeeklyOff,
         currentUser,
         isAuthenticated,
         toast,

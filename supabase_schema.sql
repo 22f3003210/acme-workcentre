@@ -203,3 +203,37 @@ CREATE POLICY "Allow public read projects" ON public.projects FOR SELECT USING (
 CREATE POLICY "Allow public insert projects" ON public.projects FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update projects" ON public.projects FOR UPDATE USING (true);
 CREATE POLICY "Allow public delete projects" ON public.projects FOR DELETE USING (true);
+
+-- SHIFTS & WEEKLY OFFS TABLES
+CREATE TABLE IF NOT EXISTS public.shifts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT UNIQUE NOT NULL,
+    code TEXT,
+    timings TEXT,
+    break_mins TEXT,
+    shift_type TEXT DEFAULT 'fixed',
+    status TEXT NOT NULL DEFAULT 'Active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+CREATE TABLE IF NOT EXISTS public.weekly_offs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT UNIQUE NOT NULL,
+    days TEXT[],
+    status TEXT NOT NULL DEFAULT 'Active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.shifts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.weekly_offs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read shifts" ON public.shifts FOR SELECT USING (true);
+CREATE POLICY "Allow public insert shifts" ON public.shifts FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update shifts" ON public.shifts FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete shifts" ON public.shifts FOR DELETE USING (true);
+
+CREATE POLICY "Allow public read weekly_offs" ON public.weekly_offs FOR SELECT USING (true);
+CREATE POLICY "Allow public insert weekly_offs" ON public.weekly_offs FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update weekly_offs" ON public.weekly_offs FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete weekly_offs" ON public.weekly_offs FOR DELETE USING (true);
+

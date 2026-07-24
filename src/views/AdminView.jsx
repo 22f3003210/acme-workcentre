@@ -32,8 +32,17 @@ export default function AdminView({ activeTab, setActiveTab }) {
     departments,
     addDepartment,
     deleteDepartment,
+    shifts,
+    addShift,
+    deleteShift,
+    weeklyOffs,
+    addWeeklyOff,
+    deleteWeeklyOff,
     setToast
   } = useApp();
+
+  const shiftsList = shifts;
+  const weeklyOffsList = weeklyOffs;
 
   const getUniqueNumber = (id) => {
     if (!id) return "";
@@ -134,10 +143,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [shiftsInnerTab, setShiftsInnerTab] = useState("Shifts"); // "Shifts" | "Weekly Offs" | "Shift & Weekly Off Rules"
   const [assignmentsInnerTab, setAssignmentsInnerTab] = useState("Shift & Weekly Off Assignments");
 
-  // Dynamic Shifts and Weekly Offs Lists State
-  const [shiftsList, setShiftsList] = useState([]);
-
-  const [weeklyOffsList, setWeeklyOffsList] = useState([]);
+  // Dynamic Shifts and Weekly Offs Lists managed via AppContext / Supabase
 
   // Modal Views for Add Shift & Add Weekly Off
   const [showAddShiftPage, setShowAddShiftPage] = useState(false);
@@ -175,10 +181,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
       : `Flexible (${maxShiftDurationHours || "16"} hrs max)`;
     const breakStr = `${newShiftBreakMins} mins`;
 
-    const newShiftObj = { name, code, count: "0 employees", timings, break: breakStr };
-    setShiftsList(prev => [...prev, newShiftObj]);
+    const newShiftObj = { name, code, count: "0 employees", timings, break: breakStr, type: newShiftType };
+    addShift(newShiftObj);
     setSelectedShift(name);
-    setModalSelectedShift(name); // Interconnect to Update Shift modal!
+    setModalSelectedShift(name);
     setShowAddShiftPage(false);
 
     // Reset Form
@@ -193,10 +199,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
       return;
     }
     const name = newWeeklyOffName.trim();
-    const newWeeklyOffObj = { name, count: "0 employees" };
-    setWeeklyOffsList(prev => [...prev, newWeeklyOffObj]);
+    const newWeeklyOffObj = { name, count: "0 employees", days: newWeeklyOffDays };
+    addWeeklyOff(newWeeklyOffObj);
     setSelectedWeeklyOff(name);
-    setModalSelectedWeeklyOff(name); // Interconnect to Update Weekly Off modal!
+    setModalSelectedWeeklyOff(name);
     setShowAddWeeklyOffDrawer(false);
 
     // Reset Form
@@ -3516,10 +3522,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                   title="Delete Shift"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    const nextList = shiftsList.filter(s => s.name !== item.name);
-                                    setShiftsList(nextList);
-                                    if (selectedShift === item.name) {
-                                      setSelectedShift(nextList.length > 0 ? nextList[0].name : "");
+                                    if (confirm(`Delete Shift "${item.name}"?`)) {
+                                      deleteShift(item.name);
                                     }
                                   }}
                                   style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.9rem", padding: "2px 6px" }}
@@ -3745,10 +3749,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
                                     title="Delete Weekly Off"
                                     onClick={(e) => {
                                       e.stopPropagation();
-                                      const nextList = weeklyOffsList.filter(w => w.name !== item.name);
-                                      setWeeklyOffsList(nextList);
-                                      if (selectedWeeklyOff === item.name) {
-                                        setSelectedWeeklyOff(nextList.length > 0 ? nextList[0].name : "");
+                                      if (confirm(`Delete Weekly Off "${item.name}"?`)) {
+                                        deleteWeeklyOff(item.name);
                                       }
                                     }}
                                     style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.9rem", padding: "2px 6px" }}

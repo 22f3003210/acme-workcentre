@@ -8,6 +8,8 @@ export default function AddEmployeeWizard() {
     jobTitles,
     departments,
     numberSeries,
+    shifts,
+    weeklyOffs,
     addUser,
     setToast
   } = useApp();
@@ -423,18 +425,20 @@ export default function AddEmployeeWizard() {
               <div>
                 <label style={labelStyle}>Shift *</label>
                 <select value={shift} onChange={e => setShift(e.target.value)} style={selectStyle}>
-                  <option value="General Shift (9 AM - 6 PM)">General Shift (9 AM - 6 PM)</option>
-                  <option value="Morning Shift (7 AM - 4 PM)">Morning Shift (7 AM - 4 PM)</option>
-                  <option value="UTC">UTC</option>
+                  <option value="">Select Shift</option>
+                  {shifts.map((s, idx) => (
+                    <option key={idx} value={s.name}>{s.name} ({s.timings || "General"})</option>
+                  ))}
                 </select>
               </div>
 
               <div>
                 <label style={labelStyle}>Weekly Off *</label>
                 <select value={weeklyOff} onChange={e => setWeeklyOff(e.target.value)} style={selectStyle}>
-                  <option value="Sunday">Sunday</option>
-                  <option value="Saturday & Sunday">Saturday & Sunday</option>
-                  <option value="Thursday">Thursday</option>
+                  <option value="">Select Weekly Off</option>
+                  {weeklyOffs.map((w, idx) => (
+                    <option key={idx} value={w.name}>{w.name}</option>
+                  ))}
                 </select>
               </div>
 

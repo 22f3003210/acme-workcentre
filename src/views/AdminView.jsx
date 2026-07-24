@@ -54,6 +54,23 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [dirDeptFilter, setDirDeptFilter] = useState("All");
   const [dirLocationFilter, setDirLocationFilter] = useState("All");
 
+  // Job Titles Management State (Matching Reference Screenshot)
+  const [jobTitlesList, setJobTitlesList] = useState([
+    "CEO",
+    "Chief Procurement Officer",
+    "Floor Manager",
+    "Cashier",
+    "Systems Manager",
+    "Retail Jewellery BD Consultant",
+    "Systems Operator",
+    "Office Assistant",
+    "Sales Executive",
+    "Admin Manager"
+  ]);
+  const [jobTitleSearchQuery, setJobTitleSearchQuery] = useState("");
+  const [showAddJobTitleModal, setShowAddJobTitleModal] = useState(false);
+  const [newJobTitleInput, setNewJobTitleInput] = useState("");
+
   // Shifts & Weekly Offs Sub-Navigation State (Holidays & Shift Allowance removed as requested)
   const [shiftsSubTab, setShiftsSubTab] = useState("Shift & Weekly Offs"); // "Shift & Weekly Offs" | "Assignments"
   const [shiftsInnerTab, setShiftsInnerTab] = useState("Shifts"); // "Shifts" | "Weekly Offs" | "Shift & Weekly Off Rules"
@@ -1334,42 +1351,112 @@ export default function AdminView({ activeTab, setActiveTab }) {
             </div>
           )}
 
-          {/* VIEW: EMPLOYEES -> Job Titles */}
+          {/* VIEW: EMPLOYEES -> Job Titles (Matching Reference Screenshot) */}
           {hrMainTab === "EMPLOYEES" && hrEmployeesSubTab === "Job Titles" && (
             <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "16px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Job Titles & Designations</h3>
+              {/* Header Bar */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <h3 style={{ fontSize: "1.3rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>Job Titles</h3>
+                  <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>
+                    You can specify employee job titles here.
+                  </p>
+                </div>
                 <button
-                  onClick={() => setShowOnboardModal(true)}
-                  style={{ backgroundColor: "#4c478a", color: "#ffffff", padding: "8px 18px", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer", fontSize: "0.82rem" }}
+                  onClick={() => setShowAddJobTitleModal(true)}
+                  style={{
+                    backgroundColor: "#5b50a1",
+                    color: "#ffffff",
+                    padding: "8px 20px",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    fontSize: "0.82rem",
+                    transition: "all 0.15s ease"
+                  }}
                 >
                   + Add Job Title
                 </button>
               </div>
 
+              {/* Search & Info Bar */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "12px 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                <div style={{ position: "relative", width: "100%" }}>
+                  <input
+                    type="text"
+                    placeholder="Search"
+                    value={jobTitleSearchQuery}
+                    onChange={e => setJobTitleSearchQuery(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "8px 12px 8px 32px",
+                      border: "none",
+                      borderBottom: "1px solid #e2e8f0",
+                      fontSize: "0.85rem",
+                      color: "#334155",
+                      outline: "none"
+                    }}
+                  />
+                  <span style={{ position: "absolute", left: "8px", top: "8px", color: "#94a3b8", fontSize: "0.85rem" }}>🔍</span>
+                </div>
+
+                <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "8px", fontSize: "0.78rem", color: "#64748b" }}>
+                  <span>Total: {jobTitlesList.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).length}</span>
+                  <span style={{ cursor: "pointer", color: "#64748b", fontWeight: "700" }}>⋮</span>
+                </div>
+              </div>
+
+              {/* Job Titles Table */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.84rem" }}>
                   <thead>
-                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #cbd5e1", color: "#475569", textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: "0.04em" }}>
-                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Job Title</th>
-                      <th style={{ padding: "12px 16px", textAlign: "left" }}>Department</th>
-                      <th style={{ padding: "12px 16px", textAlign: "center" }}>Assigned Employees</th>
-                      <th style={{ padding: "12px 16px", textAlign: "center" }}>Status</th>
+                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#64748b", textTransform: "uppercase", fontSize: "0.72rem", letterSpacing: "0.04em" }}>
+                      <th style={{ padding: "12px 20px", textAlign: "left", width: "45%", fontWeight: "600" }}>NAME</th>
+                      <th style={{ padding: "12px 20px", textAlign: "left", width: "35%", fontWeight: "600" }}>APPLIES TO</th>
+                      <th style={{ padding: "12px 20px", textAlign: "left", width: "20%", fontWeight: "600" }}>ACTIONS</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {Array.from(new Set(users.map(u => u.title || `${u.role} Lead`))).map((title, idx) => {
-                      const count = users.filter(u => (u.title || `${u.role} Lead`) === title).length;
-                      const sampleDept = users.find(u => (u.title || `${u.role} Lead`) === title)?.department || "Advisory";
+                    {jobTitlesList.filter(t => !jobTitleSearchQuery || t.toLowerCase().includes(jobTitleSearchQuery.toLowerCase())).map((titleName, idx) => {
+                      const count = users.filter(u => (u.title || "").toLowerCase() === titleName.toLowerCase() || (u.role || "").toLowerCase() === titleName.toLowerCase()).length;
                       return (
                         <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                          <td style={{ padding: "12px 16px", fontWeight: "600", color: "#0f172a" }}>{title}</td>
-                          <td style={{ padding: "12px 16px", color: "#475569" }}>{sampleDept}</td>
-                          <td style={{ padding: "12px 16px", textAlign: "center" }}>
-                            <span style={{ background: "#f5f3ff", color: "#4c478a", padding: "3px 10px", borderRadius: "12px", fontWeight: "600", fontSize: "0.76rem" }}>{count}</span>
+                          <td style={{ padding: "16px 20px", fontWeight: "600", color: "#1e293b" }}>
+                            {titleName}
                           </td>
-                          <td style={{ padding: "12px 16px", textAlign: "center" }}>
-                            <span style={{ color: "#16a34a", fontWeight: "600", fontSize: "0.76rem" }}>Active</span>
+                          <td style={{ padding: "16px 20px", color: "#475569" }}>
+                            <div style={{ fontWeight: "600", color: "#0f172a", fontSize: "0.9rem" }}>{count}</div>
+                            <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{count === 1 ? "employee" : "employees"}</div>
+                          </td>
+                          <td style={{ padding: "16px 20px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "14px", color: "#64748b" }}>
+                              <button
+                                type="button"
+                                title="Edit Job Title"
+                                onClick={() => {
+                                  const edited = prompt("Edit Job Title:", titleName);
+                                  if (edited && edited.trim() !== "") {
+                                    setJobTitlesList(prev => prev.map(t => t === titleName ? edited.trim() : t));
+                                  }
+                                }}
+                                style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem" }}
+                              >
+                                ✏️
+                              </button>
+                              <button
+                                type="button"
+                                title="Delete Job Title"
+                                onClick={() => {
+                                  if (confirm(`Remove "${titleName}" from Job Titles list?`)) {
+                                    setJobTitlesList(prev => prev.filter(t => t !== titleName));
+                                  }
+                                }}
+                                style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", fontSize: "0.9rem" }}
+                              >
+                                🗑️
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1377,6 +1464,57 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   </tbody>
                 </table>
               </div>
+
+              {/* Add Job Title Modal Overlay */}
+              {showAddJobTitleModal && (
+                <div className="task-modal-overlay">
+                  <div className="task-modal" style={{ maxWidth: "440px" }}>
+                    <div className="task-modal-header" style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "12px", marginBottom: "16px" }}>
+                      <h3 style={{ margin: 0, fontSize: "1.1rem" }}>Add New Job Title</h3>
+                      <button type="button" onClick={() => setShowAddJobTitleModal(false)} className="close-btn">&times;</button>
+                    </div>
+
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      if (newJobTitleInput.trim()) {
+                        setJobTitlesList(prev => [...prev, newJobTitleInput.trim()]);
+                        setNewJobTitleInput("");
+                        setShowAddJobTitleModal(false);
+                      }
+                    }}>
+                      <div className="form-group" style={{ marginBottom: "20px" }}>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Job Title Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g. Floor Manager"
+                          value={newJobTitleInput}
+                          onChange={e => setNewJobTitleInput(e.target.value)}
+                          style={{ width: "100%", padding: "8px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem" }}
+                        />
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowAddJobTitleModal(false)}
+                          style={{ padding: "8px 16px", background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "4px", color: "#475569", fontWeight: "600", cursor: "pointer" }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          style={{ padding: "8px 20px", background: "#5b50a1", border: "none", borderRadius: "4px", color: "#ffffff", fontWeight: "600", cursor: "pointer" }}
+                        >
+                          Save Job Title
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

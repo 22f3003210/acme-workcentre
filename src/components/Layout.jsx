@@ -98,13 +98,11 @@ export default function Layout({ children, activeTab, setActiveTab }) {
         ];
       case "Consultant":
         return [
-          { id: "punch",    label: "Daily Attendance", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>) },
+          { id: "punch",    label: "Attendance & Leave", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>) },
           { id: "leaves",   label: "My Leaves", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>) },
-          { id: "payslips", label: "My Payslips", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></svg>) },
-          { id: "expenses", label: "Expense Portal", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>) },
-          { id: "projects", label: "Projects", icon: projectIcon },
-          { id: "recruitment", label: "Recruiter Hub", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>) },
-          { id: "ledger",   label: "My Sourcing Ledger", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>) },
+          { id: "expenses", label: "My Expenses", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>) },
+          { id: "projects", label: "My Projects", icon: projectIcon },
+          { id: "payslips", label: "My Payslips", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></svg>) }
         ];
       default: return [];
     }
@@ -123,13 +121,14 @@ export default function Layout({ children, activeTab, setActiveTab }) {
   // 9-Dots App Launcher State
   const [showAppsMenu, setShowAppsMenu] = useState(false);
 
-  const appMenuItems = [
+  const rawAppMenuItems = [
     {
       name: "Homepage",
       bgColor: "#fdf4ff",
       borderColor: "#f5d0fe",
       iconColor: "#c026d3",
       tabId: "dashboard",
+      adminOnly: true,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -138,11 +137,12 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       )
     },
     {
-      name: "Employee",
+      name: "Employee Directory",
       bgColor: "#ecfeff",
       borderColor: "#a5f3fc",
       iconColor: "#0891b2",
-      tabId: currentUser?.role === "Admin" ? "directory" : "dashboard",
+      tabId: "directory",
+      adminOnly: true,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
@@ -151,11 +151,12 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       )
     },
     {
-      name: "Payroll",
+      name: "Payroll & Reports",
       bgColor: "#fff1f2",
       borderColor: "#fecdd3",
       iconColor: "#e11d48",
       tabId: "reports",
+      adminOnly: true,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect width="20" height="12" x="2" y="6" rx="2" />
@@ -165,8 +166,8 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       )
     },
     {
-      name: "Workforce Management",
-      subtitle: "(Formerly Leave & Attendance)",
+      name: "Attendance & Leave",
+      subtitle: "(My Self-Service & Punch)",
       bgColor: "#f3e8ff",
       borderColor: "#e9d5ff",
       iconColor: "#9333ea",
@@ -182,11 +183,12 @@ export default function Layout({ children, activeTab, setActiveTab }) {
     },
     {
       name: "Recruiting",
-      subtitle: "(Free Client Hiring & Geo-Talent Match)",
+      subtitle: "(Client Hiring & Geo-Talent Match)",
       bgColor: "#faf5ff",
       borderColor: "#e9d5ff",
       iconColor: "#7c3aed",
       tabId: "recruitment",
+      adminOnly: true,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
@@ -197,8 +199,8 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       )
     },
     {
-      name: "Projects",
-      subtitle: "(Retail Jewellery BD Projects)",
+      name: "My Projects",
+      subtitle: "(BD Projects & Tasks)",
       bgColor: "#eff6ff",
       borderColor: "#bfdbfe",
       iconColor: "#2563eb",
@@ -211,7 +213,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       )
     },
     {
-      name: "Expense",
+      name: "My Expenses",
       bgColor: "#fffbeb",
       borderColor: "#fde68a",
       iconColor: "#d97706",
@@ -222,8 +224,27 @@ export default function Layout({ children, activeTab, setActiveTab }) {
           <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
         </svg>
       )
+    },
+    {
+      name: "My Payslips",
+      bgColor: "#f0fdf4",
+      borderColor: "#bbf7d0",
+      iconColor: "#16a34a",
+      tabId: "payslips",
+      employeeOnly: true,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect width="20" height="12" x="2" y="6" rx="2" />
+          <circle cx="12" cy="12" r="2" />
+          <path d="M6 12h.01M18 12h.01" />
+        </svg>
+      )
     }
   ];
+
+  const appMenuItems = currentUser?.role === "Consultant"
+    ? rawAppMenuItems.filter(item => !item.adminOnly)
+    : rawAppMenuItems.filter(item => !item.employeeOnly);
 
   return (
     <div className={`app-container ${currentUser?.role === "Admin" ? "theme-admin" : ""}`} style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>

@@ -241,7 +241,7 @@ export default function LedgerReports() {
                             {e.category}
                           </span>
                         </td>
-                        <td style={{ fontWeight: "700", color: "#0f172a" }}>₹{e.amount.toLocaleString()}</td>
+                        <td style={{ fontWeight: "700", color: "#0f172a" }}>₹{(e.amount || 0).toLocaleString()}</td>
                         <td style={{ fontSize: "0.8rem", color: "#475569", maxWidth: "240px", wordBreak: "break-word" }}>{e.description}</td>
                         <td>
                           <span className={`role-badge ${e.status.toLowerCase()}`}>
@@ -733,7 +733,7 @@ export default function LedgerReports() {
                       <td style={{ padding: "10px", textAlign: "right" }}>₹{selectedEmployeeLedger.totals.spent.toFixed(2)}</td>
                       <td style={{ padding: "10px", textAlign: "right", color: "var(--color-success)" }}>₹{selectedEmployeeLedger.totals.received.toFixed(2)}</td>
                       <td style={{ padding: "10px", textAlign: "right", color: selectedEmployeeLedger.ledgerRows[selectedEmployeeLedger.ledgerRows.length - 1]?.balance < 0 ? "var(--color-error)" : "var(--color-success)" }}>
-                        ₹{selectedEmployeeLedger.ledgerRows[selectedEmployeeLedger.ledgerRows.length - 1]?.balance.toFixed(2) || "0.00"}
+                        ₹{(selectedEmployeeLedger.ledgerRows[selectedEmployeeLedger.ledgerRows.length - 1]?.balance || 0).toFixed(2)}
                       </td>
                     </tr>
                   </tbody>

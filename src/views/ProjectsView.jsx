@@ -951,7 +951,7 @@ export default function ProjectsView() {
                         <td>{e.date}</td>
                         <td>{e.category}</td>
                         <td>{e.description}</td>
-                        <td style={{ textAlign: "right", fontWeight: "700" }}>₹{e.amount.toFixed(2)}</td>
+                        <td style={{ textAlign: "right", fontWeight: "700" }}>₹{(e.amount || 0).toFixed(2)}</td>
                         <td><span className={`status-badge ${e.status.toLowerCase()}`}>{e.status}</span></td>
                       </tr>
                     ))}

@@ -40,7 +40,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
     weeklyOffs,
     addWeeklyOff,
     deleteWeeklyOff,
-    setToast
+    setToast,
+    leaveRequests,
+    approveLeave,
+    rejectLeave
   } = useApp();
 
   const shiftsList = shifts;
@@ -2597,6 +2600,137 @@ export default function AdminView({ activeTab, setActiveTab }) {
         </>
       )}
 
+      {subModuleTab === "DASHBOARD" && dashboardSubTab === "Leave Summary" && (() => {
+        const pendingLeaves = leaveRequests.filter(r => r.status === "Pending");
+        const allLeaves = leaveRequests;
+
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px", marginTop: "16px" }}>
+            {/* Top Bar / Stats */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+              <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase" }}>Pending Approval</span>
+                <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#d97706", marginTop: "4px" }}>{pendingLeaves.length}</div>
+              </div>
+              <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase" }}>Approved This Month</span>
+                <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#16a34a", marginTop: "4px" }}>{allLeaves.filter(r => r.status === "Approved").length}</div>
+              </div>
+              <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase" }}>Rejected Leaves</span>
+                <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#dc2626", marginTop: "4px" }}>{allLeaves.filter(r => r.status === "Rejected").length}</div>
+              </div>
+              <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.75rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase" }}>Total Applications</span>
+                <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#2563eb", marginTop: "4px" }}>{allLeaves.length}</div>
+              </div>
+            </div>
+
+            {/* Pending Requests Table */}
+            <div style={{ background: "#ffffff", borderRadius: "8px", border: "1px solid #e2e8f0", padding: "20px" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a", marginBottom: "16px" }}>Pending Leave Approvals</h3>
+              {pendingLeaves.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "28px", color: "#64748b", background: "#f8fafc", borderRadius: "6px" }}>
+                  <p style={{ margin: 0 }}>No pending leave applications requiring approval.</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", textAlign: "left" }}>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Employee</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Leave Type</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Dates</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Reason</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Applied On</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingLeaves.map(req => (
+                        <tr key={req.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "12px 14px", fontWeight: "600", color: "#0f172a" }}>
+                            {req.employeeName} <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "400" }}>({req.empCode})</span>
+                          </td>
+                          <td style={{ padding: "12px 14px", fontWeight: "600" }}>{req.type} {req.halfDay ? "(Half Day)" : ""}</td>
+                          <td style={{ padding: "12px 14px" }}>{req.fromDate} to {req.toDate}</td>
+                          <td style={{ padding: "12px 14px", color: "#475569" }}>{req.reason}</td>
+                          <td style={{ padding: "12px 14px", color: "#64748b" }}>{req.appliedOn}</td>
+                          <td style={{ padding: "12px 14px" }}>
+                            <div style={{ display: "flex", gap: "8px" }}>
+                              <button
+                                type="button"
+                                onClick={() => { approveLeave(req.id); setToast({ message: `Approved leave for ${req.employeeName}`, type: "success" }); }}
+                                style={{ background: "#22c55e", color: "#ffffff", border: "none", borderRadius: "4px", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "600", cursor: "pointer" }}
+                              >
+                                Approve
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { rejectLeave(req.id, "Rejected by Admin"); setToast({ message: `Rejected leave for ${req.employeeName}`, type: "error" }); }}
+                                style={{ background: "#ef4444", color: "#ffffff", border: "none", borderRadius: "4px", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "600", cursor: "pointer" }}
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* All Leave History Log */}
+            <div style={{ background: "#ffffff", borderRadius: "8px", border: "1px solid #e2e8f0", padding: "20px" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a", marginBottom: "16px" }}>All Employees Leave Log</h3>
+              {allLeaves.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>No leave records present.</div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", textAlign: "left" }}>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Employee</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Type</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>From / To</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Reason</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allLeaves.map(req => {
+                        const statusColors = {
+                          Pending: { bg: "#fef3c7", fg: "#d97706" },
+                          Approved: { bg: "#dcfce7", fg: "#15803d" },
+                          Rejected: { bg: "#fee2e2", fg: "#dc2626" },
+                          Cancelled: { bg: "#f1f5f9", fg: "#64748b" }
+                        };
+                        const sc = statusColors[req.status] || statusColors.Pending;
+                        return (
+                          <tr key={req.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                            <td style={{ padding: "10px 14px", fontWeight: "600" }}>{req.employeeName}</td>
+                            <td style={{ padding: "10px 14px" }}>{req.type}</td>
+                            <td style={{ padding: "10px 14px" }}>{req.fromDate} - {req.toDate}</td>
+                            <td style={{ padding: "10px 14px", color: "#475569" }}>{req.reason}</td>
+                            <td style={{ padding: "10px 14px" }}>
+                              <span style={{ background: sc.bg, color: sc.fg, padding: "3px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "700" }}>
+                                {req.status}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* DAILY REPORT / EMPLOYEE SWIPES View (Matching Reference Screenshots 1 & 2) */}
       {subModuleTab === "DASHBOARD" && dashboardSubTab === "Daily Report" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -3959,7 +4093,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
         </div>
       )}
 
-      {activeTab === "reports" && (
+      {(activeTab === "reports" || activeTab === "ledger") && (
         <div className="glass-card" style={{ padding: "24px", borderRadius: "0", display: "flex", flexDirection: "column", width: "100%", border: "1px solid #e2e8f0" }}>
           {/* Subtab Segmented Navigation Header */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e2e8f0", paddingBottom: "16px", marginBottom: "20px" }}>

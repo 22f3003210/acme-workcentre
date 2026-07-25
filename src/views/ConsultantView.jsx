@@ -16,7 +16,12 @@ export default function ConsultantView({ activeTab }) {
     advanceRequests,
     requestAdvance,
     setToast,
-    settings 
+    settings,
+    leaveRequests,
+    applyLeave,
+    cancelLeave,
+    getLeaveBalance,
+    generatePayslip
   } = useApp();
 
   // Digital clock state
@@ -40,6 +45,32 @@ export default function ConsultantView({ activeTab }) {
   const [profileTab, setProfileTab] = useState("TIME");
   const [timeSubTab, setTimeSubTab] = useState("Attendance");
   const [statsRange, setStatsRange] = useState("Last Week");
+
+  // Leave Form State
+  const [showApplyLeaveModal, setShowApplyLeaveModal] = useState(false);
+  const [leaveType, setLeaveType] = useState("Casual Leave");
+  const [leaveFrom, setLeaveFrom] = useState(new Date().toISOString().split("T")[0]);
+  const [leaveTo, setLeaveTo] = useState(new Date().toISOString().split("T")[0]);
+  const [leaveHalfDay, setLeaveHalfDay] = useState(false);
+  const [leaveReason, setLeaveReason] = useState("");
+
+  // Payslip State
+  const [selectedPayslipMonth, setSelectedPayslipMonth] = useState("July 2026");
+
+  const handleApplyLeaveSubmit = (e) => {
+    e.preventDefault();
+    if (!leaveFrom || !leaveTo || !leaveReason.trim()) return;
+    applyLeave(currentUser.id, {
+      type: leaveType,
+      fromDate: leaveFrom,
+      toDate: leaveTo,
+      halfDay: leaveHalfDay,
+      reason: leaveReason
+    });
+    setToast({ message: "Leave application submitted successfully!", type: "success" });
+    setShowApplyLeaveModal(false);
+    setLeaveReason("");
+  };
 
   // Update clock every second
   useEffect(() => {
@@ -226,16 +257,16 @@ export default function ConsultantView({ activeTab }) {
         {/* Contact Info Strip */}
         <div style={{ padding: "12px 20px", background: "#ffffff", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: "24px", fontSize: "0.82rem", color: "#475569", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ color: "#64748b" }}>✉</span> <span>{currentUser.email || "mrmarvelmani1999@gmail.com"}</span>
+            <span style={{ color: "#64748b" }}>✉</span> <span>{currentUser.email || "consultant@acme.com"}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ color: "#64748b" }}>📞</span> <span>+91-7569099549</span>
+            <span style={{ color: "#64748b" }}>📞</span> <span>{currentUser.phone || "+91-9876543210"}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ color: "#64748b" }}>📍</span> <span>Mehdipatnam</span>
+            <span style={{ color: "#64748b" }}>📍</span> <span>{currentUser.location || "Mumbai / HQ"}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ color: "#64748b" }}>🪪</span> <span>HBJ00007</span>
+            <span style={{ color: "#64748b" }}>🪪</span> <span>{currentUser.empCode || "EMP-101"}</span>
           </div>
         </div>
 
@@ -243,19 +274,19 @@ export default function ConsultantView({ activeTab }) {
         <div style={{ padding: "14px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", gap: "48px", fontSize: "0.82rem" }}>
           <div>
             <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>JOINING DATE</span>
-            <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>24 Jan 2025</span>
+            <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>{currentUser.joiningDate || "24 Jan 2025"}</span>
           </div>
 
           <div>
             <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>DEPARTMENT</span>
-            <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>{currentUser.department?.toUpperCase() || "IT & SYSTEMS SUPPORT"}</span>
+            <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>{currentUser.department?.toUpperCase() || "GENERAL"}</span>
           </div>
 
           <div>
             <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>REPORTING MANAGER</span>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
               <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80" alt="Manager" style={{ width: "20px", height: "20px", borderRadius: "50%" }} />
-              <span style={{ fontWeight: "600", color: "#2563eb" }}>Shikhar Jain</span>
+              <span style={{ fontWeight: "600", color: "#2563eb" }}>{currentUser.reportingManager || "ACME Management"}</span>
             </div>
           </div>
         </div>
@@ -1043,6 +1074,284 @@ export default function ConsultantView({ activeTab }) {
       {activeTab === "recruitment" && (
         <RecruiterView />
       )}
+
+      {activeTab === "leaves" && (() => {
+        const leaveBal = getLeaveBalance(currentUser.id);
+        const myLeaves = leaveRequests.filter(r => r.employeeId === currentUser.id);
+
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Header & Apply Button */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", padding: "20px 24px", borderRadius: "8px", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+              <div>
+                <h2 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>My Leave Management</h2>
+                <p style={{ fontSize: "0.85rem", color: "#64748b", margin: "4px 0 0 0" }}>Track leave balances, apply for leaves, and monitor approval status</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowApplyLeaveModal(true)}
+                style={{ background: "#5b50a1", color: "#ffffff", border: "none", borderRadius: "6px", padding: "10px 20px", fontWeight: "600", fontSize: "0.88rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <span>+</span> Apply for Leave
+              </button>
+            </div>
+
+            {/* Leave Balance Cards Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+              <div style={{ background: "#ffffff", borderRadius: "8px", padding: "20px", border: "1px solid #e2e8f0", borderLeft: "4px solid #3b82f6" }}>
+                <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#3b82f6", textTransform: "uppercase", letterSpacing: "0.05em" }}>CASUAL LEAVE (CL)</span>
+                <div style={{ fontSize: "2rem", fontWeight: "800", color: "#0f172a", margin: "8px 0" }}>{leaveBal.casual.available} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "#64748b" }}>/ {leaveBal.casual.total} Days</span></div>
+                <div style={{ fontSize: "0.8rem", color: "#64748b" }}>Used: {leaveBal.casual.used} Days</div>
+              </div>
+
+              <div style={{ background: "#ffffff", borderRadius: "8px", padding: "20px", border: "1px solid #e2e8f0", borderLeft: "4px solid #10b981" }}>
+                <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#10b981", textTransform: "uppercase", letterSpacing: "0.05em" }}>SICK LEAVE (SL)</span>
+                <div style={{ fontSize: "2rem", fontWeight: "800", color: "#0f172a", margin: "8px 0" }}>{leaveBal.sick.available} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "#64748b" }}>/ {leaveBal.sick.total} Days</span></div>
+                <div style={{ fontSize: "0.8rem", color: "#64748b" }}>Used: {leaveBal.sick.used} Days</div>
+              </div>
+
+              <div style={{ background: "#ffffff", borderRadius: "8px", padding: "20px", border: "1px solid #e2e8f0", borderLeft: "4px solid #8b5cf6" }}>
+                <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#8b5cf6", textTransform: "uppercase", letterSpacing: "0.05em" }}>EARNED LEAVE (EL)</span>
+                <div style={{ fontSize: "2rem", fontWeight: "800", color: "#0f172a", margin: "8px 0" }}>{leaveBal.earned.available} <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "#64748b" }}>/ {leaveBal.earned.total} Days</span></div>
+                <div style={{ fontSize: "0.8rem", color: "#64748b" }}>Used: {leaveBal.earned.used} Days</div>
+              </div>
+            </div>
+
+            {/* Leave History Table */}
+            <div style={{ background: "#ffffff", borderRadius: "8px", border: "1px solid #e2e8f0", padding: "20px" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a", marginBottom: "16px" }}>Leave Application History</h3>
+              {myLeaves.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "32px", color: "#64748b", background: "#f8fafc", borderRadius: "6px" }}>
+                  <p style={{ margin: 0 }}>No leave applications filed yet.</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", textAlign: "left" }}>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Applied Date</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Leave Type</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Dates</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Reason</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Status</th>
+                        <th style={{ padding: "10px 14px", color: "#475569" }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {myLeaves.map(req => {
+                        const statusColors = {
+                          Pending: { bg: "#fef3c7", fg: "#d97706" },
+                          Approved: { bg: "#dcfce7", fg: "#15803d" },
+                          Rejected: { bg: "#fee2e2", fg: "#dc2626" },
+                          Cancelled: { bg: "#f1f5f9", fg: "#64748b" }
+                        };
+                        const sc = statusColors[req.status] || statusColors.Pending;
+                        return (
+                          <tr key={req.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                            <td style={{ padding: "12px 14px" }}>{req.appliedOn}</td>
+                            <td style={{ padding: "12px 14px", fontWeight: "600" }}>{req.type} {req.halfDay ? "(Half Day)" : ""}</td>
+                            <td style={{ padding: "12px 14px" }}>{req.fromDate} to {req.toDate}</td>
+                            <td style={{ padding: "12px 14px", color: "#475569" }}>{req.reason}</td>
+                            <td style={{ padding: "12px 14px" }}>
+                              <span style={{ background: sc.bg, color: sc.fg, padding: "3px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "700" }}>
+                                {req.status}
+                              </span>
+                            </td>
+                            <td style={{ padding: "12px 14px" }}>
+                              {req.status === "Pending" && (
+                                <button
+                                  type="button"
+                                  onClick={() => { cancelLeave(req.id); setToast({ message: "Leave application cancelled.", type: "info" }); }}
+                                  style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", color: "#475569", borderRadius: "4px", padding: "4px 8px", fontSize: "0.78rem", cursor: "pointer" }}
+                                >
+                                  Cancel
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Apply Leave Modal */}
+            {showApplyLeaveModal && (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ background: "#ffffff", borderRadius: "8px", width: "500px", maxWidth: "90vw", padding: "24px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #f1f5f9", paddingBottom: "12px" }}>
+                    <h3 style={{ fontSize: "1.15rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>Apply for Leave</h3>
+                    <button type="button" onClick={() => setShowApplyLeaveModal(false)} style={{ background: "none", border: "none", fontSize: "1.4rem", color: "#64748b", cursor: "pointer" }}>&times;</button>
+                  </div>
+                  <form onSubmit={handleApplyLeaveSubmit}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "4px" }}>Leave Type *</label>
+                        <select value={leaveType} onChange={e => setLeaveType(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }}>
+                          <option value="Casual Leave">Casual Leave (CL)</option>
+                          <option value="Sick Leave">Sick Leave (SL)</option>
+                          <option value="Earned Leave">Earned Leave (EL)</option>
+                          <option value="Comp Off">Compensatory Off</option>
+                        </select>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div>
+                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "4px" }}>From Date *</label>
+                          <input type="date" required value={leaveFrom} onChange={e => setLeaveFrom(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "4px" }}>To Date *</label>
+                          <input type="date" required value={leaveTo} onChange={e => setLeaveTo(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }} />
+                        </div>
+                      </div>
+
+                      <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: "#334155", cursor: "pointer" }}>
+                        <input type="checkbox" checked={leaveHalfDay} onChange={e => setLeaveHalfDay(e.target.checked)} style={{ width: "16px", height: "16px", accentColor: "#5b50a1" }} />
+                        Apply as Half Day
+                      </label>
+
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "4px" }}>Reason *</label>
+                        <textarea required rows={3} placeholder="Please provide reason for leave request" value={leaveReason} onChange={e => setLeaveReason(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem", resize: "vertical" }} />
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid #f1f5f9", paddingTop: "16px", marginTop: "8px" }}>
+                        <button type="button" onClick={() => setShowApplyLeaveModal(false)} style={{ padding: "8px 16px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", cursor: "pointer" }}>Cancel</button>
+                        <button type="submit" style={{ padding: "8px 20px", background: "#5b50a1", color: "#ffffff", border: "none", borderRadius: "4px", fontSize: "0.85rem", fontWeight: "600", cursor: "pointer" }}>Submit Application</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {activeTab === "payslips" && (() => {
+        const payslipData = generatePayslip(currentUser.id, selectedPayslipMonth);
+
+        return (
+          <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+            {/* Top Bar: Controls */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", padding: "20px 24px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+              <div>
+                <h2 style={{ fontSize: "1.3rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>My Salary Slips</h2>
+                <p style={{ fontSize: "0.85rem", color: "#64748b", margin: "4px 0 0 0" }}>View & download monthly salary breakdowns and tax deductions</p>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <select
+                  value={selectedPayslipMonth}
+                  onChange={e => setSelectedPayslipMonth(e.target.value)}
+                  style={{ padding: "10px 16px", border: "1px solid #cbd5e1", borderRadius: "6px", fontSize: "0.88rem", background: "#ffffff", fontWeight: "600", color: "#0f172a" }}
+                >
+                  <option value="July 2026">July 2026</option>
+                  <option value="June 2026">June 2026</option>
+                  <option value="May 2026">May 2026</option>
+                  <option value="April 2026">April 2026</option>
+                  <option value="March 2026">March 2026</option>
+                  <option value="February 2026">February 2026</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "6px", padding: "10px 18px", fontWeight: "600", fontSize: "0.88rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  🖨 Print / Download PDF
+                </button>
+              </div>
+            </div>
+
+            {/* Payslip Document Card */}
+            <div style={{ background: "#ffffff", borderRadius: "8px", border: "1px solid #cbd5e1", padding: "40px", maxWidth: "880px", margin: "0 auto", width: "100%", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
+              {/* Header */}
+              <div style={{ borderBottom: "2px solid #0f172a", paddingBottom: "20px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <h1 style={{ fontSize: "1.5rem", fontWeight: "800", color: "#0f172a", margin: 0, textTransform: "uppercase", letterSpacing: "0.02em" }}>ACME WORKCENTRE PRIVATE LIMITED</h1>
+                  <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>Plot 42, Advisory Towers, BKC, Mumbai - 400051</p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <span style={{ background: "#e0e7ff", color: "#3730a3", padding: "4px 12px", borderRadius: "4px", fontSize: "0.82rem", fontWeight: "700", display: "inline-block" }}>PAYSLIP</span>
+                  <div style={{ fontSize: "0.9rem", fontWeight: "700", color: "#0f172a", marginTop: "6px" }}>{payslipData.month}</div>
+                </div>
+              </div>
+
+              {/* Employee & Bank Info Grid */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", background: "#f8fafc", padding: "16px 20px", borderRadius: "6px", border: "1px solid #e2e8f0", marginBottom: "24px", fontSize: "0.84rem" }}>
+                <div>
+                  <div style={{ marginBottom: "6px" }}><span style={{ color: "#64748b" }}>Employee Name:</span> <strong style={{ color: "#0f172a" }}>{payslipData.employeeName}</strong></div>
+                  <div style={{ marginBottom: "6px" }}><span style={{ color: "#64748b" }}>Employee Code:</span> <strong style={{ color: "#0f172a" }}>{payslipData.empCode}</strong></div>
+                  <div style={{ marginBottom: "6px" }}><span style={{ color: "#64748b" }}>Designation:</span> <strong style={{ color: "#0f172a" }}>{payslipData.designation}</strong></div>
+                  <div><span style={{ color: "#64748b" }}>Department:</span> <strong style={{ color: "#0f172a" }}>{payslipData.department}</strong></div>
+                </div>
+                <div>
+                  <div style={{ marginBottom: "6px" }}><span style={{ color: "#64748b" }}>Bank Account:</span> <strong style={{ color: "#0f172a" }}>{payslipData.bankAccount}</strong></div>
+                  <div style={{ marginBottom: "6px" }}><span style={{ color: "#64748b" }}>PF Number:</span> <strong style={{ color: "#0f172a" }}>{payslipData.pfNumber}</strong></div>
+                  <div style={{ marginBottom: "6px" }}><span style={{ color: "#64748b" }}>PAN Number:</span> <strong style={{ color: "#0f172a" }}>{payslipData.panNumber}</strong></div>
+                  <div><span style={{ color: "#64748b" }}>Paid Days:</span> <strong style={{ color: "#0f172a" }}>{payslipData.paidDays} / {payslipData.workingDays}</strong></div>
+                </div>
+              </div>
+
+              {/* Earnings & Deductions Tables */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px", marginBottom: "24px" }}>
+                {/* Earnings Table */}
+                <div>
+                  <h4 style={{ fontSize: "0.9rem", fontWeight: "700", color: "#166534", background: "#dcfce7", padding: "8px 12px", borderRadius: "4px 4px 0 0", margin: 0 }}>EARNINGS</h4>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.83rem", border: "1px solid #cbd5e1", borderTop: "none" }}>
+                    <tbody>
+                      {payslipData.earnings.map((item, idx) => (
+                        <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "8px 12px", color: "#334155" }}>{item.title}</td>
+                          <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: "600", color: "#0f172a" }}>₹{item.amount.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                      <tr style={{ background: "#f8fafc", fontWeight: "700" }}>
+                        <td style={{ padding: "10px 12px", color: "#0f172a" }}>Gross Earnings</td>
+                        <td style={{ padding: "10px 12px", textAlign: "right", color: "#166534" }}>₹{payslipData.grossEarnings.toLocaleString()}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Deductions Table */}
+                <div>
+                  <h4 style={{ fontSize: "0.9rem", fontWeight: "700", color: "#991b1b", background: "#fee2e2", padding: "8px 12px", borderRadius: "4px 4px 0 0", margin: 0 }}>DEDUCTIONS</h4>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.83rem", border: "1px solid #cbd5e1", borderTop: "none" }}>
+                    <tbody>
+                      {payslipData.deductions.map((item, idx) => (
+                        <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                          <td style={{ padding: "8px 12px", color: "#334155" }}>{item.title}</td>
+                          <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: "600", color: "#0f172a" }}>₹{item.amount.toLocaleString()}</td>
+                        </tr>
+                      ))}
+                      <tr style={{ background: "#f8fafc", fontWeight: "700" }}>
+                        <td style={{ padding: "10px 12px", color: "#0f172a" }}>Total Deductions</td>
+                        <td style={{ padding: "10px 12px", textAlign: "right", color: "#991b1b" }}>₹{payslipData.totalDeductions.toLocaleString()}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Net Pay Card */}
+              <div style={{ background: "#f0fdf4", border: "2px solid #bbf7d0", borderRadius: "6px", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#166534", textTransform: "uppercase" }}>NET TAKE HOME SALARY</span>
+                  <div style={{ fontSize: "0.82rem", color: "#15803d", marginTop: "2px" }}>Directly deposited to bank account</div>
+                </div>
+                <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#166534" }}>
+                  ₹{payslipData.netSalary.toLocaleString()}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Profile & Petty Cash Allowance Modal */}
       {showProfileModal && (

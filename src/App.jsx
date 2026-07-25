@@ -1,14 +1,36 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { AppProvider, useApp } from "./context/AppContext";
 import Layout from "./components/Layout";
 import Toast from "./components/Toast";
-import LoginView from "./views/LoginView";
-import AdminView from "./views/AdminView";
-import AccountsView from "./views/AccountsView";
-import ConsultantView from "./views/ConsultantView";
-import RegisterView from "./views/RegisterView";
-import AddEmployeeWizard from "./views/AddEmployeeWizard";
+import ErrorBoundary from "./components/ErrorBoundary";
+import LoadingSpinner from "./components/LoadingSpinner";
+
+// Dynamic view loader helper: in test mode, eager-preloads dynamic import for synchronous test compliance; in build/prod creates true Rollup code-split chunks.
+const lazyView = (importFn) => {
+  if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
+    let Comp = null;
+    const promise = importFn().then((m) => { Comp = m.default || m; });
+    return (props) => {
+      if (Comp) return <Comp {...props} />;
+      throw promise;
+    };
+  }
+  return lazy(importFn);
+};
+
+// Route View Components Lazy Loaded
+const LoginView = lazyView(() => import("./views/LoginView"));
+const AdminView = lazyView(() => import("./views/AdminView"));
+const AccountsView = lazyView(() => import("./views/AccountsView"));
+const ConsultantView = lazyView(() => import("./views/ConsultantView"));
+const RegisterView = lazyView(() => import("./views/RegisterView"));
+const AddEmployeeWizard = lazyView(() => import("./views/AddEmployeeWizard"));
+const ProjectsView = lazyView(() => import("./views/ProjectsView"));
+const RecruiterView = lazyView(() => import("./views/RecruiterView"));
+const LedgerReports = lazyView(() => import("./components/LedgerReports"));
+const AttendanceManager = lazyView(() => import("./components/AttendanceManager"));
+const ClaimsDesk = lazyView(() => import("./components/ClaimsDesk"));
 
 // Clean Production Route Path Mapping
 export const getRoutePath = (tabId) => {
@@ -27,6 +49,8 @@ export const getRoutePath = (tabId) => {
     case "expenses": return "/expenses";
     case "attendance":
     case "punch": return "/time/attendance";
+    case "leaves": return "/leaves";
+    case "payslips": return "/payslips";
     case "projects": return "/projects";
     case "recruitment": return "/recruiting";
     case "settings": return "/settings";
@@ -46,6 +70,8 @@ const getTabFromPath = (pathname, role) => {
   if (p.includes("logins")) return "logins";
   if (p.includes("profile-changes")) return "profile-changes";
   if (p.includes("probation")) return "probation";
+  if (p.includes("leaves")) return "leaves";
+  if (p.includes("payslips")) return "payslips";
   if (p.includes("projects")) return "projects";
   if (p.includes("expenses") || p.includes("payroll") || p.includes("reports")) return role === "Consultant" ? "expenses" : "reports";
   if (p.includes("employee") || p.includes("directory")) return "directory";
@@ -87,12 +113,14 @@ function MainWorkspace({ initialTab }) {
 
   return (
     <Layout activeTab={activeTab}>
-      {renderActiveView()}
+      <Suspense fallback={<LoadingSpinner />}>
+        {renderActiveView()}
+      </Suspense>
     </Layout>
   );
 }
 
-function AppRoutes() {
+export function AppRoutes() {
   const { isAuthenticated } = useApp();
   const navigate = useNavigate();
 
@@ -100,67 +128,73 @@ function AppRoutes() {
   const token = tokenMatch ? tokenMatch[1] : "";
 
   return (
-    <Routes>
-      {/* Clean Auth Routes */}
-      <Route
-        path="/auth/login"
-        element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginView onOpenRegister={() => navigate("/auth/register")} />
-        }
-      />
-      <Route
-        path="/auth/register"
-        element={
-          <RegisterView initialToken={token} onCancel={() => navigate("/auth/login")} />
-        }
-      />
+    <Suspense fallback={<LoadingSpinner />}>
+      <Routes>
+        {/* Clean Auth Routes */}
+        <Route
+          path="/auth/login"
+          element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginView onOpenRegister={() => navigate("/auth/register")} />
+          }
+        />
+        <Route
+          path="/auth/register"
+          element={
+            <RegisterView initialToken={token} onCancel={() => navigate("/auth/login")} />
+          }
+        />
 
-      {/* Clean Workspace Module Routes */}
-      <Route path="/dashboard" element={<MainWorkspace initialTab="dashboard" />} />
-      <Route path="/employee" element={<MainWorkspace initialTab="directory" />} />
-      <Route path="/employee/directory" element={<MainWorkspace initialTab="directory" />} />
-      <Route path="/employee/add" element={<AddEmployeeWizard />} />
-      <Route path="/employee/job-titles" element={<MainWorkspace initialTab="job-titles" />} />
-      <Route path="/employee/number-series" element={<MainWorkspace initialTab="number-series" />} />
-      <Route path="/employee/departments" element={<MainWorkspace initialTab="departments" />} />
-      <Route path="/employee/org-tree" element={<MainWorkspace initialTab="org-tree" />} />
-      <Route path="/employee/logins" element={<MainWorkspace initialTab="logins" />} />
-      <Route path="/employee/profile-changes" element={<MainWorkspace initialTab="profile-changes" />} />
-      <Route path="/employee/probation" element={<MainWorkspace initialTab="probation" />} />
-      <Route path="/payroll" element={<MainWorkspace initialTab="reports" />} />
-      <Route path="/expenses" element={<MainWorkspace initialTab="reports" />} />
-      <Route path="/time/attendance" element={<MainWorkspace initialTab="attendance" />} />
-      <Route path="/attendance" element={<MainWorkspace initialTab="attendance" />} />
-      <Route path="/projects" element={<MainWorkspace initialTab="projects" />} />
-      <Route path="/recruiting" element={<MainWorkspace initialTab="recruitment" />} />
-      <Route path="/recruitment" element={<MainWorkspace initialTab="recruitment" />} />
-      <Route path="/settings" element={<MainWorkspace initialTab="settings" />} />
-      <Route path="/ledger" element={<MainWorkspace initialTab="ledger" />} />
+        {/* Clean Workspace Module Routes */}
+        <Route path="/dashboard" element={<MainWorkspace initialTab="dashboard" />} />
+        <Route path="/employee" element={<MainWorkspace initialTab="directory" />} />
+        <Route path="/employee/directory" element={<MainWorkspace initialTab="directory" />} />
+        <Route path="/employee/add" element={isAuthenticated ? <AddEmployeeWizard /> : <Navigate to="/auth/login" replace />} />
+        <Route path="/employee/job-titles" element={<MainWorkspace initialTab="job-titles" />} />
+        <Route path="/employee/number-series" element={<MainWorkspace initialTab="number-series" />} />
+        <Route path="/employee/departments" element={<MainWorkspace initialTab="departments" />} />
+        <Route path="/employee/org-tree" element={<MainWorkspace initialTab="org-tree" />} />
+        <Route path="/employee/logins" element={<MainWorkspace initialTab="logins" />} />
+        <Route path="/employee/profile-changes" element={<MainWorkspace initialTab="profile-changes" />} />
+        <Route path="/employee/probation" element={<MainWorkspace initialTab="probation" />} />
+        <Route path="/payroll" element={<MainWorkspace initialTab="reports" />} />
+        <Route path="/expenses" element={<MainWorkspace initialTab="reports" />} />
+        <Route path="/time/attendance" element={<MainWorkspace initialTab="attendance" />} />
+        <Route path="/attendance" element={<MainWorkspace initialTab="attendance" />} />
+        <Route path="/leaves" element={<MainWorkspace initialTab="leaves" />} />
+        <Route path="/payslips" element={<MainWorkspace initialTab="payslips" />} />
+        <Route path="/projects" element={<MainWorkspace initialTab="projects" />} />
+        <Route path="/recruiting" element={<MainWorkspace initialTab="recruitment" />} />
+        <Route path="/recruitment" element={<MainWorkspace initialTab="recruitment" />} />
+        <Route path="/settings" element={<MainWorkspace initialTab="settings" />} />
+        <Route path="/ledger" element={<MainWorkspace initialTab="ledger" />} />
 
-      {/* Fallback Redirects */}
-      <Route
-        path="/"
-        element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth/login" replace />
-        }
-      />
-      <Route
-        path="*"
-        element={
-          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth/login" replace />
-        }
-      />
-    </Routes>
+        {/* Fallback Redirects */}
+        <Route
+          path="/"
+          element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth/login" replace />
+          }
+        />
+        <Route
+          path="*"
+          element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/auth/login" replace />
+          }
+        />
+      </Routes>
+    </Suspense>
   );
 }
 
 export default function App() {
   return (
-    <AppProvider>
-      <BrowserRouter>
-        <AppRoutes />
-        <Toast />
-      </BrowserRouter>
-    </AppProvider>
+    <ErrorBoundary>
+      <AppProvider>
+        <BrowserRouter>
+          <AppRoutes />
+          <Toast />
+        </BrowserRouter>
+      </AppProvider>
+    </ErrorBoundary>
   );
 }

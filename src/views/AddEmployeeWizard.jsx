@@ -42,7 +42,9 @@ export default function AddEmployeeWizard() {
 
   // Step 3: Work Details
   const [inviteToLogin, setInviteToLogin] = useState(false);
+  const [enableOnboarding, setEnableOnboarding] = useState(true);
   const [leavePlan, setLeavePlan] = useState("Standard Leave Plan");
+  const [holidayList, setHolidayList] = useState([]);
   const [attendanceTracking, setAttendanceTracking] = useState(true);
   const [shift, setShift] = useState("General Shift (9 AM - 6 PM)");
   const [weeklyOff, setWeeklyOff] = useState("Sunday");

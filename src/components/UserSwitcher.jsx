@@ -9,14 +9,14 @@ export default function UserSwitcher() {
       <div className="switcher-content">
         <div className="active-badge">
           <div className="pulse-indicator"></div>
-          <span>Workcentre System Demo: <strong>{currentUser.name}</strong> ({currentUser.role})</span>
+          <span>Workcentre System Demo: <strong>{currentUser?.name || "Guest"}</strong> ({currentUser?.role || "User"})</span>
         </div>
         
         <div className="switcher-actions">
           <label htmlFor="user-select">Select Login Account:</label>
           <select 
             id="user-select" 
-            value={currentUser.id} 
+            value={currentUser?.id || ""} 
             onChange={(e) => switchUser(e.target.value)}
             className="luxury-select"
           >

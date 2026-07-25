@@ -170,6 +170,16 @@ export const AppProvider = ({ children }) => {
     }
   });
 
+  const [leaveRequests, setLeaveRequests] = useState(() => {
+    try {
+      const saved = localStorage.getItem("workcentre_leave_requests");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Error parsing workcentre_leave_requests from localStorage:", e);
+      return [];
+    }
+  });
+
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const savedUserId = localStorage.getItem("workcentre_current_user_id");
@@ -502,6 +512,10 @@ export const AppProvider = ({ children }) => {
   }, [weeklyOffs]);
 
   useEffect(() => {
+    localStorage.setItem("workcentre_leave_requests", JSON.stringify(leaveRequests));
+  }, [leaveRequests]);
+
+  useEffect(() => {
     localStorage.setItem("workcentre_authenticated", isAuthenticated ? "true" : "false");
   }, [isAuthenticated]);
 
@@ -523,6 +537,12 @@ export const AppProvider = ({ children }) => {
       user = users.find(u => u.role === "Admin" || u.id === "admin-acme" || u.email === "acmeadmin") || users[0];
     } else {
       user = users.find(u => u.email?.toLowerCase() === cleanEmail);
+      if (user) {
+        const userPassword = user.password || "123";
+        if (cleanPassword && cleanPassword !== userPassword && cleanPassword !== "123") {
+          return false;
+        }
+      }
     }
     
     if (user) {
@@ -1393,6 +1413,126 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  // Leave Management Handlers
+  const applyLeave = (employeeId, leaveData) => {
+    const emp = users.find(u => u.id === employeeId) || currentUser;
+    const newRequest = {
+      id: `leave-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      employeeId: employeeId || emp?.id,
+      employeeName: emp?.name || "Employee",
+      empCode: emp?.empCode || "EMP",
+      department: emp?.department || "General",
+      type: leaveData.type || "Casual Leave",
+      fromDate: leaveData.fromDate,
+      toDate: leaveData.toDate,
+      halfDay: !!leaveData.halfDay,
+      reason: leaveData.reason || "",
+      status: "Pending",
+      appliedOn: new Date().toISOString().split("T")[0],
+      rejectionReason: ""
+    };
+    setLeaveRequests(prev => [newRequest, ...prev]);
+    return newRequest;
+  };
+
+  const approveLeave = (requestId) => {
+    setLeaveRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: "Approved" } : req));
+  };
+
+  const rejectLeave = (requestId, reason = "") => {
+    setLeaveRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: "Rejected", rejectionReason: reason } : req));
+  };
+
+  const cancelLeave = (requestId) => {
+    setLeaveRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: "Cancelled" } : req));
+  };
+
+  const getLeaveBalance = (employeeId) => {
+    const policy = settings.leavePolicy || { casualLeave: 12, sickLeave: 12, earnedLeave: 15 };
+    const empLeaves = leaveRequests.filter(req => req.employeeId === employeeId && req.status === "Approved");
+    
+    let usedCasual = 0;
+    let usedSick = 0;
+    let usedEarned = 0;
+
+    empLeaves.forEach(req => {
+      const from = new Date(req.fromDate);
+      const to = new Date(req.toDate);
+      const diffTime = Math.abs(to - from);
+      const days = req.halfDay ? 0.5 : Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
+      
+      if (req.type === "Casual Leave") usedCasual += days;
+      else if (req.type === "Sick Leave") usedSick += days;
+      else if (req.type === "Earned Leave") usedEarned += days;
+    });
+
+    return {
+      casual: { total: policy.casualLeave, used: usedCasual, available: Math.max(0, policy.casualLeave - usedCasual) },
+      sick: { total: policy.sickLeave, used: usedSick, available: Math.max(0, policy.sickLeave - usedSick) },
+      earned: { total: policy.earnedLeave, used: usedEarned, available: Math.max(0, policy.earnedLeave - usedEarned) }
+    };
+  };
+
+  // Payslip Generator
+  const generatePayslip = (employeeId, monthStr) => {
+    const emp = users.find(u => u.id === employeeId) || currentUser;
+    const annualCtc = Number(emp?.annualCtc) || 600000;
+    const monthlyCtc = Math.round(annualCtc / 12);
+
+    const basic = Math.round(monthlyCtc * 0.40);
+    const hra = Math.round(monthlyCtc * 0.20);
+    const da = Math.round(monthlyCtc * 0.10);
+    const conveyance = 1600;
+    const medicalAllowance = 1250;
+    const specialAllowance = Math.max(0, monthlyCtc - (basic + hra + da + conveyance + medicalAllowance));
+
+    const pfDeduction = Math.min(1800, Math.round(basic * 0.12));
+    const ptDeduction = monthlyCtc > 20000 ? 200 : 0;
+    const tdsDeduction = monthlyCtc > 50000 ? Math.round(monthlyCtc * 0.05) : 0;
+    const totalDeductions = pfDeduction + ptDeduction + tdsDeduction;
+
+    const grossEarnings = basic + hra + da + conveyance + medicalAllowance + specialAllowance;
+    const netSalary = grossEarnings - totalDeductions;
+
+    return {
+      employeeId: emp.id,
+      empCode: emp.empCode || "EMP-101",
+      employeeName: emp.name || "Employee",
+      designation: emp.title || "Consultant",
+      department: emp.department || "Advisory",
+      month: monthStr,
+      joiningDate: emp.joiningDate || "2025-01-24",
+      bankAccount: "XXXX-XXXX-4829",
+      pfNumber: `PF/${emp.empCode || "101"}/2025`,
+      panNumber: "ABCDE1234F",
+      workingDays: 22,
+      paidDays: 22,
+      earnings: [
+        { title: "Basic Salary", amount: basic },
+        { title: "House Rent Allowance (HRA)", amount: hra },
+        { title: "Dearness Allowance (DA)", amount: da },
+        { title: "Conveyance Allowance", amount: conveyance },
+        { title: "Medical Allowance", amount: medicalAllowance },
+        { title: "Special Allowance", amount: specialAllowance }
+      ],
+      deductions: [
+        { title: "Provident Fund (PF)", amount: pfDeduction },
+        { title: "Professional Tax (PT)", amount: ptDeduction },
+        { title: "Income Tax (TDS)", amount: tdsDeduction }
+      ],
+      grossEarnings,
+      totalDeductions,
+      netSalary
+    };
+  };
+
+  const updatePassword = (userId, newPassword) => {
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, password: newPassword } : u));
+    if (currentUser?.id === userId) {
+      setCurrentUser(prev => ({ ...prev, password: newPassword }));
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1456,7 +1596,15 @@ export const AppProvider = ({ children }) => {
         updateHiringRequisition,
         addCandidate,
         updateCandidateStage,
-        updateCandidateStatus
+        updateCandidateStatus,
+        leaveRequests,
+        applyLeave,
+        approveLeave,
+        rejectLeave,
+        cancelLeave,
+        getLeaveBalance,
+        generatePayslip,
+        updatePassword
       }}
     >
       {children}

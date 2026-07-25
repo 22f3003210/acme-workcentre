@@ -21,7 +21,8 @@ export default function ConsultantView({ activeTab }) {
     applyLeave,
     cancelLeave,
     getLeaveBalance,
-    generatePayslip
+    generatePayslip,
+    updateUserProfile
   } = useApp();
 
   // Digital clock state
@@ -57,6 +58,32 @@ export default function ConsultantView({ activeTab }) {
   // Payslip State
   const [selectedPayslipMonth, setSelectedPayslipMonth] = useState("July 2026");
 
+  // Employee Self-Service Onboarding Profile State
+  const [showSelfOnboardingModal, setShowSelfOnboardingModal] = useState(false);
+  const [profileStep, setProfileStep] = useState(1);
+
+  const [personalEmail, setPersonalEmail] = useState(currentUser?.personalEmail || "");
+  const [altPhone, setAltPhone] = useState(currentUser?.altPhone || "");
+  const [dob, setDob] = useState(currentUser?.dob || "1998-05-14");
+  const [bloodGroup, setBloodGroup] = useState(currentUser?.bloodGroup || "O+");
+  const [gender, setGender] = useState(currentUser?.gender || "Male");
+
+  const [emergencyName, setEmergencyName] = useState(currentUser?.emergencyName || "");
+  const [emergencyRelation, setEmergencyRelation] = useState(currentUser?.emergencyRelation || "Parent/Spouse");
+  const [emergencyPhone, setEmergencyPhone] = useState(currentUser?.emergencyPhone || "");
+  const [currentAddress, setCurrentAddress] = useState(currentUser?.currentAddress || "");
+  const [permanentAddress, setPermanentAddress] = useState(currentUser?.permanentAddress || "");
+
+  const [panNumber, setPanNumber] = useState(currentUser?.panNumber || "");
+  const [aadhaarNumber, setAadhaarNumber] = useState(currentUser?.aadhaarNumber || "");
+  const [passportNumber, setPassportNumber] = useState(currentUser?.passportNumber || "");
+
+  const [bankName, setBankName] = useState(currentUser?.bankName || "HDFC Bank");
+  const [bankAccount, setBankAccount] = useState(currentUser?.bankAccount || "");
+  const [confirmBankAccount, setConfirmBankAccount] = useState(currentUser?.bankAccount || "");
+  const [ifscCode, setIfscCode] = useState(currentUser?.ifscCode || "");
+  const [branchName, setBranchName] = useState(currentUser?.branchName || "");
+
   const handleApplyLeaveSubmit = (e) => {
     e.preventDefault();
     if (!leaveFrom || !leaveTo || !leaveReason.trim()) return;
@@ -70,6 +97,35 @@ export default function ConsultantView({ activeTab }) {
     setToast({ message: "Leave application submitted successfully!", type: "success" });
     setShowApplyLeaveModal(false);
     setLeaveReason("");
+  };
+
+  const handleProfileSubmit = (e) => {
+    e.preventDefault();
+    if (bankAccount && confirmBankAccount && bankAccount !== confirmBankAccount) {
+      setToast({ message: "Bank account numbers do not match!", type: "error" });
+      return;
+    }
+    updateUserProfile(currentUser.id, {
+      personalEmail,
+      altPhone,
+      dob,
+      bloodGroup,
+      gender,
+      emergencyName,
+      emergencyRelation,
+      emergencyPhone,
+      currentAddress,
+      permanentAddress,
+      panNumber,
+      aadhaarNumber,
+      passportNumber,
+      bankName,
+      bankAccount,
+      ifscCode,
+      branchName
+    });
+    setToast({ message: "Profile details saved successfully!", type: "success" });
+    setShowSelfOnboardingModal(false);
   };
 
   // Update clock every second
@@ -217,6 +273,23 @@ export default function ConsultantView({ activeTab }) {
 
   return (
     <div className="consultant-view-container">
+      {/* First-Time Self-Onboarding Prompt Banner */}
+      {!currentUser?.profileCompleted && (
+        <div style={{ background: "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)", color: "#ffffff", padding: "16px 24px", borderRadius: "8px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 4px 12px rgba(79,70,229,0.2)" }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "700" }}>👋 Welcome! Please complete your employee profile details</h3>
+            <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "#e0e7ff" }}>Enter your PAN, Aadhaar, Bank Account, Emergency Contact & Personal Details to finalize your self-service onboarding.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowSelfOnboardingModal(true)}
+            style={{ background: "#ffffff", color: "#3730a3", border: "none", borderRadius: "6px", padding: "10px 20px", fontWeight: "700", fontSize: "0.88rem", cursor: "pointer", whiteSpace: "nowrap" }}
+          >
+            Complete Profile Now →
+          </button>
+        </div>
+      )}
+
       {/* Keka HR Style Employee Profile Top Banner Card */}
       <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
         
@@ -289,6 +362,16 @@ export default function ConsultantView({ activeTab }) {
               <span style={{ fontWeight: "600", color: "#2563eb" }}>{currentUser.reportingManager || "ACME Management"}</span>
             </div>
           </div>
+
+          <div style={{ marginLeft: "auto" }}>
+            <button
+              type="button"
+              onClick={() => setShowSelfOnboardingModal(true)}
+              style={{ background: "#5b50a1", color: "#ffffff", border: "none", borderRadius: "4px", padding: "6px 14px", fontSize: "0.78rem", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+            >
+              <span>✏️</span> Edit Profile Details
+            </button>
+          </div>
         </div>
 
         {/* Main Profile Navigation Tabs Row */}
@@ -347,6 +430,80 @@ export default function ConsultantView({ activeTab }) {
         )}
 
       </div>
+
+      {/* PROFILE / ABOUT Tab: Self-Service Details */}
+      {(profileTab === "PROFILE" || profileTab === "ABOUT") && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px", marginBottom: "24px" }}>
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: "16px", marginBottom: "20px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.15rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>My Personal & Statutory Profile</h3>
+                <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>Identity cards, banking, emergency contacts, and personal information</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSelfOnboardingModal(true)}
+                style={{ background: "#5b50a1", color: "#ffffff", border: "none", borderRadius: "6px", padding: "8px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+              >
+                ✏️ Edit Profile Details
+              </button>
+            </div>
+
+            {/* Grid 1: Identity & Statutory Cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+              <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>PAN CARD NUMBER</span>
+                <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a", marginTop: "6px" }}>{currentUser.panNumber || "Not Provided"}</div>
+              </div>
+
+              <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>AADHAAR CARD NUMBER</span>
+                <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a", marginTop: "6px" }}>{currentUser.aadhaarNumber || "Not Provided"}</div>
+              </div>
+
+              <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "6px", border: "1px solid #e2e8f0" }}>
+                <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>BLOOD GROUP</span>
+                <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#dc2626", marginTop: "6px" }}>{currentUser.bloodGroup || "O+"}</div>
+              </div>
+            </div>
+
+            {/* Grid 2: Bank Account Details */}
+            <h4 style={{ fontSize: "0.92rem", fontWeight: "700", color: "#1e293b", marginBottom: "12px", borderBottom: "1px solid #f1f5f9", paddingBottom: "6px" }}>Bank & Remittance Details</h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "16px", marginBottom: "24px", fontSize: "0.85rem" }}>
+              <div>
+                <span style={{ color: "#64748b", fontSize: "0.75rem", display: "block" }}>BANK NAME</span>
+                <strong style={{ color: "#0f172a" }}>{currentUser.bankName || "HDFC Bank"}</strong>
+              </div>
+              <div>
+                <span style={{ color: "#64748b", fontSize: "0.75rem", display: "block" }}>ACCOUNT NUMBER</span>
+                <strong style={{ color: "#0f172a" }}>{currentUser.bankAccount || "XXXX-XXXX-4829"}</strong>
+              </div>
+              <div>
+                <span style={{ color: "#64748b", fontSize: "0.75rem", display: "block" }}>IFSC CODE</span>
+                <strong style={{ color: "#0f172a" }}>{currentUser.ifscCode || "HDFC0000123"}</strong>
+              </div>
+              <div>
+                <span style={{ color: "#64748b", fontSize: "0.75rem", display: "block" }}>BRANCH NAME</span>
+                <strong style={{ color: "#0f172a" }}>{currentUser.branchName || "BKC Main Branch"}</strong>
+              </div>
+            </div>
+
+            {/* Grid 3: Emergency & Addresses */}
+            <h4 style={{ fontSize: "0.92rem", fontWeight: "700", color: "#1e293b", marginBottom: "12px", borderBottom: "1px solid #f1f5f9", paddingBottom: "6px" }}>Emergency Contact & Addresses</h4>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px", fontSize: "0.85rem" }}>
+              <div>
+                <span style={{ color: "#64748b", fontSize: "0.75rem", display: "block" }}>EMERGENCY CONTACT</span>
+                <strong style={{ color: "#0f172a" }}>{currentUser.emergencyName || "Parent/Spouse"} ({currentUser.emergencyRelation || "Parent"})</strong>
+                <div style={{ color: "#2563eb", marginTop: "2px" }}>📞 {currentUser.emergencyPhone || "+91-9876543210"}</div>
+              </div>
+              <div>
+                <span style={{ color: "#64748b", fontSize: "0.75rem", display: "block" }}>CURRENT RESIDENTIAL ADDRESS</span>
+                <div style={{ color: "#0f172a", marginTop: "2px" }}>{currentUser.currentAddress || "Mehdipatnam, Hyderabad, Telangana"}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Attendance Content Grid (Matching Keka HR Screenshot) */}
       {profileTab === "TIME" && timeSubTab === "Attendance" && (
@@ -1414,6 +1571,170 @@ export default function ConsultantView({ activeTab }) {
           </div>
         </div>
       )}
+
+      {/* Employee Profile Self-Service Onboarding Modal */}
+      {showSelfOnboardingModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ background: "#ffffff", borderRadius: "8px", width: "640px", maxWidth: "95vw", padding: "28px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.15)", maxHeight: "90vh", overflowY: "auto" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #f1f5f9", paddingBottom: "12px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.2rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>Employee Profile Self-Service</h3>
+                <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "2px 0 0 0" }}>Fill out your statutory, identity, and personal contact details</p>
+              </div>
+              <button type="button" onClick={() => setShowSelfOnboardingModal(false)} style={{ background: "none", border: "none", fontSize: "1.4rem", color: "#64748b", cursor: "pointer" }}>&times;</button>
+            </div>
+
+            {/* Stepper Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "24px", background: "#f8fafc", padding: "12px 20px", borderRadius: "6px" }}>
+              {[
+                { step: 1, label: "1. Personal & Contact" },
+                { step: 2, label: "2. PAN & Aadhaar" },
+                { step: 3, label: "3. Bank Account" }
+              ].map(s => (
+                <span
+                  key={s.step}
+                  onClick={() => setProfileStep(s.step)}
+                  style={{ fontSize: "0.82rem", fontWeight: profileStep === s.step ? "700" : "500", color: profileStep === s.step ? "#5b50a1" : "#64748b", cursor: "pointer" }}
+                >
+                  {s.label}
+                </span>
+              ))}
+            </div>
+
+            <form onSubmit={handleProfileSubmit}>
+              {profileStep === 1 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Personal Email</label>
+                      <input type="email" placeholder="personal@email.com" value={personalEmail} onChange={e => setPersonalEmail(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Alternate Phone</label>
+                      <input type="tel" placeholder="+91-9876543210" value={altPhone} onChange={e => setAltPhone(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }} />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Date of Birth</label>
+                      <input type="date" value={dob} onChange={e => setDob(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Blood Group</label>
+                      <select value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }}>
+                        {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map(bg => <option key={bg} value={bg}>{bg}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Gender</label>
+                      <select value={gender} onChange={e => setGender(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }}>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <h4 style={{ fontSize: "0.9rem", fontWeight: "700", color: "#1e293b", margin: "8px 0 0 0" }}>Emergency Contact & Address</h4>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Contact Person Name *</label>
+                      <input type="text" required placeholder="Parent / Spouse Name" value={emergencyName} onChange={e => setEmergencyName(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Relationship *</label>
+                      <input type="text" required placeholder="Father / Spouse" value={emergencyRelation} onChange={e => setEmergencyRelation(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }} />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Emergency Phone *</label>
+                      <input type="tel" required placeholder="+91-9876543210" value={emergencyPhone} onChange={e => setEmergencyPhone(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Current Residential Address *</label>
+                    <textarea required rows={2} placeholder="Full current address" value={currentAddress} onChange={e => setCurrentAddress(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem", resize: "vertical" }} />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Permanent Address</label>
+                    <textarea rows={2} placeholder="Permanent address (or same as current)" value={permanentAddress} onChange={e => setPermanentAddress(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem", resize: "vertical" }} />
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
+                    <button type="button" onClick={() => setProfileStep(2)} style={{ padding: "10px 20px", background: "#5b50a1", color: "#ffffff", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer" }}>Next: Identity Cards →</button>
+                  </div>
+                </div>
+              )}
+
+              {profileStep === 2 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div>
+                    <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>PAN Card Number *</label>
+                    <input type="text" required maxLength={10} placeholder="ABCDE1234F" value={panNumber} onChange={e => setPanNumber(e.target.value.toUpperCase())} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem", letterSpacing: "0.08em", fontWeight: "700" }} />
+                    <span style={{ fontSize: "0.72rem", color: "#64748b" }}>10-character Permanent Account Number</span>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Aadhaar Card Number *</label>
+                    <input type="text" required maxLength={14} placeholder="1234 5678 9012" value={aadhaarNumber} onChange={e => setAadhaarNumber(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem", letterSpacing: "0.08em", fontWeight: "700" }} />
+                    <span style={{ fontSize: "0.72rem", color: "#64748b" }}>12-digit UIDAI Aadhaar number</span>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Passport Number (Optional)</label>
+                    <input type="text" placeholder="A1234567" value={passportNumber} onChange={e => setPassportNumber(e.target.value.toUpperCase())} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }} />
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
+                    <button type="button" onClick={() => setProfileStep(1)} style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", cursor: "pointer" }}>← Back</button>
+                    <button type="button" onClick={() => setProfileStep(3)} style={{ padding: "10px 20px", background: "#5b50a1", color: "#ffffff", border: "none", borderRadius: "4px", fontWeight: "600", cursor: "pointer" }}>Next: Bank Account →</button>
+                  </div>
+                </div>
+              )}
+
+              {profileStep === 3 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                    <div>
+                      <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Bank Name *</label>
+                      <select value={bankName} onChange={e => setBankName(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }}>
+                        {["HDFC Bank", "ICICI Bank", "State Bank of India (SBI)", "Axis Bank", "Kotak Mahindra Bank", "Punjab National Bank", "Other Bank"].map(b => <option key={b} value={b}>{b}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Branch Name</label>
+                      <input type="text" placeholder="Branch location" value={branchName} onChange={e => setBranchName(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem" }} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Bank Account Number *</label>
+                    <input type="text" required placeholder="Enter bank account number" value={bankAccount} onChange={e => setBankAccount(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem", fontWeight: "700" }} />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>Re-enter Account Number *</label>
+                    <input type="text" required placeholder="Re-enter bank account number" value={confirmBankAccount} onChange={e => setConfirmBankAccount(e.target.value)} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem", fontWeight: "700" }} />
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: "0.78rem", color: "#6b7280", marginBottom: "4px", display: "block", fontWeight: "500" }}>IFSC Code *</label>
+                    <input type="text" required placeholder="HDFC0000123" value={ifscCode} onChange={e => setIfscCode(e.target.value.toUpperCase())} style={{ width: "100%", padding: "10px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.88rem", letterSpacing: "0.05em", fontWeight: "700" }} />
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
+                    <button type="button" onClick={() => setProfileStep(2)} style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", cursor: "pointer" }}>← Back</button>
+                    <button type="submit" style={{ padding: "10px 20px", background: "#22c55e", color: "#ffffff", border: "none", borderRadius: "4px", fontWeight: "700", cursor: "pointer" }}>Complete & Save Profile ✓</button>
+                  </div>
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Profile & Petty Cash Allowance Modal */}
     </div>
   );
 }

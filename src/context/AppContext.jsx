@@ -1533,6 +1533,33 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const updateUserProfile = (userId, profileData) => {
+    const updatedData = {
+      ...profileData,
+      profileCompleted: true,
+      profileCompletedAt: new Date().toISOString()
+    };
+
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...updatedData } : u));
+    if (currentUser?.id === userId) {
+      setCurrentUser(prev => ({ ...prev, ...updatedData }));
+    }
+
+    if (isSupabaseConfigured()) {
+      const payload = {
+        pan_number: profileData.panNumber || "",
+        aadhaar_number: profileData.aadhaarNumber || "",
+        bank_name: profileData.bankName || "",
+        account_number: profileData.bankAccount || "",
+        ifsc_code: profileData.ifscCode || "",
+        emergency_contact: profileData.emergencyContact || "",
+        blood_group: profileData.bloodGroup || "",
+        address: profileData.address || ""
+      };
+      supabase.from("users").update(payload).eq("id", userId).catch(e => console.error("Supabase updateUserProfile error:", e));
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -1604,7 +1631,8 @@ export const AppProvider = ({ children }) => {
         cancelLeave,
         getLeaveBalance,
         generatePayslip,
-        updatePassword
+        updatePassword,
+        updateUserProfile
       }}
     >
       {children}

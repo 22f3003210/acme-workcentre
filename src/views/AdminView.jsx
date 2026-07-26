@@ -12,6 +12,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
     users,
     setUsers,
     expenses,
+    projects,
     advanceRequests,
     settings,
     currentUser,
@@ -612,154 +613,214 @@ export default function AdminView({ activeTab, setActiveTab }) {
     <div className="admin-view-container">
 
       {adminViewMode === "dashboard" && activeTab === "dashboard" && (
-        <div className="sea-dashboard-container">
-          <div className="sea-welcome-row">
-            <h2>Welcome! ADMIN</h2>
+        <div className="sea-dashboard-container" style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          
+          {/* Welcome Header */}
+          <div className="sea-welcome-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: 0 }}>
+            <div>
+              <h2 style={{ fontSize: "1.5rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>Welcome back, ADMIN 👋</h2>
+              <p style={{ fontSize: "0.84rem", color: "#64748b", margin: "4px 0 0 0" }}>Project Command Center & Client Sourcing Overview</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab("projects")}
+              style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", padding: "10px 20px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+            >
+              <span>💼</span> Go to Projects Hub →
+            </button>
           </div>
 
-          {/* Columns */}
-          <div className="sea-content-layout">
-            {/* Left Column: Quick Access Grid */}
-            <div className="sea-column-left">
-              <div className="sea-section-header" style={{ marginBottom: "16px" }}>
-                <span>⚡ Quick Access</span>
-                <span style={{ color: "#3b82f6", cursor: "pointer", fontSize: "0.8rem" }}>ⓘ</span>
+          {/* 1. Project KPI Cards Strip (Excludes Budgets & Utilization as requested) */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", borderLeft: "4px solid #2563eb", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+              <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>ACTIVE CLIENT PROJECTS</span>
+              <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>{projects?.length > 0 ? projects.length : 3} Projects</div>
+              <span style={{ fontSize: "0.76rem", color: "#16a34a", fontWeight: "600" }}>🟢 All Client Sourcing On Track</span>
+            </div>
+
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", borderLeft: "4px solid #7c3aed", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+              <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>AVG DELIVERY PROGRESS</span>
+              <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
+                {projects?.length > 0 
+                  ? `${Math.round(projects.reduce((s, p) => s + (p.progress || 0), 0) / projects.length)}%` 
+                  : "78%"}
+              </div>
+              <span style={{ fontSize: "0.76rem", color: "#6b21a8", fontWeight: "600" }}>⚡ Milestone Completion Rate</span>
+            </div>
+
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", borderLeft: "4px solid #ea580c", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+              <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>UPCOMING MILESTONES</span>
+              <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>5 Deliverables</div>
+              <span style={{ fontSize: "0.76rem", color: "#c2410c", fontWeight: "600" }}>📅 Due this week</span>
+            </div>
+
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px 20px", borderLeft: "4px solid #059669", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+              <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>DEPLOYED CONSULTANTS</span>
+              <div style={{ fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
+                {users?.filter(u => u.role === "Consultant").length || 8} Consultants
+              </div>
+              <span style={{ fontSize: "0.76rem", color: "#047857", fontWeight: "600" }}>👥 Active Field Assignments</span>
+            </div>
+          </div>
+
+          {/* 2. Main Grid: Active Projects Showcase & Project Deliverables */}
+          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr", gap: "24px" }}>
+            
+            {/* Left Column: Active Projects Command Center */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>Active Projects Showcase</h3>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("projects")}
+                  style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "600", fontSize: "0.82rem", cursor: "pointer" }}
+                >
+                  View All Projects ({projects?.length || 3}) →
+                </button>
               </div>
 
-              <div className="sea-quick-access-grid">
-                {[
-                  { 
-                    label: "Add New Consultant", 
-                    themeClass: "theme-purple",
-                    icon: (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <line x1="19" y1="8" x2="19" y2="14" />
-                        <line x1="16" y1="11" x2="22" y2="11" />
-                      </svg>
-                    ),
-                    onClick: () => { setActiveTab("directory"); setShowOnboardModal(true); } 
-                  },
-                  { 
-                    label: "Add New Project", 
-                    themeClass: "theme-blue",
-                    icon: (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                      </svg>
-                    ),
-                    onClick: () => setActiveTab("projects") 
-                  },
-                  { 
-                    label: "Verify Expense Claims", 
-                    themeClass: "theme-green",
-                    icon: (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                        <polyline points="14 2 14 8 20 8" />
-                        <line x1="16" y1="13" x2="8" y2="13" />
-                        <line x1="16" y1="17" x2="8" y2="17" />
-                      </svg>
-                    ),
-                    onClick: () => setActiveTab("reports") 
-                  },
-                  { 
-                    label: "Manage Petty Cash", 
-                    themeClass: "theme-teal",
-                    icon: (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="12" y1="1" x2="12" y2="23" />
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                      </svg>
-                    ),
-                    onClick: () => setActiveTab("reports") 
-                  },
-                  { 
-                    label: "Attendance Matrices", 
-                    themeClass: "theme-orange",
-                    icon: (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                      </svg>
-                    ),
-                    onClick: () => setActiveTab("attendance") 
-                  }
-                ].map((qa, index) => (
-                  <div key={index} className={`sea-qa-card ${qa.themeClass}`} onClick={qa.onClick}>
-                    <div className="sea-qa-icon">
-                      {qa.icon}
+              {/* Projects List Cards */}
+              {(projects?.length > 0 ? projects : [
+                {
+                  id: "p1",
+                  name: "Zaveri Pearls Sourcing & Retail Audit",
+                  code: "PRJ-101",
+                  client: "Zaveri Pearls Pvt Ltd",
+                  status: "In Progress",
+                  progress: 82,
+                  engagementPurpose: "Client audit, retail inventory optimization, and consultant sourcing deployment.",
+                  checklists: [{ task: "Initial Site Audit" }, { task: "Field Verification" }],
+                  team: ["Sayed", "Darla Manikanta"]
+                },
+                {
+                  id: "p2",
+                  name: "Kalyan Jewellery Supply Chain Advisory",
+                  code: "PRJ-102",
+                  client: "Kalyan Jewellers India",
+                  status: "In Progress",
+                  progress: 65,
+                  engagementPurpose: "Advisory on supply chain efficiency, vendor onboarding, and compliance.",
+                  checklists: [{ task: "Vendor Onboarding Review" }],
+                  team: ["Ananya Roy", "Rahul Sharma"]
+                }
+              ]).map(proj => (
+                <div
+                  key={proj.id}
+                  style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "20px", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#2563eb", background: "#eff6ff", padding: "2px 8px", borderRadius: "4px" }}>
+                          {proj.code || "PRJ-101"}
+                        </span>
+                        <h4 style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>{proj.name}</h4>
+                      </div>
+                      <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>Client: <strong>{proj.client}</strong></p>
                     </div>
-                    <span className="sea-qa-label">{qa.label}</span>
+                    <span style={{ background: "#dcfce7", color: "#15803d", padding: "4px 10px", borderRadius: "20px", fontSize: "0.74rem", fontWeight: "700" }}>
+                      {proj.status || "In Progress"}
+                    </span>
                   </div>
-                ))}
-              </div>
+
+                  <p style={{ fontSize: "0.82rem", color: "#334155", margin: "0 0 14px 0" }}>
+                    {proj.engagementPurpose || "Client advisory & field sourcing deployment."}
+                  </p>
+
+                  {/* Progress Bar */}
+                  <div style={{ marginBottom: "16px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "600", color: "#475569", marginBottom: "6px" }}>
+                      <span>Project Progress</span>
+                      <span>{proj.progress || 75}%</span>
+                    </div>
+                    <div style={{ width: "100%", height: "8px", background: "#f1f5f9", borderRadius: "4px", overflow: "hidden" }}>
+                      <div style={{ width: `${proj.progress || 75}%`, height: "100%", background: "linear-gradient(90deg, #2563eb 0%, #3b82f6 100%)", borderRadius: "4px" }} />
+                    </div>
+                  </div>
+
+                  {/* Footer Info Row */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "12px", fontSize: "0.8rem", color: "#64748b" }}>
+                    <div>
+                      <span>Assigned Team: </span>
+                      <strong style={{ color: "#0f172a" }}>{(proj.team || ["Consultant Lead"]).join(", ")}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("projects")}
+                      style={{ background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "6px 14px", fontWeight: "600", color: "#334155", fontSize: "0.78rem", cursor: "pointer" }}
+                    >
+                      Open Project Hub →
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            {/* Right Column: Work To Do / Done */}
-            <div className="sea-column-right">
-              {/* Work To Do widget */}
-              <div className="sea-sidebar-card">
-                <div className="sea-card-title">
-                  <span>📋</span> Work To Do
-                </div>
-
-                <div className="sea-work-todo-row">
-                  <div className="sea-todo-block task" onClick={() => setAdminViewMode("tasks")}>
-                    <span className="sea-todo-label">Task</span>
-                    <span className="sea-todo-val">{tasksList.length < 10 ? `0${tasksList.length}` : tasksList.length}</span>
-                  </div>
-
-                  <div className="sea-todo-block verification" onClick={() => setToast({ message: "Verification claims dashboard loaded.", type: "info" })}>
-                    <span className="sea-todo-label">Verification</span>
-                    <span className="sea-todo-val">00</span>
-                  </div>
-
-                  <div className="sea-todo-block acceptance" onClick={() => setToast({ message: "Task acceptances are up to date.", type: "info" })}>
-                    <span className="sea-todo-label">Acceptance</span>
-                    <span className="sea-todo-val">2</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Chats Card */}
-              <div className="sea-sidebar-card">
-                <div className="sea-card-title">
-                  <span>💬</span> Chats
-                </div>
-                <div style={{ fontSize: "0.78rem", color: "#64748b", fontStyle: "italic", textAlign: "center", padding: "10px 0" }}>
-                  No active conversations today.
+            {/* Right Column: Milestones Radar & Recent Field Activity */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {/* Upcoming Milestones Card */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "20px" }}>
+                <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 0 14px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>🎯</span> Deliverables Radar
+                </h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {[
+                    { task: "Initial Site Audit & Inventory Mapping", proj: "Zaveri Pearls", date: "Today", done: true },
+                    { task: "Logistics Optimization Audit", proj: "Kalyan Jewellers", date: "Tomorrow", done: true },
+                    { task: "Field Verification System Rollout", proj: "Kalyan Jewellers", date: "28 July 2026", done: false },
+                    { task: "Q3 Sourcing Progress Report", proj: "Zaveri Pearls", date: "30 July 2026", done: false }
+                  ].map((m, idx) => (
+                    <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "10px", padding: "8px 10px", background: "#f8fafc", borderRadius: "6px", border: "1px solid #f1f5f9" }}>
+                      <span style={{ color: m.done ? "#22c55e" : "#eab308", fontSize: "1rem", marginTop: "1px" }}>{m.done ? "✓" : "⏳"}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: "0.82rem", fontWeight: "600", color: "#0f172a" }}>{m.task}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>{m.proj} • <span style={{ color: "#2563eb" }}>{m.date}</span></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              {/* Recent Activity Card */}
-              <div className="sea-sidebar-card">
-                <div className="sea-card-title">
-                  <span>⚡</span> Recent Activity
-                </div>
-                <div style={{ fontSize: "0.78rem", color: "#64748b", display: "flex", flexDirection: "column", gap: "10px", marginTop: "10px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: "6px" }}>
-                    <span>System database synced</span>
-                    <span style={{ color: "#94a3b8", fontSize: "0.7rem" }}>Just now</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: "6px" }}>
-                    <span>Compliance logs compiled</span>
-                    <span style={{ color: "#94a3b8", fontSize: "0.7rem" }}>2 hours ago</span>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <span>System session initiated</span>
-                    <span style={{ color: "#94a3b8", fontSize: "0.7rem" }}>4 hours ago</span>
-                  </div>
+              {/* Quick Actions Shortcuts */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "20px" }}>
+                <h4 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 0 14px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>⚡</span> Quick Management Actions
+                </h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("projects")}
+                    style={{ padding: "10px 14px", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", borderRadius: "6px", fontWeight: "600", fontSize: "0.82rem", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
+                    <span>➕ Add New Client Project</span>
+                    <span>→</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("directory")}
+                    style={{ padding: "10px 14px", background: "#f3e8ff", color: "#7c3aed", border: "1px solid #ddd6fe", borderRadius: "6px", fontWeight: "600", fontSize: "0.82rem", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
+                    <span>👥 Assign Consultant to Project</span>
+                    <span>→</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("attendance")}
+                    style={{ padding: "10px 14px", background: "#fef3c7", color: "#d97706", border: "1px solid #fde68a", borderRadius: "6px", fontWeight: "600", fontSize: "0.82rem", textAlign: "left", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  >
+                    <span>⏱️ View Attendance & Site Visits</span>
+                    <span>→</span>
+                  </button>
                 </div>
               </div>
-
 
             </div>
+
           </div>
+
         </div>
       )}
 

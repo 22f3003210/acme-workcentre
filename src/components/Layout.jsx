@@ -804,8 +804,50 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       {/* Main Body Layout under Top Navbar */}
       <div className="app-body-layout" style={{ display: "flex", flexGrow: 1, width: "100%", minHeight: "calc(100vh - 80px)", position: "relative" }}>
         
-        {/* Main Content Area (Full 100% Width) */}
-        <div className="main-wrapper" style={{ flex: 1, width: "100%", maxWidth: "100%" }}>
+        {/* YouTube-Style Collapsible Side Navigation Bar for Admin View */}
+        {currentUser?.role === "Admin" && (
+          <aside className="youtube-sidebar">
+            <div className="youtube-sidebar-nav">
+              {navItems.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`youtube-nav-item ${isActive ? "active" : ""}`}
+                    onClick={() => {
+                      if (setActiveTab) setActiveTab(item.id);
+                      navigate(getRoutePath(item.id));
+                    }}
+                    title={item.label}
+                  >
+                    <span className="youtube-nav-icon">{item.icon}</span>
+                    <span className="youtube-nav-label">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="youtube-sidebar-divider" />
+
+            <div className="youtube-sidebar-footer">
+              <div className="youtube-user-card" onClick={openModal} title="Admin Profile & Account Settings">
+                <img
+                  src={currentUser?.avatar || "https://api.dicebear.com/7.x/initials/svg?seed=Admin"}
+                  alt={currentUser?.name}
+                  className="youtube-user-avatar"
+                />
+                <div className="youtube-user-info">
+                  <span className="youtube-user-name">{currentUser?.name || "Admin"}</span>
+                  <span className="youtube-user-role">System Admin</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+        )}
+
+        {/* Main Content Area */}
+        <div className="main-wrapper" style={{ flex: 1, width: "100%", maxWidth: "100%", minWidth: 0 }}>
           <header className="mobile-header">
             <div className="mobile-brand">
               <span className="brand-logo">

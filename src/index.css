@@ -3038,5 +3038,160 @@ button, input, select, textarea {
   margin: 0 !important;
 }
 
+/* YouTube Style Collapsible Side Navigation Bar (Admin View) */
+.youtube-sidebar {
+  width: 72px;
+  min-width: 72px;
+  background: #ffffff;
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 70px;
+  height: calc(100vh - 70px);
+  z-index: 850;
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s ease;
+  overflow: hidden;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.youtube-sidebar:hover {
+  width: 230px;
+  min-width: 230px;
+  box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
+}
+
+.youtube-sidebar-nav {
+  flex: 1;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Nav Item Pill (YouTube style) */
+.youtube-nav-item {
+  width: 100%;
+  height: 44px;
+  border-radius: 12px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 16px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.youtube-nav-item:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.youtube-nav-item.active {
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.youtube-nav-item.active:hover {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+.youtube-nav-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.youtube-nav-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  letter-spacing: 0.01em;
+}
+
+.youtube-sidebar:hover .youtube-nav-label {
+  opacity: 1;
+}
+
+.youtube-sidebar-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 6px 12px;
+}
+
+.youtube-sidebar-footer {
+  padding: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.youtube-user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.youtube-user-card:hover {
+  background: #f8fafc;
+}
+
+.youtube-user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #e2e8f0;
+}
+
+.youtube-user-info {
+  display: flex;
+  flex-direction: column;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.youtube-sidebar:hover .youtube-user-info {
+  opacity: 1;
+}
+
+.youtube-user-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.youtube-user-role {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+@media (max-width: 768px) {
+  .youtube-sidebar {
+    display: none !important;
+  }
+}
+
 
 

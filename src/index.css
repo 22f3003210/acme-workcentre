@@ -2126,7 +2126,7 @@ button, input, select, textarea {
   position: sticky;
   top: 0;
   z-index: 850;
-  margin: 0 0 24px 0 !important; /* Spaced out and cleared overlap */
+  margin: 0 !important; /* Cleared margin to merge directly into content */
 }
 
 .sea-nav-left {
@@ -2252,7 +2252,7 @@ button, input, select, textarea {
 
 /* Dashboard main container */
 .sea-dashboard-container {
-  padding-top: 24px;
+  padding-top: 0;
 }
 
 .sea-welcome-row {
@@ -2975,7 +2975,7 @@ button, input, select, textarea {
 }
 
 .theme-admin .main-content {
-  padding: 24px !important; /* Premium inset padding gap from sidebar */
+  padding: 16px 24px 24px 24px !important; /* Clean inset padding merged directly under top navbar */
   max-width: none !important;
   margin: 0 !important;
   width: 100% !important;

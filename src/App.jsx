@@ -31,6 +31,7 @@ const RecruiterView = lazyView(() => import("./views/RecruiterView"));
 const LedgerReports = lazyView(() => import("./components/LedgerReports"));
 const AttendanceManager = lazyView(() => import("./components/AttendanceManager"));
 const ClaimsDesk = lazyView(() => import("./components/ClaimsDesk"));
+const ScheduleCalendarView = lazyView(() => import("./views/ScheduleCalendarView"));
 
 // Clean Production Route Path Mapping
 export const getRoutePath = (tabId) => {
@@ -52,6 +53,7 @@ export const getRoutePath = (tabId) => {
     case "leaves": return "/leaves";
     case "payslips": return "/payslips";
     case "projects": return "/projects";
+    case "calendar": return "/calendar";
     case "recruitment": return "/recruiting";
     case "settings": return "/settings";
     case "ledger": return "/ledger";
@@ -73,6 +75,7 @@ const getTabFromPath = (pathname, role) => {
   if (p.includes("leaves")) return "leaves";
   if (p.includes("payslips")) return "payslips";
   if (p.includes("projects")) return "projects";
+  if (p.includes("calendar")) return "calendar";
   if (p.includes("expenses") || p.includes("payroll") || p.includes("reports")) return role === "Consultant" ? "expenses" : "reports";
   if (p.includes("employee") || p.includes("directory")) return "directory";
   if (p.includes("attendance") || p.includes("punch")) return role === "Consultant" ? "punch" : "attendance";
@@ -95,6 +98,9 @@ function MainWorkspace({ initialTab }) {
   }
 
   const renderActiveView = () => {
+    if (activeTab === "calendar") {
+      return <ScheduleCalendarView />;
+    }
     switch (currentUser.role) {
       case "Admin":
       case "Accounts Manager":
@@ -163,6 +169,7 @@ export function AppRoutes() {
         <Route path="/leaves" element={<MainWorkspace initialTab="leaves" />} />
         <Route path="/payslips" element={<MainWorkspace initialTab="payslips" />} />
         <Route path="/projects" element={<MainWorkspace initialTab="projects" />} />
+        <Route path="/calendar" element={<MainWorkspace initialTab="calendar" />} />
         <Route path="/recruiting" element={<MainWorkspace initialTab="recruitment" />} />
         <Route path="/recruitment" element={<MainWorkspace initialTab="recruitment" />} />
         <Route path="/settings" element={<MainWorkspace initialTab="settings" />} />

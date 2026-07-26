@@ -6,7 +6,8 @@ import {
   initialAdvanceRequests,
   initialProjects,
   initialHiringRequisitions,
-  initialCandidates
+  initialCandidates,
+  initialSchedules
 } from "../data/initialData";
 import {
   supabase,
@@ -177,6 +178,16 @@ export const AppProvider = ({ children }) => {
     } catch (e) {
       console.error("Error parsing workcentre_leave_requests from localStorage:", e);
       return [];
+    }
+  });
+
+  const [schedules, setSchedules] = useState(() => {
+    try {
+      const saved = localStorage.getItem("workcentre_schedules");
+      return saved ? JSON.parse(saved) : initialSchedules;
+    } catch (e) {
+      console.error("Error parsing workcentre_schedules from localStorage:", e);
+      return initialSchedules;
     }
   });
 
@@ -1632,7 +1643,23 @@ export const AppProvider = ({ children }) => {
         getLeaveBalance,
         generatePayslip,
         updatePassword,
-        updateUserProfile
+        updateUserProfile,
+        schedules,
+        addSchedule: (schData) => {
+          const newSch = { id: "sch-" + Date.now(), ...schData };
+          setSchedules(prev => {
+            const updated = [newSch, ...prev];
+            try { localStorage.setItem("workcentre_schedules", JSON.stringify(updated)); } catch(e){}
+            return updated;
+          });
+        },
+        deleteSchedule: (schId) => {
+          setSchedules(prev => {
+            const updated = prev.filter(s => s.id !== schId);
+            try { localStorage.setItem("workcentre_schedules", JSON.stringify(updated)); } catch(e){}
+            return updated;
+          });
+        }
       }}
     >
       {children}

@@ -359,35 +359,45 @@ export default function ScheduleCalendarView() {
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* VIEW MODE 1: DAY VIEW (NO TOP DAYS BAR - 10 AM to 7 PM)      */}
+        {/* VIEW MODE 1: DAY VIEW (GOOGLE CALENDAR STYLE DAYWISE)        */}
         {/* ------------------------------------------------------------- */}
         {viewMode === "Day" && (
           <div style={{ flex: 1 }}>
-            {/* Day Title Header Banner */}
-            <div style={{ background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", border: "1px solid #bfdbfe", borderRadius: "12px", padding: "16px 24px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 2px 4px rgba(37,99,235,0.06)" }}>
-              <div>
-                <span style={{ fontSize: "0.75rem", color: "#2563eb", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.5px" }}>DAY VIEW AGENDA</span>
-                <h3 style={{ fontSize: "1.25rem", fontWeight: "800", color: "#1e3a8a", margin: "2px 0 0 0" }}>
-                  {new Date(selectedDay).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-                </h3>
+            {/* Day Header (Google Calendar Style: Weekday Abbr + Date Number) */}
+            <div style={{ display: "grid", gridTemplateColumns: "85px 1fr", gap: "12px", marginBottom: "16px", alignItems: "flex-end", paddingBottom: "12px", borderBottom: "1px solid #f1f5f9" }}>
+              <div style={{ fontSize: "0.74rem", color: "#64748b", fontWeight: "800", textTransform: "uppercase" }}>
+                GMT+05:30
               </div>
-              <span style={{ background: "#2563eb", color: "#ffffff", padding: "6px 16px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "800", boxShadow: "0 2px 6px rgba(37,99,235,0.3)" }}>
-                {filteredSchedules.filter(s => s.date === selectedDay).length} Events Scheduled
-              </span>
+              <div>
+                <div style={{ fontSize: "0.78rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", letterSpacing: "1px" }}>
+                  {new Date(selectedDay).toLocaleDateString("en-US", { weekday: "short" })}
+                </div>
+                <div style={{ fontSize: "2.2rem", fontWeight: "800", color: "#0f172a", lineHeight: 1, marginTop: "2px" }}>
+                  {new Date(selectedDay).getDate()}
+                </div>
+              </div>
             </div>
 
             {/* Timeline Grid (10 AM to 7 PM) */}
             <div style={{ position: "relative", borderTop: "1px solid #e2e8f0" }}>
               {timeSlots.map((time, idx) => (
                 <div key={idx} style={{ display: "grid", gridTemplateColumns: "85px 1fr", height: "65px", borderBottom: "1px solid #f1f5f9" }}>
-                  <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", transform: "translateY(-10px)" }}>
+                  <div style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "700", transform: "translateY(-10px)" }}>
                     {time}
                   </div>
                   <div style={{ borderLeft: "1px solid #e2e8f0" }} />
                 </div>
               ))}
 
-              {/* Day View Beautified Cards */}
+              {/* Red Current Time Line Indicator */}
+              <div style={{ position: "absolute", top: "180px", left: "75px", right: 0, height: "2px", background: "#ef4444", zIndex: 10, display: "flex", alignItems: "center" }}>
+                <div style={{ background: "#ef4444", color: "#ffffff", fontSize: "0.68rem", fontWeight: "800", padding: "2px 6px", borderRadius: "4px", transform: "translateX(-48px)" }}>
+                  12:46 PM
+                </div>
+                <div style={{ width: "8px", height: "8px", background: "#ef4444", borderRadius: "50%", transform: "translateX(-4px)" }} />
+              </div>
+
+              {/* Day View Event Blocks matching Google Calendar layout */}
               <div style={{ position: "absolute", top: 0, left: "85px", right: 0, bottom: 0, pointerEvents: "none" }}>
                 {filteredSchedules.filter(s => s.date === selectedDay).map((sch) => {
                   const pos = getTimePosition(sch.startTime, sch.endTime);
@@ -403,31 +413,34 @@ export default function ScheduleCalendarView() {
                         position: "absolute",
                         top: pos.top,
                         height: pos.height,
-                        left: "14px",
-                        right: "14px",
-                        borderRadius: "12px",
-                        padding: "14px 20px",
+                        left: "8px",
+                        right: "8px",
+                        borderRadius: "8px",
+                        padding: "10px 16px",
                         pointerEvents: "auto",
                         cursor: "pointer",
-                        boxShadow: "0 4px 14px rgba(0,0,0,0.06)",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.05)",
                         display: "flex",
                         justifyContent: "space-between",
-                        alignItems: "center",
+                        alignItems: "flex-start",
                         zIndex: 5,
                         ...colorStyle
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: "1.02rem", fontWeight: "800", marginBottom: "4px" }}>{sch.title}</div>
-                        <div style={{ fontSize: "0.8rem", opacity: 0.9, fontWeight: "600" }}>
-                          ⏰ {sch.startTime} - {sch.endTime} • <strong style={{ textDecoration: "underline" }}>{sch.projectName}</strong>
+                        <div style={{ fontSize: "0.98rem", fontWeight: "800", color: colorStyle.color, marginBottom: "2px" }}>
+                          {sch.title}
+                        </div>
+                        <div style={{ fontSize: "0.8rem", opacity: 0.88, fontWeight: "600" }}>
+                          {sch.startTime} – {sch.endTime}
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ fontSize: "0.78rem", fontWeight: "800", background: "rgba(255,255,255,0.85)", padding: "5px 12px", borderRadius: "8px", border: "1px solid rgba(0,0,0,0.06)" }}>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "0.75rem", fontWeight: "800", background: "rgba(255,255,255,0.85)", padding: "3px 10px", borderRadius: "6px" }}>
                           {getCategoryEmoji(sch.category)}
                         </span>
-                        <span style={{ fontSize: "0.78rem", fontWeight: "700", background: "rgba(255,255,255,0.7)", padding: "4px 10px", borderRadius: "14px" }}>
+                        <span style={{ fontSize: "0.75rem", fontWeight: "700", opacity: 0.85 }}>
                           👤 {sch.consultant}
                         </span>
                       </div>

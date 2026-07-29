@@ -104,43 +104,38 @@ export default function ScheduleCalendarView() {
     }
   };
 
-  // Modern Premium Color Palette with Micro-Gradients & Left Accents
+  // Modern Premium Color Palette with Uniform Crisp Borders (No borderLeft corner shading artifacts)
   const getColorStyle = (colorName) => {
     switch (colorName) {
       case "purple":
         return {
           background: "linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)",
-          border: "1px solid #e9d5ff",
-          borderLeft: "5px solid #9333ea",
+          border: "1px solid #c084fc",
           color: "#6b21a8"
         };
       case "orange":
         return {
           background: "linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)",
-          border: "1px solid #fed7aa",
-          borderLeft: "5px solid #ea580c",
+          border: "1px solid #fb923c",
           color: "#c2410c"
         };
       case "green":
         return {
           background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
-          border: "1px solid #bbf7d0",
-          borderLeft: "5px solid #16a34a",
+          border: "1px solid #4ade80",
           color: "#15803d"
         };
       case "red":
         return {
           background: "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
-          border: "1px solid #fecaca",
-          borderLeft: "5px solid #dc2626",
+          border: "1px solid #f87171",
           color: "#b91c1c"
         };
       case "blue":
       default:
         return {
           background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
-          border: "1px solid #bfdbfe",
-          borderLeft: "5px solid #2563eb",
+          border: "1px solid #60a5fa",
           color: "#1e40af"
         };
     }

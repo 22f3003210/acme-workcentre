@@ -63,6 +63,45 @@ export default function ScheduleCalendarView() {
 
   const weekDays = getWeekDays(currentDate);
 
+  // Helper to generate proper month grid cells with leading & trailing month padding
+  const getMonthGridCells = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+
+    const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sun, 3 = Wed for July 2026
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+
+    const cells = [];
+
+    // 1. Previous month leading days
+    for (let i = firstDayIndex - 1; i >= 0; i--) {
+      const pDay = prevMonthDays - i;
+      const prevMonth = month === 0 ? 11 : month - 1;
+      const prevYear = month === 0 ? year - 1 : year;
+      const dateYmd = `${prevYear}-${String(prevMonth + 1).padStart(2, '0')}-${String(pDay).padStart(2, '0')}`;
+      cells.push({ dayNum: pDay, isCurrentMonth: false, dateYmd });
+    }
+
+    // 2. Current month days
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateYmd = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      cells.push({ dayNum: d, isCurrentMonth: true, dateYmd });
+    }
+
+    // 3. Next month trailing days to complete 35 or 42 grid cells
+    const totalCells = cells.length > 35 ? 42 : 35;
+    const remaining = totalCells - cells.length;
+    for (let n = 1; n <= remaining; n++) {
+      const nextMonth = month === 11 ? 0 : month + 1;
+      const nextYear = month === 11 ? year + 1 : year;
+      const dateYmd = `${nextYear}-${String(nextMonth + 1).padStart(2, '0')}-${String(n).padStart(2, '0')}`;
+      cells.push({ dayNum: n, isCurrentMonth: false, dateYmd });
+    }
+
+    return cells;
+  };
+
   // Strictly Work Hours 10:00 AM to 7:00 PM
   const timeSlots = [
     "10 AM", "11 AM", "12 PM", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM", "7 PM"
@@ -572,66 +611,82 @@ export default function ScheduleCalendarView() {
         )}
 
         {/* ------------------------------------------------------------- */}
-        {/* VIEW MODE 3: MONTH VIEW (FULL 7x5 MONTH BOX GRID)             */}
+        {/* VIEW MODE 3: MONTH VIEW (FULL 7x5 / 7x6 PROPER MONTH GRID)    */}
         {/* ------------------------------------------------------------- */}
         {viewMode === "Month" && (
           <div style={{ flex: 1 }}>
-            {/* Days Header Bar */}
+            {/* Days Header Bar (Sun - Sat) */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: "#cbd5e1", border: "1px solid #cbd5e1", borderRadius: "10px 10px 0 0", textAlign: "center" }}>
-              {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, i) => (
-                <div key={i} style={{ background: "#f8fafc", padding: "10px", fontSize: "0.82rem", fontWeight: "800", color: "#475569" }}>
+              {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((day, i) => (
+                <div key={i} style={{ background: "#f8fafc", padding: "10px", fontSize: "0.8rem", fontWeight: "800", color: "#475569" }}>
                   {day}
                 </div>
               ))}
             </div>
 
-            {/* 7x5 Boxes Grid */}
+            {/* Month Days Grid with Proper Weekday Alignment */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: "#cbd5e1", border: "1px solid #cbd5e1", borderTop: "none", borderRadius: "0 0 10px 10px" }}>
-              {Array.from({ length: 31 }, (_, i) => i + 1).map((dayNum) => {
-                const dateStr = `2026-07-${String(dayNum).padStart(2, '0')}`;
-                const dayEvents = filteredSchedules.filter(s => s.date === dateStr);
-                const isSelected = dateStr === selectedDay;
+              {getMonthGridCells(currentDate).map((cell, idx) => {
+                const dayEvents = filteredSchedules.filter(s => s.date === cell.dateYmd);
+                const isSelected = cell.dateYmd === selectedDay;
+                const isToday = cell.dateYmd === "2026-07-27";
 
                 return (
                   <div
-                    key={dayNum}
+                    key={idx}
                     onClick={() => {
-                      setSelectedDay(dateStr);
-                      setViewMode("Day");
+                      setSelectedDay(cell.dateYmd);
+                      if (cell.isCurrentMonth) setViewMode("Day");
                     }}
                     style={{
-                      background: isSelected ? "#eff6ff" : "#ffffff",
-                      minHeight: "110px",
-                      padding: "10px",
-                      cursor: "pointer"
+                      background: isSelected ? "#eff6ff" : cell.isCurrentMonth ? "#ffffff" : "#f8fafc",
+                      minHeight: "105px",
+                      padding: "8px 10px",
+                      cursor: "pointer",
+                      opacity: cell.isCurrentMonth ? 1 : 0.45
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "0.86rem", fontWeight: "800", color: isSelected ? "#2563eb" : "#334155" }}>
-                        {dayNum}
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: isToday ? "26px" : "auto",
+                          height: isToday ? "26px" : "auto",
+                          borderRadius: isToday ? "50%" : "0",
+                          background: isToday ? "#4f46e5" : "transparent",
+                          color: isToday ? "#ffffff" : isSelected ? "#2563eb" : cell.isCurrentMonth ? "#334155" : "#94a3b8",
+                          fontSize: "0.85rem",
+                          fontWeight: "800"
+                        }}
+                      >
+                        {cell.dayNum}
                       </span>
-                      {dayEvents.length > 0 && (
-                        <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "#4f46e5", background: "#eef2ff", padding: "2px 8px", borderRadius: "10px" }}>
-                          {dayEvents.length} items
+
+                      {dayEvents.length > 0 && cell.isCurrentMonth && (
+                        <span style={{ fontSize: "0.68rem", fontWeight: "800", color: "#4f46e5", background: "#eef2ff", padding: "2px 6px", borderRadius: "10px" }}>
+                          {dayEvents.length}
                         </span>
                       )}
                     </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
-                      {dayEvents.map(sch => {
+                    {/* Event Badges Stack */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      {dayEvents.slice(0, 3).map(sch => {
                         const colorStyle = getColorStyle(sch.color);
                         return (
                           <div
                             key={sch.id}
                             style={{
-                              fontSize: "0.74rem",
+                              fontSize: "0.72rem",
                               fontWeight: "700",
-                              padding: "4px 8px",
+                              padding: "3px 6px",
                               borderRadius: "6px",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
-                              boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
+                              boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
                               ...colorStyle
                             }}
                           >
@@ -639,6 +694,11 @@ export default function ScheduleCalendarView() {
                           </div>
                         );
                       })}
+                      {dayEvents.length > 3 && (
+                        <div style={{ fontSize: "0.68rem", fontWeight: "800", color: "#4f46e5", marginTop: "2px" }}>
+                          +{dayEvents.length - 3} more
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

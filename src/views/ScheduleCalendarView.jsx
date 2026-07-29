@@ -4,12 +4,23 @@ import { useApp } from "../context/AppContext";
 export default function ScheduleCalendarView() {
   const { schedules, addSchedule, deleteSchedule, projects, users, currentUser, setToast } = useApp();
 
-  // Current view mode: 'Week', 'Day', 'Month'
+  // Active view mode: 'Day', 'Week', 'Month', 'Schedule'
   const [viewMode, setViewMode] = useState("Week");
 
   // Selected date state (defaults to 2026-07-27)
   const [currentDate, setCurrentDate] = useState(new Date("2026-07-27"));
   const [selectedDay, setSelectedDay] = useState("2026-07-27");
+
+  // Category filters
+  const [categoryFilters, setCategoryFilters] = useState({
+    "Site Audit": true,
+    "Client Meeting": true,
+    "Field Audit": true,
+    "Team Call": true,
+    "Client Review": true,
+    "Internal Audit": true,
+    "Board Sync": true
+  });
 
   // Create Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -24,7 +35,7 @@ export default function ScheduleCalendarView() {
 
   // Month Names & Short Days
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const dayNamesShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayNamesShort = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
   // Helper date format YYYY-MM-DD
   const formatYMD = (d) => {
@@ -74,8 +85,6 @@ export default function ScheduleCalendarView() {
     const startH = parseHour(startTimeStr);
     const endH = parseHour(endTimeStr);
 
-    // Grid starts at 10 AM (10.0) and ends at 7 PM (19.0)
-    // Total row height is 65px
     const top = Math.max(0, (startH - 10) * 65);
     const height = Math.max(45, (endH - startH) * 65);
 
@@ -99,7 +108,10 @@ export default function ScheduleCalendarView() {
     }
   };
 
-  // Month navigation
+  // Filtered schedules based on category checkboxes
+  const filteredSchedules = (schedules || []).filter(s => categoryFilters[s.category] !== false);
+
+  // Handlers for date navigation
   const handlePrevMonth = () => {
     const next = new Date(currentDate);
     next.setMonth(next.getMonth() - 1);
@@ -116,6 +128,11 @@ export default function ScheduleCalendarView() {
     const today = new Date("2026-07-27");
     setCurrentDate(today);
     setSelectedDay("2026-07-27");
+  };
+
+  // Toggle category filter
+  const toggleFilter = (cat) => {
+    setCategoryFilters(prev => ({ ...prev, [cat]: !prev[cat] }));
   };
 
   // Create Schedule submit
@@ -146,67 +163,145 @@ export default function ScheduleCalendarView() {
     setShowCreateModal(false);
   };
 
-  // Today schedule filter for right sidebar
-  const todaySchedules = schedules?.filter(s => s.date === selectedDay) || [];
-
   return (
-    <div className="schedule-calendar-container" style={{ display: "flex", gap: "24px", padding: "24px", background: "#f8fafc", minHeight: "calc(100vh - 80px)", fontFamily: "Inter, sans-serif" }}>
+    <div className="schedule-calendar-workspace" style={{ display: "flex", gap: "20px", padding: "20px", background: "#f8fafc", minHeight: "calc(100vh - 80px)", fontFamily: "Inter, sans-serif" }}>
       
-      {/* LEFT / MAIN CALENDAR WORKSPACE */}
-      <div style={{ flex: 1, background: "#ffffff", borderRadius: "16px", padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)" }}>
+      {/* ----------------------------------------------------------------- */}
+      {/* LEFT SIDEBAR: CREATE BUTTON, MINI CALENDAR & CATEGORY FILTERS    */}
+      {/* ----------------------------------------------------------------- */}
+      <div style={{ width: "260px", display: "flex", flexDirection: "column", gap: "20px" }}>
         
-        {/* Workspace Top Header */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-          <div>
-            <h1 style={{ fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>Calendar</h1>
-            <p style={{ fontSize: "0.84rem", color: "#64748b", margin: "4px 0 0 0" }}>Workplace Schedule & Field Operations Planner (10:00 AM – 7:00 PM)</p>
-          </div>
+        {/* + Create Pill Button (Google Calendar Style) */}
+        <button
+          type="button"
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            background: "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)",
+            color: "#ffffff",
+            border: "none",
+            borderRadius: "28px",
+            padding: "14px 24px",
+            fontWeight: "800",
+            fontSize: "0.95rem",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: "12px",
+            boxShadow: "0 6px 16px rgba(79,70,229,0.25)",
+            transition: "transform 0.15s ease"
+          }}
+        >
+          <span style={{ fontSize: "1.4rem", lineHeight: 1 }}>+</span> Create Event
+        </button>
 
-          <button
-            type="button"
-            onClick={() => setShowCreateModal(true)}
-            style={{ background: "#4f46e5", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 24px", fontWeight: "700", fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 12px rgba(79,70,229,0.25)" }}
-          >
-            <span>+</span> Create Schedule
-          </button>
-        </div>
-
-        {/* View Switcher Bar & Month Navigator */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", borderBottom: "1px solid #f1f5f9", paddingBottom: "16px" }}>
-          
-          {/* Month Navigator */}
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>
+        {/* Mini 7x5 Month Datepicker Widget */}
+        <div style={{ background: "#ffffff", borderRadius: "14px", padding: "18px", border: "1px solid #e2e8f0", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+            <span style={{ fontSize: "0.92rem", fontWeight: "800", color: "#0f172a" }}>
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </span>
-            <div style={{ display: "flex", gap: "4px" }}>
-              <button
-                type="button"
-                onClick={handlePrevMonth}
-                style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "6px", width: "32px", height: "32px", cursor: "pointer", fontWeight: "700", color: "#475569" }}
-              >
-                ‹
-              </button>
-              <button
-                type="button"
-                onClick={handleToday}
-                style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "0 14px", height: "32px", cursor: "pointer", fontWeight: "700", fontSize: "0.82rem", color: "#475569" }}
-              >
-                Today
-              </button>
-              <button
-                type="button"
-                onClick={handleNextMonth}
-                style={{ background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "6px", width: "32px", height: "32px", cursor: "pointer", fontWeight: "700", color: "#475569" }}
-              >
-                ›
-              </button>
+            <div style={{ display: "flex", gap: "2px" }}>
+              <button onClick={handlePrevMonth} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: "700", color: "#64748b", fontSize: "0.9rem" }}>‹</button>
+              <button onClick={handleNextMonth} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: "700", color: "#64748b", fontSize: "0.9rem" }}>›</button>
             </div>
           </div>
 
-          {/* View Mode Pills (Week / Day / Month) */}
-          <div style={{ display: "flex", background: "#f1f5f9", borderRadius: "8px", padding: "4px", border: "1px solid #e2e8f0" }}>
-            {["Week", "Day", "Month"].map((mode) => (
+          {/* Day Labels */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", textAlign: "center", marginBottom: "6px" }}>
+            {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+              <span key={i} style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700" }}>{d}</span>
+            ))}
+          </div>
+
+          {/* Days Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", textAlign: "center" }}>
+            {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => {
+              const dayStr = `2026-07-${String(d).padStart(2, '0')}`;
+              const isSelected = dayStr === selectedDay;
+
+              return (
+                <div
+                  key={d}
+                  onClick={() => {
+                    setSelectedDay(dayStr);
+                    setCurrentDate(new Date(dayStr));
+                  }}
+                  style={{
+                    padding: "5px 0",
+                    fontSize: "0.78rem",
+                    fontWeight: isSelected ? "800" : "600",
+                    borderRadius: "50%",
+                    cursor: "pointer",
+                    background: isSelected ? "#4f46e5" : "transparent",
+                    color: isSelected ? "#ffffff" : "#334155"
+                  }}
+                >
+                  {d}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Categories / Calendars Filter Panel */}
+        <div style={{ background: "#ffffff", borderRadius: "14px", padding: "18px", border: "1px solid #e2e8f0", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+          <h4 style={{ fontSize: "0.85rem", fontWeight: "800", color: "#0f172a", margin: "0 0 12px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            My Calendars
+          </h4>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {[
+              { cat: "Site Audit", color: "#2563eb" },
+              { cat: "Client Meeting", color: "#2563eb" },
+              { cat: "Field Audit", color: "#ea580c" },
+              { cat: "Team Call", color: "#9333ea" },
+              { cat: "Client Review", color: "#9333ea" },
+              { cat: "Board Sync", color: "#dc2626" }
+            ].map(item => (
+              <label key={item.cat} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.82rem", color: "#334155", cursor: "pointer", fontWeight: "600" }}>
+                <input
+                  type="checkbox"
+                  checked={categoryFilters[item.cat] !== false}
+                  onChange={() => toggleFilter(item.cat)}
+                  style={{ accentColor: item.color, cursor: "pointer" }}
+                />
+                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: item.color }} />
+                <span>{item.cat}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+      </div>
+
+      {/* ----------------------------------------------------------------- */}
+      {/* MAIN CONTENT AREA: TOP CONTROL BAR & 4 VIEW MODES                */}
+      {/* ----------------------------------------------------------------- */}
+      <div style={{ flex: 1, background: "#ffffff", borderRadius: "16px", padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column" }}>
+        
+        {/* Top Navigation & View Mode Controls Bar */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #f1f5f9", paddingBottom: "16px" }}>
+          
+          {/* Navigator Controls */}
+          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+            <button
+              type="button"
+              onClick={handleToday}
+              style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontWeight: "700", fontSize: "0.85rem", color: "#334155", cursor: "pointer" }}
+            >
+              Today
+            </button>
+            <div style={{ display: "flex", gap: "4px" }}>
+              <button onClick={handlePrevMonth} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", width: "32px", height: "32px", cursor: "pointer", fontWeight: "700", color: "#475569" }}>‹</button>
+              <button onClick={handleNextMonth} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", width: "32px", height: "32px", cursor: "pointer", fontWeight: "700", color: "#475569" }}>›</button>
+            </div>
+            <h2 style={{ fontSize: "1.3rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+            </h2>
+          </div>
+
+          {/* View Switcher Select Dropdown / Pills */}
+          <div style={{ display: "flex", gap: "8px", background: "#f1f5f9", padding: "4px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+            {["Day", "Week", "Month", "Schedule"].map((mode) => (
               <button
                 key={mode}
                 type="button"
@@ -216,7 +311,7 @@ export default function ScheduleCalendarView() {
                   color: viewMode === mode ? "#4f46e5" : "#64748b",
                   border: "none",
                   borderRadius: "6px",
-                  padding: "6px 18px",
+                  padding: "6px 16px",
                   fontWeight: "700",
                   fontSize: "0.84rem",
                   cursor: "pointer",
@@ -231,24 +326,24 @@ export default function ScheduleCalendarView() {
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* VIEW MODE 1: DAY VIEW (NO TOP DAYS BAR - 10 AM to 7 PM)      */}
+        {/* VIEW MODE 1: DAY VIEW (SINGLE DAY COLUMN - 10 AM to 7 PM)     */}
         {/* ------------------------------------------------------------- */}
         {viewMode === "Day" && (
-          <div>
-            {/* Day Header Banner (e.g. Monday, 27 July 2026) */}
+          <div style={{ flex: 1 }}>
+            {/* Day Title Header Banner */}
             <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "10px", padding: "14px 20px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <span style={{ fontSize: "0.75rem", color: "#2563eb", fontWeight: "800", textTransform: "uppercase" }}>SELECTED DAY SCHEDULE</span>
+                <span style={{ fontSize: "0.75rem", color: "#2563eb", fontWeight: "800", textTransform: "uppercase" }}>DAY VIEW</span>
                 <h3 style={{ fontSize: "1.15rem", fontWeight: "800", color: "#1e3a8a", margin: "2px 0 0 0" }}>
                   {new Date(selectedDay).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                 </h3>
               </div>
               <span style={{ background: "#2563eb", color: "#ffffff", padding: "4px 12px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: "700" }}>
-                {schedules?.filter(s => s.date === selectedDay).length || 0} Tasks Scheduled
+                {filteredSchedules.filter(s => s.date === selectedDay).length} Scheduled Events
               </span>
             </div>
 
-            {/* Single-Column Timeline (10 AM to 7 PM) */}
+            {/* Timeline Grid (10 AM to 7 PM) */}
             <div style={{ position: "relative", borderTop: "1px solid #e2e8f0" }}>
               {timeSlots.map((time, idx) => (
                 <div key={idx} style={{ display: "grid", gridTemplateColumns: "80px 1fr", height: "65px", borderBottom: "1px solid #f1f5f9" }}>
@@ -259,9 +354,9 @@ export default function ScheduleCalendarView() {
                 </div>
               ))}
 
-              {/* Event Cards Rendered Full-Width in Day Mode */}
+              {/* Event Cards Rendered Full Width */}
               <div style={{ position: "absolute", top: 0, left: "80px", right: 0, bottom: 0, pointerEvents: "none" }}>
-                {schedules?.filter(s => s.date === selectedDay).map((sch) => {
+                {filteredSchedules.filter(s => s.date === selectedDay).map((sch) => {
                   const pos = getTimePosition(sch.startTime, sch.endTime);
                   const colorStyle = getColorStyle(sch.color);
 
@@ -269,7 +364,7 @@ export default function ScheduleCalendarView() {
                     <div
                       key={sch.id}
                       onClick={() => {
-                        if (window.confirm(`Delete schedule '${sch.title}'?`)) deleteSchedule(sch.id);
+                        if (window.confirm(`Delete event '${sch.title}'?`)) deleteSchedule(sch.id);
                       }}
                       style={{
                         position: "absolute",
@@ -283,7 +378,7 @@ export default function ScheduleCalendarView() {
                         cursor: "pointer",
                         boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
                         display: "flex",
-                        justify: "space-between",
+                        justifyContent: "space-between",
                         alignItems: "center",
                         zIndex: 5,
                         ...colorStyle
@@ -311,11 +406,11 @@ export default function ScheduleCalendarView() {
         )}
 
         {/* ------------------------------------------------------------- */}
-        {/* VIEW MODE 2: WEEK VIEW (TOP DAYS HEADER BAR - 10 AM to 7 PM)  */}
+        {/* VIEW MODE 2: WEEK VIEW (7 COLUMNS - 10 AM to 7 PM)             */}
         {/* ------------------------------------------------------------- */}
         {viewMode === "Week" && (
-          <div>
-            {/* Days Header Row (Sun to Sat) */}
+          <div style={{ flex: 1 }}>
+            {/* Week Days Header Row */}
             <div style={{ display: "grid", gridTemplateColumns: "70px repeat(7, 1fr)", gap: "8px", marginBottom: "16px", textAlign: "center" }}>
               <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700" }}>GMT +05:30</div>
               {weekDays.map((d, index) => {
@@ -343,8 +438,7 @@ export default function ScheduleCalendarView() {
                         background: isSelected ? "#4f46e5" : isToday ? "#eff6ff" : "transparent",
                         color: isSelected ? "#ffffff" : isToday ? "#2563eb" : "#0f172a",
                         fontWeight: "800",
-                        fontSize: "0.92rem",
-                        boxShadow: isSelected ? "0 2px 6px rgba(79,70,229,0.3)" : "none"
+                        fontSize: "0.92rem"
                       }}
                     >
                       {d.getDate()}
@@ -354,7 +448,7 @@ export default function ScheduleCalendarView() {
               })}
             </div>
 
-            {/* Hourly Timeline Grid (10 AM - 7 PM) */}
+            {/* Timeline Grid (10 AM to 7 PM) */}
             <div style={{ position: "relative", borderTop: "1px solid #e2e8f0" }}>
               {timeSlots.map((time, idx) => (
                 <div key={idx} style={{ display: "grid", gridTemplateColumns: "70px 1fr", height: "65px", borderBottom: "1px solid #f8fafc" }}>
@@ -365,7 +459,7 @@ export default function ScheduleCalendarView() {
                 </div>
               ))}
 
-              {/* Red Current Time Marker (12:46 PM) */}
+              {/* Red Current Time Line Marker */}
               <div style={{ position: "absolute", top: "180px", left: "60px", right: 0, height: "2px", background: "#ef4444", zIndex: 10, display: "flex", alignItems: "center" }}>
                 <div style={{ background: "#ef4444", color: "#ffffff", fontSize: "0.68rem", fontWeight: "800", padding: "2px 6px", borderRadius: "4px", transform: "translateX(-48px)" }}>
                   12:46 PM
@@ -373,11 +467,11 @@ export default function ScheduleCalendarView() {
                 <div style={{ width: "8px", height: "8px", background: "#ef4444", borderRadius: "50%", transform: "translateX(-4px)" }} />
               </div>
 
-              {/* Render Schedule Cards on 7-Column Grid */}
+              {/* Event Cards Rendered in 7 Columns */}
               <div style={{ position: "absolute", top: 0, left: "70px", right: 0, bottom: 0, display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "8px", pointerEvents: "none" }}>
                 {weekDays.map((d, colIdx) => {
                   const dateYmd = formatYMD(d);
-                  const daySchedules = schedules?.filter(s => s.date === dateYmd) || [];
+                  const daySchedules = filteredSchedules.filter(s => s.date === dateYmd);
 
                   return (
                     <div key={colIdx} style={{ position: "relative", height: "100%" }}>
@@ -389,7 +483,7 @@ export default function ScheduleCalendarView() {
                           <div
                             key={sch.id}
                             onClick={() => {
-                              if (window.confirm(`Delete schedule '${sch.title}'?`)) deleteSchedule(sch.id);
+                              if (window.confirm(`Delete event '${sch.title}'?`)) deleteSchedule(sch.id);
                             }}
                             style={{
                               position: "absolute",
@@ -429,11 +523,11 @@ export default function ScheduleCalendarView() {
         )}
 
         {/* ------------------------------------------------------------- */}
-        {/* VIEW MODE 3: MONTH VIEW (FULL 7x5 MONTH EVENT BOX GRID)       */}
+        {/* VIEW MODE 3: MONTH VIEW (FULL 7x5 MONTH BOX GRID)             */}
         {/* ------------------------------------------------------------- */}
         {viewMode === "Month" && (
-          <div>
-            {/* Days of Week Header Bar */}
+          <div style={{ flex: 1 }}>
+            {/* Days Header */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: "#e2e8f0", border: "1px solid #e2e8f0", borderRadius: "8px 8px 0 0", textAlign: "center" }}>
               {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, i) => (
                 <div key={i} style={{ background: "#f8fafc", padding: "10px", fontSize: "0.8rem", fontWeight: "800", color: "#475569" }}>
@@ -442,11 +536,11 @@ export default function ScheduleCalendarView() {
               ))}
             </div>
 
-            {/* 7x5 Month Grid Boxes */}
+            {/* 7x5 Boxes Grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: "#e2e8f0", border: "1px solid #e2e8f0", borderTop: "none", borderRadius: "0 0 8px 8px" }}>
               {Array.from({ length: 31 }, (_, i) => i + 1).map((dayNum) => {
                 const dateStr = `2026-07-${String(dayNum).padStart(2, '0')}`;
-                const dayEvents = schedules?.filter(s => s.date === dateStr) || [];
+                const dayEvents = filteredSchedules.filter(s => s.date === dateStr);
                 const isSelected = dateStr === selectedDay;
 
                 return (
@@ -460,23 +554,11 @@ export default function ScheduleCalendarView() {
                       background: isSelected ? "#eff6ff" : "#ffffff",
                       minHeight: "105px",
                       padding: "8px",
-                      cursor: "pointer",
-                      transition: "background 0.15s ease"
+                      cursor: "pointer"
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                      <span style={{
-                        fontSize: "0.84rem",
-                        fontWeight: "800",
-                        color: isSelected ? "#2563eb" : "#334155",
-                        background: isSelected ? "#dbeafe" : "transparent",
-                        width: "24px",
-                        height: "24px",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center"
-                      }}>
+                      <span style={{ fontSize: "0.84rem", fontWeight: "800", color: isSelected ? "#2563eb" : "#334155" }}>
                         {dayNum}
                       </span>
                       {dayEvents.length > 0 && (
@@ -486,7 +568,6 @@ export default function ScheduleCalendarView() {
                       )}
                     </div>
 
-                    {/* Stacked Event Badges inside day box */}
                     <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                       {dayEvents.map(sch => {
                         const colorStyle = getColorStyle(sch.color);
@@ -516,114 +597,89 @@ export default function ScheduleCalendarView() {
           </div>
         )}
 
-      </div>
-
-      {/* RIGHT SIDEBAR: MINI MONTH DATEPICKER & TODAY AGENDA */}
-      <div style={{ width: "320px", display: "flex", flexDirection: "column", gap: "24px" }}>
-        
-        {/* Mini Monthly Calendar Widget */}
-        <div style={{ background: "#ffffff", borderRadius: "16px", padding: "20px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <span style={{ fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </span>
-            <div style={{ display: "flex", gap: "4px" }}>
-              <button onClick={handlePrevMonth} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: "700", color: "#64748b" }}>‹</button>
-              <button onClick={handleNextMonth} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: "700", color: "#64748b" }}>›</button>
+        {/* ------------------------------------------------------------- */}
+        {/* VIEW MODE 4: SCHEDULE / AGENDA VIEW MODE                      */}
+        {/* ------------------------------------------------------------- */}
+        {viewMode === "Schedule" && (
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ fontSize: "0.88rem", color: "#64748b", fontWeight: "600", marginBottom: "4px" }}>
+              Chronological Workplace Agenda
             </div>
-          </div>
 
-          {/* Day Labels */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", textAlign: "center", marginBottom: "8px" }}>
-            {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day, i) => (
-              <span key={i} style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700" }}>{day}</span>
-            ))}
-          </div>
-
-          {/* Days Grid */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "4px", textAlign: "center" }}>
-            {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => {
-              const dayStr = `2026-07-${String(d).padStart(2, '0')}`;
-              const isSelected = dayStr === selectedDay;
-
-              return (
-                <div
-                  key={d}
-                  onClick={() => setSelectedDay(dayStr)}
-                  style={{
-                    padding: "6px 0",
-                    fontSize: "0.8rem",
-                    fontWeight: isSelected ? "800" : "600",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    background: isSelected ? "#4f46e5" : "transparent",
-                    color: isSelected ? "#ffffff" : "#334155"
-                  }}
-                >
-                  {d}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Selected Day Agenda Summary */}
-        <div style={{ background: "#ffffff", borderRadius: "16px", padding: "20px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)", flex: 1 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>Day Agenda</h3>
-            <span style={{ fontSize: "0.78rem", color: "#4f46e5", fontWeight: "700", cursor: "pointer" }} onClick={() => setViewMode("Day")}>View Full Day →</span>
-          </div>
-          <p style={{ fontSize: "0.78rem", color: "#64748b", margin: "0 0 16px 0", fontWeight: "600" }}>{selectedDay}</p>
-
-          {todaySchedules.length > 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              {todaySchedules.map((sch) => {
+            {filteredSchedules.length > 0 ? (
+              filteredSchedules.map((sch) => {
                 const colorStyle = getColorStyle(sch.color);
 
                 return (
                   <div
                     key={sch.id}
                     style={{
-                      borderRadius: "10px",
-                      padding: "12px 14px",
-                      ...colorStyle
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "12px",
+                      padding: "16px 20px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "0.9rem" }}>📋</span>
-                      <div style={{ fontSize: "0.88rem", fontWeight: "800" }}>{sch.title}</div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                      <div style={{ minWidth: "120px" }}>
+                        <div style={{ fontSize: "0.78rem", fontWeight: "800", color: "#2563eb", textTransform: "uppercase" }}>
+                          {new Date(sch.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                        </div>
+                        <div style={{ fontSize: "0.74rem", color: "#64748b", fontWeight: "600", marginTop: "2px" }}>
+                          {sch.startTime} - {sch.endTime}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: "0.98rem", fontWeight: "800", color: "#0f172a" }}>{sch.title}</div>
+                        <div style={{ fontSize: "0.8rem", color: "#475569", marginTop: "2px" }}>
+                          Project: <strong>{sch.projectName}</strong> • Assigned: <strong>{sch.consultant}</strong>
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.74rem", fontWeight: "700", opacity: 0.9 }}>
-                      <span>{sch.startTime} - {sch.endTime}</span>
-                      <span>{sch.category}</span>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span style={{ fontSize: "0.76rem", fontWeight: "800", padding: "4px 12px", borderRadius: "20px", ...colorStyle }}>
+                        {sch.category}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => deleteSchedule(sch.id)}
+                        style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "6px", padding: "4px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                      >
+                        Delete
+                      </button>
                     </div>
                   </div>
                 );
-              })}
-            </div>
-          ) : (
-            <div style={{ padding: "30px 10px", textAlign: "center", color: "#94a3b8", fontSize: "0.82rem", fontStyle: "italic" }}>
-              No tasks scheduled for {selectedDay}. Click '+ Create Schedule' to add one.
-            </div>
-          )}
-
-        </div>
+              })
+            ) : (
+              <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8", fontSize: "0.9rem", fontStyle: "italic" }}>
+                No events match your selected calendar filters.
+              </div>
+            )}
+          </div>
+        )}
 
       </div>
 
-      {/* CREATE SCHEDULE MODAL (10 AM - 7 PM Bounds) */}
+      {/* CREATE SCHEDULE MODAL */}
       {showCreateModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
           <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "480px", maxWidth: "90%", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
             
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>Create New Schedule</h3>
+              <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>Create Event</h3>
               <button onClick={() => setShowCreateModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
             </div>
 
             <form onSubmit={handleCreateSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>Schedule Title *</label>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>Event Title *</label>
                 <input
                   type="text"
                   required
@@ -647,7 +703,7 @@ export default function ScheduleCalendarView() {
                     <option value="Field Audit">Field Audit</option>
                     <option value="Team Call">Team Call</option>
                     <option value="Client Review">Client Review</option>
-                    <option value="Internal Audit">Internal Audit</option>
+                    <option value="Board Sync">Board Sync</option>
                   </select>
                 </div>
 
@@ -679,7 +735,7 @@ export default function ScheduleCalendarView() {
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>Start Time (10 AM - 7 PM)</label>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>Start Time</label>
                   <select
                     value={schStartTime}
                     onChange={(e) => setSchStartTime(e.target.value)}
@@ -696,7 +752,7 @@ export default function ScheduleCalendarView() {
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>End Time (10 AM - 7 PM)</label>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>End Time</label>
                   <select
                     value={schEndTime}
                     onChange={(e) => setSchEndTime(e.target.value)}
@@ -725,7 +781,7 @@ export default function ScheduleCalendarView() {
                   type="submit"
                   style={{ padding: "10px 22px", border: "none", borderRadius: "8px", background: "#4f46e5", color: "#ffffff", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
                 >
-                  Save Schedule
+                  Save Event
                 </button>
               </div>
             </form>

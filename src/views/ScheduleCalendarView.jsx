@@ -86,32 +86,70 @@ export default function ScheduleCalendarView() {
     const endH = parseHour(endTimeStr);
 
     const top = Math.max(0, (startH - 10) * 65);
-    const height = Math.max(45, (endH - startH) * 65);
+    const height = Math.max(48, (endH - startH) * 65);
 
     return { top: `${top}px`, height: `${height}px` };
   };
 
-  // Modern Linear/Google style Color Mapping with left border accent
+  // Category Emoji Helper
+  const getCategoryEmoji = (cat) => {
+    switch (cat) {
+      case "Site Audit": return "📍 Site Audit";
+      case "Client Meeting": return "🤝 Client Meeting";
+      case "Field Audit": return "🔍 Field Audit";
+      case "Team Call": return "📞 Team Call";
+      case "Client Review": return "⭐ Client Review";
+      case "Board Sync": return "👑 Board Sync";
+      default: return `📋 ${cat}`;
+    }
+  };
+
+  // Modern Premium Color Palette with Micro-Gradients & Left Accents
   const getColorStyle = (colorName) => {
     switch (colorName) {
       case "purple":
-        return { background: "#faf5ff", border: "1px solid #e9d5ff", borderLeft: "4px solid #9333ea", color: "#6b21a8" };
+        return {
+          background: "linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)",
+          border: "1px solid #e9d5ff",
+          borderLeft: "5px solid #9333ea",
+          color: "#6b21a8"
+        };
       case "orange":
-        return { background: "#fff7ed", border: "1px solid #fed7aa", borderLeft: "4px solid #ea580c", color: "#c2410c" };
+        return {
+          background: "linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)",
+          border: "1px solid #fed7aa",
+          borderLeft: "5px solid #ea580c",
+          color: "#c2410c"
+        };
       case "green":
-        return { background: "#f0fdf4", border: "1px solid #bbf7d0", borderLeft: "4px solid #16a34a", color: "#15803d" };
+        return {
+          background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+          border: "1px solid #bbf7d0",
+          borderLeft: "5px solid #16a34a",
+          color: "#15803d"
+        };
       case "red":
-        return { background: "#fef2f2", border: "1px solid #fecaca", borderLeft: "4px solid #dc2626", color: "#b91c1c" };
+        return {
+          background: "linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)",
+          border: "1px solid #fecaca",
+          borderLeft: "5px solid #dc2626",
+          color: "#b91c1c"
+        };
       case "blue":
       default:
-        return { background: "#eff6ff", border: "1px solid #bfdbfe", borderLeft: "4px solid #2563eb", color: "#1e40af" };
+        return {
+          background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)",
+          border: "1px solid #bfdbfe",
+          borderLeft: "5px solid #2563eb",
+          color: "#1e40af"
+        };
     }
   };
 
   // Filtered schedules based on category checkboxes
   const filteredSchedules = (schedules || []).filter(s => categoryFilters[s.category] !== false);
 
-  // Handlers for date navigation
+  // Date navigators
   const handlePrevMonth = () => {
     const next = new Date(currentDate);
     next.setMonth(next.getMonth() - 1);
@@ -130,12 +168,11 @@ export default function ScheduleCalendarView() {
     setSelectedDay("2026-07-27");
   };
 
-  // Toggle category filter
   const toggleFilter = (cat) => {
     setCategoryFilters(prev => ({ ...prev, [cat]: !prev[cat] }));
   };
 
-  // Create Schedule submit
+  // Create Submit
   const handleCreateSubmit = (e) => {
     e.preventDefault();
     if (!schTitle.trim()) {
@@ -157,21 +194,21 @@ export default function ScheduleCalendarView() {
       color: schColor
     });
 
-    if (setToast) setToast({ message: `Schedule '${schTitle}' created successfully!`, type: "success" });
+    if (setToast) setToast({ message: `Event '${schTitle}' created successfully!`, type: "success" });
 
     setSchTitle("");
     setShowCreateModal(false);
   };
 
   return (
-    <div className="schedule-calendar-workspace" style={{ display: "flex", gap: "20px", padding: "20px", background: "#f8fafc", minHeight: "calc(100vh - 80px)", fontFamily: "Inter, sans-serif" }}>
+    <div className="schedule-calendar-workspace" style={{ display: "flex", gap: "24px", padding: "24px", background: "#f8fafc", minHeight: "calc(100vh - 80px)", fontFamily: "Inter, sans-serif" }}>
       
       {/* ----------------------------------------------------------------- */}
       {/* LEFT SIDEBAR: CREATE BUTTON, MINI CALENDAR & CATEGORY FILTERS    */}
       {/* ----------------------------------------------------------------- */}
-      <div style={{ width: "260px", display: "flex", flexDirection: "column", gap: "20px" }}>
+      <div style={{ width: "270px", display: "flex", flexDirection: "column", gap: "20px" }}>
         
-        {/* + Create Pill Button (Google Calendar Style) */}
+        {/* + Create Event Gradient Pill Button */}
         <button
           type="button"
           onClick={() => setShowCreateModal(true)}
@@ -180,14 +217,14 @@ export default function ScheduleCalendarView() {
             color: "#ffffff",
             border: "none",
             borderRadius: "28px",
-            padding: "14px 24px",
+            padding: "14px 26px",
             fontWeight: "800",
             fontSize: "0.95rem",
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             gap: "12px",
-            boxShadow: "0 6px 16px rgba(79,70,229,0.25)",
+            boxShadow: "0 6px 20px rgba(79,70,229,0.3)",
             transition: "transform 0.15s ease"
           }}
         >
@@ -195,21 +232,21 @@ export default function ScheduleCalendarView() {
         </button>
 
         {/* Mini 7x5 Month Datepicker Widget */}
-        <div style={{ background: "#ffffff", borderRadius: "14px", padding: "18px", border: "1px solid #e2e8f0", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-            <span style={{ fontSize: "0.92rem", fontWeight: "800", color: "#0f172a" }}>
+        <div style={{ background: "#ffffff", borderRadius: "16px", padding: "20px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <span style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </span>
-            <div style={{ display: "flex", gap: "2px" }}>
-              <button onClick={handlePrevMonth} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: "700", color: "#64748b", fontSize: "0.9rem" }}>‹</button>
-              <button onClick={handleNextMonth} style={{ background: "none", border: "none", cursor: "pointer", fontWeight: "700", color: "#64748b", fontSize: "0.9rem" }}>›</button>
+            <div style={{ display: "flex", gap: "4px" }}>
+              <button onClick={handlePrevMonth} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", width: "28px", height: "28px", cursor: "pointer", fontWeight: "700", color: "#64748b" }}>‹</button>
+              <button onClick={handleNextMonth} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", width: "28px", height: "28px", cursor: "pointer", fontWeight: "700", color: "#64748b" }}>›</button>
             </div>
           </div>
 
           {/* Day Labels */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", textAlign: "center", marginBottom: "6px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", textAlign: "center", marginBottom: "8px" }}>
             {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-              <span key={i} style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: "700" }}>{d}</span>
+              <span key={i} style={{ fontSize: "0.74rem", color: "#94a3b8", fontWeight: "800" }}>{d}</span>
             ))}
           </div>
 
@@ -227,13 +264,14 @@ export default function ScheduleCalendarView() {
                     setCurrentDate(new Date(dayStr));
                   }}
                   style={{
-                    padding: "5px 0",
-                    fontSize: "0.78rem",
+                    padding: "6px 0",
+                    fontSize: "0.8rem",
                     fontWeight: isSelected ? "800" : "600",
                     borderRadius: "50%",
                     cursor: "pointer",
                     background: isSelected ? "#4f46e5" : "transparent",
-                    color: isSelected ? "#ffffff" : "#334155"
+                    color: isSelected ? "#ffffff" : "#334155",
+                    boxShadow: isSelected ? "0 2px 8px rgba(79,70,229,0.3)" : "none"
                   }}
                 >
                   {d}
@@ -244,11 +282,11 @@ export default function ScheduleCalendarView() {
         </div>
 
         {/* Categories / Calendars Filter Panel */}
-        <div style={{ background: "#ffffff", borderRadius: "14px", padding: "18px", border: "1px solid #e2e8f0", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
-          <h4 style={{ fontSize: "0.85rem", fontWeight: "800", color: "#0f172a", margin: "0 0 12px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+        <div style={{ background: "#ffffff", borderRadius: "16px", padding: "20px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)" }}>
+          <h4 style={{ fontSize: "0.82rem", fontWeight: "800", color: "#64748b", margin: "0 0 14px 0", textTransform: "uppercase", letterSpacing: "0.5px" }}>
             My Calendars
           </h4>
-          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {[
               { cat: "Site Audit", color: "#2563eb" },
               { cat: "Client Meeting", color: "#2563eb" },
@@ -257,14 +295,14 @@ export default function ScheduleCalendarView() {
               { cat: "Client Review", color: "#9333ea" },
               { cat: "Board Sync", color: "#dc2626" }
             ].map(item => (
-              <label key={item.cat} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.82rem", color: "#334155", cursor: "pointer", fontWeight: "600" }}>
+              <label key={item.cat} style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "0.84rem", color: "#334155", cursor: "pointer", fontWeight: "600" }}>
                 <input
                   type="checkbox"
                   checked={categoryFilters[item.cat] !== false}
                   onChange={() => toggleFilter(item.cat)}
-                  style={{ accentColor: item.color, cursor: "pointer" }}
+                  style={{ accentColor: item.color, cursor: "pointer", width: "16px", height: "16px" }}
                 />
-                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: item.color }} />
+                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: item.color, boxShadow: `0 0 6px ${item.color}66` }} />
                 <span>{item.cat}</span>
               </label>
             ))}
@@ -278,29 +316,29 @@ export default function ScheduleCalendarView() {
       {/* ----------------------------------------------------------------- */}
       <div style={{ flex: 1, background: "#ffffff", borderRadius: "16px", padding: "24px", border: "1px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column" }}>
         
-        {/* Top Navigation & View Mode Controls Bar */}
+        {/* Top Control Bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", borderBottom: "1px solid #f1f5f9", paddingBottom: "16px" }}>
           
           {/* Navigator Controls */}
-          <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
             <button
               type="button"
               onClick={handleToday}
-              style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontWeight: "700", fontSize: "0.85rem", color: "#334155", cursor: "pointer" }}
+              style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 18px", fontWeight: "700", fontSize: "0.86rem", color: "#334155", cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}
             >
               Today
             </button>
             <div style={{ display: "flex", gap: "4px" }}>
-              <button onClick={handlePrevMonth} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", width: "32px", height: "32px", cursor: "pointer", fontWeight: "700", color: "#475569" }}>‹</button>
-              <button onClick={handleNextMonth} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", width: "32px", height: "32px", cursor: "pointer", fontWeight: "700", color: "#475569" }}>›</button>
+              <button onClick={handlePrevMonth} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", width: "34px", height: "34px", cursor: "pointer", fontWeight: "700", color: "#475569" }}>‹</button>
+              <button onClick={handleNextMonth} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "6px", width: "34px", height: "34px", cursor: "pointer", fontWeight: "700", color: "#475569" }}>›</button>
             </div>
-            <h2 style={{ fontSize: "1.3rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+            <h2 style={{ fontSize: "1.35rem", fontWeight: "800", color: "#0f172a", margin: 0, letterSpacing: "-0.3px" }}>
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </h2>
           </div>
 
-          {/* View Switcher Select Dropdown / Pills */}
-          <div style={{ display: "flex", gap: "8px", background: "#f1f5f9", padding: "4px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+          {/* View Switcher Pills */}
+          <div style={{ display: "flex", gap: "6px", background: "#f1f5f9", padding: "4px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
             {["Day", "Week", "Month", "Schedule"].map((mode) => (
               <button
                 key={mode}
@@ -310,12 +348,12 @@ export default function ScheduleCalendarView() {
                   background: viewMode === mode ? "#ffffff" : "transparent",
                   color: viewMode === mode ? "#4f46e5" : "#64748b",
                   border: "none",
-                  borderRadius: "6px",
-                  padding: "6px 16px",
-                  fontWeight: "700",
-                  fontSize: "0.84rem",
+                  borderRadius: "8px",
+                  padding: "7px 18px",
+                  fontWeight: "800",
+                  fontSize: "0.85rem",
                   cursor: "pointer",
-                  boxShadow: viewMode === mode ? "0 2px 4px rgba(0,0,0,0.08)" : "none"
+                  boxShadow: viewMode === mode ? "0 2px 6px rgba(0,0,0,0.08)" : "none"
                 }}
               >
                 {mode}
@@ -326,36 +364,36 @@ export default function ScheduleCalendarView() {
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* VIEW MODE 1: DAY VIEW (SINGLE DAY COLUMN - 10 AM to 7 PM)     */}
+        {/* VIEW MODE 1: DAY VIEW (NO TOP DAYS BAR - 10 AM to 7 PM)      */}
         {/* ------------------------------------------------------------- */}
         {viewMode === "Day" && (
           <div style={{ flex: 1 }}>
             {/* Day Title Header Banner */}
-            <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "10px", padding: "14px 20px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", border: "1px solid #bfdbfe", borderRadius: "12px", padding: "16px 24px", marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 2px 4px rgba(37,99,235,0.06)" }}>
               <div>
-                <span style={{ fontSize: "0.75rem", color: "#2563eb", fontWeight: "800", textTransform: "uppercase" }}>DAY VIEW</span>
-                <h3 style={{ fontSize: "1.15rem", fontWeight: "800", color: "#1e3a8a", margin: "2px 0 0 0" }}>
+                <span style={{ fontSize: "0.75rem", color: "#2563eb", fontWeight: "800", textTransform: "uppercase", letterSpacing: "0.5px" }}>DAY VIEW AGENDA</span>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: "800", color: "#1e3a8a", margin: "2px 0 0 0" }}>
                   {new Date(selectedDay).toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
                 </h3>
               </div>
-              <span style={{ background: "#2563eb", color: "#ffffff", padding: "4px 12px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: "700" }}>
-                {filteredSchedules.filter(s => s.date === selectedDay).length} Scheduled Events
+              <span style={{ background: "#2563eb", color: "#ffffff", padding: "6px 16px", borderRadius: "20px", fontSize: "0.8rem", fontWeight: "800", boxShadow: "0 2px 6px rgba(37,99,235,0.3)" }}>
+                {filteredSchedules.filter(s => s.date === selectedDay).length} Events Scheduled
               </span>
             </div>
 
             {/* Timeline Grid (10 AM to 7 PM) */}
             <div style={{ position: "relative", borderTop: "1px solid #e2e8f0" }}>
               {timeSlots.map((time, idx) => (
-                <div key={idx} style={{ display: "grid", gridTemplateColumns: "80px 1fr", height: "65px", borderBottom: "1px solid #f1f5f9" }}>
-                  <div style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "700", transform: "translateY(-10px)" }}>
+                <div key={idx} style={{ display: "grid", gridTemplateColumns: "85px 1fr", height: "65px", borderBottom: "1px solid #f1f5f9" }}>
+                  <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", transform: "translateY(-10px)" }}>
                     {time}
                   </div>
                   <div style={{ borderLeft: "1px solid #e2e8f0" }} />
                 </div>
               ))}
 
-              {/* Event Cards Rendered Full Width */}
-              <div style={{ position: "absolute", top: 0, left: "80px", right: 0, bottom: 0, pointerEvents: "none" }}>
+              {/* Day View Beautified Cards */}
+              <div style={{ position: "absolute", top: 0, left: "85px", right: 0, bottom: 0, pointerEvents: "none" }}>
                 {filteredSchedules.filter(s => s.date === selectedDay).map((sch) => {
                   const pos = getTimePosition(sch.startTime, sch.endTime);
                   const colorStyle = getColorStyle(sch.color);
@@ -370,13 +408,13 @@ export default function ScheduleCalendarView() {
                         position: "absolute",
                         top: pos.top,
                         height: pos.height,
-                        left: "12px",
-                        right: "12px",
-                        borderRadius: "10px",
-                        padding: "12px 18px",
+                        left: "14px",
+                        right: "14px",
+                        borderRadius: "12px",
+                        padding: "14px 20px",
                         pointerEvents: "auto",
                         cursor: "pointer",
-                        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)",
+                        boxShadow: "0 4px 14px rgba(0,0,0,0.06)",
                         display: "flex",
                         justifyContent: "space-between",
                         alignItems: "center",
@@ -385,16 +423,18 @@ export default function ScheduleCalendarView() {
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: "0.95rem", fontWeight: "800", marginBottom: "2px" }}>{sch.title}</div>
-                        <div style={{ fontSize: "0.78rem", opacity: 0.85, fontWeight: "600" }}>
-                          ⏰ {sch.startTime} - {sch.endTime} • <span style={{ fontWeight: "700" }}>{sch.projectName}</span>
+                        <div style={{ fontSize: "1.02rem", fontWeight: "800", marginBottom: "4px" }}>{sch.title}</div>
+                        <div style={{ fontSize: "0.8rem", opacity: 0.9, fontWeight: "600" }}>
+                          ⏰ {sch.startTime} - {sch.endTime} • <strong style={{ textDecoration: "underline" }}>{sch.projectName}</strong>
                         </div>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "0.75rem", fontWeight: "800", background: "rgba(255,255,255,0.7)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(0,0,0,0.08)" }}>
-                          {sch.category}
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ fontSize: "0.78rem", fontWeight: "800", background: "rgba(255,255,255,0.85)", padding: "5px 12px", borderRadius: "8px", border: "1px solid rgba(0,0,0,0.06)" }}>
+                          {getCategoryEmoji(sch.category)}
                         </span>
-                        <span style={{ fontSize: "0.75rem", fontWeight: "700", opacity: 0.8 }}>👤 {sch.consultant}</span>
+                        <span style={{ fontSize: "0.78rem", fontWeight: "700", background: "rgba(255,255,255,0.7)", padding: "4px 10px", borderRadius: "14px" }}>
+                          👤 {sch.consultant}
+                        </span>
                       </div>
                     </div>
                   );
@@ -412,7 +452,7 @@ export default function ScheduleCalendarView() {
           <div style={{ flex: 1 }}>
             {/* Week Days Header Row */}
             <div style={{ display: "grid", gridTemplateColumns: "70px repeat(7, 1fr)", gap: "8px", marginBottom: "16px", textAlign: "center" }}>
-              <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "700" }}>GMT +05:30</div>
+              <div style={{ fontSize: "0.75rem", color: "#94a3b8", fontWeight: "800" }}>GMT +05:30</div>
               {weekDays.map((d, index) => {
                 const dateYmd = formatYMD(d);
                 const isSelected = dateYmd === selectedDay;
@@ -424,7 +464,7 @@ export default function ScheduleCalendarView() {
                     onClick={() => setSelectedDay(dateYmd)}
                     style={{ cursor: "pointer", padding: "6px 0" }}
                   >
-                    <div style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "700", marginBottom: "4px" }}>
+                    <div style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "800", marginBottom: "4px" }}>
                       {dayNamesShort[d.getDay()]}
                     </div>
                     <div
@@ -432,13 +472,14 @@ export default function ScheduleCalendarView() {
                         display: "inline-flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        width: "34px",
-                        height: "34px",
+                        width: "36px",
+                        height: "36px",
                         borderRadius: "50%",
                         background: isSelected ? "#4f46e5" : isToday ? "#eff6ff" : "transparent",
                         color: isSelected ? "#ffffff" : isToday ? "#2563eb" : "#0f172a",
                         fontWeight: "800",
-                        fontSize: "0.92rem"
+                        fontSize: "0.95rem",
+                        boxShadow: isSelected ? "0 4px 10px rgba(79,70,229,0.35)" : "none"
                       }}
                     >
                       {d.getDate()}
@@ -459,7 +500,7 @@ export default function ScheduleCalendarView() {
                 </div>
               ))}
 
-              {/* Red Current Time Line Marker */}
+              {/* Red Current Time Line Indicator (12:46 PM) */}
               <div style={{ position: "absolute", top: "180px", left: "60px", right: 0, height: "2px", background: "#ef4444", zIndex: 10, display: "flex", alignItems: "center" }}>
                 <div style={{ background: "#ef4444", color: "#ffffff", fontSize: "0.68rem", fontWeight: "800", padding: "2px 6px", borderRadius: "4px", transform: "translateX(-48px)" }}>
                   12:46 PM
@@ -491,23 +532,23 @@ export default function ScheduleCalendarView() {
                               height: pos.height,
                               left: "3px",
                               right: "3px",
-                              borderRadius: "8px",
-                              padding: "8px 10px",
+                              borderRadius: "10px",
+                              padding: "9px 11px",
                               pointerEvents: "auto",
                               cursor: "pointer",
-                              boxShadow: "0 2px 4px rgba(0,0,0,0.04)",
+                              boxShadow: "0 3px 8px rgba(0,0,0,0.05)",
                               zIndex: 5,
                               overflow: "hidden",
                               ...colorStyle
                             }}
                           >
-                            <div style={{ fontSize: "0.8rem", fontWeight: "800", marginBottom: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            <div style={{ fontSize: "0.82rem", fontWeight: "800", marginBottom: "3px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                               {sch.title}
                             </div>
-                            <div style={{ fontSize: "0.7rem", opacity: 0.85, fontWeight: "600" }}>
+                            <div style={{ fontSize: "0.72rem", opacity: 0.9, fontWeight: "600" }}>
                               {sch.startTime} - {sch.endTime}
                             </div>
-                            <div style={{ marginTop: "4px", fontSize: "0.66rem", fontWeight: "800", background: "rgba(255,255,255,0.7)", padding: "1px 5px", borderRadius: "4px", display: "inline-block" }}>
+                            <div style={{ marginTop: "5px", fontSize: "0.68rem", fontWeight: "800", background: "rgba(255,255,255,0.75)", padding: "2px 6px", borderRadius: "4px", display: "inline-block" }}>
                               {sch.category}
                             </div>
                           </div>
@@ -527,17 +568,17 @@ export default function ScheduleCalendarView() {
         {/* ------------------------------------------------------------- */}
         {viewMode === "Month" && (
           <div style={{ flex: 1 }}>
-            {/* Days Header */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: "#e2e8f0", border: "1px solid #e2e8f0", borderRadius: "8px 8px 0 0", textAlign: "center" }}>
+            {/* Days Header Bar */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: "#cbd5e1", border: "1px solid #cbd5e1", borderRadius: "10px 10px 0 0", textAlign: "center" }}>
               {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, i) => (
-                <div key={i} style={{ background: "#f8fafc", padding: "10px", fontSize: "0.8rem", fontWeight: "800", color: "#475569" }}>
+                <div key={i} style={{ background: "#f8fafc", padding: "10px", fontSize: "0.82rem", fontWeight: "800", color: "#475569" }}>
                   {day}
                 </div>
               ))}
             </div>
 
             {/* 7x5 Boxes Grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: "#e2e8f0", border: "1px solid #e2e8f0", borderTop: "none", borderRadius: "0 0 8px 8px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: "#cbd5e1", border: "1px solid #cbd5e1", borderTop: "none", borderRadius: "0 0 10px 10px" }}>
               {Array.from({ length: 31 }, (_, i) => i + 1).map((dayNum) => {
                 const dateStr = `2026-07-${String(dayNum).padStart(2, '0')}`;
                 const dayEvents = filteredSchedules.filter(s => s.date === dateStr);
@@ -552,36 +593,37 @@ export default function ScheduleCalendarView() {
                     }}
                     style={{
                       background: isSelected ? "#eff6ff" : "#ffffff",
-                      minHeight: "105px",
-                      padding: "8px",
+                      minHeight: "110px",
+                      padding: "10px",
                       cursor: "pointer"
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "0.84rem", fontWeight: "800", color: isSelected ? "#2563eb" : "#334155" }}>
+                      <span style={{ fontSize: "0.86rem", fontWeight: "800", color: isSelected ? "#2563eb" : "#334155" }}>
                         {dayNum}
                       </span>
                       {dayEvents.length > 0 && (
-                        <span style={{ fontSize: "0.68rem", fontWeight: "800", color: "#4f46e5", background: "#eef2ff", padding: "1px 6px", borderRadius: "10px" }}>
+                        <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "#4f46e5", background: "#eef2ff", padding: "2px 8px", borderRadius: "10px" }}>
                           {dayEvents.length} items
                         </span>
                       )}
                     </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
                       {dayEvents.map(sch => {
                         const colorStyle = getColorStyle(sch.color);
                         return (
                           <div
                             key={sch.id}
                             style={{
-                              fontSize: "0.72rem",
+                              fontSize: "0.74rem",
                               fontWeight: "700",
-                              padding: "3px 6px",
-                              borderRadius: "4px",
+                              padding: "4px 8px",
+                              borderRadius: "6px",
                               overflow: "hidden",
                               textOverflow: "ellipsis",
                               whiteSpace: "nowrap",
+                              boxShadow: "0 1px 3px rgba(0,0,0,0.03)",
                               ...colorStyle
                             }}
                           >
@@ -602,8 +644,8 @@ export default function ScheduleCalendarView() {
         {/* ------------------------------------------------------------- */}
         {viewMode === "Schedule" && (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "16px" }}>
-            <div style={{ fontSize: "0.88rem", color: "#64748b", fontWeight: "600", marginBottom: "4px" }}>
-              Chronological Workplace Agenda
+            <div style={{ fontSize: "0.88rem", color: "#64748b", fontWeight: "700" }}>
+              Chronological Workplace Operations Agenda
             </div>
 
             {filteredSchedules.length > 0 ? (
@@ -616,40 +658,41 @@ export default function ScheduleCalendarView() {
                     style={{
                       background: "#ffffff",
                       border: "1px solid #e2e8f0",
-                      borderRadius: "12px",
-                      padding: "16px 20px",
+                      borderRadius: "14px",
+                      padding: "18px 24px",
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      boxShadow: "0 2px 4px rgba(0,0,0,0.02)"
+                      boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)",
+                      transition: "transform 0.15s ease"
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                      <div style={{ minWidth: "120px" }}>
-                        <div style={{ fontSize: "0.78rem", fontWeight: "800", color: "#2563eb", textTransform: "uppercase" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                      <div style={{ minWidth: "130px", background: "#f8fafc", padding: "10px 14px", borderRadius: "10px", border: "1px solid #f1f5f9", textAlign: "center" }}>
+                        <div style={{ fontSize: "0.84rem", fontWeight: "800", color: "#2563eb", textTransform: "uppercase" }}>
                           {new Date(sch.date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                         </div>
-                        <div style={{ fontSize: "0.74rem", color: "#64748b", fontWeight: "600", marginTop: "2px" }}>
+                        <div style={{ fontSize: "0.76rem", color: "#64748b", fontWeight: "700", marginTop: "2px" }}>
                           {sch.startTime} - {sch.endTime}
                         </div>
                       </div>
 
                       <div>
-                        <div style={{ fontSize: "0.98rem", fontWeight: "800", color: "#0f172a" }}>{sch.title}</div>
-                        <div style={{ fontSize: "0.8rem", color: "#475569", marginTop: "2px" }}>
-                          Project: <strong>{sch.projectName}</strong> • Assigned: <strong>{sch.consultant}</strong>
+                        <div style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>{sch.title}</div>
+                        <div style={{ fontSize: "0.82rem", color: "#475569", marginTop: "4px" }}>
+                          Project: <strong style={{ color: "#1e293b" }}>{sch.projectName}</strong> • Assigned: <strong style={{ color: "#1e293b" }}>{sch.consultant}</strong>
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span style={{ fontSize: "0.76rem", fontWeight: "800", padding: "4px 12px", borderRadius: "20px", ...colorStyle }}>
-                        {sch.category}
+                    <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                      <span style={{ fontSize: "0.8rem", fontWeight: "800", padding: "6px 14px", borderRadius: "20px", ...colorStyle }}>
+                        {getCategoryEmoji(sch.category)}
                       </span>
                       <button
                         type="button"
                         onClick={() => deleteSchedule(sch.id)}
-                        style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "6px", padding: "4px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                        style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "8px", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}
                       >
                         Delete
                       </button>
@@ -669,34 +712,37 @@ export default function ScheduleCalendarView() {
 
       {/* CREATE SCHEDULE MODAL */}
       {showCreateModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
-          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "480px", maxWidth: "90%", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.5)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "#ffffff", borderRadius: "20px", padding: "32px", width: "500px", maxWidth: "90%", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)" }}>
             
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h3 style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>Create Event</h3>
-              <button onClick={() => setShowCreateModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "22px" }}>
+              <div>
+                <h3 style={{ fontSize: "1.25rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>Create Workplace Event</h3>
+                <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "2px 0 0 0" }}>Schedule client audits, meetings, & site visits</p>
+              </div>
+              <button onClick={() => setShowCreateModal(false)} style={{ background: "#f1f5f9", border: "none", borderRadius: "50%", width: "32px", height: "32px", fontSize: "1rem", cursor: "pointer", color: "#64748b" }}>✕</button>
             </div>
 
-            <form onSubmit={handleCreateSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+            <form onSubmit={handleCreateSubmit} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>Event Title *</label>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>Event Title *</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Basic Photography & Audit"
                   value={schTitle}
                   onChange={(e) => setSchTitle(e.target.value)}
-                  style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.88rem" }}
+                  style={{ width: "100%", padding: "12px 16px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.9rem" }}
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>Category</label>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>Category</label>
                   <select
                     value={schCategory}
                     onChange={(e) => setSchCategory(e.target.value)}
-                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.88rem" }}
+                    style={{ width: "100%", padding: "12px 16px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.9rem" }}
                   >
                     <option value="Client Meeting">Client Meeting</option>
                     <option value="Site Audit">Site Audit</option>
@@ -708,38 +754,38 @@ export default function ScheduleCalendarView() {
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>Color Theme</label>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>Color Theme</label>
                   <select
                     value={schColor}
                     onChange={(e) => setSchColor(e.target.value)}
-                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.88rem" }}
+                    style={{ width: "100%", padding: "12px 16px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.9rem" }}
                   >
-                    <option value="blue">Blue</option>
-                    <option value="purple">Purple</option>
-                    <option value="orange">Orange</option>
-                    <option value="green">Green</option>
-                    <option value="red">Red</option>
+                    <option value="blue">Blue Accent</option>
+                    <option value="purple">Purple Accent</option>
+                    <option value="orange">Orange Accent</option>
+                    <option value="green">Green Accent</option>
+                    <option value="red">Red Accent</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>Date</label>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>Date</label>
                 <input
                   type="date"
                   value={schDate}
                   onChange={(e) => setSchDate(e.target.value)}
-                  style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.88rem" }}
+                  style={{ width: "100%", padding: "12px 16px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.9rem" }}
                 />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>Start Time</label>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>Start Time (10 AM - 7 PM)</label>
                   <select
                     value={schStartTime}
                     onChange={(e) => setSchStartTime(e.target.value)}
-                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.88rem" }}
+                    style={{ width: "100%", padding: "12px 16px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.9rem" }}
                   >
                     <option value="10:00 AM">10:00 AM</option>
                     <option value="11:00 AM">11:00 AM</option>
@@ -752,11 +798,11 @@ export default function ScheduleCalendarView() {
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>End Time</label>
+                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>End Time (10 AM - 7 PM)</label>
                   <select
                     value={schEndTime}
                     onChange={(e) => setSchEndTime(e.target.value)}
-                    style={{ width: "100%", padding: "10px 14px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.88rem" }}
+                    style={{ width: "100%", padding: "12px 16px", border: "1px solid #cbd5e1", borderRadius: "10px", fontSize: "0.9rem" }}
                   >
                     <option value="11:00 AM">11:00 AM</option>
                     <option value="12:00 PM">12:00 PM</option>
@@ -769,17 +815,17 @@ export default function ScheduleCalendarView() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "12px" }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "16px" }}>
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  style={{ padding: "10px 18px", border: "1px solid #cbd5e1", borderRadius: "8px", background: "#f8fafc", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+                  style={{ padding: "12px 20px", border: "1px solid #cbd5e1", borderRadius: "10px", background: "#f8fafc", fontWeight: "700", fontSize: "0.88rem", cursor: "pointer" }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  style={{ padding: "10px 22px", border: "none", borderRadius: "8px", background: "#4f46e5", color: "#ffffff", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                  style={{ padding: "12px 26px", border: "none", borderRadius: "10px", background: "#4f46e5", color: "#ffffff", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(79,70,229,0.3)" }}
                 >
                   Save Event
                 </button>

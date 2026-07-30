@@ -234,31 +234,51 @@ export default function ProjectsView() {
 
   const consultants = users.filter(u => u.role === "Consultant");
 
-  // ── SEPARATE PAGE VIEW FOR SELECTED PROJECT HUB (MATCHING USER REFERENCE UI DASHBOARD) ──
+  // ── SEPARATE PAGE VIEW FOR SELECTED PROJECT HUB (STRUCTURED WORKSPACE) ──
   if (selectedProject) {
     const effectiveProject = getEffectiveProject(selectedProject);
     const linkedExps = expenses.filter(e => e.projectId === effectiveProject.id || e.projectName === effectiveProject.name);
     
     return (
-      <div className="individual-project-view" style={{ padding: "12px 16px", minHeight: "100vh", display: "flex", flexDirection: "column", gap: "16px", fontFamily: "Inter, system-ui, sans-serif", color: "#0f172a", background: "#f1f5f9" }}>
+      <div className="individual-project-view" style={{ padding: "16px", minHeight: "100vh", display: "flex", flexDirection: "column", gap: "20px", fontFamily: "Inter, system-ui, sans-serif", color: "#0f172a", background: "#f8fafc" }}>
         
         {/* ------------------------------------------------------------- */}
-        {/* TOP HEADER: BACK ARROW + CLIENT TITLE + EDIT & CLOSE BUTTONS  */}
+        {/* 1. TOP NAVIGATION HEADER                                      */}
         {/* ------------------------------------------------------------- */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ffffff", padding: "10px 18px", borderRadius: "12px", border: "1px solid #cbd5e1", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ffffff", padding: "14px 20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button
               onClick={() => setSelectedProject(null)}
-              style={{ background: "#f1f5f9", border: "none", width: "32px", height: "32px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "1.1rem", color: "#475569", fontWeight: "700" }}
+              style={{ background: "#f1f5f9", border: "none", width: "34px", height: "34px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "1.1rem", color: "#334155", fontWeight: "700" }}
+              title="Back to All Projects"
             >
               ‹
             </button>
-            <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
-              Customer | <span style={{ color: "#2563eb" }}>{effectiveProject.pocName || effectiveProject.client}</span>
-            </span>
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <h2 style={{ margin: 0, fontSize: "1.35rem", fontWeight: "800", color: "#0f172a" }}>
+                  {effectiveProject.client || "Client Engagement"}
+                </h2>
+                <span style={{ color: "#cbd5e1" }}>|</span>
+                <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#2563eb" }}>
+                  {effectiveProject.name}
+                </span>
+                <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "2px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "800" }}>
+                  {effectiveProject.code || "PROJ-TEST-01"}
+                </span>
+                <span style={{
+                  background: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#dcfce7" : "#fff7ed",
+                  color: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#16a34a" : "#d97706",
+                  border: `1px solid ${(effectiveProject.status || "Active").toLowerCase() === "active" ? "#bbf7d0" : "#fed7aa"}`,
+                  padding: "2px 10px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: "800"
+                }}>
+                  ● {effectiveProject.status || "Active"}
+                </span>
+              </div>
+            </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <button
               onClick={() => alert("Editing Project Details...")}
               style={{
@@ -267,9 +287,9 @@ export default function ProjectsView() {
                 gap: "6px",
                 background: "#ffffff",
                 border: "1px solid #cbd5e1",
-                padding: "6px 14px",
-                borderRadius: "8px",
-                fontSize: "0.82rem",
+                padding: "8px 16px",
+                borderRadius: "10px",
+                fontSize: "0.85rem",
                 fontWeight: "700",
                 color: "#334155",
                 cursor: "pointer"
@@ -285,16 +305,17 @@ export default function ProjectsView() {
                 alignItems: "center",
                 gap: "6px",
                 background: "#ffffff",
-                border: "1px solid #cbd5e1",
-                padding: "6px 14px",
-                borderRadius: "8px",
-                fontSize: "0.82rem",
+                border: "1px solid #e2e8f0",
+                padding: "8px 16px",
+                borderRadius: "10px",
+                fontSize: "0.85rem",
                 fontWeight: "800",
                 color: "#0f172a",
-                cursor: "pointer"
+                cursor: "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.03)"
               }}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <circle cx="12" cy="12" r="10" fill="#fef2f2" stroke="#ef4444" strokeWidth="2" />
                 <path d="M15 9l-6 6M9 9l6 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
               </svg>
@@ -304,297 +325,429 @@ export default function ProjectsView() {
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* TOP SECTION: PROFILE CARD (LEFT) + VIBRANT KPIS & TABS (RIGHT)*/}
+        {/* 2. STRUCTURED EXECUTIVE METRIC CARDS STRIP                    */}
         {/* ------------------------------------------------------------- */}
-        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: "16px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px" }}>
           
-          {/* LEFT PROFILE & ACTION BADGES CARD (Matching C-HO004 profile card in screenshot) */}
-          <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "14px", boxShadow: "0 2px 6px rgba(0,0,0,0.03)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-              <div style={{ width: "54px", height: "54px", borderRadius: "50%", background: "#cbd5e1", color: "#475569", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>
-                {(effectiveProject.client || "C")[0]}
-              </div>
-              <div>
-                <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
-                  {effectiveProject.code || "C-HO004"}
-                </h3>
-                <div style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "700", marginTop: "2px" }}>
-                  Budget: Rs 50.00 Lacs
-                </div>
-                <div style={{ fontSize: "0.76rem", color: "#64748b", marginTop: "2px" }}>
-                  +{effectiveProject.pocContact || "91 7452521524"} | -
-                </div>
-              </div>
+          {/* Card 1: Client Overview */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px", display: "flex", alignItems: "center", gap: "14px" }}>
+            <div style={{ background: "#eff6ff", color: "#2563eb", width: "44px", height: "44px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
             </div>
-
-            {/* Row of 5 Pill Badges */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-              <span style={{ background: "#15803d", color: "#ffffff", padding: "5px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                💚 Beverage
-              </span>
-              <span style={{ background: "#15803d", color: "#ffffff", padding: "5px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                🎁 Add Birthdate
-              </span>
-              <span style={{ background: "#15803d", color: "#ffffff", padding: "5px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                💍 Add Anniversary
-              </span>
-              <span style={{ background: "#f1f5f9", color: "#334155", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "700" }}>
-                👥 Team (4)
-              </span>
-              <span style={{ background: "#f1f5f9", color: "#334155", border: "1px solid #cbd5e1", padding: "4px 8px", borderRadius: "8px", fontSize: "0.75rem" }}>
-                📎
-              </span>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>POC & CONTACT</div>
+              <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>{effectiveProject.pocName || effectiveProject.client}</div>
+              <div style={{ fontSize: "0.75rem", color: "#2563eb", fontWeight: "600" }}>📱 {effectiveProject.pocContact || "+91-9849012345"}</div>
             </div>
           </div>
 
-          {/* RIGHT SIDE: 3 TOP VIBRANT KPI CARDS + PILL NAVIGATION TABS + 6 RECTANGLE KPIS */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            
-            {/* Top Row: 3 Vibrant Gradient Cards + Pill Tabs Strip */}
-            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "12px" }}>
-              
-              {/* 3 Colorful Gradient Feature Cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
-                
-                {/* Card 1: Blue Gift Vouchers */}
-                <div style={{ background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)", borderRadius: "12px", padding: "14px", color: "#ffffff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", boxShadow: "0 3px 8px rgba(2,132,199,0.25)" }}>
-                  <div style={{ fontSize: "1.4rem", marginBottom: "2px" }}>🎁</div>
-                  <div style={{ fontSize: "0.75rem", opacity: 0.9, fontWeight: "600" }}>Tasks Completed</div>
-                  <strong style={{ fontSize: "1.5rem", fontWeight: "900", marginTop: "2px" }}>8 / 14</strong>
-                </div>
-
-                {/* Card 2: Orange Loyalty Points */}
-                <div style={{ background: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)", borderRadius: "12px", padding: "14px", color: "#ffffff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", boxShadow: "0 3px 8px rgba(234,88,12,0.25)" }}>
-                  <div style={{ fontSize: "1.4rem", marginBottom: "2px" }}>🏅</div>
-                  <div style={{ fontSize: "0.75rem", opacity: 0.9, fontWeight: "600" }}>Phase Progress</div>
-                  <strong style={{ fontSize: "1.3rem", fontWeight: "900", marginTop: "2px" }}>Phase 4 (65%)</strong>
-                </div>
-
-                {/* Card 3: Purple Schemes */}
-                <div style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)", borderRadius: "12px", padding: "14px", color: "#ffffff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", boxShadow: "0 3px 8px rgba(124,58,237,0.25)" }}>
-                  <div style={{ fontSize: "1.4rem", marginBottom: "2px" }}>🏺</div>
-                  <div style={{ fontSize: "0.75rem", opacity: 0.9, fontWeight: "600" }}>Site Visits</div>
-                  <strong style={{ fontSize: "1.5rem", fontWeight: "900", marginTop: "2px" }}>5 Done</strong>
-                </div>
-
-              </div>
-
-              {/* Pill Navigation Tabs */}
-              <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "12px", padding: "8px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                {[
-                  { id: "business", label: "Business Details" },
-                  { id: "audit", label: "Audit Report" },
-                  { id: "plan", label: "Project Plan" },
-                  { id: "tasks", label: "Tasks (14)" },
-                  { id: "visits", label: "Visits (5)" },
-                  { id: "documents", label: "Documents" },
-                  { id: "team", label: "Team" },
-                  { id: "discussions", label: "Discussions" },
-                  { id: "expenses", label: "Expenses" }
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveProjectTab(tab.id)}
-                    style={{
-                      background: activeProjectTab === tab.id ? "#2563eb" : "#f1f5f9",
-                      color: activeProjectTab === tab.id ? "#ffffff" : "#334155",
-                      border: "none",
-                      padding: "6px 12px",
-                      borderRadius: "6px",
-                      fontSize: "0.75rem",
-                      fontWeight: "700",
-                      cursor: "pointer",
-                      transition: "all 0.15s ease"
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
+          {/* Card 2: Tasks Summary */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px", display: "flex", alignItems: "center", gap: "14px" }}>
+            <div style={{ background: "#f0fdf4", color: "#16a34a", width: "44px", height: "44px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
             </div>
-
-            {/* Bottom Row: 6 Graphic Metric Cards */}
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px" }}>
-              
-              {/* Card 1: Orders (Dark Blue) */}
-              <div style={{ background: "#0f172a", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>Total Tasks</div>
-                  <div style={{ fontSize: "1.4rem", fontWeight: "900" }}>14</div>
-                </div>
-                <span style={{ fontSize: "1.4rem" }}>📋</span>
-              </div>
-
-              {/* Card 2: Bills (Teal Green) */}
-              <div style={{ background: "#065f46", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>Overdue Tasks</div>
-                  <div style={{ fontSize: "1.4rem", fontWeight: "900" }}>2</div>
-                </div>
-                <span style={{ fontSize: "1.4rem" }}>💵</span>
-              </div>
-
-              {/* Card 3: Sales (Navy Blue) */}
-              <div style={{ background: "#1e3a8a", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>Expenses</div>
-                  <div style={{ fontSize: "1.2rem", fontWeight: "900" }}>₹45k</div>
-                </div>
-                <span style={{ fontSize: "1.4rem" }}>🏪</span>
-              </div>
-
-              {/* Card 4: Memo (Brown) */}
-              <div style={{ background: "#9a3412", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>Meetings</div>
-                  <div style={{ fontSize: "1.4rem", fontWeight: "900" }}>3</div>
-                </div>
-                <span style={{ fontSize: "1.4rem" }}>📝</span>
-              </div>
-
-              {/* Card 5: Quotation (Dark Indigo) */}
-              <div style={{ background: "#312e81", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>Site Audits</div>
-                  <div style={{ fontSize: "1.4rem", fontWeight: "900" }}>5</div>
-                </div>
-                <span style={{ fontSize: "1.4rem" }}>📊</span>
-              </div>
-
-              {/* Card 6: Pending Estimation (Purple) */}
-              <div style={{ background: "#581c87", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>SOP Sign-off</div>
-                  <div style={{ fontSize: "0.82rem", fontWeight: "900" }}>Pending</div>
-                </div>
-                <span style={{ fontSize: "1.4rem" }}>🧮</span>
-              </div>
-
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>TASKS & PLANNER</div>
+              <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>14 Tasks <span style={{ fontSize: "0.75rem", color: "#16a34a" }}>(8 Done)</span></div>
+              <div style={{ fontSize: "0.75rem", color: "#dc2626", fontWeight: "600" }}>⚠️ 2 Urgent Overdue</div>
             </div>
+          </div>
 
+          {/* Card 3: Audit Phase */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px", display: "flex", alignItems: "center", gap: "14px" }}>
+            <div style={{ background: "#fff7ed", color: "#ea580c", width: "44px", height: "44px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>AUDIT STAGE</div>
+              <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#ea580c" }}>Phase 4: Process Design</div>
+              <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Progress: 65% Completed</div>
+            </div>
+          </div>
+
+          {/* Card 4: Expenses & Budget */}
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px", display: "flex", alignItems: "center", gap: "14px" }}>
+            <div style={{ background: "#f3e8ff", color: "#9333ea", width: "44px", height: "44px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            </div>
+            <div>
+              <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>LINKED EXPENSES</div>
+              <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>₹{linkedExps.reduce((s, e) => s + e.amount, 0).toLocaleString() || "45,000"}</div>
+              <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Budget: ₹50.00 Lacs</div>
+            </div>
           </div>
 
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* BOTTOM WORKSPACE GRID (MATCHING BOTTOM 3-PANEL LAYOUT IN SCREENSHOT) */}
+        {/* 3. STRUCTURED TAB NAVIGATION STRIP                             */}
         {/* ------------------------------------------------------------- */}
-        <div style={{ display: "grid", gridTemplateColumns: "240px 1.2fr 1fr", gap: "16px", minHeight: "420px" }}>
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "6px", display: "flex", gap: "6px", overflowX: "auto", boxShadow: "0 1px 2px rgba(0,0,0,0.02)" }}>
+          {[
+            { id: "business", label: "Business Details" },
+            { id: "audit", label: "Audit Report" },
+            { id: "plan", label: "Project Plan" },
+            { id: "tasks", label: `Tasks & Planner (${effectiveProject.scheduledEvents?.length || 14})` },
+            { id: "visits", label: `Visit & Review History (${effectiveProject.clientVisits?.length || 5})` },
+            { id: "documents", label: "Documents & Deliverables" },
+            { id: "team", label: "Assigned Team" },
+            { id: "discussions", label: "Discussions & Logs" },
+            { id: "expenses", label: `Linked Expenses (${linkedExps.length})` }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveProjectTab(tab.id)}
+              style={{
+                background: activeProjectTab === tab.id ? "#2563eb" : "transparent",
+                color: activeProjectTab === tab.id ? "#ffffff" : "#475569",
+                border: "none",
+                borderRadius: "8px",
+                padding: "9px 16px",
+                fontWeight: "700",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all 0.15s ease"
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ------------------------------------------------------------- */}
+        {/* 4. MAIN WORKSPACE AREA (LEFT DETAILED CONTENT + RIGHT ACTIONS) */}
+        {/* ------------------------------------------------------------- */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 300px", gap: "20px" }}>
           
-          {/* PANEL 1: LEFT SIDE METRIC STACK */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {/* LEFT COLUMN: ACTIVE TAB CONTENT */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             
-            {/* Lifetime Value / Contract Value Card (Dark Green) */}
-            <div style={{ background: "#064e3b", borderRadius: "12px", padding: "18px", color: "#ffffff", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "140px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div>
-                  <div style={{ fontSize: "0.78rem", color: "#a7f3d0", fontWeight: "700", textTransform: "uppercase" }}>Lifetime Value</div>
-                  <strong style={{ fontSize: "1.8rem", fontWeight: "900", marginTop: "4px", display: "block" }}>10.45 <span style={{ fontSize: "1.1rem" }}>Lacs</span></strong>
-                </div>
-                <span style={{ fontSize: "2.2rem" }}>💰</span>
-              </div>
-            </div>
+            {/* TAB 1: BUSINESS DETAILS */}
+            {activeProjectTab === "business" && (
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
+                  🏢 Business Profile & Engagement Scope
+                </h3>
+                
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+                  <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>CLIENT POC</span>
+                    <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
+                      {effectiveProject.pocName || effectiveProject.client}
+                    </p>
+                    <span style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "600" }}>📱 {effectiveProject.pocContact || "+91-9849012345"}</span>
+                  </div>
 
-            {/* Last Visit Card (Blue Card) */}
-            <div style={{ background: "#1e3a8a", borderRadius: "12px", padding: "18px", color: "#ffffff", display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <div style={{ fontSize: "0.75rem", color: "#93c5fd", fontWeight: "700" }}>Last Site Visit</div>
-                  <strong style={{ fontSize: "1.2rem", fontWeight: "900" }}>2 Days Ago</strong>
-                </div>
-                <span style={{ fontSize: "1.8rem" }}>🗺️</span>
-              </div>
+                  <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>START DATE</span>
+                    <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
+                      {effectiveProject.startDate || "27 Jul 2026"}
+                    </p>
+                  </div>
 
-              <div style={{ borderTop: "1px solid #3b82f640", paddingTop: "10px" }}>
-                <div style={{ fontSize: "0.72rem", color: "#bfdbfe" }}>Last Audit Check-in</div>
-                <div style={{ fontSize: "1.1rem", fontWeight: "800" }}>Rs 392000</div>
-                <div style={{ fontSize: "0.68rem", color: "#93c5fd", marginTop: "2px" }}>2 ITEMS | CREDIT CARD</div>
+                  <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                    <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>PROJECT CODE</span>
+                    <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#2563eb" }}>
+                      {effectiveProject.code || "PROJ-TEST-01"}
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", border: "1px solid #bfdbfe", padding: "20px", borderRadius: "12px" }}>
+                  <h4 style={{ margin: "0 0 8px 0", fontSize: "1rem", fontWeight: "800", color: "#1e3a8a" }}>
+                    Engagement Purpose & Business Objectives
+                  </h4>
+                  <p style={{ margin: 0, fontSize: "0.9rem", color: "#1e40af", lineHeight: "1.6" }}>
+                    {effectiveProject.engagementPurpose || effectiveProject.description || "Client requested consulting advisory for inventory audit, staff upselling, POS ledger reconciliation, and retail growth."}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* TAB 2: AUDIT REPORT */}
+            {activeProjectTab === "audit" && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                {/* 8-Phase Stepper */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <h3 style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                      8-PHASE IMPLEMENTATION AUDIT PROGRESS
+                    </h3>
+                    <span style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "800" }}>Current: Phase 4 (Process Design)</span>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
+                    {[
+                      { num: 1, title: "Vision Alignment", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
+                      { num: 2, title: "Business Audit", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
+                      { num: 3, title: "Gap Analysis", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
+                      { num: 4, title: "Process Design", status: "In Progress (65%)", color: "#2563eb", bg: "#eff6ff" },
+                      { num: 5, title: "Implementation", status: "Upcoming", color: "#d97706", bg: "#fff7ed" },
+                      { num: 6, title: "KPI Monitoring", status: "Pending", color: "#64748b", bg: "#f8fafc" },
+                      { num: 7, title: "Governance", status: "Pending", color: "#64748b", bg: "#f8fafc" },
+                      { num: 8, title: "Advisory Review", status: "Pending", color: "#64748b", bg: "#f8fafc" }
+                    ].map(p => (
+                      <div key={p.num} style={{ background: p.bg, border: `1px solid ${p.color}40`, borderRadius: "10px", padding: "14px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "0.72rem", fontWeight: "800", color: p.color }}>PHASE {p.num}</span>
+                          {p.status.includes("Completed") && <span style={{ color: "#16a34a", fontWeight: "800" }}>✓</span>}
+                        </div>
+                        <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#0f172a", margin: "6px 0 2px 0" }}>{p.title}</div>
+                        <div style={{ fontSize: "0.72rem", color: p.color, fontWeight: "700" }}>{p.status}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Planning Checklists */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
+                  <h3 style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", margin: "0 0 16px 0" }}>Operational & Strategic Planning Checklists</h3>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                    {[
+                      { domain: "Business Strategy & Retail Advisory", color: "#2563eb", bg: "#eff6ff" },
+                      { domain: "HR Operations & Consultant Sourcing", color: "#059669", bg: "#ecfdf5" },
+                      { domain: "IT Systems & POS Inventory Control", color: "#7c3aed", bg: "#f3e8ff" },
+                      { domain: "Legal Compliance & Internal Audits", color: "#d97706", bg: "#fffbeb" }
+                    ].map((d, dIdx) => (
+                      <div key={dIdx} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px" }}>
+                        <div style={{ background: d.bg, color: d.color, padding: "6px 12px", borderRadius: "8px", fontWeight: "700", fontSize: "0.82rem", marginBottom: "12px", display: "inline-block" }}>
+                          {d.domain}
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                          {(effectiveProject.checklists || [
+                            { task: "Initial Site Audit & Layout Review", done: true },
+                            { task: "POS & Billing Integration Verification", done: false },
+                            { task: "Staff Sales Coaching Workshop", done: false }
+                          ]).map((chk, iIdx) => (
+                            <label key={iIdx} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.85rem", color: "#334155", cursor: "pointer" }}>
+                              <input type="checkbox" checked={chk.done} onChange={() => toggleProjectChecklistItem(effectiveProject.id, dIdx, iIdx)} style={{ cursor: "pointer" }} />
+                              <span style={{ textDecoration: chk.done ? "line-through" : "none", opacity: chk.done ? 0.6 : 1 }}>{chk.task}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: PROJECT PLAN */}
+            {activeProjectTab === "plan" && (
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
+                <h3 style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", margin: "0 0 16px 0" }}>Project Health & Implementation Roadmap</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>
+                      <span>Task Completion Velocity</span>
+                      <span style={{ color: "#16a34a", fontWeight: "800" }}>87%</span>
+                    </div>
+                    <div style={{ width: "100%", height: "10px", background: "#f1f5f9", borderRadius: "5px", overflow: "hidden" }}>
+                      <div style={{ width: "87%", height: "100%", background: "#16a34a" }} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>
+                      <span>Consultant Utilization</span>
+                      <span style={{ color: "#2563eb", fontWeight: "800" }}>84%</span>
+                    </div>
+                    <div style={{ width: "100%", height: "10px", background: "#f1f5f9", borderRadius: "5px", overflow: "hidden" }}>
+                      <div style={{ width: "84%", height: "100%", background: "#2563eb" }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: TASKS & EVENT PLANNER */}
+            {activeProjectTab === "tasks" && (
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
+                    📋 Scheduled Tasks & Event Planner
+                  </h3>
+                  <button onClick={() => setShowEventModal(true)} style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "8px 16px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}>
+                    + Add New Task
+                  </button>
+                </div>
+                <p style={{ margin: 0, fontSize: "0.88rem", color: "#64748b" }}>
+                  14 total tasks scheduled for this engagement. 8 completed, 2 urgent overdue.
+                </p>
+              </div>
+            )}
+
+            {/* TAB 5: VISIT & REVIEW HISTORY */}
+            {activeProjectTab === "visits" && (
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
+                    🚗 Client Site Visits & Field Review History
+                  </h3>
+                  <button onClick={() => setShowVisitModal(true)} style={{ background: "#059669", color: "#ffffff", border: "none", padding: "8px 16px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}>
+                    + Record Field Visit
+                  </button>
+                </div>
+                <p style={{ margin: 0, fontSize: "0.88rem", color: "#64748b" }}>
+                  5 field visits completed by Darla Manikanta and Shikhar Jain.
+                </p>
+              </div>
+            )}
+
+            {/* TAB 6: DOCUMENTS & DELIVERABLES */}
+            {activeProjectTab === "documents" && (
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
+                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
+                  📁 Documents & Deliverables Repository
+                </h3>
+                <p style={{ margin: 0, fontSize: "0.88rem", color: "#64748b" }}>
+                  SOP PDFs, Audit Checklists, and Client Contract files.
+                </p>
+              </div>
+            )}
+
+            {/* TAB 7: ASSIGNED TEAM */}
+            {activeProjectTab === "team" && (
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
+                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
+                  👥 Assigned Business Consultants & Recruiting Team
+                </h3>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                  {[
+                    { name: "Darla Manikanta", role: "Lead Systems & Field Auditor" },
+                    { name: "Shikhar Jain", role: "Retail Sourcing Specialist" },
+                    { name: "Jyoshna Manuka", role: "POS Inventory Consultant" },
+                    { name: "Hemanth Kumar Jain", role: "Principal Advisor" }
+                  ].map((m, i) => (
+                    <div key={i} style={{ padding: "14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px" }}>
+                      <strong style={{ display: "block", color: "#0f172a" }}>{m.name}</strong>
+                      <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{m.role}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 8: DISCUSSIONS & ACTIVITY LOGS */}
+            {activeProjectTab === "discussions" && (
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
+                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
+                  💬 Discussions & Team Activity Logs
+                </h3>
+                <form onSubmit={handlePostDiscussion} style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
+                  <textarea
+                    rows="3"
+                    placeholder="Post a client meeting update or discussion note..."
+                    value={discText}
+                    onChange={e => setDiscText(e.target.value)}
+                    style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }}
+                  />
+                  <button type="submit" style={{ alignSelf: "flex-end", background: "#2563eb", color: "#ffffff", border: "none", padding: "8px 20px", borderRadius: "6px", fontWeight: "700", cursor: "pointer" }}>
+                    Post Note
+                  </button>
+                </form>
+              </div>
+            )}
+
+            {/* TAB 9: LINKED EXPENSES */}
+            {activeProjectTab === "expenses" && (
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
+                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
+                  💸 Linked Expenses Billed to Project
+                </h3>
+                {linkedExps.length === 0 ? (
+                  <p style={{ color: "#64748b", fontSize: "0.9rem", fontStyle: "italic" }}>No expenses billed under this project yet.</p>
+                ) : (
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0", textAlign: "left", color: "#475569" }}>
+                        <th style={{ padding: "10px" }}>Date</th>
+                        <th style={{ padding: "10px" }}>Category</th>
+                        <th style={{ padding: "10px" }}>Description</th>
+                        <th style={{ padding: "10px", textAlign: "right" }}>Amount</th>
+                        <th style={{ padding: "10px" }}>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {linkedExps.map(exp => (
+                        <tr key={exp.id} style={{ borderBottom: "1px solid #e2e8f0" }}>
+                          <td style={{ padding: "10px", fontWeight: "700" }}>{exp.date}</td>
+                          <td style={{ padding: "10px" }}>{exp.category}</td>
+                          <td style={{ padding: "10px" }}>{exp.description}</td>
+                          <td style={{ padding: "10px", textAlign: "right", fontWeight: "800" }}>₹{exp.amount.toLocaleString()}</td>
+                          <td style={{ padding: "10px" }}>
+                            <span style={{ background: "#dcfce7", color: "#16a34a", padding: "2px 8px", borderRadius: "4px", fontWeight: "700", fontSize: "0.75rem" }}>
+                              ● {exp.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
 
           </div>
 
-          {/* PANEL 2: CENTER ENGAGEMENT BLUEPRINT PANEL */}
-          <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+          {/* RIGHT COLUMN: QUICK ACTIONS SHORTCUTS & RISKS PANEL */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             
-            {/* Preferred Items / Shared Catalogue Tabs */}
-            <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
-              <button style={{ background: "#1d4ed8", color: "#ffffff", border: "none", padding: "8px 16px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "800" }}>
-                Preferred Items
-              </button>
-              <button style={{ background: "#f1f5f9", color: "#475569", border: "none", padding: "8px 16px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "700" }}>
-                Shared Catalogue
-              </button>
+            {/* Quick Actions Card */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>⚡ QUICK ACTIONS</h3>
+                <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "12px", fontWeight: "800" }}>Shortcuts</span>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {[
+                  { label: "+ Add Task", icon: "📋", action: () => setShowEventModal(true), bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" },
+                  { label: "+ Schedule Visit", icon: "🚗", action: () => setShowVisitModal(true), bg: "#ecfdf5", color: "#059669", border: "#a7f3d0" },
+                  { label: "+ Upload Document", icon: "📄", action: () => setActiveProjectTab("documents"), bg: "#f5f3ff", color: "#7c3aed", border: "#ddd6fe" },
+                  { label: "+ Create Meeting", icon: "📅", action: () => setShowEventModal(true), bg: "#fff7ed", color: "#c2410c", border: "#ffedd5" },
+                  { label: "+ Add Risk", icon: "⚠️", action: () => alert("Opening Add Risk dialog..."), bg: "#fef2f2", color: "#b91c1c", border: "#fecaca" },
+                  { label: "+ Generate Report", icon: "📊", action: () => alert("Generating Project Report..."), bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
+                  { label: "+ Raise Approval", icon: "✍️", action: () => alert("Raising Approval Request..."), bg: "#faf5ff", color: "#9333ea", border: "#e9d5ff" }
+                ].map((btn, i) => (
+                  <button
+                    key={i}
+                    onClick={btn.action}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justify: "space-between",
+                      padding: "10px 14px",
+                      background: btn.bg,
+                      border: `1px solid ${btn.border}`,
+                      borderRadius: "10px",
+                      color: btn.color,
+                      fontWeight: "800",
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "1rem" }}>{btn.icon}</span>
+                      {btn.label}
+                    </span>
+                    <span>→</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Engagement Graphic & Blueprint Showcase */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#f8fafc", borderRadius: "10px", padding: "20px", border: "1px dashed #cbd5e1" }}>
-              <div style={{ fontSize: "4rem", marginBottom: "8px" }}>💍</div>
-              <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>GOLD & JEWELRY RETAIL AUDIT BLUEPRINT</h4>
-              <p style={{ margin: "4px 0 0 0", fontSize: "0.78rem", color: "#64748b", textAlign: "center" }}>
-                POS Cash Counter Reconciliation • Gold Vault Stock Audit • Sales Staff Upselling SOP
-              </p>
-            </div>
-
-            {/* Bottom Spec Bar */}
-            <div style={{ background: "#0f172a", color: "#ffffff", borderRadius: "8px", padding: "12px 16px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", textAlign: "center", marginTop: "14px" }}>
-              <div>
-                <span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>Metal:</span>
-                <strong style={{ fontSize: "0.88rem" }}>GOLD</strong>
+            {/* Risks Widget */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px" }}>
+              <h4 style={{ margin: "0 0 12px 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>⚠️ RISKS & APPROVALS</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <div style={{ padding: "10px", background: "#fef2f2", borderRadius: "8px", border: "1px solid #fecaca" }}>
+                  <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#b91c1c" }}>Inventory Verification Delay</div>
+                  <div style={{ fontSize: "0.72rem", color: "#7f1d1d" }}>Owner: Darla • High Risk</div>
+                </div>
               </div>
-              <div>
-                <span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>Purity:</span>
-                <strong style={{ fontSize: "0.88rem" }}>22K</strong>
-              </div>
-              <div>
-                <span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>Stone:</span>
-                <strong style={{ fontSize: "0.88rem" }}>Diamond</strong>
-              </div>
-              <div>
-                <span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>Design:</span>
-                <strong style={{ fontSize: "0.88rem" }}>-</strong>
-              </div>
-            </div>
-
-          </div>
-
-          {/* PANEL 3: RIGHT INTERACTION CANVAS & SPACE TIMELINE BOARD */}
-          <div style={{ background: "#0a0f1d", border: "1px solid #1e293b", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", color: "#ffffff", position: "relative", overflow: "hidden" }}>
-            
-            {/* Customer Interaction / Company Interaction Tabs */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <div style={{ display: "flex", gap: "8px" }}>
-                <button style={{ background: "#0f172a", color: "#ffffff", border: "1px solid #334155", padding: "6px 14px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "800" }}>
-                  Customer Interaction
-                </button>
-                <button style={{ background: "transparent", color: "#94a3b8", border: "none", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "700" }}>
-                  Company Interaction
-                </button>
-              </div>
-              <span style={{ color: "#64748b", cursor: "pointer", fontSize: "0.9rem" }}>⛶</span>
-            </div>
-
-            {/* Starry Space Timeline Canvas (Exact Replica of Rocket Callouts in screenshot) */}
-            <div style={{ flex: 1, background: "radial-gradient(ellipse at bottom, #1e1b4b 0%, #090d16 100%)", borderRadius: "10px", padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-around", border: "1px solid #1e1b4b", position: "relative" }}>
-              
-              {/* Rocket Timeline Callout Bubble 1 */}
-              <div style={{ background: "#2563eb", color: "#ffffff", padding: "12px 20px", borderRadius: "24px", fontSize: "0.82rem", fontWeight: "800", textAlign: "center", boxShadow: "0 4px 14px rgba(37,99,235,0.4)", position: "relative" }}>
-                🚀 New Star Joined Us!
-                <div style={{ fontSize: "0.72rem", opacity: 0.8, fontWeight: "600" }}>Phase 4 Process Design • 30 Jul 2026</div>
-              </div>
-
-              {/* Dotted Vertical Connector Line */}
-              <div style={{ width: "2px", height: "30px", borderLeft: "2px dashed #60a5fa" }} />
-
-              {/* Rocket Timeline Callout Bubble 2 */}
-              <div style={{ background: "#2563eb", color: "#ffffff", padding: "12px 20px", borderRadius: "24px", fontSize: "0.82rem", fontWeight: "800", textAlign: "center", boxShadow: "0 4px 14px rgba(37,99,235,0.4)", position: "relative" }}>
-                🚀 New Star Joined Us!
-                <div style={{ fontSize: "0.72rem", opacity: 0.8, fontWeight: "600" }}>POS Inventory Audit • 25 Jul 2026</div>
-              </div>
-
-              {/* Earth / Space Canvas Footer Decor */}
-              <div style={{ position: "absolute", bottom: "-40px", width: "200px", height: "80px", borderRadius: "50%", background: "#3b82f630", filter: "blur(20px)" }} />
             </div>
 
           </div>

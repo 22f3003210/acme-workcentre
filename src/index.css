@@ -55,6 +55,18 @@
   scrollbar-width: thin;
 }
 
+/* Hide left sidebar & expand main content full width when an individual client project is active */
+body.hide-sidebar .youtube-sidebar {
+  display: none !important;
+}
+body.hide-sidebar .app-main-content,
+body.hide-sidebar .main-wrapper {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
 /* --- Global Sharp 90° Square Edges Override --- */
 .glass-card,
 .card,

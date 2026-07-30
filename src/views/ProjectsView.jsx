@@ -87,6 +87,18 @@ export default function ProjectsView() {
   const [newBudget, setNewBudget] = useState("");
   const [linkExpensesEnabled, setLinkExpensesEnabled] = useState(true);
 
+  // Automatically hide left sidebar when an individual client project detail view is active
+  useEffect(() => {
+    if (selectedProject) {
+      document.body.classList.add("hide-sidebar");
+    } else {
+      document.body.classList.remove("hide-sidebar");
+    }
+    return () => {
+      document.body.classList.remove("hide-sidebar");
+    };
+  }, [selectedProject]);
+
   // Filtered projects
   const filteredProjects = projects.filter(p => {
     const matchesStatus = statusFilter === "All" || p.status === statusFilter || (statusFilter === "Active" && p.status === "In Progress");
@@ -231,42 +243,67 @@ export default function ProjectsView() {
       <div className="individual-project-view" style={{ padding: "8px 0", minHeight: "100vh", display: "flex", flexDirection: "column", gap: "20px", fontFamily: "Inter, sans-serif", color: "#0f172a" }}>
         
         {/* ------------------------------------------------------------- */}
-        {/* TOP BAR: BACK BUTTON & STATUS BADGE                           */}
+        {/* TOP BAR: PROJECT CODE + STATUS + EDIT & CLOSE ACTION BUTTONS   */}
         {/* ------------------------------------------------------------- */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <button
-            onClick={() => setSelectedProject(null)}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              background: "#ffffff",
-              border: "1px solid #cbd5e1",
-              padding: "10px 18px",
-              borderRadius: "10px",
-              fontSize: "0.88rem",
-              fontWeight: "700",
-              color: "#334155",
-              cursor: "pointer",
-              boxShadow: "0 2px 4px rgba(0,0,0,0.03)"
-            }}
-          >
-            ← Back to All Projects
-          </button>
-
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700" }}>Project Code:</span>
-            <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "4px 12px", borderRadius: "8px", fontSize: "0.82rem", fontWeight: "800" }}>
-              {effectiveProject.code || "PRJ-101"}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ffffff", padding: "12px 20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "700" }}>Project Code:</span>
+            <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "5px 14px", borderRadius: "8px", fontSize: "0.88rem", fontWeight: "800" }}>
+              {effectiveProject.code || "PROJ-TEST-01"}
             </span>
             <span style={{
               background: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#dcfce7" : "#fff7ed",
               color: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#16a34a" : "#d97706",
               border: `1px solid ${(effectiveProject.status || "Active").toLowerCase() === "active" ? "#bbf7d0" : "#fed7aa"}`,
-              padding: "4px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: "800"
+              padding: "5px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "800"
             }}>
               ● {effectiveProject.status || "Active"}
             </span>
+          </div>
+
+          {/* Right Corner: Edit & Close Buttons (Matching User Screenshot) */}
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={() => alert("Editing Project Details...")}
+              style={{
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                padding: "8px 18px",
+                borderRadius: "10px",
+                fontSize: "0.92rem",
+                fontWeight: "700",
+                color: "#0f172a",
+                cursor: "pointer",
+                transition: "all 0.15s ease"
+              }}
+            >
+              Edit
+            </button>
+
+            <button
+              onClick={() => setSelectedProject(null)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                background: "#f8fafc",
+                border: "1px solid #e2e8f0",
+                padding: "8px 18px",
+                borderRadius: "12px",
+                fontSize: "0.95rem",
+                fontWeight: "800",
+                color: "#0f172a",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.03)"
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" fill="#fef2f2" stroke="#ef4444" strokeWidth="2" />
+                <path d="M15 9l-6 6M9 9l6 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              Close
+            </button>
           </div>
         </div>
 
@@ -527,20 +564,23 @@ export default function ProjectsView() {
             {/* ── RIGHT COLUMN ── */}
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               
-              {/* Panel 0: Quick Actions */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
-                    ⚡ QUICK ACTIONS
-                  </h3>
-                  <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", padding: "2px 8px", borderRadius: "6px", fontWeight: "800" }}>
+              {/* Panel 0: Quick Actions (Super Attractive & Aligned UI) */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{ fontSize: "1.2rem" }}>⚡</span>
+                    <h3 style={{ fontSize: "1.08rem", fontWeight: "800", color: "#0f172a", margin: 0, letterSpacing: "-0.3px" }}>
+                      QUICK ACTIONS
+                    </h3>
+                  </div>
+                  <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "3px 10px", borderRadius: "20px", fontWeight: "800" }}>
                     Fast Shortcuts
                   </span>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "8px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   {[
-                    { label: "+ Add Task", icon: "📋", action: () => setShowEventModal(true), bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" },
+                    { label: "+ Add Task", icon: "📋", action: () => setShowEventModal(true), bg: "#f0f7ff", color: "#2563eb", border: "#bfdbfe" },
                     { label: "+ Schedule Visit", icon: "🚗", action: () => setShowVisitModal(true), bg: "#ecfdf5", color: "#059669", border: "#a7f3d0" },
                     { label: "+ Upload Document", icon: "📄", action: () => setActiveProjectTab("documents"), bg: "#f5f3ff", color: "#7c3aed", border: "#ddd6fe" },
                     { label: "+ Create Meeting", icon: "📅", action: () => setShowEventModal(true), bg: "#fff7ed", color: "#c2410c", border: "#ffedd5" },
@@ -555,23 +595,33 @@ export default function ProjectsView() {
                         display: "flex",
                         alignItems: "center",
                         justify: "space-between",
-                        padding: "10px 14px",
+                        padding: "12px 16px",
                         background: btn.bg,
                         border: `1px solid ${btn.border}`,
-                        borderRadius: "10px",
+                        borderRadius: "12px",
                         color: btn.color,
                         fontWeight: "800",
-                        fontSize: "0.84rem",
+                        fontSize: "0.88rem",
                         cursor: "pointer",
-                        transition: "all 0.15s ease",
-                        textAlign: "left"
+                        transition: "all 0.18s ease",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.01)"
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.transform = "translateX(4px)";
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)";
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.transform = "translateX(0)";
+                        e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.01)";
                       }}
                     >
-                      <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "1rem" }}>{btn.icon}</span>
+                      <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                          {btn.icon}
+                        </span>
                         {btn.label}
                       </span>
-                      <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>→</span>
+                      <span style={{ fontSize: "1rem", opacity: 0.75 }}>→</span>
                     </button>
                   ))}
                 </div>

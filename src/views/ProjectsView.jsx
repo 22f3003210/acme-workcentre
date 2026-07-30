@@ -527,6 +527,56 @@ export default function ProjectsView() {
             {/* ── RIGHT COLUMN ── */}
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               
+              {/* Panel 0: Quick Actions */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                    ⚡ QUICK ACTIONS
+                  </h3>
+                  <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", padding: "2px 8px", borderRadius: "6px", fontWeight: "800" }}>
+                    Fast Shortcuts
+                  </span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "8px" }}>
+                  {[
+                    { label: "+ Add Task", icon: "📋", action: () => setShowEventModal(true), bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" },
+                    { label: "+ Schedule Visit", icon: "🚗", action: () => setShowVisitModal(true), bg: "#ecfdf5", color: "#059669", border: "#a7f3d0" },
+                    { label: "+ Upload Document", icon: "📄", action: () => setActiveProjectTab("documents"), bg: "#f5f3ff", color: "#7c3aed", border: "#ddd6fe" },
+                    { label: "+ Create Meeting", icon: "📅", action: () => setShowEventModal(true), bg: "#fff7ed", color: "#c2410c", border: "#ffedd5" },
+                    { label: "+ Add Risk", icon: "⚠️", action: () => alert("Opening Add Risk dialog..."), bg: "#fef2f2", color: "#b91c1c", border: "#fecaca" },
+                    { label: "+ Generate Report", icon: "📊", action: () => setActiveProjectTab("reports"), bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
+                    { label: "+ Raise Approval", icon: "✍️", action: () => alert("Raising Approval Request..."), bg: "#faf5ff", color: "#9333ea", border: "#e9d5ff" }
+                  ].map((btn, i) => (
+                    <button
+                      key={i}
+                      onClick={btn.action}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justify: "space-between",
+                        padding: "10px 14px",
+                        background: btn.bg,
+                        border: `1px solid ${btn.border}`,
+                        borderRadius: "10px",
+                        color: btn.color,
+                        fontWeight: "800",
+                        fontSize: "0.84rem",
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                        textAlign: "left"
+                      }}
+                    >
+                      <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <span style={{ fontSize: "1rem" }}>{btn.icon}</span>
+                        {btn.label}
+                      </span>
+                      <span style={{ fontSize: "0.85rem", opacity: 0.7 }}>→</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Panel 1: Project Health / KPIs */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
                 <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>

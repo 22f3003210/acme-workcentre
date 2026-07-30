@@ -234,904 +234,374 @@ export default function ProjectsView() {
 
   const consultants = users.filter(u => u.role === "Consultant");
 
-  // ── SEPARATE PAGE VIEW FOR SELECTED PROJECT HUB (MATCHING USER ASCII WIREFRAME) ──
+  // ── SEPARATE PAGE VIEW FOR SELECTED PROJECT HUB (MATCHING USER REFERENCE UI DASHBOARD) ──
   if (selectedProject) {
     const effectiveProject = getEffectiveProject(selectedProject);
     const linkedExps = expenses.filter(e => e.projectId === effectiveProject.id || e.projectName === effectiveProject.name);
     
     return (
-      <div className="individual-project-view" style={{ padding: "8px 0", minHeight: "100vh", display: "flex", flexDirection: "column", gap: "20px", fontFamily: "Inter, sans-serif", color: "#0f172a" }}>
+      <div className="individual-project-view" style={{ padding: "12px 16px", minHeight: "100vh", display: "flex", flexDirection: "column", gap: "16px", fontFamily: "Inter, system-ui, sans-serif", color: "#0f172a", background: "#f1f5f9" }}>
         
         {/* ------------------------------------------------------------- */}
-        {/* 1. CLIENT HEADER CARD (WITH EDIT & CLOSE BUTTONS INSIDE)      */}
+        {/* TOP HEADER: BACK ARROW + CLIENT TITLE + EDIT & CLOSE BUTTONS  */}
         {/* ------------------------------------------------------------- */}
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "20px" }}>
-          
-          {/* Header Top Info Row */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px" }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-                <h1 style={{ margin: 0, fontSize: "1.55rem", fontWeight: "800", color: "#0f172a", letterSpacing: "-0.4px" }}>
-                  {effectiveProject.client || "Client Engagement"}
-                </h1>
-                <span style={{ color: "#94a3b8", fontSize: "1.3rem" }}>•</span>
-                <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "700", color: "#2563eb" }}>
-                  {effectiveProject.name}
-                </h2>
-
-                {/* Badges directly next to title */}
-                <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "4px 12px", borderRadius: "8px", fontSize: "0.82rem", fontWeight: "800", marginLeft: "4px" }}>
-                  {effectiveProject.code || "PROJ-TEST-01"}
-                </span>
-                <span style={{
-                  background: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#dcfce7" : "#fff7ed",
-                  color: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#16a34a" : "#d97706",
-                  border: `1px solid ${(effectiveProject.status || "Active").toLowerCase() === "active" ? "#bbf7d0" : "#fed7aa"}`,
-                  padding: "4px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: "800"
-                }}>
-                  ● {effectiveProject.status || "Active"}
-                </span>
-              </div>
-
-              <p style={{ margin: "8px 0 0 0", fontSize: "0.88rem", color: "#64748b" }}>
-                POC: <strong style={{ color: "#334155" }}>{effectiveProject.pocName || effectiveProject.client}</strong> • Phone: <strong style={{ color: "#334155" }}>{effectiveProject.pocContact || effectiveProject.clientContact || "+91-9849012345"}</strong> • Start: <strong style={{ color: "#334155" }}>{effectiveProject.startDate || "27 Jul 2026"}</strong>
-              </p>
-            </div>
-
-            {/* Right Side: Edit & Close Action Buttons */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <button
-                onClick={() => alert("Editing Project Details...")}
-                style={{
-                  background: "#ffffff",
-                  border: "1px solid #cbd5e1",
-                  padding: "8px 18px",
-                  borderRadius: "10px",
-                  fontSize: "0.88rem",
-                  fontWeight: "700",
-                  color: "#0f172a",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease"
-                }}
-              >
-                Edit
-              </button>
-
-              <button
-                onClick={() => setSelectedProject(null)}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  background: "#ffffff",
-                  border: "1px solid #e2e8f0",
-                  padding: "8px 18px",
-                  borderRadius: "12px",
-                  fontSize: "0.92rem",
-                  fontWeight: "800",
-                  color: "#0f172a",
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.03)"
-                }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" fill="#fef2f2" stroke="#ef4444" strokeWidth="2" />
-                  <path d="M15 9l-6 6M9 9l6 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                Close
-              </button>
-            </div>
-          </div>
-
-          {/* 4 Primary KPI Metric Cards Strip (Clean Modern Vector SVGs) */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", borderTop: "1px solid #f1f5f9", paddingTop: "18px" }}>
-            <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ background: "#eff6ff", color: "#2563eb", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Total Tasks</div>
-                <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>14 Tasks <span style={{ fontSize: "0.7rem", color: "#16a34a" }}>(8 Done)</span></div>
-              </div>
-            </div>
-
-            <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ background: "#fef2f2", color: "#dc2626", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Overdue Tasks</div>
-                <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#dc2626" }}>2 Urgent <span style={{ fontSize: "0.7rem", color: "#ea580c" }}>(Action Req.)</span></div>
-              </div>
-            </div>
-
-            <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ background: "#fff7ed", color: "#ea580c", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Linked Expenses</div>
-                <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>₹{linkedExps.reduce((s, e) => s + e.amount, 0).toLocaleString() || "45,000"}</div>
-              </div>
-            </div>
-
-            <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ background: "#f3e8ff", color: "#9333ea", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-              </div>
-              <div>
-                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Client Site Visits</div>
-                <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>{effectiveProject.clientVisits?.length || 5} Completed</div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        {/* ------------------------------------------------------------- */}
-        {/* 2. PRIMARY NAVIGATION TAB BAR (MODERN CLEAN SVG VECTOR ICONS) */}
-        {/* ------------------------------------------------------------- */}
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "6px 12px", display: "flex", gap: "8px", overflowX: "auto" }}>
-          {[
-            { 
-              id: "business", 
-              label: "Business Details", 
-              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
-            },
-            { 
-              id: "audit", 
-              label: "Audit Report", 
-              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
-            },
-            { 
-              id: "plan", 
-              label: "Project Plan", 
-              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M9 3v18"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M3 9h6"/><path d="M3 15h6"/></svg>
-            },
-            { 
-              id: "tasks", 
-              label: `Tasks & Event Planner (${effectiveProject.scheduledEvents?.length || 14})`, 
-              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
-            },
-            { 
-              id: "visits", 
-              label: `Visit & Review History (${effectiveProject.clientVisits?.length || 5})`, 
-              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            },
-            { 
-              id: "documents", 
-              label: "Documents & Deliverables", 
-              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
-            },
-            { 
-              id: "team", 
-              label: "Assigned Team", 
-              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            },
-            { 
-              id: "discussions", 
-              label: `Discussions & Activity Logs (${effectiveProject.discussions?.length || 0})`, 
-              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            },
-            { 
-              id: "expenses", 
-              label: `Linked Expenses (${linkedExps.length})`, 
-              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-            }
-          ].map(tab => (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ffffff", padding: "10px 18px", borderRadius: "12px", border: "1px solid #cbd5e1", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <button
-              key={tab.id}
-              onClick={() => setActiveProjectTab(tab.id)}
+              onClick={() => setSelectedProject(null)}
+              style={{ background: "#f1f5f9", border: "none", width: "32px", height: "32px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "1.1rem", color: "#475569", fontWeight: "700" }}
+            >
+              ‹
+            </button>
+            <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
+              Customer | <span style={{ color: "#2563eb" }}>{effectiveProject.pocName || effectiveProject.client}</span>
+            </span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              onClick={() => alert("Editing Project Details...")}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "8px",
-                background: activeProjectTab === tab.id ? "#2563eb" : "transparent",
-                color: activeProjectTab === tab.id ? "#ffffff" : "#475569",
-                border: "none",
+                gap: "6px",
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                padding: "6px 14px",
                 borderRadius: "8px",
-                padding: "10px 16px",
+                fontSize: "0.82rem",
                 fontWeight: "700",
-                fontSize: "0.85rem",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: "all 0.15s ease"
+                color: "#334155",
+                cursor: "pointer"
               }}
             >
-              {tab.icon}
-              {tab.label}
+              ✏️ Edit
             </button>
-          ))}
+
+            <button
+              onClick={() => setSelectedProject(null)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                background: "#ffffff",
+                border: "1px solid #cbd5e1",
+                padding: "6px 14px",
+                borderRadius: "8px",
+                fontSize: "0.82rem",
+                fontWeight: "800",
+                color: "#0f172a",
+                cursor: "pointer"
+              }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" fill="#fef2f2" stroke="#ef4444" strokeWidth="2" />
+                <path d="M15 9l-6 6M9 9l6 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              Close
+            </button>
+          </div>
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* 3. TAB 1: 🏢 BUSINESS DETAILS                                 */}
+        {/* TOP SECTION: PROFILE CARD (LEFT) + VIBRANT KPIS & TABS (RIGHT)*/}
         {/* ------------------------------------------------------------- */}
-        {activeProjectTab === "business" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr", gap: "20px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: "16px" }}>
+          
+          {/* LEFT PROFILE & ACTION BADGES CARD (Matching C-HO004 profile card in screenshot) */}
+          <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "14px", boxShadow: "0 2px 6px rgba(0,0,0,0.03)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{ width: "54px", height: "54px", borderRadius: "50%", background: "#cbd5e1", color: "#475569", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>
+                {(effectiveProject.client || "C")[0]}
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
+                  {effectiveProject.code || "C-HO004"}
+                </h3>
+                <div style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "700", marginTop: "2px" }}>
+                  Budget: Rs 50.00 Lacs
+                </div>
+                <div style={{ fontSize: "0.76rem", color: "#64748b", marginTop: "2px" }}>
+                  +{effectiveProject.pocContact || "91 7452521524"} | -
+                </div>
+              </div>
+            </div>
+
+            {/* Row of 5 Pill Badges */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+              <span style={{ background: "#15803d", color: "#ffffff", padding: "5px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                💚 Beverage
+              </span>
+              <span style={{ background: "#15803d", color: "#ffffff", padding: "5px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                🎁 Add Birthdate
+              </span>
+              <span style={{ background: "#15803d", color: "#ffffff", padding: "5px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                💍 Add Anniversary
+              </span>
+              <span style={{ background: "#f1f5f9", color: "#334155", border: "1px solid #cbd5e1", padding: "4px 10px", borderRadius: "8px", fontSize: "0.75rem", fontWeight: "700" }}>
+                👥 Team (4)
+              </span>
+              <span style={{ background: "#f1f5f9", color: "#334155", border: "1px solid #cbd5e1", padding: "4px 8px", borderRadius: "8px", fontSize: "0.75rem" }}>
+                📎
+              </span>
+            </div>
+          </div>
+
+          {/* RIGHT SIDE: 3 TOP VIBRANT KPI CARDS + PILL NAVIGATION TABS + 6 RECTANGLE KPIS */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             
-            {/* Left Column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* Top Row: 3 Vibrant Gradient Cards + Pill Tabs Strip */}
+            <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "12px" }}>
               
-              {/* Contact & Meta Card */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-                <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>POINT OF CONTACT (POC)</span>
-                  <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
-                    {selectedProject.pocName || selectedProject.client}
-                  </p>
-                  <span style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "600" }}>📱 {selectedProject.pocContact || selectedProject.clientContact || "+91-9849012345"}</span>
+              {/* 3 Colorful Gradient Feature Cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}>
+                
+                {/* Card 1: Blue Gift Vouchers */}
+                <div style={{ background: "linear-gradient(135deg, #0284c7 0%, #0369a1 100%)", borderRadius: "12px", padding: "14px", color: "#ffffff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", boxShadow: "0 3px 8px rgba(2,132,199,0.25)" }}>
+                  <div style={{ fontSize: "1.4rem", marginBottom: "2px" }}>🎁</div>
+                  <div style={{ fontSize: "0.75rem", opacity: 0.9, fontWeight: "600" }}>Tasks Completed</div>
+                  <strong style={{ fontSize: "1.5rem", fontWeight: "900", marginTop: "2px" }}>8 / 14</strong>
                 </div>
 
-                <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>START DATE & STATUS</span>
-                  <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
-                    {selectedProject.startDate || "27 Jul 2026"} • <span style={{ color: "#16a34a" }}>{selectedProject.status || "Active"}</span>
-                  </p>
+                {/* Card 2: Orange Loyalty Points */}
+                <div style={{ background: "linear-gradient(135deg, #ea580c 0%, #c2410c 100%)", borderRadius: "12px", padding: "14px", color: "#ffffff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", boxShadow: "0 3px 8px rgba(234,88,12,0.25)" }}>
+                  <div style={{ fontSize: "1.4rem", marginBottom: "2px" }}>🏅</div>
+                  <div style={{ fontSize: "0.75rem", opacity: 0.9, fontWeight: "600" }}>Phase Progress</div>
+                  <strong style={{ fontSize: "1.3rem", fontWeight: "900", marginTop: "2px" }}>Phase 4 (65%)</strong>
                 </div>
 
-                <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>PROJECT CODE</span>
-                  <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#2563eb" }}>
-                    {selectedProject.code || "PROJ-TEST-01"}
-                  </p>
+                {/* Card 3: Purple Schemes */}
+                <div style={{ background: "linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)", borderRadius: "12px", padding: "14px", color: "#ffffff", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", boxShadow: "0 3px 8px rgba(124,58,237,0.25)" }}>
+                  <div style={{ fontSize: "1.4rem", marginBottom: "2px" }}>🏺</div>
+                  <div style={{ fontSize: "0.75rem", opacity: 0.9, fontWeight: "600" }}>Site Visits</div>
+                  <strong style={{ fontSize: "1.5rem", fontWeight: "900", marginTop: "2px" }}>5 Done</strong>
                 </div>
+
               </div>
 
-              {/* Engagement Purpose Banner */}
-              <div style={{ background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", border: "1px solid #bfdbfe", padding: "20px 24px", borderRadius: "14px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.3rem" }}>💡</span>
-                  <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#1e3a8a" }}>
-                    Engagement Purpose & Business Objectives
-                  </h3>
-                </div>
-                <p style={{ margin: 0, fontSize: "0.92rem", color: "#1e40af", lineHeight: "1.6", fontWeight: "500" }}>
-                  {selectedProject.engagementPurpose || selectedProject.description || "Client requested consulting advisory for inventory audit, staff upselling, POS ledger reconciliation, and retail growth."}
-                </p>
+              {/* Pill Navigation Tabs */}
+              <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "12px", padding: "8px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                {[
+                  { id: "business", label: "Business Details" },
+                  { id: "audit", label: "Audit Report" },
+                  { id: "plan", label: "Project Plan" },
+                  { id: "tasks", label: "Tasks (14)" },
+                  { id: "visits", label: "Visits (5)" },
+                  { id: "documents", label: "Documents" },
+                  { id: "team", label: "Team" },
+                  { id: "discussions", label: "Discussions" },
+                  { id: "expenses", label: "Expenses" }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveProjectTab(tab.id)}
+                    style={{
+                      background: activeProjectTab === tab.id ? "#2563eb" : "#f1f5f9",
+                      color: activeProjectTab === tab.id ? "#ffffff" : "#334155",
+                      border: "none",
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      fontSize: "0.75rem",
+                      fontWeight: "700",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
-
-              {/* Scope Description */}
-              {selectedProject.description && (
-                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px", borderRadius: "14px" }}>
-                  <h3 style={{ margin: "0 0 10px 0", fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>Project Description & Scope Details</h3>
-                  <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155", lineHeight: "1.6" }}>
-                    {selectedProject.description}
-                  </p>
-                </div>
-              )}
 
             </div>
 
-            {/* Right Column */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* Bottom Row: 6 Graphic Metric Cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px" }}>
               
-              {/* Panel 0: Quick Actions */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{ fontSize: "1.2rem" }}>⚡</span>
-                    <h3 style={{ fontSize: "1.08rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>QUICK ACTIONS</h3>
-                  </div>
-                  <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "3px 10px", borderRadius: "20px", fontWeight: "800" }}>Fast Shortcuts</span>
+              {/* Card 1: Orders (Dark Blue) */}
+              <div style={{ background: "#0f172a", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>Total Tasks</div>
+                  <div style={{ fontSize: "1.4rem", fontWeight: "900" }}>14</div>
                 </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {[
-                    { label: "+ Add Task", icon: "📋", action: () => setShowEventModal(true), bg: "#f0f7ff", color: "#2563eb", border: "#bfdbfe" },
-                    { label: "+ Schedule Visit", icon: "🚗", action: () => setShowVisitModal(true), bg: "#ecfdf5", color: "#059669", border: "#a7f3d0" },
-                    { label: "+ Upload Document", icon: "📄", action: () => setActiveProjectTab("documents"), bg: "#f5f3ff", color: "#7c3aed", border: "#ddd6fe" },
-                    { label: "+ Create Meeting", icon: "📅", action: () => setShowEventModal(true), bg: "#fff7ed", color: "#c2410c", border: "#ffedd5" },
-                    { label: "+ Add Risk", icon: "⚠️", action: () => alert("Opening Add Risk dialog..."), bg: "#fef2f2", color: "#b91c1c", border: "#fecaca" },
-                    { label: "+ Generate Report", icon: "📊", action: () => setActiveProjectTab("reports"), bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
-                    { label: "+ Raise Approval", icon: "✍️", action: () => alert("Raising Approval Request..."), bg: "#faf5ff", color: "#9333ea", border: "#e9d5ff" }
-                  ].map((btn, i) => (
-                    <button
-                      key={i}
-                      onClick={btn.action}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justify: "space-between",
-                        padding: "12px 16px",
-                        background: btn.bg,
-                        border: `1px solid ${btn.border}`,
-                        borderRadius: "12px",
-                        color: btn.color,
-                        fontWeight: "800",
-                        fontSize: "0.88rem",
-                        cursor: "pointer",
-                        transition: "all 0.18s ease"
-                      }}
-                    >
-                      <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ width: "28px", height: "28px", borderRadius: "8px", background: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem", boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
-                          {btn.icon}
-                        </span>
-                        {btn.label}
-                      </span>
-                      <span style={{ fontSize: "1rem", opacity: 0.75 }}>→</span>
-                    </button>
-                  ))}
-                </div>
+                <span style={{ fontSize: "1.4rem" }}>📋</span>
               </div>
 
-              {/* Risks & Approvals */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>RISKS & APPROVALS</h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <div style={{ padding: "10px 12px", background: "#fef2f2", borderRadius: "8px", border: "1px solid #fecaca", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#dc2626" }}>⚠️ Inventory Verification Delay</div>
-                      <div style={{ fontSize: "0.72rem", color: "#991b1b" }}>Owner: Darla • Severity: High</div>
-                    </div>
-                    <span style={{ background: "#dc2626", color: "#ffffff", fontSize: "0.68rem", fontWeight: "800", padding: "2px 8px", borderRadius: "10px" }}>Open</span>
-                  </div>
-
-                  <div style={{ padding: "10px 12px", background: "#fff7ed", borderRadius: "8px", border: "1px solid #fed7aa", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div>
-                      <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#d97706" }}>📝 SOP Sign-off Pending</div>
-                      <div style={{ fontSize: "0.72rem", color: "#9a3412" }}>Owner: Shikhar • Severity: Medium</div>
-                    </div>
-                    <span style={{ background: "#d97706", color: "#ffffff", fontSize: "0.68rem", fontWeight: "800", padding: "2px 8px", borderRadius: "10px" }}>In Review</span>
-                  </div>
+              {/* Card 2: Bills (Teal Green) */}
+              <div style={{ background: "#065f46", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>Overdue Tasks</div>
+                  <div style={{ fontSize: "1.4rem", fontWeight: "900" }}>2</div>
                 </div>
+                <span style={{ fontSize: "1.4rem" }}>💵</span>
+              </div>
+
+              {/* Card 3: Sales (Navy Blue) */}
+              <div style={{ background: "#1e3a8a", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>Expenses</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "900" }}>₹45k</div>
+                </div>
+                <span style={{ fontSize: "1.4rem" }}>🏪</span>
+              </div>
+
+              {/* Card 4: Memo (Brown) */}
+              <div style={{ background: "#9a3412", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>Meetings</div>
+                  <div style={{ fontSize: "1.4rem", fontWeight: "900" }}>3</div>
+                </div>
+                <span style={{ fontSize: "1.4rem" }}>📝</span>
+              </div>
+
+              {/* Card 5: Quotation (Dark Indigo) */}
+              <div style={{ background: "#312e81", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>Site Audits</div>
+                  <div style={{ fontSize: "1.4rem", fontWeight: "900" }}>5</div>
+                </div>
+                <span style={{ fontSize: "1.4rem" }}>📊</span>
+              </div>
+
+              {/* Card 6: Pending Estimation (Purple) */}
+              <div style={{ background: "#581c87", borderRadius: "10px", padding: "12px", color: "#ffffff", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <div style={{ fontSize: "0.7rem", opacity: 0.8, fontWeight: "700" }}>SOP Sign-off</div>
+                  <div style={{ fontSize: "0.82rem", fontWeight: "900" }}>Pending</div>
+                </div>
+                <span style={{ fontSize: "1.4rem" }}>🧮</span>
               </div>
 
             </div>
 
           </div>
-        )}
+
+        </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* 4. TAB 2: 📋 AUDIT REPORT                                     */}
+        {/* BOTTOM WORKSPACE GRID (MATCHING BOTTOM 3-PANEL LAYOUT IN SCREENSHOT) */}
         {/* ------------------------------------------------------------- */}
-        {activeProjectTab === "audit" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr", gap: "20px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              
-              {/* 8-Phase Stepper */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
-                    8-PHASE IMPLEMENTATION AUDIT PROGRESS
-                  </h3>
-                  <span style={{ fontSize: "0.78rem", color: "#2563eb", fontWeight: "700" }}>Current: Phase 4 (Process Design)</span>
+        <div style={{ display: "grid", gridTemplateColumns: "240px 1.2fr 1fr", gap: "16px", minHeight: "420px" }}>
+          
+          {/* PANEL 1: LEFT SIDE METRIC STACK */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+            
+            {/* Lifetime Value / Contract Value Card (Dark Green) */}
+            <div style={{ background: "#064e3b", borderRadius: "12px", padding: "18px", color: "#ffffff", display: "flex", flexDirection: "column", justifyContent: "space-between", minHeight: "140px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div>
+                  <div style={{ fontSize: "0.78rem", color: "#a7f3d0", fontWeight: "700", textTransform: "uppercase" }}>Lifetime Value</div>
+                  <strong style={{ fontSize: "1.8rem", fontWeight: "900", marginTop: "4px", display: "block" }}>10.45 <span style={{ fontSize: "1.1rem" }}>Lacs</span></strong>
                 </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
-                  {[
-                    { num: 1, title: "Vision Alignment", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
-                    { num: 2, title: "Business Audit", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
-                    { num: 3, title: "Gap Analysis", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
-                    { num: 4, title: "Process Design", status: "In Progress (65%)", color: "#2563eb", bg: "#eff6ff" },
-                    { num: 5, title: "Implementation", status: "Upcoming", color: "#d97706", bg: "#fff7ed" },
-                    { num: 6, title: "KPI Monitoring", status: "Pending", color: "#64748b", bg: "#f8fafc" },
-                    { num: 7, title: "Governance", status: "Pending", color: "#64748b", bg: "#f8fafc" },
-                    { num: 8, title: "Advisory Review", status: "Pending", color: "#64748b", bg: "#f8fafc" }
-                  ].map(p => (
-                    <div key={p.num} style={{ background: p.bg, border: `1px solid ${p.color}40`, borderRadius: "10px", padding: "12px 14px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "0.7rem", fontWeight: "800", color: p.color }}>PHASE {p.num}</span>
-                        {p.status.includes("Completed") && <span style={{ color: "#16a34a", fontSize: "0.85rem" }}>✓</span>}
-                      </div>
-                      <div style={{ fontSize: "0.85rem", fontWeight: "800", color: "#0f172a", lineHeight: "1.2", marginTop: "4px" }}>{p.title}</div>
-                      <div style={{ fontSize: "0.68rem", color: p.color, fontWeight: "700", marginTop: "4px" }}>{p.status}</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Checklists */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 16px 0" }}>Operational & Strategic Planning Checklists</h3>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                  {[
-                    { domain: "Business Strategy & Retail Advisory", color: "#2563eb", bg: "#eff6ff" },
-                    { domain: "HR Operations & Consultant Sourcing", color: "#059669", bg: "#ecfdf5" },
-                    { domain: "IT Systems & POS Inventory Control", color: "#7c3aed", bg: "#f3e8ff" },
-                    { domain: "Legal Compliance & Internal Audits", color: "#d97706", bg: "#fffbeb" }
-                  ].map((d, dIdx) => (
-                    <div key={dIdx} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px" }}>
-                      <div style={{ background: d.bg, color: d.color, padding: "6px 12px", borderRadius: "8px", fontWeight: "700", fontSize: "0.82rem", marginBottom: "12px", display: "inline-block" }}>
-                        {d.domain}
-                      </div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                        {(selectedProject.checklists || [
-                          { task: "Initial Site Audit & Layout Review", done: true },
-                          { task: "POS & Billing Integration Verification", done: false },
-                          { task: "Staff Sales Coaching Workshop", done: false }
-                        ]).map((chk, iIdx) => (
-                          <label key={iIdx} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.84rem", color: "#334155", cursor: "pointer" }}>
-                            <input type="checkbox" checked={chk.done} onChange={() => toggleProjectChecklistItem(selectedProject.id, dIdx, iIdx)} style={{ cursor: "pointer" }} />
-                            <span style={{ textDecoration: chk.done ? "line-through" : "none", opacity: chk.done ? 0.6 : 1 }}>{chk.task}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              {/* Quick Actions Panel */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                  <h3 style={{ fontSize: "1.08rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>⚡ QUICK ACTIONS</h3>
-                  <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", padding: "3px 10px", borderRadius: "20px", fontWeight: "800" }}>Shortcuts</span>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  <button onClick={() => alert("Downloading PDF Audit Report...")} style={{ padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d", borderRadius: "12px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer" }}>⬇️ Download Full Audit Report (PDF)</button>
-                  <button onClick={() => setShowVisitModal(true)} style={{ padding: "12px 16px", background: "#ecfdf5", border: "1px solid #a7f3d0", color: "#059669", borderRadius: "12px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer" }}>🚗 Record New Field Audit Visit</button>
-                </div>
+                <span style={{ fontSize: "2.2rem" }}>💰</span>
               </div>
             </div>
-          </div>
-        )}
 
-        {/* ------------------------------------------------------------- */}
-        {/* 5. TAB 3: 🗂 PROJECT PLAN                                    */}
-        {/* ------------------------------------------------------------- */}
-        {activeProjectTab === "plan" && (
-          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr", gap: "20px" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              
-              {/* Health Gauges */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 16px 0" }}>PROJECT HEALTH KPIS & VELOCITY</h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
-                      <span>Task Completion Velocity</span>
-                      <span style={{ color: "#16a34a", fontWeight: "800" }}>87%</span>
-                    </div>
-                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                      <div style={{ width: "87%", height: "100%", background: "#16a34a" }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
-                      <span>Consultant Utilization</span>
-                      <span style={{ color: "#2563eb", fontWeight: "800" }}>84%</span>
-                    </div>
-                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                      <div style={{ width: "84%", height: "100%", background: "#2563eb" }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
-                      <span>Milestone Delivery</span>
-                      <span style={{ color: "#9333ea", fontWeight: "800" }}>92%</span>
-                    </div>
-                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                      <div style={{ width: "92%", height: "100%", background: "#9333ea" }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px" }}>
-                <h3 style={{ fontSize: "1.08rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>⚡ QUICK ACTIONS</h3>
-                <button onClick={() => setShowEventModal(true)} style={{ width: "100%", padding: "12px", background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2563eb", borderRadius: "10px", fontWeight: "800", cursor: "pointer" }}>+ Schedule Milestone Event</button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ------------------------------------------------------------- */}
-        {/* MEETINGS & CALLS TAB VIEW                                     */}
-        {/* Date | Meeting Type | Participants | Minutes | Follow-up | Status */}
-        {/* ------------------------------------------------------------- */}
-        {activeProjectTab === "meetings" && (() => {
-          const sampleMeetings = [
-            {
-              id: "m-1",
-              date: "30 Jul 2026, 02:00 PM",
-              type: "SOP Implementation & Sign-off Sync",
-              participants: ["Sayed (Client POC)", "Shikhar Jain", "Darla Manikanta"],
-              minutes: "Reviewed Phase 4 inventory verification audit findings. Client approved draft SOP for POS cash handling and gold vault reconciliation.",
-              followUp: "Shikhar to send final signed SOP PDF by 02 Aug. Darla to initiate staff training.",
-              status: "Completed",
-              statusBg: "#dcfce7",
-              statusColor: "#16a34a"
-            },
-            {
-              id: "m-2",
-              date: "03 Aug 2026, 11:00 AM",
-              type: "Q3 Sales Target & Sourcing Review",
-              participants: ["Sayed (Client POC)", "Hemanth Kumar", "Jyoshna Manuka"],
-              minutes: "Agenda: Review retail staff sales commission structure, old gold exchange margins, and inventory barcode scanning implementation.",
-              followUp: "Jyoshna to present POS barcode scanning workflow demo.",
-              status: "Scheduled",
-              statusBg: "#eff6ff",
-              statusColor: "#2563eb"
-            },
-            {
-              id: "m-3",
-              date: "25 Jul 2026, 04:30 PM",
-              type: "Initial Scope & Store Audit Alignment",
-              participants: ["Sayed (Client POC)", "Darla Manikanta"],
-              minutes: "Discussed main showroom layout changes, security camera coverage audit, and staff attendance log tracking.",
-              followUp: "Darla completed initial site audit report and cataloged vault stock.",
-              status: "Completed",
-              statusBg: "#dcfce7",
-              statusColor: "#16a34a"
-            }
-          ];
-
-          return (
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* Last Visit Card (Blue Card) */}
+            <div style={{ background: "#1e3a8a", borderRadius: "12px", padding: "18px", color: "#ffffff", display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>
-                    📞 Project Meetings & Minutes of Meeting (MoM)
-                  </h3>
-                  <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "#64748b" }}>
-                    Track client review calls, meeting minutes, attendee lists, and follow-up action items.
-                  </p>
+                  <div style={{ fontSize: "0.75rem", color: "#93c5fd", fontWeight: "700" }}>Last Site Visit</div>
+                  <strong style={{ fontSize: "1.2rem", fontWeight: "900" }}>2 Days Ago</strong>
                 </div>
+                <span style={{ fontSize: "1.8rem" }}>🗺️</span>
+              </div>
 
-                <button
-                  onClick={() => setShowEventModal(true)}
-                  style={{
-                    background: "#2563eb",
-                    color: "#ffffff",
-                    border: "none",
-                    padding: "10px 18px",
-                    borderRadius: "8px",
-                    fontWeight: "700",
-                    fontSize: "0.85rem",
-                    cursor: "pointer"
-                  }}
-                >
-                  + Schedule / Record Meeting
+              <div style={{ borderTop: "1px solid #3b82f640", paddingTop: "10px" }}>
+                <div style={{ fontSize: "0.72rem", color: "#bfdbfe" }}>Last Audit Check-in</div>
+                <div style={{ fontSize: "1.1rem", fontWeight: "800" }}>Rs 392000</div>
+                <div style={{ fontSize: "0.68rem", color: "#93c5fd", marginTop: "2px" }}>2 ITEMS | CREDIT CARD</div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* PANEL 2: CENTER ENGAGEMENT BLUEPRINT PANEL */}
+          <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+            
+            {/* Preferred Items / Shared Catalogue Tabs */}
+            <div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+              <button style={{ background: "#1d4ed8", color: "#ffffff", border: "none", padding: "8px 16px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "800" }}>
+                Preferred Items
+              </button>
+              <button style={{ background: "#f1f5f9", color: "#475569", border: "none", padding: "8px 16px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "700" }}>
+                Shared Catalogue
+              </button>
+            </div>
+
+            {/* Engagement Graphic & Blueprint Showcase */}
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "#f8fafc", borderRadius: "10px", padding: "20px", border: "1px dashed #cbd5e1" }}>
+              <div style={{ fontSize: "4rem", marginBottom: "8px" }}>💍</div>
+              <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>GOLD & JEWELRY RETAIL AUDIT BLUEPRINT</h4>
+              <p style={{ margin: "4px 0 0 0", fontSize: "0.78rem", color: "#64748b", textAlign: "center" }}>
+                POS Cash Counter Reconciliation • Gold Vault Stock Audit • Sales Staff Upselling SOP
+              </p>
+            </div>
+
+            {/* Bottom Spec Bar */}
+            <div style={{ background: "#0f172a", color: "#ffffff", borderRadius: "8px", padding: "12px 16px", display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px", textAlign: "center", marginTop: "14px" }}>
+              <div>
+                <span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>Metal:</span>
+                <strong style={{ fontSize: "0.88rem" }}>GOLD</strong>
+              </div>
+              <div>
+                <span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>Purity:</span>
+                <strong style={{ fontSize: "0.88rem" }}>22K</strong>
+              </div>
+              <div>
+                <span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>Stone:</span>
+                <strong style={{ fontSize: "0.88rem" }}>Diamond</strong>
+              </div>
+              <div>
+                <span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>Design:</span>
+                <strong style={{ fontSize: "0.88rem" }}>-</strong>
+              </div>
+            </div>
+
+          </div>
+
+          {/* PANEL 3: RIGHT INTERACTION CANVAS & SPACE TIMELINE BOARD */}
+          <div style={{ background: "#0a0f1d", border: "1px solid #1e293b", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", color: "#ffffff", position: "relative", overflow: "hidden" }}>
+            
+            {/* Customer Interaction / Company Interaction Tabs */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <div style={{ display: "flex", gap: "8px" }}>
+                <button style={{ background: "#0f172a", color: "#ffffff", border: "1px solid #334155", padding: "6px 14px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "800" }}>
+                  Customer Interaction
+                </button>
+                <button style={{ background: "transparent", color: "#94a3b8", border: "none", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "700" }}>
+                  Company Interaction
                 </button>
               </div>
-
-              {/* Meetings Table */}
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
-                  <thead>
-                    <tr style={{ background: "#f8fafc", borderBottom: "2px solid #cbd5e1", textAlign: "left", color: "#475569" }}>
-                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "140px" }}>📅 Date & Time</th>
-                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "180px" }}>🤝 Meeting Type</th>
-                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "200px" }}>👥 Participants</th>
-                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "260px" }}>📝 Minutes (MoM)</th>
-                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "220px" }}>📌 Follow-Up Actions</th>
-                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "110px" }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sampleMeetings.map(m => (
-                      <tr key={m.id} style={{ borderBottom: "1px solid #e2e8f0", verticalAlign: "top" }}>
-                        <td style={{ padding: "14px 12px", fontWeight: "800", color: "#0f172a" }}>
-                          {m.date}
-                        </td>
-                        <td style={{ padding: "14px 12px" }}>
-                          <span style={{ background: "#eff6ff", color: "#1d4ed8", padding: "4px 10px", borderRadius: "6px", fontWeight: "800", display: "inline-block" }}>
-                            {m.type}
-                          </span>
-                        </td>
-                        <td style={{ padding: "14px 12px" }}>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
-                            {m.participants.map((p, i) => (
-                              <span key={i} style={{ background: "#f1f5f9", color: "#334155", padding: "2px 8px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "700" }}>
-                                {p}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td style={{ padding: "14px 12px", color: "#334155", lineHeight: "1.5" }}>
-                          {m.minutes}
-                        </td>
-                        <td style={{ padding: "14px 12px", color: "#2563eb", fontWeight: "600", lineHeight: "1.5" }}>
-                          {m.followUp}
-                        </td>
-                        <td style={{ padding: "14px 12px" }}>
-                          <span style={{ background: m.statusBg, color: m.statusColor, padding: "4px 10px", borderRadius: "6px", fontWeight: "800", fontSize: "0.75rem" }}>
-                            ● {m.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <span style={{ color: "#64748b", cursor: "pointer", fontSize: "0.9rem" }}>⛶</span>
             </div>
-          );
-        })()}
 
-          {/* TAB 1: OVERVIEW */}
-          {activeProjectTab === "overview" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-                <div style={{ background: "var(--bg-tertiary)", padding: "16px", borderRadius: "10px", border: "1px solid var(--border-color)" }}>
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Point of Contact (POC)</span>
-                  <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "700", color: "var(--text-primary)" }}>
-                    {selectedProject.pocName || selectedProject.client}
-                  </p>
-                  <span style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>📱 {selectedProject.pocContact || selectedProject.clientContact || "N/A"}</span>
-                </div>
-
-                <div style={{ background: "var(--bg-tertiary)", padding: "16px", borderRadius: "10px", border: "1px solid var(--border-color)" }}>
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Start Date & Status</span>
-                  <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "700", color: "var(--text-primary)" }}>
-                    {selectedProject.startDate || "Active"} • <span style={{ color: "var(--color-success)" }}>{selectedProject.status || "Active"}</span>
-                  </p>
-                </div>
-
-                <div style={{ background: "var(--bg-tertiary)", padding: "16px", borderRadius: "10px", border: "1px solid var(--border-color)" }}>
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Project Code</span>
-                  <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "700", color: "#2563eb" }}>
-                    {selectedProject.code}
-                  </p>
-                </div>
-              </div>
-
-              {selectedProject.description && (
-                <div style={{ background: "var(--bg-tertiary)", padding: "16px", borderRadius: "10px", border: "1px solid var(--border-color)" }}>
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: "700", textTransform: "uppercase" }}>Project Description & Scope</span>
-                  <p style={{ margin: "8px 0 0 0", fontSize: "0.9rem", color: "var(--text-primary)", lineHeight: "1.5" }}>
-                    {selectedProject.description}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: TEAM (Consultant Team & Hiring Team) */}
-          {activeProjectTab === "team" && (() => {
-            const consultantList = [
-              {
-                id: "c-1",
-                name: "Darla Manikanta",
-                title: "Systems Operator & Lead Auditor",
-                department: "IT & SYSTEMS SUPPORT",
-                phone: "+91-7569099549",
-                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120",
-                badge: "Lead Field Auditor"
-              },
-              {
-                id: "c-2",
-                name: "Shikhar Jain",
-                title: "Retail Sourcing Specialist & Sales Trainer",
-                department: "RETAIL CONSULTING",
-                phone: "+91-9849012345",
-                avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=120",
-                badge: "Sales Floor Trainer"
-              },
-              {
-                id: "c-3",
-                name: "Jyoshna Manuka",
-                title: "Systems & Inventory POS Consultant",
-                department: "IT & SYSTEMS SUPPORT",
-                phone: "+91-9876543210",
-                avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=120",
-                badge: "POS Inventory Specialist"
-              },
-              {
-                id: "c-4",
-                name: "Hemanth Kumar Jain",
-                title: "Managing Director & Principal Consultant",
-                department: "EXECUTIVE ADVISORY",
-                phone: "+91-9849012345",
-                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=120",
-                badge: "Principal Advisor"
-              }
-            ];
-
-            const hiringTeamList = [
-              {
-                id: "h-1",
-                name: "Syed Shafi",
-                title: "Head Recruiter & Sourcing Specialist",
-                specialty: "Candidate Sourcing, Screening & Interview Calls",
-                email: "shafi@acmeworkcentre.com",
-                avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120",
-                badge: "Lead Recruiter"
-              },
-              {
-                id: "h-2",
-                name: "Sophia Laurent",
-                title: "HR Director & Candidate Placement Lead",
-                specialty: "Client Interview Coordination & Onboarding",
-                email: "sophia@workcentre.com",
-                avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=120",
-                badge: "Placement Director"
-              },
-              {
-                id: "h-3",
-                name: "Praveen",
-                title: "Telecalling & Social Sourcing Specialist",
-                specialty: "Meta Ads & Naukri Resume Screening",
-                email: "praveen@acmeworkcentre.com",
-                avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=120",
-                badge: "Telecaller Lead"
-              },
-              {
-                id: "h-4",
-                name: "Robert Chen",
-                title: "Recruitment Operations Coordinator",
-                specialty: "Outstation Candidate Client Visit Coordination",
-                email: "robert@workcentre.com",
-                avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=120",
-                badge: "Recruitment Operations"
-              }
-            ];
-
-            return (
-              <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-                
-                {/* SECTION 1: BUSINESS & FIELD CONSULTANTS */}
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: "700" }}>
-                        💼 Assigned Business & Field Consultants
-                      </h3>
-                      <p style={{ margin: "2px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
-                        On-site store auditors, inventory strategists, and sales coaching advisors assigned to this client engagement.
-                      </p>
-                    </div>
-                    <span style={{ background: "#eff6ff", color: "#2563eb", fontSize: "0.75rem", fontWeight: "700", padding: "4px 12px", borderRadius: "20px", border: "1px solid #bfdbfe" }}>
-                      4 Consultants Assigned
-                    </span>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                    {consultantList.map(c => (
-                      <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                          <img src={c.avatar} alt={c.name} style={{ width: "46px", height: "46px", borderRadius: "50%", objectFit: "cover" }} />
-                          <div>
-                            <strong style={{ fontSize: "0.95rem", display: "block", color: "#0f172a" }}>{c.name}</strong>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{c.title}</span>
-                            <div style={{ fontSize: "0.76rem", color: "#2563eb", marginTop: "2px" }}>📱 {c.phone}</div>
-                          </div>
-                        </div>
-                        <span style={{ fontSize: "0.75rem", color: "#059669", fontWeight: "700", background: "#ecfdf5", padding: "4px 10px", borderRadius: "6px", border: "1px solid #a7f3d0" }}>
-                          ● {c.badge}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* SECTION 2: DEDICATED RECRUITING & HIRING TEAM */}
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: "700" }}>
-                        🎯 Dedicated Recruiting & Hiring Team (Free Client Hiring Desk)
-                      </h3>
-                      <p style={{ margin: "2px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
-                        Sourcing, telecalling, candidate screening, and interview scheduling team assigned to fulfill client staffing requirements.
-                      </p>
-                    </div>
-                    <span style={{ background: "#f0fdf4", color: "#16a34a", fontSize: "0.75rem", fontWeight: "700", padding: "4px 12px", borderRadius: "20px", border: "1px solid #bbf7d0" }}>
-                      Free Client Hiring Service Included
-                    </span>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                    {hiringTeamList.map(h => (
-                      <div key={h.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px", background: "#ffffff", borderRadius: "12px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                          <img src={h.avatar} alt={h.name} style={{ width: "46px", height: "46px", borderRadius: "50%", objectFit: "cover" }} />
-                          <div>
-                            <strong style={{ fontSize: "0.95rem", display: "block", color: "#0f172a" }}>{h.name}</strong>
-                            <span style={{ fontSize: "0.8rem", color: "#64748b" }}>{h.title}</span>
-                            <div style={{ fontSize: "0.76rem", color: "#059669", marginTop: "2px" }}>✉ {h.email}</div>
-                          </div>
-                        </div>
-                        <span style={{ fontSize: "0.75rem", color: "#7c3aed", fontWeight: "700", background: "#f3e8ff", padding: "4px 10px", borderRadius: "6px", border: "1px solid #ddd6fe" }}>
-                          ● {h.badge}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            );
-          })()}
-
-          {/* TAB 3: EXPENSES */}
-          {activeProjectTab === "expenses" && (
-            <div>
-              <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem" }}>Expense Claims Billed to Project</h3>
-              {linkedExps.length === 0 ? (
-                <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", fontStyle: "italic" }}>No expenses billed under this project yet.</p>
-              ) : (
-                <table className="luxury-table" style={{ fontSize: "0.82rem" }}>
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Category</th>
-                      <th>Description</th>
-                      <th style={{ textAlign: "right" }}>Amount</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {linkedExps.map(e => (
-                      <tr key={e.id}>
-                        <td>{e.date}</td>
-                        <td>{e.category}</td>
-                        <td>{e.description}</td>
-                        <td style={{ textAlign: "right", fontWeight: "700" }}>₹{(e.amount || 0).toFixed(2)}</td>
-                        <td><span className={`status-badge ${e.status.toLowerCase()}`}>{e.status}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          )}
-
-          {/* TAB 4: DISCUSSIONS */}
-          {activeProjectTab === "discussions" && (
-            <div>
-              <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem" }}>Project Log & Team Discussion Feed</h3>
+            {/* Starry Space Timeline Canvas (Exact Replica of Rocket Callouts in screenshot) */}
+            <div style={{ flex: 1, background: "radial-gradient(ellipse at bottom, #1e1b4b 0%, #090d16 100%)", borderRadius: "10px", padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-around", border: "1px solid #1e1b4b", position: "relative" }}>
               
-              <form onSubmit={handlePostDiscussion} style={{ marginBottom: "24px", background: "var(--bg-tertiary)", padding: "16px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
-                <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-                  <select
-                    value={discCategory}
-                    onChange={e => setDiscCategory(e.target.value)}
-                    style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.82rem", fontWeight: "600", background: "var(--bg-primary)", color: "var(--text-primary)" }}
-                  >
-                    <option value="Client Update">📢 Client Update</option>
-                    <option value="Milestone Achieved">🎯 Milestone Achieved</option>
-                    <option value="Expense Query">💸 Expense Query</option>
-                    <option value="Internal Note">📝 Internal Note</option>
-                  </select>
-                </div>
-                <textarea
-                  placeholder="Write project update or discussion note..."
-                  value={discText}
-                  onChange={e => setDiscText(e.target.value)}
-                  rows="3"
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid var(--border-color)", fontSize: "0.9rem", outline: "none", resize: "none", background: "var(--bg-primary)", color: "var(--text-primary)" }}
-                />
-                <button
-                  type="submit"
-                  className="luxury-button"
-                  style={{ marginTop: "10px", backgroundColor: "#2563eb", color: "#fff", border: "none" }}
-                >
-                  Post Note
-                </button>
-              </form>
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                {(selectedProject.discussions || []).map((d, i) => (
-                  <div key={d.id || i} style={{ padding: "16px", borderRadius: "10px", background: "var(--bg-primary)", border: "1px solid var(--border-color)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "6px" }}>
-                      <strong>{d.authorName} ({d.authorRole})</strong>
-                      <span>{d.date}</span>
-                    </div>
-                    <span style={{ fontSize: "0.72rem", fontWeight: "700", background: "#eff6ff", color: "#2563eb", padding: "3px 8px", borderRadius: "4px" }}>
-                      {d.category}
-                    </span>
-                    <p style={{ margin: "8px 0 0 0", fontSize: "0.9rem", color: "var(--text-primary)" }}>{d.text}</p>
-                  </div>
-                ))}
-
-                {(!selectedProject.discussions || selectedProject.discussions.length === 0) && (
-                  <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", fontStyle: "italic" }}>No discussions posted yet.</p>
-                )}
+              {/* Rocket Timeline Callout Bubble 1 */}
+              <div style={{ background: "#2563eb", color: "#ffffff", padding: "12px 20px", borderRadius: "24px", fontSize: "0.82rem", fontWeight: "800", textAlign: "center", boxShadow: "0 4px 14px rgba(37,99,235,0.4)", position: "relative" }}>
+                🚀 New Star Joined Us!
+                <div style={{ fontSize: "0.72rem", opacity: 0.8, fontWeight: "600" }}>Phase 4 Process Design • 30 Jul 2026</div>
               </div>
+
+              {/* Dotted Vertical Connector Line */}
+              <div style={{ width: "2px", height: "30px", borderLeft: "2px dashed #60a5fa" }} />
+
+              {/* Rocket Timeline Callout Bubble 2 */}
+              <div style={{ background: "#2563eb", color: "#ffffff", padding: "12px 20px", borderRadius: "24px", fontSize: "0.82rem", fontWeight: "800", textAlign: "center", boxShadow: "0 4px 14px rgba(37,99,235,0.4)", position: "relative" }}>
+                🚀 New Star Joined Us!
+                <div style={{ fontSize: "0.72rem", opacity: 0.8, fontWeight: "600" }}>POS Inventory Audit • 25 Jul 2026</div>
+              </div>
+
+              {/* Earth / Space Canvas Footer Decor */}
+              <div style={{ position: "absolute", bottom: "-40px", width: "200px", height: "80px", borderRadius: "50%", background: "#3b82f630", filter: "blur(20px)" }} />
             </div>
-          )}
+
+          </div>
+
         </div>
+
+      </div>
     );
   }
 

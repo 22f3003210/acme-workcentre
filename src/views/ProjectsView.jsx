@@ -310,10 +310,13 @@ export default function ProjectsView() {
         {/* ------------------------------------------------------------- */}
         {/* 1. CLIENT HEADER + PROGRESS + HEALTH + KPIS CARD              */}
         {/* ------------------------------------------------------------- */}
+        {/* ------------------------------------------------------------- */}
+        {/* 1. CLIENT HEADER CARD                                         */}
+        {/* ------------------------------------------------------------- */}
         <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "20px" }}>
           
           {/* Header Top Info Row */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px" }}>
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", letterSpacing: "-0.4px" }}>
@@ -327,24 +330,6 @@ export default function ProjectsView() {
               <p style={{ margin: "6px 0 0 0", fontSize: "0.88rem", color: "#64748b" }}>
                 POC: <strong style={{ color: "#334155" }}>{effectiveProject.pocName || effectiveProject.client}</strong> • Phone: <strong style={{ color: "#334155" }}>{effectiveProject.pocContact || effectiveProject.clientContact || "+91-9849012345"}</strong> • Start: <strong style={{ color: "#334155" }}>{effectiveProject.startDate || "27 Jul 2026"}</strong>
               </p>
-            </div>
-
-            {/* Health Score Badge & Overall Progress */}
-            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "10px 18px", borderRadius: "12px", textAlign: "center" }}>
-                <span style={{ fontSize: "0.7rem", color: "#16a34a", fontWeight: "800", textTransform: "uppercase", display: "block" }}>HEALTH SCORE</span>
-                <strong style={{ fontSize: "1.3rem", color: "#15803d", fontWeight: "900" }}>85% Healthy 🟢</strong>
-              </div>
-
-              <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "10px 18px", borderRadius: "12px", minWidth: "160px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "#2563eb", fontWeight: "800", marginBottom: "4px" }}>
-                  <span>OVERALL PROGRESS</span>
-                  <span>{effectiveProject.progress || 72}%</span>
-                </div>
-                <div style={{ width: "100%", height: "8px", background: "#dbeafe", borderRadius: "4px", overflow: "hidden" }}>
-                  <div style={{ width: `${effectiveProject.progress || 72}%`, height: "100%", background: "#2563eb", borderRadius: "4px" }} />
-                </div>
-              </div>
             </div>
           </div>
 
@@ -386,18 +371,19 @@ export default function ProjectsView() {
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* 2. PRIMARY MAIN NAVIGATION TAB BAR                            */}
-        {/* Overview | Tasks | Timeline | Audits | Deliverables | Meetings | Reports */}
+        {/* 2. PRIMARY NAVIGATION TAB BAR                                 */}
         {/* ------------------------------------------------------------- */}
         <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "6px 12px", display: "flex", gap: "8px", overflowX: "auto" }}>
           {[
-            { id: "overview", label: "Overview" },
-            { id: "tasks", label: `Tasks (${effectiveProject.scheduledEvents?.length || 14})` },
-            { id: "timeline", label: `Timeline (${effectiveProject.clientVisits?.length || 5})` },
-            { id: "audits", label: "Audits & Checklists" },
-            { id: "deliverables", label: "Deliverables" },
-            { id: "meetings", label: "Meetings & Calls" },
-            { id: "reports", label: "Reports" }
+            { id: "business", label: "🏢 Business Details" },
+            { id: "audit", label: "📋 Audit Report" },
+            { id: "plan", label: "🗂 Project Plan" },
+            { id: "tasks", label: `📅 Tasks & Event Planner (${effectiveProject.scheduledEvents?.length || 14})` },
+            { id: "visits", label: `🚗 Visit & Review History (${effectiveProject.clientVisits?.length || 5})` },
+            { id: "documents", label: "📁 Documents & Deliverables" },
+            { id: "team", label: "👥 Assigned Team" },
+            { id: "discussions", label: `💬 Discussions & Activity Logs (${effectiveProject.discussions?.length || 0})` },
+            { id: "expenses", label: `💸 Linked Expenses (${linkedExps.length})` }
           ].map(tab => (
             <button
               key={tab.id}
@@ -421,161 +407,75 @@ export default function ProjectsView() {
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* 3. MAIN WORKSPACE GRID (OVERVIEW TAB WITH 2-COLUMN LAYOUT)     */}
+        {/* 3. TAB 1: 🏢 BUSINESS DETAILS                                 */}
         {/* ------------------------------------------------------------- */}
-        {(activeProjectTab === "overview" || activeProjectTab === "audits" || activeProjectTab === "deliverables") && (
+        {activeProjectTab === "business" && (
           <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr", gap: "20px" }}>
             
-            {/* ── LEFT COLUMN ── */}
+            {/* Left Column */}
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               
-              {/* Panel 1: 8-Phase Progress */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
-                    8-PHASE IMPLEMENTATION PROGRESS
+              {/* Contact & Meta Card */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
+                <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>POINT OF CONTACT (POC)</span>
+                  <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
+                    {selectedProject.pocName || selectedProject.client}
+                  </p>
+                  <span style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "600" }}>📱 {selectedProject.pocContact || selectedProject.clientContact || "+91-9849012345"}</span>
+                </div>
+
+                <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>START DATE & STATUS</span>
+                  <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
+                    {selectedProject.startDate || "27 Jul 2026"} • <span style={{ color: "#16a34a" }}>{selectedProject.status || "Active"}</span>
+                  </p>
+                </div>
+
+                <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>PROJECT CODE</span>
+                  <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#2563eb" }}>
+                    {selectedProject.code || "PROJ-TEST-01"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Engagement Purpose Banner */}
+              <div style={{ background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", border: "1px solid #bfdbfe", padding: "20px 24px", borderRadius: "14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "1.3rem" }}>💡</span>
+                  <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#1e3a8a" }}>
+                    Engagement Purpose & Business Objectives
                   </h3>
-                  <span style={{ fontSize: "0.78rem", color: "#2563eb", fontWeight: "700" }}>
-                    Current: Phase 4 (Process Design)
-                  </span>
                 </div>
-
-                {/* 8-Phase Stepper / Progress Cards */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
-                  {[
-                    { num: 1, title: "Vision Alignment", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
-                    { num: 2, title: "Business Audit", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
-                    { num: 3, title: "Gap Analysis", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
-                    { num: 4, title: "Process Design", status: "In Progress (65%)", color: "#2563eb", bg: "#eff6ff" },
-                    { num: 5, title: "Implementation", status: "Upcoming", color: "#d97706", bg: "#fff7ed" },
-                    { num: 6, title: "KPI Monitoring", status: "Pending", color: "#64748b", bg: "#f8fafc" },
-                    { num: 7, title: "Governance", status: "Pending", color: "#64748b", bg: "#f8fafc" },
-                    { num: 8, title: "Advisory Review", status: "Pending", color: "#64748b", bg: "#f8fafc" }
-                  ].map(p => (
-                    <div
-                      key={p.num}
-                      style={{
-                        background: p.bg,
-                        border: `1px solid ${p.color}40`,
-                        borderRadius: "10px",
-                        padding: "12px 14px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "4px"
-                      }}
-                    >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontSize: "0.7rem", fontWeight: "800", color: p.color }}>PHASE {p.num}</span>
-                        {p.status.includes("Completed") && <span style={{ color: "#16a34a", fontSize: "0.85rem" }}>✓</span>}
-                      </div>
-                      <div style={{ fontSize: "0.85rem", fontWeight: "800", color: "#0f172a", lineHeight: "1.2" }}>{p.title}</div>
-                      <div style={{ fontSize: "0.68rem", color: p.color, fontWeight: "700", marginTop: "4px" }}>{p.status}</div>
-                    </div>
-                  ))}
-                </div>
+                <p style={{ margin: 0, fontSize: "0.92rem", color: "#1e40af", lineHeight: "1.6", fontWeight: "500" }}>
+                  {selectedProject.engagementPurpose || selectedProject.description || "Client requested consulting advisory for inventory audit, staff upselling, POS ledger reconciliation, and retail growth."}
+                </p>
               </div>
 
-              {/* Panel 2: Upcoming Tasks */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
-                    UPCOMING TASKS
-                  </h3>
-                  <button
-                    onClick={() => setShowEventModal(true)}
-                    style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "6px 14px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}
-                  >
-                    + Add Task
-                  </button>
+              {/* Scope Description */}
+              {selectedProject.description && (
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "20px", borderRadius: "14px" }}>
+                  <h3 style={{ margin: "0 0 10px 0", fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>Project Description & Scope Details</h3>
+                  <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155", lineHeight: "1.6" }}>
+                    {selectedProject.description}
+                  </p>
                 </div>
-
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #cbd5e1", textAlign: "left", color: "#64748b" }}>
-                      <th style={{ padding: "8px 4px", fontWeight: "800" }}>Task Title</th>
-                      <th style={{ padding: "8px 4px", fontWeight: "800" }}>Priority</th>
-                      <th style={{ padding: "8px 4px", fontWeight: "800" }}>Assignee</th>
-                      <th style={{ padding: "8px 4px", fontWeight: "800" }}>Due Date</th>
-                      <th style={{ padding: "8px 4px", fontWeight: "800" }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { title: "Store Inventory Verification Audit", priority: "High", assignee: "Darla Manikanta", date: "02 Aug", status: "In Progress" },
-                      { title: "SOP Manual Sign-off with Management", priority: "High", assignee: "Shikhar Jain", date: "03 Aug", status: "Pending" },
-                      { title: "Billing & Cash Counter Staff Workshop", priority: "Medium", assignee: "Jyoshna Manuka", date: "05 Aug", status: "Pending" },
-                      { title: "Q3 Sales Sourcing Target Review", priority: "Low", assignee: "Hemanth Kumar", date: "07 Aug", status: "Pending" }
-                    ].map((t, idx) => (
-                      <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: "10px 4px", fontWeight: "800", color: "#0f172a" }}>{t.title}</td>
-                        <td style={{ padding: "10px 4px" }}>
-                          <span style={{
-                            background: t.priority === "High" ? "#fef2f2" : t.priority === "Medium" ? "#fff7ed" : "#f0fdf4",
-                            color: t.priority === "High" ? "#dc2626" : t.priority === "Medium" ? "#ea580c" : "#16a34a",
-                            padding: "2px 8px", borderRadius: "8px", fontSize: "0.7rem", fontWeight: "800"
-                          }}>
-                            {t.priority}
-                          </span>
-                        </td>
-                        <td style={{ padding: "10px 4px", color: "#334155", fontWeight: "600" }}>{t.assignee}</td>
-                        <td style={{ padding: "10px 4px", color: "#64748b", fontWeight: "700" }}>{t.date}</td>
-                        <td style={{ padding: "10px 4px" }}>
-                          <span style={{
-                            background: t.status === "In Progress" ? "#eff6ff" : "#fff7ed",
-                            color: t.status === "In Progress" ? "#2563eb" : "#d97706",
-                            padding: "2px 8px", borderRadius: "8px", fontSize: "0.7rem", fontWeight: "800"
-                          }}>
-                            {t.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Panel 3: Recent Activities */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>
-                  RECENT ACTIVITIES
-                </h3>
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  {[
-                    { text: "Darla Manikanta completed site check-in at main showroom store", time: "1 hour ago", icon: "📍", color: "#2563eb" },
-                    { text: "Shikhar Jain uploaded Q2 Inventory Audit PDF Document", time: "3 hours ago", icon: "📄", color: "#16a34a" },
-                    { text: "Jyoshna Manuka updated Phase 4 Process Design checklist progress to 65%", time: "Yesterday", icon: "📊", color: "#9333ea" },
-                    { text: "Travel Expense claim of ₹1,850 approved by Accounts Team", time: "2 days ago", icon: "₹", color: "#ea580c" }
-                  ].map((act, i) => (
-                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #f1f5f9" }}>
-                      <span style={{ width: "32px", height: "32px", borderRadius: "8px", background: `${act.color}15`, color: act.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800" }}>
-                        {act.icon}
-                      </span>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: "0.82rem", fontWeight: "700", color: "#0f172a" }}>{act.text}</div>
-                        <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "2px" }}>{act.time}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              )}
 
             </div>
 
-            {/* ── RIGHT COLUMN ── */}
+            {/* Right Column */}
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               
-              {/* Panel 0: Quick Actions (Super Attractive & Aligned UI) */}
+              {/* Panel 0: Quick Actions */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{ fontSize: "1.2rem" }}>⚡</span>
-                    <h3 style={{ fontSize: "1.08rem", fontWeight: "800", color: "#0f172a", margin: 0, letterSpacing: "-0.3px" }}>
-                      QUICK ACTIONS
-                    </h3>
+                    <h3 style={{ fontSize: "1.08rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>QUICK ACTIONS</h3>
                   </div>
-                  <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "3px 10px", borderRadius: "20px", fontWeight: "800" }}>
-                    Fast Shortcuts
-                  </span>
+                  <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "3px 10px", borderRadius: "20px", fontWeight: "800" }}>Fast Shortcuts</span>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -603,16 +503,7 @@ export default function ProjectsView() {
                         fontWeight: "800",
                         fontSize: "0.88rem",
                         cursor: "pointer",
-                        transition: "all 0.18s ease",
-                        boxShadow: "0 2px 4px rgba(0,0,0,0.01)"
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.transform = "translateX(4px)";
-                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.06)";
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.transform = "translateX(0)";
-                        e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.01)";
+                        transition: "all 0.18s ease"
                       }}
                     >
                       <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
@@ -627,84 +518,9 @@ export default function ProjectsView() {
                 </div>
               </div>
 
-              {/* Panel 1: Project Health / KPIs */}
+              {/* Risks & Approvals */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>
-                  PROJECT HEALTH / KPIS
-                </h3>
-                
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
-                      <span>Task Completion Velocity</span>
-                      <span style={{ color: "#16a34a", fontWeight: "800" }}>87%</span>
-                    </div>
-                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                      <div style={{ width: "87%", height: "100%", background: "#16a34a" }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
-                      <span>Consultant Utilization</span>
-                      <span style={{ color: "#2563eb", fontWeight: "800" }}>84%</span>
-                    </div>
-                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                      <div style={{ width: "84%", height: "100%", background: "#2563eb" }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
-                      <span>Milestone Delivery</span>
-                      <span style={{ color: "#9333ea", fontWeight: "800" }}>92%</span>
-                    </div>
-                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
-                      <div style={{ width: "92%", height: "100%", background: "#9333ea" }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Panel 2: Upcoming Visits */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
-                    UPCOMING VISITS
-                  </h3>
-                  <button
-                    onClick={() => setShowVisitModal(true)}
-                    style={{ background: "#059669", color: "#ffffff", border: "none", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
-                  >
-                    + Record Visit
-                  </button>
-                </div>
-
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                  {[
-                    { date: "02 Aug", title: "Showroom Audit Visit", location: "Main Store", consultant: "Darla Manikanta" },
-                    { date: "05 Aug", title: "Inventory Verification", location: "Warehouse", consultant: "Shikhar Jain" }
-                  ].map((v, i) => (
-                    <div key={i} style={{ padding: "12px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div style={{ background: "#ecfdf5", color: "#059669", padding: "8px 10px", borderRadius: "8px", textAlign: "center", minWidth: "60px" }}>
-                        <span style={{ fontSize: "0.68rem", fontWeight: "800", display: "block" }}>AUG</span>
-                        <strong style={{ fontSize: "1rem" }}>{v.date.split(" ")[0]}</strong>
-                      </div>
-                      <div>
-                        <strong style={{ fontSize: "0.85rem", color: "#0f172a", display: "block" }}>{v.title}</strong>
-                        <span style={{ fontSize: "0.74rem", color: "#64748b" }}>{v.location} • <strong style={{ color: "#334155" }}>{v.consultant}</strong></span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Panel 3: Risks & Approvals */}
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>
-                  RISKS & APPROVALS
-                </h3>
-
+                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>RISKS & APPROVALS</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                   <div style={{ padding: "10px 12px", background: "#fef2f2", borderRadius: "8px", border: "1px solid #fecaca", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div>
@@ -726,6 +542,148 @@ export default function ProjectsView() {
 
             </div>
 
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- */}
+        {/* 4. TAB 2: 📋 AUDIT REPORT                                     */}
+        {/* ------------------------------------------------------------- */}
+        {activeProjectTab === "audit" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr", gap: "20px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {/* 8-Phase Stepper */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                    8-PHASE IMPLEMENTATION AUDIT PROGRESS
+                  </h3>
+                  <span style={{ fontSize: "0.78rem", color: "#2563eb", fontWeight: "700" }}>Current: Phase 4 (Process Design)</span>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
+                  {[
+                    { num: 1, title: "Vision Alignment", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
+                    { num: 2, title: "Business Audit", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
+                    { num: 3, title: "Gap Analysis", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
+                    { num: 4, title: "Process Design", status: "In Progress (65%)", color: "#2563eb", bg: "#eff6ff" },
+                    { num: 5, title: "Implementation", status: "Upcoming", color: "#d97706", bg: "#fff7ed" },
+                    { num: 6, title: "KPI Monitoring", status: "Pending", color: "#64748b", bg: "#f8fafc" },
+                    { num: 7, title: "Governance", status: "Pending", color: "#64748b", bg: "#f8fafc" },
+                    { num: 8, title: "Advisory Review", status: "Pending", color: "#64748b", bg: "#f8fafc" }
+                  ].map(p => (
+                    <div key={p.num} style={{ background: p.bg, border: `1px solid ${p.color}40`, borderRadius: "10px", padding: "12px 14px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.7rem", fontWeight: "800", color: p.color }}>PHASE {p.num}</span>
+                        {p.status.includes("Completed") && <span style={{ color: "#16a34a", fontSize: "0.85rem" }}>✓</span>}
+                      </div>
+                      <div style={{ fontSize: "0.85rem", fontWeight: "800", color: "#0f172a", lineHeight: "1.2", marginTop: "4px" }}>{p.title}</div>
+                      <div style={{ fontSize: "0.68rem", color: p.color, fontWeight: "700", marginTop: "4px" }}>{p.status}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Checklists */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
+                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 16px 0" }}>Operational & Strategic Planning Checklists</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  {[
+                    { domain: "Business Strategy & Retail Advisory", color: "#2563eb", bg: "#eff6ff" },
+                    { domain: "HR Operations & Consultant Sourcing", color: "#059669", bg: "#ecfdf5" },
+                    { domain: "IT Systems & POS Inventory Control", color: "#7c3aed", bg: "#f3e8ff" },
+                    { domain: "Legal Compliance & Internal Audits", color: "#d97706", bg: "#fffbeb" }
+                  ].map((d, dIdx) => (
+                    <div key={dIdx} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px" }}>
+                      <div style={{ background: d.bg, color: d.color, padding: "6px 12px", borderRadius: "8px", fontWeight: "700", fontSize: "0.82rem", marginBottom: "12px", display: "inline-block" }}>
+                        {d.domain}
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {(selectedProject.checklists || [
+                          { task: "Initial Site Audit & Layout Review", done: true },
+                          { task: "POS & Billing Integration Verification", done: false },
+                          { task: "Staff Sales Coaching Workshop", done: false }
+                        ]).map((chk, iIdx) => (
+                          <label key={iIdx} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.84rem", color: "#334155", cursor: "pointer" }}>
+                            <input type="checkbox" checked={chk.done} onChange={() => toggleProjectChecklistItem(selectedProject.id, dIdx, iIdx)} style={{ cursor: "pointer" }} />
+                            <span style={{ textDecoration: chk.done ? "line-through" : "none", opacity: chk.done ? 0.6 : 1 }}>{chk.task}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              {/* Quick Actions Panel */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", boxShadow: "0 4px 16px rgba(0,0,0,0.03)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                  <h3 style={{ fontSize: "1.08rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>⚡ QUICK ACTIONS</h3>
+                  <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", padding: "3px 10px", borderRadius: "20px", fontWeight: "800" }}>Shortcuts</span>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <button onClick={() => alert("Downloading PDF Audit Report...")} style={{ padding: "12px 16px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d", borderRadius: "12px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer" }}>⬇️ Download Full Audit Report (PDF)</button>
+                  <button onClick={() => setShowVisitModal(true)} style={{ padding: "12px 16px", background: "#ecfdf5", border: "1px solid #a7f3d0", color: "#059669", borderRadius: "12px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer" }}>🚗 Record New Field Audit Visit</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ------------------------------------------------------------- */}
+        {/* 5. TAB 3: 🗂 PROJECT PLAN                                    */}
+        {/* ------------------------------------------------------------- */}
+        {activeProjectTab === "plan" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr", gap: "20px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {/* Health Gauges */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
+                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 16px 0" }}>PROJECT HEALTH KPIS & VELOCITY</h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                      <span>Task Completion Velocity</span>
+                      <span style={{ color: "#16a34a", fontWeight: "800" }}>87%</span>
+                    </div>
+                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                      <div style={{ width: "87%", height: "100%", background: "#16a34a" }} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                      <span>Consultant Utilization</span>
+                      <span style={{ color: "#2563eb", fontWeight: "800" }}>84%</span>
+                    </div>
+                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                      <div style={{ width: "84%", height: "100%", background: "#2563eb" }} />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                      <span>Milestone Delivery</span>
+                      <span style={{ color: "#9333ea", fontWeight: "800" }}>92%</span>
+                    </div>
+                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                      <div style={{ width: "92%", height: "100%", background: "#9333ea" }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px" }}>
+                <h3 style={{ fontSize: "1.08rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>⚡ QUICK ACTIONS</h3>
+                <button onClick={() => setShowEventModal(true)} style={{ width: "100%", padding: "12px", background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2563eb", borderRadius: "10px", fontWeight: "800", cursor: "pointer" }}>+ Schedule Milestone Event</button>
+              </div>
+            </div>
           </div>
         )}
 

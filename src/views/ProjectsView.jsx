@@ -222,516 +222,412 @@ export default function ProjectsView() {
 
   const consultants = users.filter(u => u.role === "Consultant");
 
-  // ── SEPARATE PAGE VIEW FOR SELECTED PROJECT HUB ──
+  // ── SEPARATE PAGE VIEW FOR SELECTED PROJECT HUB (MATCHING USER ASCII WIREFRAME) ──
   if (selectedProject) {
     const effectiveProject = getEffectiveProject(selectedProject);
     const linkedExps = expenses.filter(e => e.projectId === effectiveProject.id || e.projectName === effectiveProject.name);
     
     return (
-      <div className="projects-view-container" style={{ padding: "8px 0", minHeight: "100vh" }}>
+      <div className="individual-project-view" style={{ padding: "8px 0", minHeight: "100vh", display: "flex", flexDirection: "column", gap: "20px", fontFamily: "Inter, sans-serif", color: "#0f172a" }}>
         
-        {/* Top Navigation Bar: Back Button */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+        {/* ------------------------------------------------------------- */}
+        {/* TOP BAR: BACK BUTTON & STATUS BADGE                           */}
+        {/* ------------------------------------------------------------- */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button
             onClick={() => setSelectedProject(null)}
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: "8px",
-              background: "var(--bg-secondary)",
-              border: "1px solid var(--border-color)",
+              background: "#ffffff",
+              border: "1px solid #cbd5e1",
               padding: "10px 18px",
-              borderRadius: "8px",
+              borderRadius: "10px",
               fontSize: "0.88rem",
               fontWeight: "700",
-              color: "var(--text-primary)",
+              color: "#334155",
               cursor: "pointer",
-              boxShadow: "0 2px 6px rgba(0,0,0,0.04)"
+              boxShadow: "0 2px 4px rgba(0,0,0,0.03)"
             }}
           >
             ← Back to All Projects
           </button>
-          <div style={{ display: "flex", gap: "8px" }}>
-            <span className={`status-badge ${(effectiveProject.status || "active").toLowerCase()}`} style={{ fontSize: "0.85rem", padding: "6px 14px" }}>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700" }}>Project Code:</span>
+            <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "4px 12px", borderRadius: "8px", fontSize: "0.82rem", fontWeight: "800" }}>
+              {effectiveProject.code || "PRJ-101"}
+            </span>
+            <span style={{
+              background: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#dcfce7" : "#fff7ed",
+              color: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#16a34a" : "#d97706",
+              border: `1px solid ${(effectiveProject.status || "Active").toLowerCase() === "active" ? "#bbf7d0" : "#fed7aa"}`,
+              padding: "4px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: "800"
+            }}>
               ● {effectiveProject.status || "Active"}
             </span>
           </div>
         </div>
 
-        {/* Project Header Banner Card */}
-        <div className="glass-card" style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%)", color: "#fff", padding: "28px", borderRadius: "16px", marginBottom: "20px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
+        {/* ------------------------------------------------------------- */}
+        {/* 1. CLIENT HEADER + PROGRESS + HEALTH + KPIS CARD              */}
+        {/* ------------------------------------------------------------- */}
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "20px" }}>
+          
+          {/* Header Top Info Row */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px" }}>
             <div>
-              <span style={{ fontSize: "0.78rem", background: "rgba(255,255,255,0.18)", color: "#93c5fd", padding: "3px 10px", borderRadius: "6px", fontWeight: "700", textTransform: "uppercase" }}>
-                {effectiveProject.code}
-              </span>
-              <h1 style={{ margin: "10px 0 6px 0", fontSize: "1.8rem", fontWeight: "800", color: "#ffffff" }}>
-                {effectiveProject.name}
-              </h1>
-              <p style={{ margin: 0, fontSize: "0.9rem", color: "rgba(255,255,255,0.8)" }}>
-                POC: <strong>{effectiveProject.pocName || effectiveProject.client}</strong> • Phone: {effectiveProject.pocContact || effectiveProject.clientContact || "N/A"}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", letterSpacing: "-0.4px" }}>
+                  {effectiveProject.client || "Client Engagement"}
+                </h1>
+                <span style={{ color: "#94a3b8", fontSize: "1.4rem" }}>•</span>
+                <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: "700", color: "#2563eb" }}>
+                  {effectiveProject.name}
+                </h2>
+              </div>
+              <p style={{ margin: "6px 0 0 0", fontSize: "0.88rem", color: "#64748b" }}>
+                POC: <strong style={{ color: "#334155" }}>{effectiveProject.pocName || effectiveProject.client}</strong> • Phone: <strong style={{ color: "#334155" }}>{effectiveProject.pocContact || effectiveProject.clientContact || "+91-9849012345"}</strong> • Start: <strong style={{ color: "#334155" }}>{effectiveProject.startDate || "27 Jul 2026"}</strong>
               </p>
             </div>
-            
-            <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-              <div style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(4px)", padding: "12px 18px", borderRadius: "10px", textAlign: "right" }}>
-                <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.7)", textTransform: "uppercase", display: "block" }}>Linked Expenses</span>
-                <strong style={{ fontSize: "1.2rem", color: "#60a5fa" }}>₹{linkedExps.reduce((s, e) => s + e.amount, 0).toLocaleString()}</strong>
+
+            {/* Health Score Badge & Overall Progress */}
+            <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "10px 18px", borderRadius: "12px", textAlign: "center" }}>
+                <span style={{ fontSize: "0.7rem", color: "#16a34a", fontWeight: "800", textTransform: "uppercase", display: "block" }}>HEALTH SCORE</span>
+                <strong style={{ fontSize: "1.3rem", color: "#15803d", fontWeight: "900" }}>85% Healthy 🟢</strong>
               </div>
-              <div style={{ background: "rgba(255,255,255,0.1)", backdropFilter: "blur(4px)", padding: "12px 18px", borderRadius: "10px", textAlign: "right" }}>
-                <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.7)", textTransform: "uppercase", display: "block" }}>Discussions</span>
-                <strong style={{ fontSize: "1.2rem", color: "#60a5fa" }}>{effectiveProject.discussions?.length || 0} notes</strong>
+
+              <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "10px 18px", borderRadius: "12px", minWidth: "160px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.72rem", color: "#2563eb", fontWeight: "800", marginBottom: "4px" }}>
+                  <span>OVERALL PROGRESS</span>
+                  <span>{effectiveProject.progress || 72}%</span>
+                </div>
+                <div style={{ width: "100%", height: "8px", background: "#dbeafe", borderRadius: "4px", overflow: "hidden" }}>
+                  <div style={{ width: `${effectiveProject.progress || 72}%`, height: "100%", background: "#2563eb", borderRadius: "4px" }} />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Hub Sub-Tabs Bar */}
-          <div style={{ display: "flex", gap: "16px", marginTop: "24px", borderBottom: "1px solid rgba(255,255,255,0.15)", overflowX: "auto" }}>
-            {[
-              { id: "scope", label: "📋 Purpose & Scope Checklists" },
-              { id: "planner", label: `📅 Task & Event Planner (${effectiveProject.scheduledEvents?.length || 0})` },
-              { id: "visits", label: `🚗 Client Visits Timeline (${effectiveProject.clientVisits?.length || 0})` },
-              { id: "overview", label: "Overview & Details" },
-              { id: "team", label: "Assigned Team" },
-              { id: "expenses", label: `Linked Expenses (${linkedExps.length})` },
-              { id: "discussions", label: `Discussions & Logs (${effectiveProject.discussions?.length || 0})` }
-            ].map(t => (
-              <button
-                key={t.id}
-                onClick={() => setActiveProjectTab(t.id)}
-                style={{
-                  background: "none",
-                  border: "none",
-                  borderBottom: activeProjectTab === t.id ? "3px solid #60a5fa" : "3px solid transparent",
-                  color: activeProjectTab === t.id ? "#ffffff" : "rgba(255,255,255,0.7)",
-                  fontWeight: activeProjectTab === t.id ? "700" : "500",
-                  padding: "10px 10px",
-                  cursor: "pointer",
-                  fontSize: "0.86rem",
-                  whiteSpace: "nowrap"
-                }}
-              >
-                {t.label}
-              </button>
-            ))}
+          {/* 4 Primary KPI Metric Cards Strip */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", borderTop: "1px solid #f1f5f9", paddingTop: "18px" }}>
+            <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ background: "#eff6ff", color: "#2563eb", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1rem" }}>📋</div>
+              <div>
+                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Total Tasks</div>
+                <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>14 Tasks <span style={{ fontSize: "0.7rem", color: "#16a34a" }}>(8 Done)</span></div>
+              </div>
+            </div>
+
+            <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ background: "#fef2f2", color: "#dc2626", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1rem" }}>⚠️</div>
+              <div>
+                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Overdue Tasks</div>
+                <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#dc2626" }}>2 Urgent <span style={{ fontSize: "0.7rem", color: "#ea580c" }}>(Action Req.)</span></div>
+              </div>
+            </div>
+
+            <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ background: "#fff7ed", color: "#ea580c", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1rem" }}>₹</div>
+              <div>
+                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Linked Expenses</div>
+                <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>₹{linkedExps.reduce((s, e) => s + e.amount, 0).toLocaleString() || "45,000"}</div>
+              </div>
+            </div>
+
+            <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ background: "#f3e8ff", color: "#9333ea", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1rem" }}>🚗</div>
+              <div>
+                <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Client Site Visits</div>
+                <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>{effectiveProject.clientVisits?.length || 5} Completed</div>
+              </div>
+            </div>
           </div>
+
         </div>
 
-        {/* Tab Content Section */}
-        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", padding: "24px", borderRadius: "12px", minHeight: "450px" }}>
+        {/* ------------------------------------------------------------- */}
+        {/* 2. PRIMARY MAIN NAVIGATION TAB BAR                            */}
+        {/* Overview | Tasks | Timeline | Audits | Deliverables | Meetings | Reports */}
+        {/* ------------------------------------------------------------- */}
+        <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "6px 12px", display: "flex", gap: "8px", overflowX: "auto" }}>
+          {[
+            { id: "overview", label: "Overview" },
+            { id: "tasks", label: `Tasks (${effectiveProject.scheduledEvents?.length || 14})` },
+            { id: "timeline", label: `Timeline (${effectiveProject.clientVisits?.length || 5})` },
+            { id: "audits", label: "Audits & Checklists" },
+            { id: "deliverables", label: "Deliverables" },
+            { id: "meetings", label: "Meetings & Calls" },
+            { id: "reports", label: "Reports" }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveProjectTab(tab.id)}
+              style={{
+                background: activeProjectTab === tab.id ? "#2563eb" : "transparent",
+                color: activeProjectTab === tab.id ? "#ffffff" : "#475569",
+                border: "none",
+                borderRadius: "8px",
+                padding: "10px 18px",
+                fontWeight: "700",
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: "all 0.15s ease"
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-          {/* ── TAB: PURPOSE & SCOPE CHECKLISTS ── */}
-          {activeProjectTab === "scope" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              {/* Engagement Purpose Banner */}
-              <div style={{ background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", border: "1px solid #bfdbfe", padding: "20px 24px", borderRadius: "12px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ fontSize: "1.3rem" }}>💡</span>
-                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: "#1e3a8a" }}>
-                    Why / Purpose Client Approached Us
-                  </h3>
-                </div>
-                <p style={{ margin: 0, fontSize: "0.94rem", color: "#1e40af", lineHeight: "1.6", fontWeight: "500" }}>
-                  {selectedProject.engagementPurpose || selectedProject.description || "Client requested consulting advisory for inventory audit, staff upselling, and retail growth."}
-                </p>
-              </div>
-
-              {/* Checklists Grid (4 Domains) */}
-              <div>
+        {/* ------------------------------------------------------------- */}
+        {/* 3. MAIN WORKSPACE GRID (OVERVIEW TAB WITH 2-COLUMN LAYOUT)     */}
+        {/* ------------------------------------------------------------- */}
+        {(activeProjectTab === "overview" || activeProjectTab === "audits" || activeProjectTab === "deliverables") && (
+          <div style={{ display: "grid", gridTemplateColumns: "1.8fr 1fr", gap: "20px" }}>
+            
+            {/* ── LEFT COLUMN ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {/* Panel 1: 8-Phase Progress */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: "700" }}>
-                    Operational & Strategic Planning Checklists
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                    8-PHASE IMPLEMENTATION PROGRESS
                   </h3>
-                  <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
-                    Click items to toggle completion state
+                  <span style={{ fontSize: "0.78rem", color: "#2563eb", fontWeight: "700" }}>
+                    Current: Phase 4 (Process Design)
                   </span>
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                  {(selectedProject.checklists || [
-                    {
-                      category: "📦 Inventory Audit Checklist",
-                      items: [
-                        { text: "Physical vault stock count & weight reconciliation", completed: true },
-                        { text: "Hallmarking purity verification & BIS tag audit", completed: true },
-                        { text: "Vault vs POS software ledger discrepancy analysis", completed: false },
-                        { text: "High-value diamond & precious stone barcode tagging", completed: false }
-                      ]
-                    },
-                    {
-                      category: "📣 Marketing Suggestions Checklist",
-                      items: [
-                        { text: "Local billboard & newspaper ad reach evaluation", completed: true },
-                        { text: "Social media & Meta Ads bridal campaign audit", completed: false },
-                        { text: "VIP customer bridal preview invite strategy", completed: true }
-                      ]
-                    },
-                    {
-                      category: "📈 Revenue & Sales Growth Checklist",
-                      items: [
-                        { text: "Average transaction ticket size optimization (Gold to Diamond)", completed: true },
-                        { text: "Old gold exchange scheme marketing & margin analysis", completed: false },
-                        { text: "Solitaire & bridal set cross-selling desk strategy", completed: true }
-                      ]
-                    },
-                    {
-                      category: "👥 Customer Experience & Showroom Checklist",
-                      items: [
-                        { text: "Showroom floor greeter & VIP lounge service standards", completed: true },
-                        { text: "Post-purchase thank-you & feedback call workflow", completed: true }
-                      ]
-                    }
-                  ]).map((cat, cIdx) => {
-                    const completedCount = cat.items.filter(i => i.completed).length;
-                    const percent = Math.round((completedCount / cat.items.length) * 100) || 0;
-                    return (
-                      <div key={cIdx} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "18px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                          <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "700", color: "#1e293b" }}>
-                            {cat.category}
-                          </h4>
-                          <span style={{ fontSize: "0.76rem", fontWeight: "700", background: percent === 100 ? "#dcfce7" : "#e0f2fe", color: percent === 100 ? "#15803d" : "#0369a1", padding: "3px 8px", borderRadius: "12px" }}>
-                            {completedCount}/{cat.items.length} ({percent}%)
-                          </span>
-                        </div>
-
-                        {/* Progress bar */}
-                        <div style={{ height: "6px", width: "100%", background: "#e2e8f0", borderRadius: "3px", overflow: "hidden", marginBottom: "14px" }}>
-                          <div style={{ height: "100%", width: `${percent}%`, background: percent === 100 ? "#16a34a" : "#2563eb", transition: "width 0.3s ease" }} />
-                        </div>
-
-                        {/* Items list */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                          {cat.items.map((item, iIdx) => (
-                            <label
-                              key={iIdx}
-                              onClick={() => toggleProjectChecklistItem(selectedProject.id, cIdx, iIdx)}
-                              style={{
-                                display: "flex",
-                                alignItems: "flex-start",
-                                gap: "10px",
-                                cursor: "pointer",
-                                fontSize: "0.85rem",
-                                color: item.completed ? "#64748b" : "#1e293b",
-                                textDecoration: item.completed ? "line-through" : "none",
-                                background: item.completed ? "#f1f5f9" : "#ffffff",
-                                padding: "8px 12px",
-                                borderRadius: "8px",
-                                border: "1px solid #cbd5e1"
-                              }}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={item.completed}
-                                readOnly
-                                style={{ marginTop: "2px", accentColor: "#2563eb" }}
-                              />
-                              <span>{item.text}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── TAB: TASK & EVENT PLANNER ── */}
-          {activeProjectTab === "planner" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: "1.1rem", color: "#0f172a", fontWeight: "700" }}>
-                    Project Task & Event Scheduler
-                  </h3>
-                  <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
-                    Schedule client call updates, on-site store visits, and staff training workshops.
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setShowEventModal(true)}
-                  style={{
-                    background: "#2563eb",
-                    color: "#ffffff",
-                    border: "none",
-                    padding: "10px 18px",
-                    borderRadius: "8px",
-                    fontWeight: "600",
-                    fontSize: "0.86rem",
-                    cursor: "pointer",
-                    boxShadow: "0 2px 6px rgba(37, 99, 235, 0.2)"
-                  }}
-                >
-                  + Schedule Event / Call / Training
-                </button>
-              </div>
-
-              {/* Events Table / Cards List */}
-              {(!selectedProject.scheduledEvents || selectedProject.scheduledEvents.length === 0) ? (
-                <div style={{ textAlign: "center", padding: "40px 20px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>No upcoming events scheduled yet.</p>
-                  <button
-                    onClick={() => setShowEventModal(true)}
-                    style={{ marginTop: "12px", background: "none", border: "none", color: "#2563eb", fontWeight: "700", cursor: "pointer" }}
-                  >
-                    + Schedule your first event
-                  </button>
-                </div>
-              ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                  {selectedProject.scheduledEvents.map((evt, idx) => (
+                {/* 8-Phase Stepper / Progress Cards */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
+                  {[
+                    { num: 1, title: "Vision Alignment", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
+                    { num: 2, title: "Business Audit", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
+                    { num: 3, title: "Gap Analysis", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
+                    { num: 4, title: "Process Design", status: "In Progress (65%)", color: "#2563eb", bg: "#eff6ff" },
+                    { num: 5, title: "Implementation", status: "Upcoming", color: "#d97706", bg: "#fff7ed" },
+                    { num: 6, title: "KPI Monitoring", status: "Pending", color: "#64748b", bg: "#f8fafc" },
+                    { num: 7, title: "Governance", status: "Pending", color: "#64748b", bg: "#f8fafc" },
+                    { num: 8, title: "Advisory Review", status: "Pending", color: "#64748b", bg: "#f8fafc" }
+                  ].map(p => (
                     <div
-                      key={evt.id || idx}
+                      key={p.num}
                       style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justify: "space-between",
-                        padding: "16px 20px",
-                        background: "#ffffff",
+                        background: p.bg,
+                        border: `1px solid ${p.color}40`,
                         borderRadius: "10px",
-                        border: "1px solid #e2e8f0",
-                        boxShadow: "0 2px 6px rgba(0,0,0,0.02)"
+                        padding: "12px 14px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "4px"
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                        <div style={{ background: "#f1f5f9", padding: "10px 14px", borderRadius: "8px", textAlign: "center", minWidth: "90px" }}>
-                          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase", display: "block" }}>
-                            {evt.type === "Call Scheduling" ? "📞 CALL" : evt.type === "Offline Visit Scheduling" ? "🏢 VISIT" : "🎓 TRAINING"}
-                          </span>
-                          <strong style={{ fontSize: "0.85rem", color: "#1e293b" }}>{evt.date}</strong>
-                        </div>
-
-                        <div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <strong style={{ fontSize: "0.98rem", color: "#0f172a" }}>{evt.title}</strong>
-                            <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", padding: "2px 8px", borderRadius: "4px", fontWeight: "700" }}>
-                              {evt.time}
-                            </span>
-                          </div>
-                          <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "#64748b" }}>
-                            Consultant: <strong>{evt.consultant}</strong> {evt.notes ? `• ${evt.notes}` : ""}
-                          </p>
-                        </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontSize: "0.7rem", fontWeight: "800", color: p.color }}>PHASE {p.num}</span>
+                        {p.status.includes("Completed") && <span style={{ color: "#16a34a", fontSize: "0.85rem" }}>✓</span>}
                       </div>
-
-                      <span style={{ background: "#dcfce7", color: "#15803d", fontSize: "0.78rem", fontWeight: "700", padding: "4px 12px", borderRadius: "6px" }}>
-                        ● {evt.status || "Scheduled"}
-                      </span>
+                      <div style={{ fontSize: "0.85rem", fontWeight: "800", color: "#0f172a", lineHeight: "1.2" }}>{p.title}</div>
+                      <div style={{ fontSize: "0.68rem", color: p.color, fontWeight: "700", marginTop: "4px" }}>{p.status}</div>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
-          )}
-
-          {/* ── TAB: OFFLINE CLIENT VISITS TIMELINE ── */}
-          {activeProjectTab === "visits" && (
-            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-              {/* Header Stats Banner */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
-                <div style={{ background: "#f8fafc", padding: "16px 20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Total Client Visits</span>
-                  <p style={{ margin: "6px 0 0 0", fontSize: "1.4rem", fontWeight: "800", color: "#0f172a" }}>
-                    {effectiveProject.clientVisits?.length || 0} Visits Completed
-                  </p>
-                </div>
-
-                <div style={{ background: "#f8fafc", padding: "16px 20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Total Field Days Spent</span>
-                  <p style={{ margin: "6px 0 0 0", fontSize: "1.4rem", fontWeight: "800", color: "#2563eb" }}>
-                    {(effectiveProject.clientVisits || []).reduce((sum, v) => sum + (v.durationDays || 1), 0)} Days On-Site
-                  </p>
-                </div>
-
-                <div style={{ background: "#f8fafc", padding: "16px 20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                  <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>Visiting Team Support</span>
-                  <p style={{ margin: "6px 0 0 0", fontSize: "0.95rem", fontWeight: "700", color: "#16a34a" }}>
-                    Multi-Consultant Visits Allowed
-                  </p>
-                </div>
               </div>
 
-              {/* Action Button Header */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <h3 style={{ margin: 0, fontSize: "1.2rem", color: "#0f172a", fontWeight: "700" }}>
-                  Timeline
-                </h3>
-
-                <button
-                  onClick={() => setShowVisitModal(true)}
-                  style={{
-                    background: "#059669",
-                    color: "#ffffff",
-                    border: "none",
-                    padding: "10px 18px",
-                    borderRadius: "8px",
-                    fontWeight: "600",
-                    fontSize: "0.86rem",
-                    cursor: "pointer",
-                    boxShadow: "0 2px 6px rgba(5, 150, 105, 0.2)"
-                  }}
-                >
-                  + Record Offline Client Visit
-                </button>
-              </div>
-
-              {/* Timeline List (Keka HR Style) */}
-              {(!effectiveProject.clientVisits || effectiveProject.clientVisits.length === 0) ? (
-                <div style={{ textAlign: "center", padding: "40px 20px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
-                  <p style={{ margin: 0, color: "#64748b", fontSize: "0.9rem" }}>No offline client visits recorded yet.</p>
+              {/* Panel 2: Upcoming Tasks */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                    UPCOMING TASKS
+                  </h3>
                   <button
-                    onClick={() => setShowVisitModal(true)}
-                    style={{ marginTop: "12px", background: "none", border: "none", color: "#059669", fontWeight: "700", cursor: "pointer" }}
+                    onClick={() => setShowEventModal(true)}
+                    style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "6px 14px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}
                   >
-                    + Record first client visit
+                    + Add Task
                   </button>
                 </div>
-              ) : (
-                <div style={{ position: "relative", paddingLeft: "36px" }}>
-                  {/* Vertical continuous gray timeline bar */}
-                  <div style={{ position: "absolute", left: "15px", top: "0", bottom: "0", width: "2px", background: "#e2e8f0" }} />
 
-                  {/* Year Header Pill: 2026 */}
-                  <div style={{ position: "relative", marginBottom: "24px", zIndex: 2 }}>
-                    <span style={{
-                      background: "#94a3b8",
-                      color: "#ffffff",
-                      fontSize: "0.74rem",
-                      fontWeight: "700",
-                      padding: "3px 10px",
-                      borderRadius: "4px",
-                      marginLeft: "-36px",
-                      display: "inline-block"
-                    }}>
-                      2026
-                    </span>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid #cbd5e1", textAlign: "left", color: "#64748b" }}>
+                      <th style={{ padding: "8px 4px", fontWeight: "800" }}>Task Title</th>
+                      <th style={{ padding: "8px 4px", fontWeight: "800" }}>Priority</th>
+                      <th style={{ padding: "8px 4px", fontWeight: "800" }}>Assignee</th>
+                      <th style={{ padding: "8px 4px", fontWeight: "800" }}>Due Date</th>
+                      <th style={{ padding: "8px 4px", fontWeight: "800" }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { title: "Store Inventory Verification Audit", priority: "High", assignee: "Darla Manikanta", date: "02 Aug", status: "In Progress" },
+                      { title: "SOP Manual Sign-off with Management", priority: "High", assignee: "Shikhar Jain", date: "03 Aug", status: "Pending" },
+                      { title: "Billing & Cash Counter Staff Workshop", priority: "Medium", assignee: "Jyoshna Manuka", date: "05 Aug", status: "Pending" },
+                      { title: "Q3 Sales Sourcing Target Review", priority: "Low", assignee: "Hemanth Kumar", date: "07 Aug", status: "Pending" }
+                    ].map((t, idx) => (
+                      <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ padding: "10px 4px", fontWeight: "800", color: "#0f172a" }}>{t.title}</td>
+                        <td style={{ padding: "10px 4px" }}>
+                          <span style={{
+                            background: t.priority === "High" ? "#fef2f2" : t.priority === "Medium" ? "#fff7ed" : "#f0fdf4",
+                            color: t.priority === "High" ? "#dc2626" : t.priority === "Medium" ? "#ea580c" : "#16a34a",
+                            padding: "2px 8px", borderRadius: "8px", fontSize: "0.7rem", fontWeight: "800"
+                          }}>
+                            {t.priority}
+                          </span>
+                        </td>
+                        <td style={{ padding: "10px 4px", color: "#334155", fontWeight: "600" }}>{t.assignee}</td>
+                        <td style={{ padding: "10px 4px", color: "#64748b", fontWeight: "700" }}>{t.date}</td>
+                        <td style={{ padding: "10px 4px" }}>
+                          <span style={{
+                            background: t.status === "In Progress" ? "#eff6ff" : "#fff7ed",
+                            color: t.status === "In Progress" ? "#2563eb" : "#d97706",
+                            padding: "2px 8px", borderRadius: "8px", fontSize: "0.7rem", fontWeight: "800"
+                          }}>
+                            {t.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Panel 3: Recent Activities */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
+                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>
+                  RECENT ACTIVITIES
+                </h3>
+                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                  {[
+                    { text: "Darla Manikanta completed site check-in at main showroom store", time: "1 hour ago", icon: "📍", color: "#2563eb" },
+                    { text: "Shikhar Jain uploaded Q2 Inventory Audit PDF Document", time: "3 hours ago", icon: "📄", color: "#16a34a" },
+                    { text: "Jyoshna Manuka updated Phase 4 Process Design checklist progress to 65%", time: "Yesterday", icon: "📊", color: "#9333ea" },
+                    { text: "Travel Expense claim of ₹1,850 approved by Accounts Team", time: "2 days ago", icon: "₹", color: "#ea580c" }
+                  ].map((act, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #f1f5f9" }}>
+                      <span style={{ width: "32px", height: "32px", borderRadius: "8px", background: `${act.color}15`, color: act.color, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800" }}>
+                        {act.icon}
+                      </span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: "0.82rem", fontWeight: "700", color: "#0f172a" }}>{act.text}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "2px" }}>{act.time}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+
+            {/* ── RIGHT COLUMN ── */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {/* Panel 1: Project Health / KPIs */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
+                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>
+                  PROJECT HEALTH / KPIS
+                </h3>
+                
+                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                      <span>Task Completion Velocity</span>
+                      <span style={{ color: "#16a34a", fontWeight: "800" }}>87%</span>
+                    </div>
+                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                      <div style={{ width: "87%", height: "100%", background: "#16a34a" }} />
+                    </div>
                   </div>
 
-                  <div style={{ display: "flex", flexDirection: "column", gap: "32px" }}>
-                    {effectiveProject.clientVisits.map((v, idx) => {
-                      const visitNum = effectiveProject.clientVisits.length - idx;
-                      const dateRangeFormatted = v.endDate && v.endDate !== v.startDate
-                        ? `${formatDateNice(v.startDate)} - ${formatDateNice(v.endDate)}`
-                        : formatDateNice(v.startDate);
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                      <span>Consultant Utilization</span>
+                      <span style={{ color: "#2563eb", fontWeight: "800" }}>84%</span>
+                    </div>
+                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                      <div style={{ width: "84%", height: "100%", background: "#2563eb" }} />
+                    </div>
+                  </div>
 
-                      const consultantNames = Array.isArray(v.visitingConsultants) ? v.visitingConsultants : [v.visitingConsultants];
-
-                      return (
-                        <div key={v.id || idx} style={{ position: "relative" }}>
-                          {/* Circular Icon Node on Vertical Line */}
-                          <div
-                            style={{
-                              position: "absolute",
-                              left: "-36px",
-                              top: "2px",
-                              width: "32px",
-                              height: "32px",
-                              borderRadius: "50%",
-                              background: idx % 2 === 0 ? "#3b82f6" : "#f59e0b",
-                              color: "#ffffff",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontSize: "0.9rem",
-                              boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
-                              border: "2px solid #ffffff"
-                            }}
-                          >
-                            {idx % 2 === 0 ? "🏢" : "🚗"}
-                          </div>
-
-                          {/* Visit Title & Subtitle */}
-                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                            <div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                                <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: "#1e293b" }}>
-                                  Visit {visitNum}{v.visitTitle ? `: ${v.visitTitle.replace(/^Visit #\d+:\s*/i, '')}` : ""}
-                                </h4>
-                                <span style={{ cursor: "pointer", color: "#94a3b8", fontSize: "0.88rem" }}>🔗</span>
-                                <span style={{ cursor: "pointer", color: "#94a3b8", fontSize: "1rem" }}>⋮</span>
-                              </div>
-                              <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "#64748b", fontWeight: "500" }}>
-                                {dateRangeFormatted} <span style={{ color: "#cbd5e1", margin: "0 4px" }}>•</span> <strong style={{ color: "#2563eb" }}>{v.durationDays || 1} Day{(v.durationDays || 1) > 1 ? "s" : ""} On-Site</strong>
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Visiting Consultants Pill (Keka HR Pill Style) */}
-                          <div style={{ marginTop: "12px" }}>
-                            <div style={{
-                              display: "inline-flex",
-                              alignItems: "center",
-                              flexWrap: "wrap",
-                              gap: "12px",
-                              background: "#f8fafc",
-                              border: "1px solid #e2e8f0",
-                              padding: "10px 16px",
-                              borderRadius: "10px",
-                              boxShadow: "0 1px 3px rgba(0,0,0,0.02)"
-                            }}>
-                              <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", marginRight: "4px" }}>
-                                👥 Visiting Team:
-                              </span>
-
-                              {consultantNames.map(cName => {
-                                const matchedUser = users.find(u => u.name === cName || u.name.includes(cName));
-                                const avatarUrl = matchedUser?.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=120";
-                                const userTitle = matchedUser?.title || matchedUser?.role || "Consultant";
-
-                                return (
-                                  <div key={cName} style={{ display: "flex", alignItems: "center", gap: "8px", background: "#ffffff", padding: "4px 10px", borderRadius: "20px", border: "1px solid #cbd5e1" }}>
-                                    <img src={avatarUrl} alt={cName} style={{ width: "26px", height: "26px", borderRadius: "50%", objectFit: "cover" }} />
-                                    <span style={{ fontSize: "0.84rem", fontWeight: "700", color: "#1e293b" }}>{cName}</span>
-                                    <span style={{ fontSize: "0.74rem", color: "#64748b", fontWeight: "500" }}>({userTitle})</span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-
-                          {/* Detailed Findings & Work Done Box */}
-                          {(v.understandings || v.workDone) && (
-                            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "18px", marginTop: "14px", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
-                              {v.understandings && (
-                                <div style={{ marginBottom: v.workDone ? "12px" : "0" }}>
-                                  <strong style={{ fontSize: "0.78rem", color: "#92400e", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
-                                    🧠 Key Understandings & Observations:
-                                  </strong>
-                                  <p style={{ margin: 0, fontSize: "0.88rem", color: "#451a03", lineHeight: "1.5" }}>
-                                    {v.understandings}
-                                  </p>
-                                </div>
-                              )}
-
-                              {v.workDone && (
-                                <div>
-                                  <strong style={{ fontSize: "0.78rem", color: "#1e293b", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
-                                    ✅ Work Done / Accomplishments:
-                                  </strong>
-                                  <p style={{ margin: 0, fontSize: "0.88rem", color: "#334155", lineHeight: "1.5" }}>
-                                    {v.workDone}
-                                  </p>
-                                </div>
-                              )}
-
-                              {v.followUpAction && (
-                                <div style={{ marginTop: "10px", fontSize: "0.8rem", color: "#2563eb", fontWeight: "600" }}>
-                                  📌 Follow-Up Action: {v.followUpAction}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "4px" }}>
+                      <span>Milestone Delivery</span>
+                      <span style={{ color: "#9333ea", fontWeight: "800" }}>92%</span>
+                    </div>
+                    <div style={{ width: "100%", height: "8px", background: "#e2e8f0", borderRadius: "4px", overflow: "hidden" }}>
+                      <div style={{ width: "92%", height: "100%", background: "#9333ea" }} />
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Panel 2: Upcoming Visits */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                    UPCOMING VISITS
+                  </h3>
+                  <button
+                    onClick={() => setShowVisitModal(true)}
+                    style={{ background: "#059669", color: "#ffffff", border: "none", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                  >
+                    + Record Visit
+                  </button>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {[
+                    { date: "02 Aug", title: "Showroom Audit Visit", location: "Main Store", consultant: "Darla Manikanta" },
+                    { date: "05 Aug", title: "Inventory Verification", location: "Warehouse", consultant: "Shikhar Jain" }
+                  ].map((v, i) => (
+                    <div key={i} style={{ padding: "12px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: "12px" }}>
+                      <div style={{ background: "#ecfdf5", color: "#059669", padding: "8px 10px", borderRadius: "8px", textAlign: "center", minWidth: "60px" }}>
+                        <span style={{ fontSize: "0.68rem", fontWeight: "800", display: "block" }}>AUG</span>
+                        <strong style={{ fontSize: "1rem" }}>{v.date.split(" ")[0]}</strong>
+                      </div>
+                      <div>
+                        <strong style={{ fontSize: "0.85rem", color: "#0f172a", display: "block" }}>{v.title}</strong>
+                        <span style={{ fontSize: "0.74rem", color: "#64748b" }}>{v.location} • <strong style={{ color: "#334155" }}>{v.consultant}</strong></span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Panel 3: Risks & Approvals */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
+                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 14px 0" }}>
+                  RISKS & APPROVALS
+                </h3>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  <div style={{ padding: "10px 12px", background: "#fef2f2", borderRadius: "8px", border: "1px solid #fecaca", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#dc2626" }}>⚠️ Inventory Verification Delay</div>
+                      <div style={{ fontSize: "0.72rem", color: "#991b1b" }}>Owner: Darla • Severity: High</div>
+                    </div>
+                    <span style={{ background: "#dc2626", color: "#ffffff", fontSize: "0.68rem", fontWeight: "800", padding: "2px 8px", borderRadius: "10px" }}>Open</span>
+                  </div>
+
+                  <div style={{ padding: "10px 12px", background: "#fff7ed", borderRadius: "8px", border: "1px solid #fed7aa", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#d97706" }}>📝 SOP Sign-off Pending</div>
+                      <div style={{ fontSize: "0.72rem", color: "#9a3412" }}>Owner: Shikhar • Severity: Medium</div>
+                    </div>
+                    <span style={{ background: "#d97706", color: "#ffffff", fontSize: "0.68rem", fontWeight: "800", padding: "2px 8px", borderRadius: "10px" }}>In Review</span>
+                  </div>
+                </div>
+              </div>
+
             </div>
-          )}
+
+          </div>
+        )}
 
           {/* TAB 1: OVERVIEW */}
           {activeProjectTab === "overview" && (
@@ -1016,7 +912,6 @@ export default function ProjectsView() {
             </div>
           )}
         </div>
-      </div>
     );
   }
 

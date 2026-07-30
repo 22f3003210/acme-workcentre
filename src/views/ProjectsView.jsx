@@ -679,6 +679,129 @@ export default function ProjectsView() {
           </div>
         )}
 
+        {/* ------------------------------------------------------------- */}
+        {/* MEETINGS & CALLS TAB VIEW                                     */}
+        {/* Date | Meeting Type | Participants | Minutes | Follow-up | Status */}
+        {/* ------------------------------------------------------------- */}
+        {activeProjectTab === "meetings" && (() => {
+          const sampleMeetings = [
+            {
+              id: "m-1",
+              date: "30 Jul 2026, 02:00 PM",
+              type: "SOP Implementation & Sign-off Sync",
+              participants: ["Sayed (Client POC)", "Shikhar Jain", "Darla Manikanta"],
+              minutes: "Reviewed Phase 4 inventory verification audit findings. Client approved draft SOP for POS cash handling and gold vault reconciliation.",
+              followUp: "Shikhar to send final signed SOP PDF by 02 Aug. Darla to initiate staff training.",
+              status: "Completed",
+              statusBg: "#dcfce7",
+              statusColor: "#16a34a"
+            },
+            {
+              id: "m-2",
+              date: "03 Aug 2026, 11:00 AM",
+              type: "Q3 Sales Target & Sourcing Review",
+              participants: ["Sayed (Client POC)", "Hemanth Kumar", "Jyoshna Manuka"],
+              minutes: "Agenda: Review retail staff sales commission structure, old gold exchange margins, and inventory barcode scanning implementation.",
+              followUp: "Jyoshna to present POS barcode scanning workflow demo.",
+              status: "Scheduled",
+              statusBg: "#eff6ff",
+              statusColor: "#2563eb"
+            },
+            {
+              id: "m-3",
+              date: "25 Jul 2026, 04:30 PM",
+              type: "Initial Scope & Store Audit Alignment",
+              participants: ["Sayed (Client POC)", "Darla Manikanta"],
+              minutes: "Discussed main showroom layout changes, security camera coverage audit, and staff attendance log tracking.",
+              followUp: "Darla completed initial site audit report and cataloged vault stock.",
+              status: "Completed",
+              statusBg: "#dcfce7",
+              statusColor: "#16a34a"
+            }
+          ];
+
+          return (
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>
+                    📞 Project Meetings & Minutes of Meeting (MoM)
+                  </h3>
+                  <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "#64748b" }}>
+                    Track client review calls, meeting minutes, attendee lists, and follow-up action items.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowEventModal(true)}
+                  style={{
+                    background: "#2563eb",
+                    color: "#ffffff",
+                    border: "none",
+                    padding: "10px 18px",
+                    borderRadius: "8px",
+                    fontWeight: "700",
+                    fontSize: "0.85rem",
+                    cursor: "pointer"
+                  }}
+                >
+                  + Schedule / Record Meeting
+                </button>
+              </div>
+
+              {/* Meetings Table */}
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc", borderBottom: "2px solid #cbd5e1", textAlign: "left", color: "#475569" }}>
+                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "140px" }}>📅 Date & Time</th>
+                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "180px" }}>🤝 Meeting Type</th>
+                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "200px" }}>👥 Participants</th>
+                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "260px" }}>📝 Minutes (MoM)</th>
+                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "220px" }}>📌 Follow-Up Actions</th>
+                      <th style={{ padding: "12px", fontWeight: "800", minWidth: "110px" }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sampleMeetings.map(m => (
+                      <tr key={m.id} style={{ borderBottom: "1px solid #e2e8f0", verticalAlign: "top" }}>
+                        <td style={{ padding: "14px 12px", fontWeight: "800", color: "#0f172a" }}>
+                          {m.date}
+                        </td>
+                        <td style={{ padding: "14px 12px" }}>
+                          <span style={{ background: "#eff6ff", color: "#1d4ed8", padding: "4px 10px", borderRadius: "6px", fontWeight: "800", display: "inline-block" }}>
+                            {m.type}
+                          </span>
+                        </td>
+                        <td style={{ padding: "14px 12px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                            {m.participants.map((p, i) => (
+                              <span key={i} style={{ background: "#f1f5f9", color: "#334155", padding: "2px 8px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "700" }}>
+                                {p}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td style={{ padding: "14px 12px", color: "#334155", lineHeight: "1.5" }}>
+                          {m.minutes}
+                        </td>
+                        <td style={{ padding: "14px 12px", color: "#2563eb", fontWeight: "600", lineHeight: "1.5" }}>
+                          {m.followUp}
+                        </td>
+                        <td style={{ padding: "14px 12px" }}>
+                          <span style={{ background: m.statusBg, color: m.statusColor, padding: "4px 10px", borderRadius: "6px", fontWeight: "800", fontSize: "0.75rem" }}>
+                            ● {m.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          );
+        })()}
+
           {/* TAB 1: OVERVIEW */}
           {activeProjectTab === "overview" && (
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>

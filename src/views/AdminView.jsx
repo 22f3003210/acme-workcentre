@@ -631,10 +631,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", position: "relative", zIndex: 2 }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                  <span style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(6px)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.74rem", fontWeight: "700", border: "1px solid rgba(255,255,255,0.2)" }}>
-                    🟢 Operational Status: Live
+                  <span style={{ background: "rgba(255,255,255,0.15)", backdropFilter: "blur(6px)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.74rem", fontWeight: "700", border: "1px solid rgba(255,255,255,0.2)", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#4ade80", boxShadow: "0 0 8px #4ade80" }} /> Operational Status: Live
                   </span>
-                  <span style={{ fontSize: "0.78rem", opacity: 0.8, fontWeight: "600" }}>📅 27 July 2026</span>
+                  <span style={{ fontSize: "0.78rem", opacity: 0.8, fontWeight: "600" }}>27 July 2026</span>
                 </div>
                 <h2 style={{ fontSize: "1.8rem", fontWeight: "800", margin: 0, letterSpacing: "-0.5px" }}>Welcome back, System Admin 👋</h2>
                 <p style={{ fontSize: "0.9rem", opacity: 0.9, margin: "6px 0 0 0" }}>Executive Project Command Center & Consultant Field Operations Overview</p>
@@ -644,43 +644,47 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 <button
                   type="button"
                   onClick={() => setActiveTab("calendar")}
-                  style={{ background: "rgba(255,255,255,0.15)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.3)", borderRadius: "10px", padding: "12px 20px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", backdropFilter: "blur(6px)" }}
+                  style={{ background: "rgba(255,255,255,0.15)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.3)", borderRadius: "10px", padding: "12px 20px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", backdropFilter: "blur(6px)", display: "inline-flex", alignItems: "center", gap: "8px" }}
                 >
-                  📅 View Calendar
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  View Calendar
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveTab("projects")}
-                  style={{ background: "#ffffff", color: "#312e81", border: "none", borderRadius: "10px", padding: "12px 24px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+                  style={{ background: "#ffffff", color: "#312e81", border: "none", borderRadius: "10px", padding: "12px 24px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(0,0,0,0.15)", display: "inline-flex", alignItems: "center", gap: "8px" }}
                 >
-                  💼 Open Projects Hub →
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                  Open Projects Hub →
                 </button>
               </div>
             </div>
           </div>
 
-          {/* 1. Executive KPI Cards Strip */}
+          {/* 1. Executive KPI Cards Strip (Clean Borders, No Left Colored Stripes) */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "20px" }}>
             
             {/* KPI Card 1: Active Projects */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px 24px", position: "relative", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)" }}>
-              <div style={{ position: "absolute", top: 0, left: 0, width: "6px", height: "100%", background: "#2563eb" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800", letterSpacing: "0.5px" }}>ACTIVE CLIENT PROJECTS</span>
-                <div style={{ background: "#eff6ff", color: "#2563eb", width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem" }}>📁</div>
+                <div style={{ background: "#eff6ff", color: "#2563eb", width: "38px", height: "38px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                </div>
               </div>
               <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "8px" }}>{projects?.length > 0 ? projects.length : 3} Active</div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px", fontSize: "0.76rem", color: "#16a34a", fontWeight: "700" }}>
-                <span>🟢</span> 100% Client Sourcing On-Track
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} /> 100% Client Sourcing On-Track
               </div>
             </div>
 
             {/* KPI Card 2: Delivery Progress */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px 24px", position: "relative", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)" }}>
-              <div style={{ position: "absolute", top: 0, left: 0, width: "6px", height: "100%", background: "#7c3aed" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800", letterSpacing: "0.5px" }}>AVG DELIVERY PROGRESS</span>
-                <div style={{ background: "#f3e8ff", color: "#7c3aed", width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem" }}>📈</div>
+                <div style={{ background: "#f3e8ff", color: "#7c3aed", width: "38px", height: "38px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
               </div>
               <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "8px" }}>
                 {projects?.length > 0 
@@ -688,35 +692,37 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   : "78%"}
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px", fontSize: "0.76rem", color: "#7c3aed", fontWeight: "700" }}>
-                <span>⚡</span> Milestone Velocity +14%
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Milestone Velocity +14%
               </div>
             </div>
 
             {/* KPI Card 3: Upcoming Deliverables */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px 24px", position: "relative", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)" }}>
-              <div style={{ position: "absolute", top: 0, left: 0, width: "6px", height: "100%", background: "#f59e0b" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800", letterSpacing: "0.5px" }}>UPCOMING DELIVERABLES</span>
-                <div style={{ background: "#fffbeb", color: "#d97706", width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem" }}>🎯</div>
+                <div style={{ background: "#fffbeb", color: "#d97706", width: "38px", height: "38px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                </div>
               </div>
               <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "8px" }}>5 Due</div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px", fontSize: "0.76rem", color: "#d97706", fontWeight: "700" }}>
-                <span>📅</span> Milestone Audits Due This Week
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Milestone Audits Due This Week
               </div>
             </div>
 
             {/* KPI Card 4: Deployed Field Consultants */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px 24px", position: "relative", overflow: "hidden", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)" }}>
-              <div style={{ position: "absolute", top: 0, left: 0, width: "6px", height: "100%", background: "#10b981" }} />
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800", letterSpacing: "0.5px" }}>DEPLOYED CONSULTANTS</span>
-                <div style={{ background: "#ecfdf5", color: "#059669", width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem" }}>👥</div>
+                <div style={{ background: "#ecfdf5", color: "#059669", width: "38px", height: "38px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
               </div>
               <div style={{ fontSize: "1.8rem", fontWeight: "800", color: "#0f172a", marginTop: "8px" }}>
                 {users?.filter(u => u.role === "Consultant").length || 8} Staff
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px", fontSize: "0.76rem", color: "#059669", fontWeight: "700" }}>
-                <span>👥</span> Active Field & Site Deployments
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#059669" }} /> Active Field & Site Deployments
               </div>
             </div>
 
@@ -849,7 +855,10 @@ export default function AdminView({ activeTab, setActiveTab }) {
               {/* Deliverables Radar */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)" }}>
                 <h4 style={{ fontSize: "1rem", fontWeight: "800", color: "#0f172a", margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>🎯</span> Deliverables Radar
+                  <span style={{ background: "#fffbeb", color: "#d97706", width: "26px", height: "26px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+                  </span>
+                  Deliverables Radar
                 </h4>
                 <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                   {[
@@ -858,8 +867,24 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     { task: "Field Verification System Rollout", proj: "Kalyan Jewellers", date: "28 July 2026", done: false },
                     { task: "Q3 Sourcing Progress Report", proj: "Zaveri Pearls", date: "30 July 2026", done: false }
                   ].map((m, idx) => (
-                    <div key={idx} style={{ display: "flex", alignItems: "flex-start", gap: "12px", padding: "10px 12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
-                      <span style={{ color: m.done ? "#16a34a" : "#d97706", fontSize: "1.1rem", marginTop: "1px" }}>{m.done ? "✓" : "⏳"}</span>
+                    <div key={idx} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 14px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #f1f5f9" }}>
+                      <span style={{
+                        background: m.done ? "#dcfce7" : "#fff7ed",
+                        color: m.done ? "#16a34a" : "#ea580c",
+                        width: "24px",
+                        height: "24px",
+                        borderRadius: "50%",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0
+                      }}>
+                        {m.done ? (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        ) : (
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        )}
+                      </span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: "0.84rem", fontWeight: "700", color: "#0f172a" }}>{m.task}</div>
                         <div style={{ fontSize: "0.74rem", color: "#64748b", marginTop: "2px" }}>{m.proj} • <span style={{ color: "#2563eb", fontWeight: "700" }}>{m.date}</span></div>
@@ -872,18 +897,25 @@ export default function AdminView({ activeTab, setActiveTab }) {
               {/* Live Field Activity Feed */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.03)" }}>
                 <h4 style={{ fontSize: "1rem", fontWeight: "800", color: "#0f172a", margin: "0 0 16px 0", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>📍</span> Live Field Operations Activity
+                  <span style={{ background: "#eff6ff", color: "#2563eb", width: "26px", height: "26px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  </span>
+                  Live Field Operations Activity
                 </h4>
                 <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                   {[
-                    { text: "Darla Manikanta checked in at Zaveri Pearls Site", time: "10m ago", icon: "📍" },
-                    { text: "Ananya Roy submitted site verification report", time: "45m ago", icon: "📄" },
-                    { text: "Sayed approved petty cash travel claim (₹1,200)", time: "2h ago", icon: "💳" }
+                    { text: "Darla Manikanta checked in at Zaveri Pearls Site", time: "10m ago", type: "loc" },
+                    { text: "Ananya Roy submitted site verification report", time: "45m ago", type: "doc" },
+                    { text: "Sayed approved petty cash travel claim (₹1,200)", time: "2h ago", type: "pay" }
                   ].map((act, i) => (
-                    <div key={i} style={{ display: "flex", gap: "10px", fontSize: "0.8rem", color: "#334155" }}>
-                      <span style={{ background: "#f1f5f9", borderRadius: "6px", width: "28px", height: "28px", display: "flex", alignItems: "center", justifyContent: "center" }}>{act.icon}</span>
+                    <div key={i} style={{ display: "flex", gap: "12px", alignItems: "center", fontSize: "0.8rem", color: "#334155" }}>
+                      <span style={{ background: act.type === "loc" ? "#eff6ff" : act.type === "doc" ? "#f0fdf4" : "#faf5ff", color: act.type === "loc" ? "#2563eb" : act.type === "doc" ? "#16a34a" : "#9333ea", borderRadius: "8px", width: "30px", height: "30px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {act.type === "loc" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>}
+                        {act.type === "doc" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}
+                        {act.type === "pay" && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>}
+                      </span>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: "600", color: "#0f172a" }}>{act.text}</div>
+                        <div style={{ fontWeight: "700", color: "#0f172a" }}>{act.text}</div>
                         <div style={{ fontSize: "0.72rem", color: "#94a3b8", marginTop: "2px" }}>{act.time}</div>
                       </div>
                     </div>

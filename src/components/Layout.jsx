@@ -33,6 +33,9 @@ export default function Layout({ children, activeTab, setActiveTab }) {
     return () => window.removeEventListener("open-employee-profile", handleOpenProfile);
   }, []);
 
+  // 9-Dots Button Side Navigation Toggle State
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+
   // Filter employees for top search bar
   const filteredEmployees = (users || []).filter(u => {
     if (!searchQuery.trim()) return false;
@@ -125,6 +128,40 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       <div className="sea-top-navbar" style={{ position: "sticky", top: 0, zIndex: 900 }}>
         <div className="sea-nav-left" style={{ display: "flex", alignItems: "center", gap: "14px", position: "relative" }}>
           
+          {/* 9-Dots Button (Linked to Side Navigation Bar Toggle) */}
+          <button
+            type="button"
+            onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
+            style={{
+              width: "42px",
+              height: "42px",
+              borderRadius: "12px",
+              background: isSidebarExpanded ? "#dbeafe" : "#eff6ff",
+              border: "1px solid #bfdbfe",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              color: "#2563eb",
+              transition: "all 0.15s ease",
+              boxShadow: isSidebarExpanded ? "0 0 0 3px rgba(37,99,235,0.2)" : "0 2px 5px rgba(37,99,235,0.08)",
+              flexShrink: 0
+            }}
+            title={isSidebarExpanded ? "Collapse Sidebar Menu" : "Expand Sidebar Menu"}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="5" cy="5" r="2.2" />
+              <circle cx="12" cy="5" r="2.2" />
+              <circle cx="19" cy="5" r="2.2" />
+              <circle cx="5" cy="12" r="2.2" />
+              <circle cx="12" cy="12" r="2.2" />
+              <circle cx="19" cy="12" r="2.2" />
+              <circle cx="5" cy="19" r="2.2" />
+              <circle cx="12" cy="19" r="2.2" />
+              <circle cx="19" cy="19" r="2.2" />
+            </svg>
+          </button>
+
           {/* Acme Consulting Oval Logo */}
           <img
             src={logoImg}
@@ -564,7 +601,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
         
         {/* YouTube-Style Collapsible Side Navigation Bar for Admin View */}
         {currentUser?.role === "Admin" && (
-          <aside className="youtube-sidebar">
+          <aside className={`youtube-sidebar ${isSidebarExpanded ? "expanded" : ""}`}>
             <div className="youtube-sidebar-nav">
               {navItems.map((item) => {
                 const isActive = activeTab === item.id;

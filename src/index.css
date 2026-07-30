@@ -3056,7 +3056,8 @@ button, input, select, textarea {
   flex-shrink: 0;
 }
 
-.youtube-sidebar:hover {
+.youtube-sidebar:hover,
+.youtube-sidebar.expanded {
   width: 230px;
   min-width: 230px;
   box-shadow: 4px 0 24px rgba(15, 23, 42, 0.12);
@@ -3125,7 +3126,8 @@ button, input, select, textarea {
   letter-spacing: 0.01em;
 }
 
-.youtube-sidebar:hover .youtube-nav-label {
+.youtube-sidebar:hover .youtube-nav-label,
+.youtube-sidebar.expanded .youtube-nav-label {
   opacity: 1;
 }
 
@@ -3172,7 +3174,8 @@ button, input, select, textarea {
   overflow: hidden;
 }
 
-.youtube-sidebar:hover .youtube-user-info {
+.youtube-sidebar:hover .youtube-user-info,
+.youtube-sidebar.expanded .youtube-user-info {
   opacity: 1;
 }
 

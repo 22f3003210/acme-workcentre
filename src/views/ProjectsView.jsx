@@ -243,100 +243,93 @@ export default function ProjectsView() {
       <div className="individual-project-view" style={{ padding: "8px 0", minHeight: "100vh", display: "flex", flexDirection: "column", gap: "20px", fontFamily: "Inter, sans-serif", color: "#0f172a" }}>
         
         {/* ------------------------------------------------------------- */}
-        {/* TOP BAR: PROJECT CODE + STATUS + EDIT & CLOSE ACTION BUTTONS   */}
-        {/* ------------------------------------------------------------- */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#ffffff", padding: "12px 20px", borderRadius: "14px", border: "1px solid #e2e8f0", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "700" }}>Project Code:</span>
-            <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "5px 14px", borderRadius: "8px", fontSize: "0.88rem", fontWeight: "800" }}>
-              {effectiveProject.code || "PROJ-TEST-01"}
-            </span>
-            <span style={{
-              background: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#dcfce7" : "#fff7ed",
-              color: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#16a34a" : "#d97706",
-              border: `1px solid ${(effectiveProject.status || "Active").toLowerCase() === "active" ? "#bbf7d0" : "#fed7aa"}`,
-              padding: "5px 16px", borderRadius: "20px", fontSize: "0.85rem", fontWeight: "800"
-            }}>
-              ● {effectiveProject.status || "Active"}
-            </span>
-          </div>
-
-          {/* Right Corner: Edit & Close Buttons (Matching User Screenshot) */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <button
-              onClick={() => alert("Editing Project Details...")}
-              style={{
-                background: "#ffffff",
-                border: "1px solid #cbd5e1",
-                padding: "8px 18px",
-                borderRadius: "10px",
-                fontSize: "0.92rem",
-                fontWeight: "700",
-                color: "#0f172a",
-                cursor: "pointer",
-                transition: "all 0.15s ease"
-              }}
-            >
-              Edit
-            </button>
-
-            <button
-              onClick={() => setSelectedProject(null)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                background: "#f8fafc",
-                border: "1px solid #e2e8f0",
-                padding: "8px 18px",
-                borderRadius: "12px",
-                fontSize: "0.95rem",
-                fontWeight: "800",
-                color: "#0f172a",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.03)"
-              }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" fill="#fef2f2" stroke="#ef4444" strokeWidth="2" />
-                <path d="M15 9l-6 6M9 9l6 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
-              </svg>
-              Close
-            </button>
-          </div>
-        </div>
-
-        {/* ------------------------------------------------------------- */}
-        {/* 1. CLIENT HEADER + PROGRESS + HEALTH + KPIS CARD              */}
-        {/* ------------------------------------------------------------- */}
-        {/* ------------------------------------------------------------- */}
-        {/* 1. CLIENT HEADER CARD                                         */}
+        {/* 1. CLIENT HEADER CARD (WITH EDIT & CLOSE BUTTONS INSIDE)      */}
         {/* ------------------------------------------------------------- */}
         <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "20px" }}>
           
           {/* Header Top Info Row */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "20px" }}>
             <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <h1 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "800", color: "#0f172a", letterSpacing: "-0.4px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                <h1 style={{ margin: 0, fontSize: "1.55rem", fontWeight: "800", color: "#0f172a", letterSpacing: "-0.4px" }}>
                   {effectiveProject.client || "Client Engagement"}
                 </h1>
-                <span style={{ color: "#94a3b8", fontSize: "1.4rem" }}>•</span>
-                <h2 style={{ margin: 0, fontSize: "1.3rem", fontWeight: "700", color: "#2563eb" }}>
+                <span style={{ color: "#94a3b8", fontSize: "1.3rem" }}>•</span>
+                <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "700", color: "#2563eb" }}>
                   {effectiveProject.name}
                 </h2>
+
+                {/* Badges directly next to title */}
+                <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "4px 12px", borderRadius: "8px", fontSize: "0.82rem", fontWeight: "800", marginLeft: "4px" }}>
+                  {effectiveProject.code || "PROJ-TEST-01"}
+                </span>
+                <span style={{
+                  background: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#dcfce7" : "#fff7ed",
+                  color: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#16a34a" : "#d97706",
+                  border: `1px solid ${(effectiveProject.status || "Active").toLowerCase() === "active" ? "#bbf7d0" : "#fed7aa"}`,
+                  padding: "4px 14px", borderRadius: "20px", fontSize: "0.82rem", fontWeight: "800"
+                }}>
+                  ● {effectiveProject.status || "Active"}
+                </span>
               </div>
-              <p style={{ margin: "6px 0 0 0", fontSize: "0.88rem", color: "#64748b" }}>
+
+              <p style={{ margin: "8px 0 0 0", fontSize: "0.88rem", color: "#64748b" }}>
                 POC: <strong style={{ color: "#334155" }}>{effectiveProject.pocName || effectiveProject.client}</strong> • Phone: <strong style={{ color: "#334155" }}>{effectiveProject.pocContact || effectiveProject.clientContact || "+91-9849012345"}</strong> • Start: <strong style={{ color: "#334155" }}>{effectiveProject.startDate || "27 Jul 2026"}</strong>
               </p>
             </div>
+
+            {/* Right Side: Edit & Close Action Buttons */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <button
+                onClick={() => alert("Editing Project Details...")}
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #cbd5e1",
+                  padding: "8px 18px",
+                  borderRadius: "10px",
+                  fontSize: "0.88rem",
+                  fontWeight: "700",
+                  color: "#0f172a",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() => setSelectedProject(null)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  padding: "8px 18px",
+                  borderRadius: "12px",
+                  fontSize: "0.92rem",
+                  fontWeight: "800",
+                  color: "#0f172a",
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.03)"
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" fill="#fef2f2" stroke="#ef4444" strokeWidth="2" />
+                  <path d="M15 9l-6 6M9 9l6 6" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                Close
+              </button>
+            </div>
           </div>
 
-          {/* 4 Primary KPI Metric Cards Strip */}
+          {/* 4 Primary KPI Metric Cards Strip (Clean Modern Vector SVGs) */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", borderTop: "1px solid #f1f5f9", paddingTop: "18px" }}>
             <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ background: "#eff6ff", color: "#2563eb", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1rem" }}>📋</div>
+              <div style={{ background: "#eff6ff", color: "#2563eb", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+              </div>
               <div>
                 <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Total Tasks</div>
                 <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>14 Tasks <span style={{ fontSize: "0.7rem", color: "#16a34a" }}>(8 Done)</span></div>
@@ -344,7 +337,9 @@ export default function ProjectsView() {
             </div>
 
             <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ background: "#fef2f2", color: "#dc2626", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1rem" }}>⚠️</div>
+              <div style={{ background: "#fef2f2", color: "#dc2626", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
               <div>
                 <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Overdue Tasks</div>
                 <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#dc2626" }}>2 Urgent <span style={{ fontSize: "0.7rem", color: "#ea580c" }}>(Action Req.)</span></div>
@@ -352,7 +347,9 @@ export default function ProjectsView() {
             </div>
 
             <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ background: "#fff7ed", color: "#ea580c", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1rem" }}>₹</div>
+              <div style={{ background: "#fff7ed", color: "#ea580c", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+              </div>
               <div>
                 <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Linked Expenses</div>
                 <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>₹{linkedExps.reduce((s, e) => s + e.amount, 0).toLocaleString() || "45,000"}</div>
@@ -360,7 +357,9 @@ export default function ProjectsView() {
             </div>
 
             <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ background: "#f3e8ff", color: "#9333ea", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1rem" }}>🚗</div>
+              <div style={{ background: "#f3e8ff", color: "#9333ea", width: "38px", height: "38px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              </div>
               <div>
                 <div style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>Client Site Visits</div>
                 <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>{effectiveProject.clientVisits?.length || 5} Completed</div>
@@ -371,29 +370,68 @@ export default function ProjectsView() {
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* 2. PRIMARY NAVIGATION TAB BAR                                 */}
+        {/* 2. PRIMARY NAVIGATION TAB BAR (MODERN CLEAN SVG VECTOR ICONS) */}
         {/* ------------------------------------------------------------- */}
         <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "6px 12px", display: "flex", gap: "8px", overflowX: "auto" }}>
           {[
-            { id: "business", label: "🏢 Business Details" },
-            { id: "audit", label: "📋 Audit Report" },
-            { id: "plan", label: "🗂 Project Plan" },
-            { id: "tasks", label: `📅 Tasks & Event Planner (${effectiveProject.scheduledEvents?.length || 14})` },
-            { id: "visits", label: `🚗 Visit & Review History (${effectiveProject.clientVisits?.length || 5})` },
-            { id: "documents", label: "📁 Documents & Deliverables" },
-            { id: "team", label: "👥 Assigned Team" },
-            { id: "discussions", label: `💬 Discussions & Activity Logs (${effectiveProject.discussions?.length || 0})` },
-            { id: "expenses", label: `💸 Linked Expenses (${linkedExps.length})` }
+            { 
+              id: "business", 
+              label: "Business Details", 
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
+            },
+            { 
+              id: "audit", 
+              label: "Audit Report", 
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+            },
+            { 
+              id: "plan", 
+              label: "Project Plan", 
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><path d="M9 3v18"/><path d="M14 9h7"/><path d="M14 15h7"/><path d="M3 9h6"/><path d="M3 15h6"/></svg>
+            },
+            { 
+              id: "tasks", 
+              label: `Tasks & Event Planner (${effectiveProject.scheduledEvents?.length || 14})`, 
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="m9 16 2 2 4-4"/></svg>
+            },
+            { 
+              id: "visits", 
+              label: `Visit & Review History (${effectiveProject.clientVisits?.length || 5})`, 
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            },
+            { 
+              id: "documents", 
+              label: "Documents & Deliverables", 
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+            },
+            { 
+              id: "team", 
+              label: "Assigned Team", 
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            },
+            { 
+              id: "discussions", 
+              label: `Discussions & Activity Logs (${effectiveProject.discussions?.length || 0})`, 
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            },
+            { 
+              id: "expenses", 
+              label: `Linked Expenses (${linkedExps.length})`, 
+              icon: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            }
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveProjectTab(tab.id)}
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
                 background: activeProjectTab === tab.id ? "#2563eb" : "transparent",
                 color: activeProjectTab === tab.id ? "#ffffff" : "#475569",
                 border: "none",
                 borderRadius: "8px",
-                padding: "10px 18px",
+                padding: "10px 16px",
                 fontWeight: "700",
                 fontSize: "0.85rem",
                 cursor: "pointer",
@@ -401,6 +439,7 @@ export default function ProjectsView() {
                 transition: "all 0.15s ease"
               }}
             >
+              {tab.icon}
               {tab.label}
             </button>
           ))}

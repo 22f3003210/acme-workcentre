@@ -1,9 +1,34 @@
 import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { initialProjects } from "../data/initialData";
 import logoImg from "../assets/logo.png";
 
+// Base64 / URL-safe encryption for Project IDs in URL routes
+const encryptProjectId = (id) => {
+  if (!id) return "";
+  try {
+    return btoa(String(id)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  } catch (e) {
+    return String(id);
+  }
+};
+
+const decryptProjectId = (str) => {
+  if (!str) return "";
+  try {
+    let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) base64 += '=';
+    return atob(base64);
+  } catch (e) {
+    return str;
+  }
+};
+
 export default function ProjectsView() {
+  const params = useParams();
+  const navigate = useNavigate();
+
   const { 
     projects, 
     addProject, 
@@ -39,7 +64,7 @@ export default function ProjectsView() {
     if (!proj) return null;
     
     const defaultDetails = {
-      companyName: proj.client || proj.name || "Diamond Atelier",
+      companyName: proj.name || proj.client || "Sunehri Virasat",
       businessModel: "Pure Retailer",
       headOffice: "Mumbai, Delhi",
       showroomCount: "5",
@@ -51,7 +76,7 @@ export default function ProjectsView() {
       purposeOfApproach: "Custom order tracking delays, designer-craftsman handoffs, vault shrinkage reconciliation.",
       primaryChallenge: "Describe how metal weight variance, inventory reconciliation, or sales tracking issues affect daily workflow...",
       staffMembers: [
-        { name: proj.pocName || "Anant Sarraf", designation: "Managing Director", contact: proj.pocContact || "9876543210" },
+        { name: proj.pocName || "Anant Sarraf", designation: "Managing Director", contact: proj.pocContact || "9876543233" },
         { name: "Ramesh Sharma", designation: "Head of Inventory & Vault", contact: "9812345678" }
       ],
       transformationOutcomes: [
@@ -167,6 +192,32 @@ export default function ProjectsView() {
   const [newBudget, setNewBudget] = useState("");
   const [linkExpensesEnabled, setLinkExpensesEnabled] = useState(true);
 
+  // Sync route URL parameter with selectedProject state securely
+  useEffect(() => {
+    if (params.projectId && projects.length > 0) {
+      const decodedId = decryptProjectId(params.projectId);
+      const matched = projects.find(p => 
+        String(p.id) === String(params.projectId) || 
+        String(p.id) === String(decodedId) || 
+        (p.code && p.code.toLowerCase() === params.projectId.toLowerCase())
+      );
+      if (matched) {
+        setSelectedProject(matched);
+      }
+    }
+  }, [params.projectId, projects]);
+
+  const handleSelectProject = (proj) => {
+    const encId = encryptProjectId(proj.id);
+    navigate(`/projects/${encId}`);
+    setSelectedProject(proj);
+  };
+
+  const handleCloseProjectHub = () => {
+    navigate('/projects');
+    setSelectedProject(null);
+  };
+
   // Automatically hide left sidebar when an individual client project detail view is active
   useEffect(() => {
     if (selectedProject) {
@@ -178,6 +229,51 @@ export default function ProjectsView() {
       document.body.classList.remove("hide-sidebar");
     };
   }, [selectedProject]);
+
+  // File upload change handler
+  const handleFileUploadChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setDocFileName(file.name);
+      setDocFileType(file.type || "PDF Document");
+      setDocFileSize(`${(file.size / 1024).toFixed(1)} KB`);
+      setDocFileUrl(URL.createObjectURL(file));
+    }
+  };
+
+  // Submit Handler for Audit Report Document Upload Form
+  const handleUploadAuditReportSubmit = (e) => {
+    e.preventDefault();
+    if (!docTitle.trim() || !selectedProject) return;
+
+    const effective = getEffectiveProject(selectedProject);
+    const newDoc = {
+      id: `audit-${Date.now()}`,
+      title: docTitle,
+      category: docCategory,
+      fileName: docFileName || "ACME_Audit_Report.pdf",
+      fileType: docFileType || "application/pdf",
+      fileSize: docFileSize || "1.5 MB",
+      uploadedAt: new Date().toISOString().split("T")[0],
+      uploadedBy: currentUser?.name || "Darla Manikanta",
+      url: docFileUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+    };
+
+    const existingDocs = effective.auditReports || [];
+    const updatedDocs = [newDoc, ...existingDocs];
+
+    updateProject(effective.id, {
+      auditReports: updatedDocs
+    });
+
+    const updated = projects.find(p => p.id === selectedProject.id);
+    if (updated) setSelectedProject({ ...updated, auditReports: updatedDocs });
+
+    setToast({ message: `Audit Report '${docTitle}' uploaded successfully!`, type: "success" });
+    setDocTitle("");
+    setDocFileName("");
+    setShowDocUploadModal(false);
+  };
 
   // Filtered projects
   const filteredProjects = projects.filter(p => {
@@ -208,9 +304,9 @@ export default function ProjectsView() {
     addProject({
       code: newCode.toUpperCase(),
       name: newName,
-      client: pocName || "Client Engagement",
+      client: newName, // Clean client brand name
       pocName: pocName || "N/A",
-      pocContact: pocContact || "N/A",
+      pocContact: pocContact || "9876543233",
       clientContact: pocContact ? `${pocName} (${pocContact})` : (pocName || "N/A"),
       location: "HQ / Client Site",
       budget: parseFloat(newBudget) || 0,
@@ -322,13 +418,21 @@ export default function ProjectsView() {
     const auditDocs = effectiveProject.auditReports || [];
     const activeDoc = auditDocs[0] || null;
 
-    // Helper initials for avatar (e.g. Heerabhai Jewellers -> HJ)
+    // Helper initials for avatar (e.g. Sunehri Virasat -> SV)
     const getInitials = (name) => {
-      if (!name) return "AC";
+      if (!name) return "SV";
       const parts = name.trim().split(" ");
       if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
       return name.substring(0, 2).toUpperCase();
     };
+
+    // Header location calculation
+    const locationName = (effectiveProject.location && effectiveProject.location !== "HQ / Client Site")
+      ? effectiveProject.location 
+      : (bizDetails.headOffice || (effectiveProject.code ? effectiveProject.code.split('-')[1] || "Abhor" : "Abhor"));
+    
+    // Header Title Format: Sunehri Virasat - Abhor
+    const headerTitle = `${effectiveProject.name} - ${locationName}`;
 
     const handleSaveBusinessDetailsForm = () => {
       updateProject(effectiveProject.id, {
@@ -342,7 +446,7 @@ export default function ProjectsView() {
 
     const handleStartEditBusiness = () => {
       setBizForm({
-        companyName: bizDetails.companyName || effectiveProject.client || "",
+        companyName: bizDetails.companyName || effectiveProject.name || "",
         headOffice: bizDetails.headOffice || "",
         showroomCount: bizDetails.showroomCount || "",
         locations: bizDetails.locations || "",
@@ -355,7 +459,7 @@ export default function ProjectsView() {
         primaryChallenge: bizDetails.primaryChallenge || "",
         staffMembers: bizDetails.staffMembers && bizDetails.staffMembers.length > 0 
           ? bizDetails.staffMembers 
-          : [{ name: effectiveProject.pocName || "", designation: "Managing Director", contact: effectiveProject.pocContact || "" }],
+          : [{ name: effectiveProject.pocName || "Anant Sarraf", designation: "Managing Director", contact: effectiveProject.pocContact || "9876543233" }],
         transformationOutcomes: bizDetails.transformationOutcomes || []
       });
       setBizStep(1);
@@ -366,37 +470,39 @@ export default function ProjectsView() {
       <div className="keka-project-view" style={{ padding: "0", minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f4f5f7", fontFamily: "Inter, -apple-system, sans-serif", color: "#172b4d" }}>
         
         {/* ------------------------------------------------------------- */}
-        {/* 1. KEKA HR STYLE TOP HEADER                                   */}
+        {/* 1. KEKA HR STYLE UNIFIED TOP HEADER CARD                      */}
         {/* ------------------------------------------------------------- */}
-        <div style={{ background: "#ffffff", padding: "20px 28px 16px 28px", borderBottom: "1px solid #e2e8f0" }}>
+        <div style={{ background: "#ffffff", padding: "20px 28px 0 28px", borderBottom: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+          
+          {/* TOP ROW: Initials Avatar Badge + Title + Code + Status + Actions */}
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
             
-            <div style={{ display: "flex", alignItems: "center", gap: "18px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
               {/* Round Avatar Initials Badge */}
               <div style={{
-                width: "64px",
-                height: "64px",
+                width: "56px",
+                height: "56px",
                 borderRadius: "50%",
                 background: "linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)",
                 color: "#ffffff",
-                fontSize: "1.45rem",
+                fontSize: "1.3rem",
                 fontWeight: "800",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 boxShadow: "0 4px 10px rgba(126, 34, 206, 0.25)"
               }}>
-                {getInitials(effectiveProject.client || effectiveProject.name)}
+                {getInitials(effectiveProject.name)}
               </div>
 
               <div>
+                {/* Clean Title Format: Sunehri Virasat - Abhor */}
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <h2 style={{ margin: 0, fontSize: "1.4rem", fontWeight: "800", color: "#0f172a" }}>
-                    {effectiveProject.client || "Client Engagement"}
+                  <h2 style={{ margin: 0, fontSize: "1.35rem", fontWeight: "800", color: "#0f172a" }}>
+                    {headerTitle}
                   </h2>
-                  <span style={{ fontSize: "1.05rem", color: "#64748b", fontWeight: "600" }}>| {effectiveProject.name}</span>
                   <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800" }}>
-                    {effectiveProject.code || "PROJ-TEST-01"}
+                    {effectiveProject.code || "SV-ABHOR"}
                   </span>
                   <span style={{
                     background: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#dcfce7" : "#fff7ed",
@@ -407,29 +513,28 @@ export default function ProjectsView() {
                   </span>
                 </div>
 
-                <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "4px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span>Sourced from Client Intake by ACME on {effectiveProject.startDate || "27 Feb 2026"}</span>
+                {/* Subtitle with Owner & Nearby Contact Details */}
+                <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "6px", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                  <span>Sourced from Client Intake by ACME on {effectiveProject.startDate || "2026-07-01"}</span>
                   <span>•</span>
-                  <span>Owner: <strong>{effectiveProject.owner || "Darla Manikanta"}</strong></span>
-                  <button onClick={handleStartEditBusiness} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontWeight: "700", padding: 0 }}>✏️</button>
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "16px", marginTop: "8px", fontSize: "0.82rem", color: "#334155" }}>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    {effectiveProject.pocContact || "+91 9876543210"}
+                  <span>Owner: <strong style={{ color: "#0f172a" }}>{effectiveProject.owner || "Darla Manikanta"}</strong></span>
+                  <button onClick={handleStartEditBusiness} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontWeight: "700", padding: 0 }} title="Edit Business Details">✏️</button>
+                  <span>•</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#2563eb", fontWeight: "700" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    {effectiveProject.pocContact || "9876543233"}
                   </span>
                   <span>•</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#475569" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                     {effectiveProject.clientEmail || "poc@client.com"}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Quick Action Icons & Top Right Close Button */}
-            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            {/* Quick Action Buttons & Right Close ✕ Button */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <button style={{ background: "#f1f5f9", border: "none", width: "36px", height: "36px", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Send Email">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </button>
@@ -438,7 +543,7 @@ export default function ProjectsView() {
               </button>
               
               <button
-                onClick={() => setSelectedProject(null)}
+                onClick={handleCloseProjectHub}
                 style={{
                   background: "none",
                   border: "none",
@@ -446,7 +551,7 @@ export default function ProjectsView() {
                   color: "#94a3b8",
                   cursor: "pointer",
                   padding: "4px 8px",
-                  marginLeft: "12px"
+                  marginLeft: "8px"
                 }}
                 title="Close Project Hub (Back to All Projects)"
               >
@@ -457,9 +562,43 @@ export default function ProjectsView() {
           </div>
 
           {/* ------------------------------------------------------------- */}
-          {/* 2. KEKA HR STYLE UNDERLINE TEXT TAB NAVIGATION STRIP          */}
+          {/* RED MARKED DETAILS CARD (MOVED INSIDE UPPER CARD ABOVE TAB BAR) */}
           {/* ------------------------------------------------------------- */}
-          <div style={{ display: "flex", gap: "24px", marginTop: "18px", borderTop: "1px solid #f1f5f9", paddingTop: "12px", overflowX: "auto" }}>
+          <div style={{ margin: "16px 0 14px 0", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "12px 18px", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "24px", fontSize: "0.85rem", color: "#475569", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
+                <span style={{ color: "#64748b" }}>Business Model:</span>
+                <strong style={{ color: "#0f172a" }}>{bizDetails.businessModel || "Pure Retailer"}</strong>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                <span style={{ color: "#64748b" }}>HQ Location:</span>
+                <strong style={{ color: "#0f172a" }}>{bizDetails.headOffice || "Mumbai, Delhi"}</strong>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3"/></svg>
+                <span style={{ color: "#64748b" }}>Showrooms:</span>
+                <strong style={{ color: "#0f172a" }}>{bizDetails.showroomCount || "5"}</strong>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", borderTop: "1px solid #e2e8f0", paddingTop: "8px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800", textTransform: "uppercase" }}>PRODUCT LINE / SKILLS:</span>
+              {(bizDetails.productLine ? bizDetails.productLine.split(",") : ["Fine Diamond Jewellery", "High-Carat Gold Ornaments", "Polki Solitaires"]).map((tag, tIdx) => (
+                <span key={tIdx} style={{ background: "#ffffff", border: "1px solid #cbd5e1", color: "#475569", padding: "2px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700" }}>
+                  {tag.trim()}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* ------------------------------------------------------------- */}
+          {/* GREEN MARKED AREA: UNDERLINE TAB BAR (AT BOTTOM OF UPPER CARD) */}
+          {/* ------------------------------------------------------------- */}
+          <div style={{ display: "flex", gap: "24px", borderTop: "1px solid #f1f5f9", paddingTop: "10px", overflowX: "auto" }}>
             {[
               { id: "business", label: "Business Details" },
               { id: "audit", label: "Audit Report" },
@@ -480,8 +619,8 @@ export default function ProjectsView() {
                   borderBottom: activeProjectTab === tab.id ? "3px solid #2563eb" : "3px solid transparent",
                   color: activeProjectTab === tab.id ? "#2563eb" : "#64748b",
                   fontWeight: activeProjectTab === tab.id ? "800" : "600",
-                  fontSize: "0.9rem",
-                  paddingBottom: "8px",
+                  fontSize: "0.88rem",
+                  paddingBottom: "10px",
                   cursor: "pointer",
                   whiteSpace: "nowrap",
                   transition: "all 0.15s ease"
@@ -491,45 +630,16 @@ export default function ProjectsView() {
               </button>
             ))}
           </div>
+
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* 3. KEKA HR SPLIT GRID WORKSPACE (70% LEFT MAIN + 30% RIGHT PANEL) */}
+        {/* 2. KEKA HR SPLIT GRID WORKSPACE (70% LEFT MAIN + 30% RIGHT PANEL) */}
         {/* ------------------------------------------------------------- */}
         <div style={{ padding: "20px 28px", display: "grid", gridTemplateColumns: "1fr 340px", gap: "20px" }}>
           
           {/* LEFT COLUMN: MAIN TAB CONTENT (70%) */}
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            
-            {/* Top Metadata Badges Card */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px 20px", display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "#475569" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
-                <span style={{ color: "#64748b" }}>Business Model:</span>
-                <span style={{ fontWeight: "700", color: "#0f172a" }}>{bizDetails.businessModel || "Pure Retailer"}</span>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "#475569" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                <span style={{ color: "#64748b" }}>HQ Location:</span>
-                <span style={{ fontWeight: "700", color: "#0f172a" }}>{bizDetails.headOffice || "Mumbai"}</span>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.85rem", color: "#475569" }}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3"/></svg>
-                <span style={{ color: "#64748b" }}>Showrooms:</span>
-                <span style={{ fontWeight: "700", color: "#0f172a" }}>{bizDetails.showroomCount || "5 Stores"}</span>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", borderTop: "1px solid #f1f5f9", paddingTop: "10px", marginTop: "4px" }}>
-                <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>PRODUCT LINE / SKILLS:</span>
-                {(bizDetails.productLine ? bizDetails.productLine.split(",") : ["Fine Diamond Jewellery", "Gold Ornaments", "Vault Reconciliation"]).map((tag, tIdx) => (
-                  <span key={tIdx} style={{ background: "#f1f5f9", color: "#475569", padding: "3px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700" }}>
-                    {tag.trim()}
-                  </span>
-                ))}
-              </div>
-            </div>
 
             {/* TAB 1: BUSINESS DETAILS */}
             {activeProjectTab === "business" && (
@@ -1260,7 +1370,7 @@ export default function ProjectsView() {
                 transition: "all 0.15s ease",
                 cursor: "pointer"
               }}
-              onClick={() => { setSelectedProject(proj); setActiveProjectTab("overview"); }}
+              onClick={() => { handleSelectProject(proj); setActiveProjectTab("business"); }}
             >
               <div>
                 {/* Header row */}

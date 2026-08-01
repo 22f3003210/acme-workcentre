@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { initialProjects } from "../data/initialData";
 import logoImg from "../assets/logo.png";
@@ -25,8 +25,6 @@ const decryptProjectId = (str) => {
   }
 };
 
-
-
 export default function ProjectsView() {
   const params = useParams();
   const navigate = useNavigate();
@@ -42,11 +40,44 @@ export default function ProjectsView() {
     users, 
     expenses, 
     currentUser, 
+    isAuthenticated,
     setToast 
   } = useApp();
 
   const [statusFilter, setStatusFilter] = useState("All"); // 'All', 'Active', 'Completed', 'On Hold'
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [selectedProject, setSelectedProject] = useState(null);
+
+  // Top-level Same-origin Blob URL for high-resolution native PDF rendering (mobile & desktop)
+  const pdfBlobUrl = useMemo(() => {
+    if (!selectedProject) return "";
+    const docs = selectedProject.auditReports || [];
+    const doc = docs[0];
+    if (!doc?.url) return "";
+    if (doc.url.startsWith("data:application/pdf")) {
+      try {
+        const parts = doc.url.split(",");
+        const base64Data = parts[1];
+        const binaryStr = window.atob(base64Data);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        return URL.createObjectURL(blob);
+      } catch (e) {
+        return doc.url;
+      }
+    }
+    return doc.url;
+  }, [selectedProject]);
+
+  // Auth Protection Check
+  if (!isAuthenticated || !currentUser) {
+    return <Navigate to="/auth/login" replace />;
+  }
 
   // Helper date formatter: e.g. 2026-07-12 -> 12 July 2026
   const formatDateNice = (dateStr) => {
@@ -125,7 +156,6 @@ export default function ProjectsView() {
   };
 
   // Modal & View states
-  const [selectedProject, setSelectedProject] = useState(null);
   const [activeProjectTab, setActiveProjectTab] = useState("business"); // Defaults to Business Details!
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -457,28 +487,6 @@ export default function ProjectsView() {
       });
       setIsEditingBusinessDetails(true);
     };
-
-    // Same-origin Blob URL for high-resolution native PDF rendering (mobile & desktop)
-    const pdfBlobUrl = useMemo(() => {
-      if (!activeDoc?.url) return "";
-      if (activeDoc.url.startsWith("data:application/pdf")) {
-        try {
-          const parts = activeDoc.url.split(",");
-          const base64Data = parts[1];
-          const binaryStr = window.atob(base64Data);
-          const len = binaryStr.length;
-          const bytes = new Uint8Array(len);
-          for (let i = 0; i < len; i++) {
-            bytes[i] = binaryStr.charCodeAt(i);
-          }
-          const blob = new Blob([bytes], { type: "application/pdf" });
-          return URL.createObjectURL(blob);
-        } catch (e) {
-          return activeDoc.url;
-        }
-      }
-      return activeDoc.url;
-    }, [activeDoc?.url]);
 
     return (
       <div className="keka-project-view" style={{ padding: "0", minHeight: "100vh", display: "flex", flexDirection: "column", background: "#f4f5f7", fontFamily: "Inter, -apple-system, sans-serif", color: "#172b4d" }}>

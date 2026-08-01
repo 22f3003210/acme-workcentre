@@ -191,21 +191,23 @@ export const AppProvider = ({ children }) => {
     }
   });
 
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const savedUserId = localStorage.getItem("workcentre_current_user_id");
-      const found = users.find(u => u.id === savedUserId);
-      return found || users[0];
-    } catch (e) {
-      return users[0];
-    }
-  });
-
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       return localStorage.getItem("workcentre_authenticated") === "true";
     } catch (e) {
       return false;
+    }
+  });
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const isAuth = localStorage.getItem("workcentre_authenticated") === "true";
+      if (!isAuth) return null;
+      const savedUserId = localStorage.getItem("workcentre_current_user_id");
+      const found = users.find(u => u.id === savedUserId);
+      return found || users[0];
+    } catch (e) {
+      return null;
     }
   });
 
@@ -575,6 +577,11 @@ export const AppProvider = ({ children }) => {
 
   const logout = () => {
     setIsAuthenticated(false);
+    setCurrentUser(null);
+    try {
+      localStorage.removeItem("workcentre_authenticated");
+      localStorage.removeItem("workcentre_current_user_id");
+    } catch (e) {}
   };
 
   const sendOtp = (phoneNumber) => {

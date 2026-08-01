@@ -169,6 +169,7 @@ export function AppRoutes() {
         <Route path="/leaves" element={<MainWorkspace initialTab="leaves" />} />
         <Route path="/payslips" element={<MainWorkspace initialTab="payslips" />} />
         <Route path="/projects" element={<MainWorkspace initialTab="projects" />} />
+        <Route path="/projects/:projectId" element={<MainWorkspace initialTab="projects" />} />
         <Route path="/calendar" element={<MainWorkspace initialTab="calendar" />} />
         <Route path="/recruiting" element={<MainWorkspace initialTab="recruitment" />} />
         <Route path="/recruitment" element={<MainWorkspace initialTab="recruitment" />} />

@@ -207,9 +207,13 @@ export default function ProjectsView() {
     setSelectedProject(proj);
   };
 
-  const handleCloseProjectHub = () => {
-    navigate('/projects');
+  const handleCloseProjectHub = (e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    setShowEventModal(false);
+    setShowVisitModal(false);
+    setShowCreateModal(false);
     setSelectedProject(null);
+    navigate('/projects');
   };
 
   // Automatically hide left sidebar when an individual client project detail view is active
@@ -1083,12 +1087,212 @@ export default function ProjectsView() {
               </div>
             )}
 
+            {/* TAB 4: TASKS & PLANNER (PHASE-WISE GANTT CHART & ALLOCATION TIMELINE) */}
             {activeProjectTab === "tasks" && (
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Scheduled Tasks & Event Planner (14)</h3>
-                  <button onClick={() => setShowEventModal(true)} style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "8px 16px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}>+ Add Task</button>
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                
+                {/* Header & Allocation Summary Cards */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>
+                        Phase-Wise Task Allocation & Interactive Gantt Timeline
+                      </h3>
+                      <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "#64748b" }}>
+                        Visualize 14 scheduled tasks grouped across 5 implementation consulting phases
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setShowEventModal(true)}
+                      style={{
+                        background: "#2563eb",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "10px 20px",
+                        borderRadius: "8px",
+                        fontWeight: "800",
+                        fontSize: "0.85rem",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)"
+                      }}
+                    >
+                      <span>+</span>
+                      <span>Schedule New Task / Phase Event</span>
+                    </button>
+                  </div>
+
+                  {/* Phase Allocation Summary Badges */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "12px", marginBottom: "24px" }}>
+                    {[
+                      { num: 1, name: "Discovery & Goal", count: 3, color: "#2563eb", bg: "#eff6ff" },
+                      { num: 2, name: "Vault & Stock Audit", count: 3, color: "#16a34a", bg: "#f0fdf4" },
+                      { num: 3, name: "Process & SOP Design", count: 3, color: "#7c3aed", bg: "#f5f3ff" },
+                      { num: 4, name: "POS System Rollout", count: 3, color: "#ea580c", bg: "#fff7ed" },
+                      { num: 5, name: "Staff Coaching", count: 2, color: "#0284c7", bg: "#f0f9ff" }
+                    ].map(ph => (
+                      <div key={ph.num} style={{ background: ph.bg, border: `1px solid ${ph.color}30`, borderRadius: "10px", padding: "12px 14px" }}>
+                        <div style={{ fontSize: "0.72rem", fontWeight: "800", color: ph.color, textTransform: "uppercase" }}>PHASE {ph.num}</div>
+                        <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#0f172a", margin: "4px 0" }}>{ph.name}</div>
+                        <div style={{ fontSize: "0.78rem", color: ph.color, fontWeight: "700" }}>{ph.count} Tasks Allocated</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* GANTT CHART CONTAINER */}
+                  <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", overflowX: "auto", background: "#ffffff" }}>
+                    
+                    {/* Gantt Header Axis */}
+                    <div style={{ display: "grid", gridTemplateColumns: "300px 150px 130px 100px 1fr", background: "#f8fafc", borderBottom: "2px solid #e2e8f0", padding: "12px 16px", fontWeight: "800", fontSize: "0.78rem", color: "#475569" }}>
+                      <div>TASK OBJECTIVE & SPECIFICATION</div>
+                      <div>ASSIGNED CONSULTANT</div>
+                      <div>TIMELINE / DATES</div>
+                      <div>STATUS</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", paddingLeft: "10px", borderLeft: "1px solid #cbd5e1" }}>
+                        <span>JUL 2026</span>
+                        <span>AUG 2026</span>
+                        <span>SEP 2026</span>
+                        <span>OCT 2026</span>
+                        <span>NOV 2026</span>
+                      </div>
+                    </div>
+
+                    {/* Gantt Rows Grouped by Phase */}
+                    {[
+                      {
+                        phaseNum: 1,
+                        title: "Phase 1: Discovery & Vision Alignment",
+                        color: "#2563eb",
+                        bg: "#eff6ff",
+                        tasks: [
+                          { title: "Client Vision & Goal Mapping", consultant: effectiveProject.owner || "Darla Manikanta", dates: "01 Jul - 10 Jul", duration: "10 days", status: "Completed", progress: 100, barLeft: "5%", barWidth: "15%" },
+                          { title: "Business Model & Intake Review", consultant: "Mayank Sarraf", dates: "05 Jul - 15 Jul", duration: "10 days", status: "Completed", progress: 100, barLeft: "12%", barWidth: "15%" },
+                          { title: "Executive Alignment Meeting", consultant: effectiveProject.owner || "Darla Manikanta", dates: "12 Jul - 20 Jul", duration: "8 days", status: "Completed", progress: 100, barLeft: "20%", barWidth: "12%" }
+                        ]
+                      },
+                      {
+                        phaseNum: 2,
+                        title: "Phase 2: Operations & Vault Stock Audit",
+                        color: "#16a34a",
+                        bg: "#f0fdf4",
+                        tasks: [
+                          { title: "Showroom Physical Tag Audit", consultant: effectiveProject.owner || "Darla Manikanta", dates: "20 Jul - 05 Aug", duration: "16 days", status: "Completed", progress: 100, barLeft: "30%", barWidth: "22%" },
+                          { title: "Metal Weight Variance Reconciliation", consultant: "Anant Sarraf", dates: "25 Jul - 10 Aug", duration: "16 days", status: "Completed", progress: 100, barLeft: "38%", barWidth: "22%" },
+                          { title: "POS Sales Ledger Vs Vault Discrepancy Sheet", consultant: "Mayank Sarraf", dates: "01 Aug - 15 Aug", duration: "15 days", status: "In Progress", progress: 80, barLeft: "48%", barWidth: "20%" }
+                        ]
+                      },
+                      {
+                        phaseNum: 3,
+                        title: "Phase 3: Process Design & SOP Guidelines",
+                        color: "#7c3aed",
+                        bg: "#f5f3ff",
+                        tasks: [
+                          { title: "Atelier Job Card Workflow Standardization", consultant: effectiveProject.owner || "Darla Manikanta", dates: "10 Aug - 25 Aug", duration: "15 days", status: "In Progress", progress: 65, barLeft: "58%", barWidth: "20%" },
+                          { title: "RFID Vault Tagging & Inventory Control SOP", consultant: effectiveProject.owner || "Darla Manikanta", dates: "15 Aug - 30 Aug", duration: "15 days", status: "In Progress", progress: 50, barLeft: "65%", barWidth: "20%" },
+                          { title: "Sales Counter ABV Upselling Script Coaching", consultant: "Mayank Sarraf", dates: "20 Aug - 05 Sep", duration: "16 days", status: "Scheduled", progress: 20, barLeft: "72%", barWidth: "20%" }
+                        ]
+                      },
+                      {
+                        phaseNum: 4,
+                        title: "Phase 4: POS & Inventory System Rollout",
+                        color: "#ea580c",
+                        bg: "#fff7ed",
+                        tasks: [
+                          { title: "RFID Vault Scanner Hardware Setup", consultant: effectiveProject.owner || "Darla Manikanta", dates: "01 Sep - 18 Sep", duration: "17 days", status: "Scheduled", progress: 0, barLeft: "80%", barWidth: "15%" },
+                          { title: "Digital Barcode Tag Sync & Integration", consultant: "Anant Sarraf", dates: "10 Sep - 25 Sep", duration: "15 days", status: "Scheduled", progress: 0, barLeft: "88%", barWidth: "12%" }
+                        ]
+                      },
+                      {
+                        phaseNum: 5,
+                        title: "Phase 5: Staff Coaching & Performance Audit",
+                        color: "#0284c7",
+                        bg: "#f0f9ff",
+                        tasks: [
+                          { title: "Boutique Sales Counter Staff Workshops", consultant: effectiveProject.owner || "Darla Manikanta", dates: "01 Oct - 20 Oct", duration: "19 days", status: "Scheduled", progress: 0, barLeft: "92%", barWidth: "8%" }
+                        ]
+                      }
+                    ].map(phaseGroup => (
+                      <div key={phaseGroup.phaseNum}>
+                        
+                        {/* Phase Group Header Bar */}
+                        <div style={{ background: phaseGroup.bg, padding: "8px 16px", fontWeight: "800", fontSize: "0.82rem", color: phaseGroup.color, borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseGroup.color }} />
+                          {phaseGroup.title} ({phaseGroup.tasks.length} Tasks)
+                        </div>
+
+                        {/* Phase Tasks Rows */}
+                        {phaseGroup.tasks.map((tk, tIndex) => (
+                          <div
+                            key={tIndex}
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "300px 150px 130px 100px 1fr",
+                              alignItems: "center",
+                              padding: "10px 16px",
+                              borderBottom: "1px solid #f1f5f9",
+                              fontSize: "0.83rem"
+                            }}
+                          >
+                            <div style={{ fontWeight: "700", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingRight: "10px" }}>
+                              {tk.title}
+                            </div>
+                            <div style={{ color: "#2563eb", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: "800" }}>
+                                {tk.consultant ? tk.consultant[0] : "D"}
+                              </span>
+                              {tk.consultant}
+                            </div>
+                            <div style={{ color: "#64748b", fontSize: "0.78rem" }}>
+                              {tk.dates}
+                            </div>
+                            <div>
+                              <span style={{
+                                background: tk.status === "Completed" ? "#dcfce7" : tk.status === "In Progress" ? "#eff6ff" : "#fff7ed",
+                                color: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706",
+                                padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: "800"
+                              }}>
+                                {tk.status}
+                              </span>
+                            </div>
+                            
+                            {/* Gantt Timeline Bar Canvas Column */}
+                            <div style={{ position: "relative", height: "24px", background: "#f8fafc", borderRadius: "6px", borderLeft: "1px solid #cbd5e1" }}>
+                              <div
+                                style={{
+                                  position: "absolute",
+                                  left: tk.barLeft,
+                                  width: tk.barWidth,
+                                  top: "3px",
+                                  bottom: "3px",
+                                  background: phaseGroup.color,
+                                  borderRadius: "4px",
+                                  boxShadow: `0 2px 6px ${phaseGroup.color}40`,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  color: "#ffffff",
+                                  fontSize: "0.68rem",
+                                  fontWeight: "800",
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden"
+                                }}
+                                title={`${tk.title}: ${tk.dates} (${tk.progress}% Completed)`}
+                              >
+                                {tk.progress > 0 ? `${tk.progress}%` : ""}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+
+                      </div>
+                    ))}
+
+                  </div>
                 </div>
+
               </div>
             )}
 

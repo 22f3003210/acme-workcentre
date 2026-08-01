@@ -25,6 +25,116 @@ const decryptProjectId = (str) => {
   }
 };
 
+// AUTOMATIC MOBILE & DESKTOP PDF CANVAS RENDERER COMPONENT
+const PdfViewer = ({ pdfUrl, title }) => {
+  const canvasRef = useRef(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [pageNum, setPageNum] = useState(1);
+  const [numPages, setNumPages] = useState(1);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError(false);
+
+    const renderPdf = async () => {
+      try {
+        if (!window.pdfjsLib) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
+        if (window.pdfjsLib) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+            "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+        }
+
+        let loadingTask;
+        if (pdfUrl.startsWith("data:application/pdf;base64,")) {
+          const base64Data = pdfUrl.split(",")[1];
+          const raw = window.atob(base64Data);
+          const uint8Array = new Uint8Array(raw.length);
+          for (let i = 0; i < raw.length; i++) {
+            uint8Array[i] = raw.charCodeAt(i);
+          }
+          loadingTask = window.pdfjsLib.getDocument({ data: uint8Array });
+        } else {
+          loadingTask = window.pdfjsLib.getDocument(pdfUrl);
+        }
+
+        const pdf = await loadingTask.promise;
+        if (!isMounted) return;
+        setNumPages(pdf.numPages);
+
+        const page = await pdf.getPage(pageNum);
+        if (!isMounted) return;
+
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const context = canvas.getContext("2d");
+
+        // Scale viewport to match container / device screen
+        const containerWidth = Math.min(window.innerWidth - 60, 800);
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
+        const scale = containerWidth / unscaledViewport.width;
+        const viewport = page.getViewport({ scale: Math.max(scale, 1.0) });
+
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport
+        };
+        await page.render(renderContext).promise;
+        if (isMounted) setLoading(false);
+      } catch (err) {
+        console.error("PDF render error:", err);
+        if (isMounted) {
+          setError(true);
+          setLoading(false);
+        }
+      }
+    };
+
+    renderPdf();
+    return () => { isMounted = false; };
+  }, [pdfUrl, pageNum]);
+
+  if (error) {
+    return (
+      <object data={pdfUrl} type="application/pdf" style={{ width: "100%", height: "650px", borderRadius: "8px" }}>
+        <iframe src={pdfUrl} title={title} style={{ width: "100%", height: "650px", border: "none" }} />
+      </object>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
+      {loading && (
+        <div style={{ padding: "40px", color: "#2563eb", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+          <span>⌛</span> <span>Loading Audit PDF Document...</span>
+        </div>
+      )}
+      <div style={{ overflowX: "auto", maxWidth: "100%", background: "#ffffff", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.1)", margin: "10px 0" }}>
+        <canvas ref={canvasRef} style={{ maxWidth: "100%", height: "auto", display: loading ? "none" : "block" }} />
+      </div>
+      {numPages > 1 && (
+        <div style={{ display: "flex", gap: "12px", alignItems: "center", marginTop: "12px" }}>
+          <button disabled={pageNum <= 1} onClick={() => setPageNum(p => Math.max(p - 1, 1))} style={{ padding: "6px 14px", borderRadius: "6px", background: "#ffffff", border: "1px solid #cbd5e1", fontWeight: "700", cursor: pageNum <= 1 ? "not-allowed" : "pointer" }}>← Previous</button>
+          <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "#475569" }}>Page {pageNum} of {numPages}</span>
+          <button disabled={pageNum >= numPages} onClick={() => setPageNum(p => Math.min(p + 1, numPages))} style={{ padding: "6px 14px", borderRadius: "6px", background: "#ffffff", border: "1px solid #cbd5e1", fontWeight: "700", cursor: pageNum >= numPages ? "not-allowed" : "pointer" }}>Next →</button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function ProjectsView() {
   const params = useParams();
   const navigate = useNavigate();
@@ -1052,11 +1162,7 @@ export default function ProjectsView() {
                           style={{ maxWidth: "100%", maxHeight: "650px", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", objectFit: "contain" }}
                         />
                       ) : activeDoc?.url && (activeDoc.url.startsWith("data:application/pdf") || activeDoc.fileName?.match(/\.pdf$/i)) ? (
-                        <iframe
-                          src={activeDoc.url}
-                          title={activeDoc.title}
-                          style={{ width: "100%", height: "650px", border: "none", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-                        />
+                        <PdfViewer pdfUrl={activeDoc.url} title={activeDoc.title} />
                       ) : (
                         <div style={{ background: "#ffffff", padding: "40px", borderRadius: "12px", width: "100%", maxWidth: "600px", textAlign: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
                           <div style={{ fontSize: "3rem", marginBottom: "12px" }}>📄</div>

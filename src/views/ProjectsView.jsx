@@ -175,34 +175,13 @@ export default function ProjectsView() {
 
   const [selectedProject, setSelectedProject] = useState(null);
 
-  // Top-level Same-origin Blob URL for high-resolution native PDF rendering (mobile & desktop)
+  // Clean PDF document URL memo for direct inline web viewer (prevents browser download popups)
   const pdfBlobUrl = useMemo(() => {
     if (!selectedProject) return "";
     const docs = selectedProject.auditReports || [];
     const doc = docs[0];
     if (!doc) return "";
-    const rawUrl = getCachedDocumentUrl(doc.id, doc.url);
-    if (!rawUrl) return "";
-
-    if (rawUrl.startsWith("data:application/pdf") || doc.fileName?.match(/\.pdf$/i) || doc.fileType?.includes("pdf")) {
-      try {
-        if (rawUrl.startsWith("data:application/pdf")) {
-          const parts = rawUrl.split(",");
-          const base64Data = parts[1];
-          const binaryStr = window.atob(base64Data);
-          const len = binaryStr.length;
-          const bytes = new Uint8Array(len);
-          for (let i = 0; i < len; i++) {
-            bytes[i] = binaryStr.charCodeAt(i);
-          }
-          const blob = new Blob([bytes], { type: "application/pdf" });
-          return URL.createObjectURL(blob);
-        }
-      } catch (e) {
-        return rawUrl;
-      }
-    }
-    return rawUrl;
+    return getCachedDocumentUrl(doc.id, doc.url);
   }, [selectedProject, selectedProject?.auditReports]);
 
   // Auth Protection Check
@@ -1241,20 +1220,14 @@ export default function ProjectsView() {
                           return <DocxViewer doc={{ ...activeDoc, url: resolvedUrl || activeDoc?.url }} />;
                         }
 
-                        // DEFAULT / PDF: Always render native vector embedded PDF viewer (or iframe) directly!
+                        // DEFAULT / PDF: Always render clean inline iframe web viewer (zero download prompts!)
                         return (
                           <div style={{ width: "100%", height: "800px", background: "#ffffff", borderRadius: "8px", overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-                            <object
-                              data={activePdfSrc}
-                              type="application/pdf"
+                            <iframe
+                              src={activePdfSrc}
+                              title={activeDoc?.title || "Audit Document PDF Viewer"}
                               style={{ width: "100%", height: "100%", border: "none" }}
-                            >
-                              <iframe
-                                src={activePdfSrc}
-                                title={activeDoc?.title || "Audit Document PDF Viewer"}
-                                style={{ width: "100%", height: "100%", border: "none" }}
-                              />
-                            </object>
+                            />
                           </div>
                         );
                       })()}

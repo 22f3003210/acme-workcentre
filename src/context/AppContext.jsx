@@ -398,7 +398,12 @@ export const AppProvider = ({ children }) => {
             location: p.location,
             description: p.description,
             engagementPurpose: p.engagement_purpose,
-            assignedConsultants: p.assigned_consultants || []
+            assignedConsultants: p.assigned_consultants || [],
+            businessDetails: p.business_details || p.businessDetails,
+            auditReports: p.audit_reports || p.auditReports,
+            checklists: p.checklists,
+            clientVisits: p.client_visits || p.clientVisits,
+            scheduledEvents: p.scheduled_events || p.scheduledEvents
           })));
         }
       }).catch(err => console.error("Supabase fetch projects error:", err));

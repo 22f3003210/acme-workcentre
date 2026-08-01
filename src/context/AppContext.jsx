@@ -482,39 +482,90 @@ export const AppProvider = ({ children }) => {
 
   // Sync to localStorage
   useEffect(() => {
-    localStorage.setItem("workcentre_users", JSON.stringify(users));
+    try {
+      localStorage.setItem("workcentre_users", JSON.stringify(users));
+    } catch (e) {
+      console.warn("localStorage quota exceeded for users:", e);
+    }
   }, [users]);
 
   useEffect(() => {
-    localStorage.setItem("workcentre_expenses", JSON.stringify(expenses));
+    try {
+      localStorage.setItem("workcentre_expenses", JSON.stringify(expenses));
+    } catch (e) {
+      console.warn("localStorage quota exceeded for expenses:", e);
+    }
   }, [expenses]);
 
   useEffect(() => {
-    localStorage.setItem("workcentre_settings", JSON.stringify(settings));
+    try {
+      localStorage.setItem("workcentre_settings", JSON.stringify(settings));
+    } catch (e) {
+      console.warn("localStorage quota exceeded for settings:", e);
+    }
   }, [settings]);
 
   useEffect(() => {
-    localStorage.setItem("workcentre_advance_requests", JSON.stringify(advanceRequests));
+    try {
+      localStorage.setItem("workcentre_advance_requests", JSON.stringify(advanceRequests));
+    } catch (e) {
+      console.warn("localStorage quota exceeded for advance_requests:", e);
+    }
   }, [advanceRequests]);
 
   useEffect(() => {
-    localStorage.setItem("workcentre_projects", JSON.stringify(projects));
+    try {
+      localStorage.setItem("workcentre_projects", JSON.stringify(projects));
+    } catch (e) {
+      console.warn("localStorage quota exceeded for workcentre_projects. Using lightweight fallback storage.", e);
+      try {
+        const lightweightProjects = projects.map(p => {
+          if (!p.auditReports) return p;
+          return {
+            ...p,
+            auditReports: p.auditReports.map(doc => ({
+              ...doc,
+              url: doc.url && doc.url.length > 100000 ? "#stored_in_memory" : doc.url
+            }))
+          };
+        });
+        localStorage.setItem("workcentre_projects", JSON.stringify(lightweightProjects));
+      } catch (err) {
+        console.error("Lightweight fallback storage failed:", err);
+      }
+    }
   }, [projects]);
 
   useEffect(() => {
-    localStorage.setItem("workcentre_hiring_requisitions", JSON.stringify(hiringRequisitions));
+    try {
+      localStorage.setItem("workcentre_hiring_requisitions", JSON.stringify(hiringRequisitions));
+    } catch (e) {
+      console.warn("localStorage quota exceeded for hiring_requisitions:", e);
+    }
   }, [hiringRequisitions]);
 
   useEffect(() => {
-    localStorage.setItem("workcentre_candidates", JSON.stringify(candidates));
+    try {
+      localStorage.setItem("workcentre_candidates", JSON.stringify(candidates));
+    } catch (e) {
+      console.warn("localStorage quota exceeded for candidates:", e);
+    }
   }, [candidates]);
 
   useEffect(() => {
-    localStorage.setItem("workcentre_job_titles", JSON.stringify(jobTitles));
+    try {
+      localStorage.setItem("workcentre_job_titles", JSON.stringify(jobTitles));
+    } catch (e) {
+      console.warn("localStorage quota exceeded for job_titles:", e);
+    }
   }, [jobTitles]);
 
   useEffect(() => {
-    localStorage.setItem("workcentre_number_series", JSON.stringify(numberSeries));
+    try {
+      localStorage.setItem("workcentre_number_series", JSON.stringify(numberSeries));
+    } catch (e) {
+      console.warn("localStorage quota exceeded for number_series:", e);
+    }
   }, [numberSeries]);
 
   useEffect(() => {

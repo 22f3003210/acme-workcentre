@@ -25,6 +25,103 @@ const decryptProjectId = (str) => {
   }
 };
 
+// WORD DOCUMENT (.DOCX / .DOC) CANVAS RENDERER COMPONENT
+const DocxViewer = ({ doc }) => {
+  const [htmlContent, setHtmlContent] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError(false);
+
+    const convertDocx = async () => {
+      try {
+        if (!window.mammoth) {
+          await new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = "https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js";
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
+
+        if (!doc?.url || !doc.url.startsWith("data:")) {
+          throw new Error("No data URL available");
+        }
+
+        const base64Data = doc.url.split(",")[1];
+        const binaryStr = window.atob(base64Data);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+
+        const result = await window.mammoth.convertToHtml({ arrayBuffer: bytes.buffer });
+        if (isMounted) {
+          setHtmlContent(result.value || "<p>Document content parsed cleanly.</p>");
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Docx conversion error:", err);
+        if (isMounted) {
+          setError(true);
+          setLoading(false);
+        }
+      }
+    };
+
+    convertDocx();
+    return () => { isMounted = false; };
+  }, [doc?.url]);
+
+  if (loading) {
+    return (
+      <div style={{ background: "#ffffff", padding: "40px", borderRadius: "12px", width: "100%", maxWidth: "700px", textAlign: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
+        <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>📄</div>
+        <h4 style={{ margin: "0 0 8px 0", color: "#2563eb", fontWeight: "800" }}>Parsing & Rendering Word Document ({doc?.fileName})...</h4>
+        <p style={{ fontSize: "0.85rem", color: "#64748b" }}>Converting Word document formatting directly onto canvas</p>
+      </div>
+    );
+  }
+
+  if (error || !htmlContent) {
+    return (
+      <div style={{ background: "#ffffff", padding: "40px", borderRadius: "12px", width: "100%", maxWidth: "800px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+        <div style={{ borderBottom: "2px solid #0f172a", paddingBottom: "16px", marginBottom: "20px" }}>
+          <h2 style={{ margin: "0 0 4px 0", fontSize: "1.4rem", fontWeight: "900", color: "#0f172a" }}>{doc?.title || doc?.fileName}</h2>
+          <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748b" }}>File: {doc?.fileName} • Uploaded: {doc?.uploadedAt} • By: {doc?.uploadedBy}</p>
+        </div>
+        <div style={{ fontSize: "0.95rem", lineHeight: "1.7", color: "#1e293b" }}>
+          <p>This Word document file (<strong>{doc?.fileName}</strong>) has been uploaded and linked to the project database.</p>
+        </div>
+        <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid #cbd5e1" }}>
+          <a href={doc?.url} download={doc?.fileName} style={{ background: "#2563eb", color: "#ffffff", padding: "8px 20px", borderRadius: "8px", textDecoration: "none", fontWeight: "800", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+            📥 Download {doc?.fileName}
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#ffffff", padding: "40px", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)", width: "100%", maxWidth: "800px", color: "#1e293b", lineHeight: "1.7", fontSize: "0.95rem" }}>
+      <div style={{ borderBottom: "2px solid #0f172a", paddingBottom: "16px", marginBottom: "24px" }}>
+        <span style={{ background: "#eff6ff", color: "#2563eb", padding: "4px 8px", borderRadius: "6px", fontWeight: "800", fontSize: "0.72rem" }}>
+          WORD AUDIT REPORT (.DOCX)
+        </span>
+        <h2 style={{ margin: "8px 0 4px 0", fontSize: "1.4rem", fontWeight: "900", color: "#0f172a" }}>{doc?.title || doc?.fileName}</h2>
+        <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b" }}>File: {doc?.fileName} • Size: {doc?.fileSize} • Uploaded by {doc?.uploadedBy}</p>
+      </div>
+
+      <div className="docx-rendered-body" dangerouslySetInnerHTML={{ __html: htmlContent }} />
+    </div>
+  );
+};
+
 export default function ProjectsView() {
   const params = useParams();
   const navigate = useNavigate();
@@ -1094,6 +1191,8 @@ export default function ProjectsView() {
                             style={{ width: "100%", height: "750px", borderRadius: "8px" }}
                           />
                         </object>
+                      ) : activeDoc?.url && (activeDoc.fileName?.match(/\.(docx|doc)$/i) || activeDoc.fileType?.includes("word") || activeDoc.fileType?.includes("officedocument")) ? (
+                        <DocxViewer doc={activeDoc} />
                       ) : (
                         <div style={{ background: "#ffffff", padding: "40px", borderRadius: "12px", width: "100%", maxWidth: "600px", textAlign: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
                           <div style={{ fontSize: "3rem", marginBottom: "12px" }}>📄</div>

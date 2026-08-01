@@ -295,7 +295,8 @@ export default function ProjectsView() {
                 cursor: "pointer"
               }}
             >
-              ✏️ Edit
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
             </button>
 
             <button
@@ -337,7 +338,10 @@ export default function ProjectsView() {
             <div>
               <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>POC & CONTACT</div>
               <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>{effectiveProject.pocName || effectiveProject.client}</div>
-              <div style={{ fontSize: "0.75rem", color: "#2563eb", fontWeight: "600" }}>📱 {effectiveProject.pocContact || "+91-9849012345"}</div>
+              <div style={{ fontSize: "0.75rem", color: "#2563eb", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                {effectiveProject.pocContact || "+91-9849012345"}
+              </div>
             </div>
           </div>
 
@@ -349,7 +353,10 @@ export default function ProjectsView() {
             <div>
               <div style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700" }}>TASKS & PLANNER</div>
               <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>14 Tasks <span style={{ fontSize: "0.75rem", color: "#16a34a" }}>(8 Done)</span></div>
-              <div style={{ fontSize: "0.75rem", color: "#dc2626", fontWeight: "600" }}>⚠️ 2 Urgent Overdue</div>
+              <div style={{ fontSize: "0.75rem", color: "#dc2626", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                2 Urgent Overdue
+              </div>
             </div>
           </div>
 
@@ -426,8 +433,9 @@ export default function ProjectsView() {
             {/* TAB 1: BUSINESS DETAILS */}
             {activeProjectTab === "business" && (
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
-                  🏢 Business Profile & Engagement Scope
+                <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
+                  Business Profile & Engagement Scope
                 </h3>
                 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px" }}>
@@ -436,7 +444,10 @@ export default function ProjectsView() {
                     <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
                       {effectiveProject.pocName || effectiveProject.client}
                     </p>
-                    <span style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "600" }}>📱 {effectiveProject.pocContact || "+91-9849012345"}</span>
+                    <span style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "600", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                      {effectiveProject.pocContact || "+91-9849012345"}
+                    </span>
                   </div>
 
                   <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
@@ -565,8 +576,9 @@ export default function ProjectsView() {
             {activeProjectTab === "tasks" && (
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
-                    📋 Scheduled Tasks & Event Planner
+                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+                    Scheduled Tasks & Event Planner
                   </h3>
                   <button onClick={() => setShowEventModal(true)} style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "8px 16px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}>
                     + Add New Task
@@ -582,8 +594,9 @@ export default function ProjectsView() {
             {activeProjectTab === "visits" && (
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
-                    🚗 Client Site Visits & Field Review History
+                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Client Site Visits & Field Review History
                   </h3>
                   <button onClick={() => setShowVisitModal(true)} style={{ background: "#059669", color: "#ffffff", border: "none", padding: "8px 16px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}>
                     + Record Field Visit
@@ -598,8 +611,9 @@ export default function ProjectsView() {
             {/* TAB 6: DOCUMENTS & DELIVERABLES */}
             {activeProjectTab === "documents" && (
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
-                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
-                  📁 Documents & Deliverables Repository
+                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z"/></svg>
+                  Documents & Deliverables Repository
                 </h3>
                 <p style={{ margin: 0, fontSize: "0.88rem", color: "#64748b" }}>
                   SOP PDFs, Audit Checklists, and Client Contract files.
@@ -610,8 +624,9 @@ export default function ProjectsView() {
             {/* TAB 7: ASSIGNED TEAM */}
             {activeProjectTab === "team" && (
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
-                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
-                  👥 Assigned Business Consultants & Recruiting Team
+                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                  Assigned Business Consultants & Recruiting Team
                 </h3>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
                   {[
@@ -632,8 +647,9 @@ export default function ProjectsView() {
             {/* TAB 8: DISCUSSIONS & ACTIVITY LOGS */}
             {activeProjectTab === "discussions" && (
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
-                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
-                  💬 Discussions & Team Activity Logs
+                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  Discussions & Team Activity Logs
                 </h3>
                 <form onSubmit={handlePostDiscussion} style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "20px" }}>
                   <textarea
@@ -653,8 +669,9 @@ export default function ProjectsView() {
             {/* TAB 9: LINKED EXPENSES */}
             {activeProjectTab === "expenses" && (
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
-                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
-                  💸 Linked Expenses Billed to Project
+                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9333ea" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                  Linked Expenses Billed to Project
                 </h3>
                 {linkedExps.length === 0 ? (
                   <p style={{ color: "#64748b", fontSize: "0.9rem", fontStyle: "italic" }}>No expenses billed under this project yet.</p>
@@ -697,19 +714,50 @@ export default function ProjectsView() {
             {/* Quick Actions Card */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 2px 8px rgba(0,0,0,0.02)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>⚡ QUICK ACTIONS</h3>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#eab308" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>QUICK ACTIONS</h3>
+                </div>
                 <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "12px", fontWeight: "800" }}>Shortcuts</span>
               </div>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[
-                  { label: "+ Add Task", icon: "📋", action: () => setShowEventModal(true), bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" },
-                  { label: "+ Schedule Visit", icon: "🚗", action: () => setShowVisitModal(true), bg: "#ecfdf5", color: "#059669", border: "#a7f3d0" },
-                  { label: "+ Upload Document", icon: "📄", action: () => setActiveProjectTab("documents"), bg: "#f5f3ff", color: "#7c3aed", border: "#ddd6fe" },
-                  { label: "+ Create Meeting", icon: "📅", action: () => setShowEventModal(true), bg: "#fff7ed", color: "#c2410c", border: "#ffedd5" },
-                  { label: "+ Add Risk", icon: "⚠️", action: () => alert("Opening Add Risk dialog..."), bg: "#fef2f2", color: "#b91c1c", border: "#fecaca" },
-                  { label: "+ Generate Report", icon: "📊", action: () => alert("Generating Project Report..."), bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" },
-                  { label: "+ Raise Approval", icon: "✍️", action: () => alert("Raising Approval Request..."), bg: "#faf5ff", color: "#9333ea", border: "#e9d5ff" }
+                  { 
+                    label: "+ Add Task", 
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M12 11v6"/><path d="M9 14h6"/></svg>, 
+                    action: () => setShowEventModal(true), bg: "#eff6ff", color: "#2563eb", border: "#bfdbfe" 
+                  },
+                  { 
+                    label: "+ Schedule Visit", 
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>, 
+                    action: () => setShowVisitModal(true), bg: "#ecfdf5", color: "#059669", border: "#a7f3d0" 
+                  },
+                  { 
+                    label: "+ Upload Document", 
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>, 
+                    action: () => setActiveProjectTab("documents"), bg: "#f5f3ff", color: "#7c3aed", border: "#ddd6fe" 
+                  },
+                  { 
+                    label: "+ Create Meeting", 
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M12 14v4"/><path d="M10 16h4"/></svg>, 
+                    action: () => setShowEventModal(true), bg: "#fff7ed", color: "#c2410c", border: "#ffedd5" 
+                  },
+                  { 
+                    label: "+ Add Risk", 
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>, 
+                    action: () => alert("Opening Add Risk dialog..."), bg: "#fef2f2", color: "#b91c1c", border: "#fecaca" 
+                  },
+                  { 
+                    label: "+ Generate Report", 
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>, 
+                    action: () => alert("Generating Project Report..."), bg: "#f0fdf4", color: "#15803d", border: "#bbf7d0" 
+                  },
+                  { 
+                    label: "+ Raise Approval", 
+                    icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>, 
+                    action: () => alert("Raising Approval Request..."), bg: "#faf5ff", color: "#9333ea", border: "#e9d5ff" 
+                  }
                 ].map((btn, i) => (
                   <button
                     key={i}
@@ -718,7 +766,7 @@ export default function ProjectsView() {
                       display: "flex",
                       alignItems: "center",
                       justify: "space-between",
-                      padding: "10px 14px",
+                      padding: "11px 14px",
                       background: btn.bg,
                       border: `1px solid ${btn.border}`,
                       borderRadius: "10px",
@@ -730,10 +778,10 @@ export default function ProjectsView() {
                     }}
                   >
                     <span style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontSize: "1rem" }}>{btn.icon}</span>
+                      {btn.icon}
                       {btn.label}
                     </span>
-                    <span>→</span>
+                    <span style={{ fontSize: "0.9rem", opacity: 0.7 }}>→</span>
                   </button>
                 ))}
               </div>
@@ -741,9 +789,12 @@ export default function ProjectsView() {
 
             {/* Risks Widget */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px" }}>
-              <h4 style={{ margin: "0 0 12px 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>⚠️ RISKS & APPROVALS</h4>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>RISKS & APPROVALS</h4>
+              </div>
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                <div style={{ padding: "10px", background: "#fef2f2", borderRadius: "8px", border: "1px solid #fecaca" }}>
+                <div style={{ padding: "10px 12px", background: "#fef2f2", borderRadius: "8px", border: "1px solid #fecaca" }}>
                   <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#b91c1c" }}>Inventory Verification Delay</div>
                   <div style={{ fontSize: "0.72rem", color: "#7f1d1d" }}>Owner: Darla • High Risk</div>
                 </div>

@@ -960,31 +960,6 @@ export default function ProjectsView() {
             {/* TAB 2: AUDIT REPORT (KEKA HR EMBEDDED RESUME VIEWER STYLE) */}
             {activeProjectTab === "audit" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                
-                {/* 8-Phase Audit Progress */}
-                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                    <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
-                      8-PHASE IMPLEMENTATION AUDIT PROGRESS
-                    </h3>
-                    <span style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "800" }}>Phase 4 (Process Design)</span>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "10px" }}>
-                    {[
-                      { num: 1, title: "Vision Alignment", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
-                      { num: 2, title: "Business Audit", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
-                      { num: 3, title: "Gap Analysis", status: "Completed", color: "#16a34a", bg: "#f0fdf4" },
-                      { num: 4, title: "Process Design", status: "In Progress (65%)", color: "#2563eb", bg: "#eff6ff" }
-                    ].map(p => (
-                      <div key={p.num} style={{ background: p.bg, border: `1px solid ${p.color}40`, borderRadius: "8px", padding: "10px 12px" }}>
-                        <div style={{ fontSize: "0.7rem", fontWeight: "800", color: p.color }}>PHASE {p.num}</div>
-                        <div style={{ fontSize: "0.85rem", fontWeight: "800", color: "#0f172a", margin: "4px 0 2px 0" }}>{p.title}</div>
-                        <div style={{ fontSize: "0.7rem", color: p.color, fontWeight: "700" }}>{p.status}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
 
                 {/* KEKA HR STYLE EMBEDDED DOCUMENT READER (RESUME VIEWER) */}
                 <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", overflow: "hidden" }}>

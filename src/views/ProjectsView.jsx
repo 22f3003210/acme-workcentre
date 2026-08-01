@@ -25,6 +25,35 @@ const decryptProjectId = (str) => {
   }
 };
 
+// Persistent In-Browser Memory Cache for Document Data URLs
+const documentDataUrlCache = new Map();
+
+const cacheDocumentUrl = (docId, url) => {
+  if (!docId || !url || url.length < 20 || url.startsWith("#")) return;
+  documentDataUrlCache.set(docId, url);
+  try {
+    sessionStorage.setItem(`acme_doc_cache_${docId}`, url);
+  } catch (e) {}
+};
+
+const getCachedDocumentUrl = (docId, fallbackUrl) => {
+  if (fallbackUrl && fallbackUrl.startsWith("data:")) return fallbackUrl;
+  if (fallbackUrl && fallbackUrl.startsWith("http")) return fallbackUrl;
+  if (docId && documentDataUrlCache.has(docId)) {
+    return documentDataUrlCache.get(docId);
+  }
+  if (docId) {
+    try {
+      const sessionVal = sessionStorage.getItem(`acme_doc_cache_${docId}`);
+      if (sessionVal) {
+        documentDataUrlCache.set(docId, sessionVal);
+        return sessionVal;
+      }
+    } catch (e) {}
+  }
+  return fallbackUrl || "";
+};
+
 // WORD DOCUMENT (.DOCX / .DOC) CANVAS RENDERER COMPONENT
 const DocxViewer = ({ doc }) => {
   const [htmlContent, setHtmlContent] = useState("");
@@ -151,11 +180,14 @@ export default function ProjectsView() {
     if (!selectedProject) return "";
     const docs = selectedProject.auditReports || [];
     const doc = docs[0];
-    if (!doc?.url) return "";
-    if (doc.url.startsWith("data:application/pdf") || doc.fileName?.match(/\.pdf$/i) || doc.fileType?.includes("pdf")) {
+    if (!doc) return "";
+    const rawUrl = getCachedDocumentUrl(doc.id, doc.url);
+    if (!rawUrl) return "";
+
+    if (rawUrl.startsWith("data:application/pdf") || doc.fileName?.match(/\.pdf$/i) || doc.fileType?.includes("pdf")) {
       try {
-        if (doc.url.startsWith("data:application/pdf")) {
-          const parts = doc.url.split(",");
+        if (rawUrl.startsWith("data:application/pdf")) {
+          const parts = rawUrl.split(",");
           const base64Data = parts[1];
           const binaryStr = window.atob(base64Data);
           const len = binaryStr.length;
@@ -167,10 +199,10 @@ export default function ProjectsView() {
           return URL.createObjectURL(blob);
         }
       } catch (e) {
-        return doc.url;
+        return rawUrl;
       }
     }
-    return doc.url;
+    return rawUrl;
   }, [selectedProject, selectedProject?.auditReports]);
 
   // Auth Protection Check
@@ -375,8 +407,11 @@ export default function ProjectsView() {
       else if (file.name.match(/\.(png|jpg|jpeg|gif|webp)$/i)) detectedType = "image/png";
       else if (file.name.match(/\.(docx|doc)$/i)) detectedType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
+      const docId = `audit-${Date.now()}`;
+      cacheDocumentUrl(docId, fileDataUrl);
+
       const newDoc = {
-        id: `audit-${Date.now()}`,
+        id: docId,
         title: fileTitle,
         category: "Site Audit Report",
         fileName: file.name,
@@ -1186,40 +1221,43 @@ export default function ProjectsView() {
 
                     {/* DOCUMENT CONTENT CANVAS */}
                     <div style={{ padding: "20px", background: "#f1f5f9", minHeight: "500px", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                      {activeDoc?.url && (activeDoc.url.startsWith("data:image") || activeDoc.fileName?.match(/\.(png|jpg|jpeg|gif|webp)$/i)) ? (
-                        <img
-                          src={activeDoc.url}
-                          alt={activeDoc.title}
-                          style={{ maxWidth: "100%", maxHeight: "650px", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", objectFit: "contain" }}
-                        />
-                      ) : activeDoc?.url && (activeDoc.url.startsWith("data:application/pdf") || activeDoc.fileName?.match(/\.pdf$/i)) ? (
-                        <object
-                          data={pdfBlobUrl || activeDoc.url}
-                          type="application/pdf"
-                          style={{ width: "100%", height: "750px", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
-                        >
-                          <embed
-                            src={pdfBlobUrl || activeDoc.url}
-                            type="application/pdf"
-                            style={{ width: "100%", height: "750px", borderRadius: "8px" }}
-                          />
-                        </object>
-                      ) : activeDoc?.url && (activeDoc.fileName?.match(/\.(docx|doc)$/i) || activeDoc.fileType?.includes("word") || activeDoc.fileType?.includes("officedocument")) ? (
-                        <DocxViewer doc={activeDoc} />
-                      ) : (
-                        <div style={{ background: "#ffffff", padding: "40px", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)", width: "100%", maxWidth: "800px", color: "#1e293b", lineHeight: "1.7", fontSize: "0.95rem" }}>
-                          <div style={{ borderBottom: "2px solid #0f172a", paddingBottom: "16px", marginBottom: "24px" }}>
-                            <span style={{ background: "#eff6ff", color: "#2563eb", padding: "4px 8px", borderRadius: "6px", fontWeight: "800", fontSize: "0.72rem" }}>
-                              UPLOADED AUDIT REPORT
-                            </span>
-                            <h2 style={{ margin: "8px 0 4px 0", fontSize: "1.4rem", fontWeight: "900", color: "#0f172a" }}>{activeDoc?.title || activeDoc?.fileName}</h2>
-                            <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b" }}>File: {activeDoc?.fileName} • Size: {activeDoc?.fileSize || "1.2 MB"} • Uploaded by {activeDoc?.uploadedBy || "Consultant"}</p>
+                      {(() => {
+                        const resolvedUrl = getCachedDocumentUrl(activeDoc?.id, activeDoc?.url);
+                        const isImage = (resolvedUrl && resolvedUrl.startsWith("data:image")) || activeDoc?.fileName?.match(/\.(png|jpg|jpeg|gif|webp)$/i);
+                        const isDocx = activeDoc?.fileName?.match(/\.(docx|doc)$/i) || activeDoc?.fileType?.includes("word") || activeDoc?.fileType?.includes("officedocument");
+                        const activePdfSrc = pdfBlobUrl || (resolvedUrl && resolvedUrl.length > 20 && !resolvedUrl.startsWith("#") ? resolvedUrl : activeDoc?.url);
+
+                        if (isImage) {
+                          return (
+                            <img
+                              src={resolvedUrl || activeDoc?.url}
+                              alt={activeDoc?.title}
+                              style={{ maxWidth: "100%", maxHeight: "650px", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", objectFit: "contain" }}
+                            />
+                          );
+                        }
+
+                        if (isDocx) {
+                          return <DocxViewer doc={{ ...activeDoc, url: resolvedUrl || activeDoc?.url }} />;
+                        }
+
+                        // DEFAULT / PDF: Always render native vector embedded PDF viewer (or iframe) directly!
+                        return (
+                          <div style={{ width: "100%", height: "800px", background: "#ffffff", borderRadius: "8px", overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+                            <object
+                              data={activePdfSrc}
+                              type="application/pdf"
+                              style={{ width: "100%", height: "100%", border: "none" }}
+                            >
+                              <iframe
+                                src={activePdfSrc}
+                                title={activeDoc?.title || "Audit Document PDF Viewer"}
+                                style={{ width: "100%", height: "100%", border: "none" }}
+                              />
+                            </object>
                           </div>
-                          <p style={{ color: "#475569" }}>
-                            This document (<strong>{activeDoc?.fileName}</strong>) is active, verified, and linked to the project workspace.
-                          </p>
-                        </div>
-                      )}
+                        );
+                      })()}
                     </div>
                   </div>
                 )}

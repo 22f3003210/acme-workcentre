@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { initialProjects } from "../data/initialData";
@@ -146,14 +146,8 @@ export default function ProjectsView() {
     transformationOutcomes: []
   });
 
-  // Audit Document Upload & Viewer Modal States
-  const [showDocUploadModal, setShowDocUploadModal] = useState(false);
-  const [docTitle, setDocTitle] = useState("");
-  const [docCategory, setDocCategory] = useState("Site Audit Report");
-  const [docFileName, setDocFileName] = useState("");
-  const [docFileType, setDocFileType] = useState("");
-  const [docFileSize, setDocFileSize] = useState("");
-  const [docFileUrl, setDocFileUrl] = useState("");
+  // Audit Document Direct Upload & Viewer Ref
+  const fileInputRef = useRef(null);
   const [viewingDoc, setViewingDoc] = useState(null); // Active document object being viewed in full reader!
 
   // New Discussion Form
@@ -230,49 +224,42 @@ export default function ProjectsView() {
     };
   }, [selectedProject]);
 
-  // File upload change handler
-  const handleFileUploadChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setDocFileName(file.name);
-      setDocFileType(file.type || "PDF Document");
-      setDocFileSize(`${(file.size / 1024).toFixed(1)} KB`);
-      setDocFileUrl(URL.createObjectURL(file));
-    }
-  };
-
-  // Submit Handler for Audit Report Document Upload Form
-  const handleUploadAuditReportSubmit = (e) => {
-    e.preventDefault();
-    if (!docTitle.trim() || !selectedProject) return;
+  // Direct File Upload Handler (No Modal Popup, Immediate Database Storage)
+  const handleDirectFileUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !selectedProject) return;
 
     const effective = getEffectiveProject(selectedProject);
-    const newDoc = {
-      id: `audit-${Date.now()}`,
-      title: docTitle,
-      category: docCategory,
-      fileName: docFileName || "ACME_Audit_Report.pdf",
-      fileType: docFileType || "application/pdf",
-      fileSize: docFileSize || "1.5 MB",
-      uploadedAt: new Date().toISOString().split("T")[0],
-      uploadedBy: currentUser?.name || "Darla Manikanta",
-      url: docFileUrl || "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const fileDataUrl = evt.target.result;
+      const fileTitle = file.name.replace(/\.[^/.]+$/, "");
+      const newDoc = {
+        id: `audit-${Date.now()}`,
+        title: fileTitle,
+        category: "Site Audit Report",
+        fileName: file.name,
+        fileType: file.type || "application/pdf",
+        fileSize: `${(file.size / 1024).toFixed(1)} KB`,
+        uploadedAt: new Date().toISOString().split("T")[0],
+        uploadedBy: currentUser?.name || "Darla Manikanta",
+        url: fileDataUrl,
+        previewData: fileDataUrl
+      };
+
+      const existingDocs = effective.auditReports || [];
+      const updatedDocs = [newDoc, ...existingDocs];
+
+      updateProject(effective.id, {
+        auditReports: updatedDocs
+      });
+
+      const updated = projects.find(p => p.id === selectedProject.id);
+      if (updated) setSelectedProject({ ...updated, auditReports: updatedDocs });
+
+      setToast({ message: `Audit document '${file.name}' uploaded & saved to database!`, type: "success" });
     };
-
-    const existingDocs = effective.auditReports || [];
-    const updatedDocs = [newDoc, ...existingDocs];
-
-    updateProject(effective.id, {
-      auditReports: updatedDocs
-    });
-
-    const updated = projects.find(p => p.id === selectedProject.id);
-    if (updated) setSelectedProject({ ...updated, auditReports: updatedDocs });
-
-    setToast({ message: `Audit Report '${docTitle}' uploaded successfully!`, type: "success" });
-    setDocTitle("");
-    setDocFileName("");
-    setShowDocUploadModal(false);
+    reader.readAsDataURL(file);
   };
 
   // Filtered projects
@@ -1018,11 +1005,33 @@ export default function ProjectsView() {
                         {activeDoc ? activeDoc.fileName : "ACME_Retail_Audit_Report_2026.pdf"}
                       </span>
                       
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleDirectFileUpload}
+                        accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx"
+                        style={{ display: "none" }}
+                      />
+
                       <button
-                        onClick={() => setShowDocUploadModal(true)}
-                        style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "6px 14px", borderRadius: "6px", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer" }}
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                        style={{
+                          background: "#2563eb",
+                          color: "#ffffff",
+                          border: "none",
+                          padding: "8px 18px",
+                          borderRadius: "8px",
+                          fontWeight: "800",
+                          fontSize: "0.85rem",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)"
+                        }}
                       >
-                        + Upload New Report
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Upload Audit Document
                       </button>
                     </div>
                   </div>
@@ -1181,54 +1190,6 @@ export default function ProjectsView() {
           </div>
 
         </div>
-
-        {/* ------------------------------------------------------------- */}
-        {/* 4. MODALS (UPLOAD DOCUMENT MODAL)                             */}
-        {/* ------------------------------------------------------------- */}
-        {showDocUploadModal && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 }}>
-            <div style={{ background: "#ffffff", width: "100%", maxWidth: "480px", borderRadius: "14px", padding: "24px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Upload Audit Document</h3>
-                <button onClick={() => setShowDocUploadModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
-              </div>
-
-              <form onSubmit={handleUploadAuditReportSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "4px" }}>Document Title</label>
-                  <input type="text" required value={docTitle} onChange={e => setDocTitle(e.target.value)} placeholder="e.g. Vault Inventory Reconciliation Sheet" style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "4px" }}>Category</label>
-                  <select value={docCategory} onChange={e => setDocCategory(e.target.value)} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }}>
-                    <option>Site Audit Report</option>
-                    <option>Vault Discrepancy Sheet</option>
-                    <option>Process SOP Guidelines</option>
-                    <option>Compliance Certificate</option>
-                    <option>Financial Ledger</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#475569", marginBottom: "4px" }}>Select File (PDF, Image, Excel, Word)</label>
-                  <input
-                    type="file"
-                    accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx"
-                    onChange={handleFileUploadChange}
-                    style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }}
-                  />
-                  {docFileName && <div style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "700", marginTop: "4px" }}>Selected: {docFileName} ({docFileSize})</div>}
-                </div>
-
-                <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-                  <button type="button" onClick={() => setShowDocUploadModal(false)} style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 16px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}>Cancel</button>
-                  <button type="submit" style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "8px 20px", borderRadius: "8px", fontWeight: "800", cursor: "pointer" }}>Upload Document</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
 
       </div>
     );

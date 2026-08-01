@@ -1427,8 +1427,7 @@ export default function ProjectsView() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    setSelectedProject(proj);
-                    setActiveProjectTab("overview");
+                    handleSelectProject(proj);
                   }}
                   style={{
                     background: "#4c478a",

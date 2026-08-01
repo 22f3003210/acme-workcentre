@@ -612,12 +612,9 @@ export default function ProjectsView() {
         </div>
 
         {/* ------------------------------------------------------------- */}
-        {/* 2. KEKA HR SPLIT GRID WORKSPACE (70% LEFT MAIN + 30% RIGHT PANEL) */}
+        {/* 2. KEKA HR WORKSPACE (100% FULL-WIDTH MAIN CONTENT AREA)       */}
         {/* ------------------------------------------------------------- */}
-        <div style={{ padding: "20px 28px", display: "grid", gridTemplateColumns: "1fr 340px", gap: "20px" }}>
-          
-          {/* LEFT COLUMN: MAIN TAB CONTENT (70%) */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <div style={{ padding: "20px 28px", display: "flex", flexDirection: "column", gap: "20px" }}>
 
             {/* TAB 1: BUSINESS DETAILS */}
             {activeProjectTab === "business" && (
@@ -1127,57 +1124,6 @@ export default function ProjectsView() {
                 <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Linked Expenses Billed to Project</h3>
               </div>
             )}
-
-          </div>
-
-          {/* RIGHT COLUMN: KEKA-STYLE PROJECT NOTES & QUICK ACTIONS PANEL (30%) */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            
-            {/* Keka HR Style Notes Panel (Matches Right Card in Screenshot) */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", minHeight: "380px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-              <div style={{ width: "64px", height: "64px", borderRadius: "12px", background: "#f8fafc", border: "1px dashed #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "12px" }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              </div>
-              <h4 style={{ margin: "0 0 4px 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>No notes added for this project</h4>
-              <p style={{ margin: 0, fontSize: "0.8rem", color: "#64748b" }}>All client activity & meeting notes will appear here</p>
-
-              <form onSubmit={handlePostDiscussion} style={{ width: "100%", marginTop: "20px" }}>
-                <textarea
-                  rows="2"
-                  placeholder="Add a quick note or update..."
-                  value={discText}
-                  onChange={e => setDiscText(e.target.value)}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", marginBottom: "8px" }}
-                />
-                <button type="submit" style={{ width: "100%", background: "#2563eb", color: "#ffffff", border: "none", padding: "8px", borderRadius: "6px", fontWeight: "700", fontSize: "0.82rem", cursor: "pointer" }}>
-                  + Post Project Note
-                </button>
-              </form>
-            </div>
-
-            {/* Quick Actions Shortcuts */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px" }}>
-              <h4 style={{ margin: "0 0 14px 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>⚡ QUICK ACTIONS</h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                {[
-                  { label: "+ Add Task", action: () => setShowEventModal(true), bg: "#eff6ff", color: "#2563eb" },
-                  { label: "+ Schedule Visit", action: () => setShowVisitModal(true), bg: "#ecfdf5", color: "#059669" },
-                  { label: "+ Upload Document", action: () => setShowDocUploadModal(true), bg: "#f5f3ff", color: "#7c3aed" },
-                  { label: "+ Create Meeting", action: () => setShowEventModal(true), bg: "#fff7ed", color: "#c2410c" },
-                  { label: "+ Add Risk", action: () => alert("Add Risk..."), bg: "#fef2f2", color: "#b91c1c" }
-                ].map((btn, i) => (
-                  <button
-                    key={i}
-                    onClick={btn.action}
-                    style={{ padding: "9px 12px", background: btn.bg, color: btn.color, border: "none", borderRadius: "8px", fontWeight: "700", fontSize: "0.82rem", cursor: "pointer", textAlign: "left" }}
-                  >
-                    {btn.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-          </div>
 
         </div>
 

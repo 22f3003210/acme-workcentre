@@ -513,22 +513,12 @@ export default function ProjectsView() {
                   </span>
                 </div>
 
-                {/* Subtitle with Owner & Nearby Contact Details */}
+                {/* Subtitle with Started on & Dynamic Owner */}
                 <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "6px", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                  <span>Sourced from Client Intake by ACME on {effectiveProject.startDate || "2026-07-01"}</span>
+                  <span>Started on {effectiveProject.startDate || "2026-07-01"}</span>
                   <span>•</span>
-                  <span>Owner: <strong style={{ color: "#0f172a" }}>{effectiveProject.owner || "Darla Manikanta"}</strong></span>
+                  <span>Owner: <strong style={{ color: "#0f172a" }}>{effectiveProject.owner || (effectiveProject.assignedConsultants && effectiveProject.assignedConsultants[0]) || currentUser?.name || "Darla Manikanta"}</strong></span>
                   <button onClick={handleStartEditBusiness} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontWeight: "700", padding: 0 }} title="Edit Business Details">✏️</button>
-                  <span>•</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#2563eb", fontWeight: "700" }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    {effectiveProject.pocContact || "9876543233"}
-                  </span>
-                  <span>•</span>
-                  <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#475569" }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                    {effectiveProject.clientEmail || "poc@client.com"}
-                  </span>
                 </div>
               </div>
             </div>
@@ -596,9 +586,9 @@ export default function ProjectsView() {
           </div>
 
           {/* ------------------------------------------------------------- */}
-          {/* GREEN MARKED AREA: UNDERLINE TAB BAR (AT BOTTOM OF UPPER CARD) */}
+          {/* RECTANGLE PILL TAB NAVIGATION BAR (WITH SEPARATE ACCENT COLOR) */}
           {/* ------------------------------------------------------------- */}
-          <div style={{ display: "flex", gap: "24px", borderTop: "1px solid #f1f5f9", paddingTop: "10px", overflowX: "auto" }}>
+          <div style={{ display: "flex", gap: "8px", borderTop: "1px solid #f1f5f9", paddingTop: "12px", paddingBottom: "14px", overflowX: "auto" }}>
             {[
               { id: "business", label: "Business Details" },
               { id: "audit", label: "Audit Report" },
@@ -614,15 +604,16 @@ export default function ProjectsView() {
                 key={tab.id}
                 onClick={() => setActiveProjectTab(tab.id)}
                 style={{
-                  background: "none",
-                  border: "none",
-                  borderBottom: activeProjectTab === tab.id ? "3px solid #2563eb" : "3px solid transparent",
-                  color: activeProjectTab === tab.id ? "#2563eb" : "#64748b",
+                  background: activeProjectTab === tab.id ? "#2563eb" : "#f1f5f9",
+                  color: activeProjectTab === tab.id ? "#ffffff" : "#475569",
+                  border: activeProjectTab === tab.id ? "1px solid #2563eb" : "1px solid #e2e8f0",
+                  borderRadius: "8px",
+                  padding: "8px 16px",
                   fontWeight: activeProjectTab === tab.id ? "800" : "600",
-                  fontSize: "0.88rem",
-                  paddingBottom: "10px",
+                  fontSize: "0.85rem",
                   cursor: "pointer",
                   whiteSpace: "nowrap",
+                  boxShadow: activeProjectTab === tab.id ? "0 2px 8px rgba(37, 99, 235, 0.25)" : "none",
                   transition: "all 0.15s ease"
                 }}
               >

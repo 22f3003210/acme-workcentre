@@ -517,22 +517,7 @@ export const AppProvider = ({ children }) => {
     try {
       localStorage.setItem("workcentre_projects", JSON.stringify(projects));
     } catch (e) {
-      console.warn("localStorage quota exceeded for workcentre_projects. Using lightweight fallback storage.", e);
-      try {
-        const lightweightProjects = projects.map(p => {
-          if (!p.auditReports) return p;
-          return {
-            ...p,
-            auditReports: p.auditReports.map(doc => ({
-              ...doc,
-              url: doc.url && doc.url.length > 100000 ? "#stored_in_memory" : doc.url
-            }))
-          };
-        });
-        localStorage.setItem("workcentre_projects", JSON.stringify(lightweightProjects));
-      } catch (err) {
-        console.error("Lightweight fallback storage failed:", err);
-      }
+      console.warn("localStorage quota exceeded for workcentre_projects. Keeping in-memory state active.", e);
     }
   }, [projects]);
 

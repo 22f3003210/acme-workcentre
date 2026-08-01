@@ -118,7 +118,7 @@ export default function ProjectsView() {
       checklists: proj.checklists || [],
       engagementPurpose: proj.engagementPurpose || "Client approached us for consulting advisory, audit, and growth strategy.",
       businessDetails: proj.businessDetails || defaultDetails,
-      auditReports: proj.auditReports || defaultAuditDocs
+      auditReports: proj.auditReports || []
     };
   };
 
@@ -951,113 +951,128 @@ export default function ProjectsView() {
                         "Challenge: {bizDetails.primaryChallenge || "Describe how metal weight variance, inventory reconciliation, or sales tracking issues affect daily workflow..."}"
                       </p>
                     </div>
-
                   </div>
                 )}
               </div>
             )}
 
-            {/* TAB 2: AUDIT REPORT (KEKA HR EMBEDDED RESUME VIEWER STYLE) */}
+            {/* TAB 2: AUDIT REPORT */}
             {activeProjectTab === "audit" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
 
-                {/* KEKA HR STYLE EMBEDDED DOCUMENT READER (RESUME VIEWER) */}
-                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", overflow: "hidden" }}>
-                  
-                  {/* Document View Header Strip (Matches Resume Header in Keka Screenshot) */}
-                  <div style={{ background: "#f8fafc", padding: "14px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span style={{ background: "#eff6ff", color: "#2563eb", padding: "4px 8px", borderRadius: "6px", fontWeight: "800", fontSize: "0.75rem" }}>
-                        PDF AUDIT REPORT
-                      </span>
-                      <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
-                        {activeDoc ? activeDoc.title : "Phase 1-3 Preliminary Audit Report"}
-                      </h4>
-                    </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleDirectFileUpload}
+                  accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx"
+                  style={{ display: "none" }}
+                />
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
-                        {activeDoc ? activeDoc.fileName : "ACME_Retail_Audit_Report_2026.pdf"}
-                      </span>
-                      
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleDirectFileUpload}
-                        accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx"
-                        style={{ display: "none" }}
-                      />
-
-                      <button
-                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                        style={{
-                          background: "#2563eb",
-                          color: "#ffffff",
-                          border: "none",
-                          padding: "8px 18px",
-                          borderRadius: "8px",
-                          fontWeight: "800",
-                          fontSize: "0.85rem",
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)"
-                        }}
-                      >
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        Upload Audit Document
-                      </button>
+                {auditDocs.length === 0 ? (
+                  /* EMPTY STATE WHEN NO DOCUMENT IS UPLOADED INITIALY */
+                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "50px 24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+                    <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                     </div>
+                    <h3 style={{ margin: "0 0 6px 0", fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>No Audit Document Uploaded</h3>
+                    <p style={{ margin: "0 0 20px 0", fontSize: "0.85rem", color: "#64748b", maxWidth: "420px" }}>
+                      No audit report has been uploaded for this client yet. Click below to select and upload your audit document directly.
+                    </p>
+                    <button
+                      onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                      style={{
+                        background: "#2563eb",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "10px 24px",
+                        borderRadius: "8px",
+                        fontWeight: "800",
+                        fontSize: "0.9rem",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)"
+                      }}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      Upload Audit Document
+                    </button>
                   </div>
-
-                  {/* EMBEDDED DOCUMENT CANVAS (FULL-WIDTH DOCUMENT PREVIEW) */}
-                  <div style={{ padding: "20px", background: "#f1f5f9", minHeight: "500px", display: "flex", justifyContent: "center" }}>
-                    <div style={{ width: "100%", maxWidth: "800px", background: "#ffffff", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.06)", padding: "40px", fontFamily: "Georgia, serif", color: "#1e293b", lineHeight: "1.7" }}>
-                      
-                      {/* Document Sheet Visual Header */}
-                      <div style={{ borderBottom: "2px solid #0f172a", paddingBottom: "20px", marginBottom: "24px", textAlign: "center" }}>
-                        <h1 style={{ margin: "0 0 6px 0", fontSize: "1.6rem", fontWeight: "900", letterSpacing: "1px", color: "#0f172a" }}>
-                          ACME WORKCENTRE ADVISORY
-                        </h1>
-                        <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "700", color: "#2563eb" }}>
-                          RETAIL AUDIT & VAULT RECONCILIATION REPORT
-                        </h3>
-                        <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b", fontFamily: "sans-serif" }}>
-                          Client: <strong>{effectiveProject.client || "Heerabhai Jewellers"}</strong> • Code: {effectiveProject.code || "PROJ-TEST-01"} • Date: {new Date().toLocaleDateString()}
-                        </p>
+                ) : (
+                  /* EMBEDDED DOCUMENT VIEWER WHEN DOCUMENT IS UPLOADED */
+                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", overflow: "hidden" }}>
+                    
+                    {/* Header bar */}
+                    <div style={{ background: "#f8fafc", padding: "14px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ background: "#eff6ff", color: "#2563eb", padding: "4px 10px", borderRadius: "6px", fontWeight: "800", fontSize: "0.75rem" }}>
+                          UPLOADED AUDIT DOCUMENT
+                        </span>
+                        <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
+                          {activeDoc ? activeDoc.title : "Uploaded Audit Report"}
+                        </h4>
                       </div>
 
-                      {/* Document Content Paragraphs */}
-                      <div style={{ fontSize: "0.95rem" }}>
-                        <h4 style={{ margin: "16px 0 8px 0", color: "#0f172a", fontFamily: "sans-serif", fontWeight: "800" }}>1. Executive Summary & Audit Observations</h4>
-                        <p>
-                          During our comprehensive site audit across showrooms and handcrafting ateliers, ACME Workcentre advisory team identified key operational friction in inventory reconciliation between POS sales ledgers and vault stock counts.
-                        </p>
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                          {activeDoc ? `${activeDoc.fileName} (${activeDoc.fileSize || "1.2 MB"})` : ""}
+                        </span>
+                        
+                        <button
+                          onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                          style={{
+                            background: "#2563eb",
+                            color: "#ffffff",
+                            border: "none",
+                            padding: "8px 18px",
+                            borderRadius: "8px",
+                            fontWeight: "800",
+                            fontSize: "0.85rem",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)"
+                          }}
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          Upload New / Replace
+                        </button>
+                      </div>
+                    </div>
 
-                        <h4 style={{ margin: "16px 0 8px 0", color: "#0f172a", fontFamily: "sans-serif", fontWeight: "800" }}>2. Core Findings & Variance Breakdown</h4>
-                        <ul style={{ paddingLeft: "20px" }}>
-                          <li><strong>Metal Weight Variance:</strong> 3.4% unaccounted variance between raw casting and finished job cards.</li>
-                          <li><strong>Vault Reconciliation:</strong> Manual physical tag counts take 14 hours per month; digitization advised.</li>
-                          <li><strong>Sales Upselling:</strong> Counter staff average bill value (ABV) can increase 18% via standardized script coaching.</li>
-                        </ul>
-
-                        <h4 style={{ margin: "16px 0 8px 0", color: "#0f172a", fontFamily: "sans-serif", fontWeight: "800" }}>3. Action Plan & Implementation Roadmap</h4>
-                        <p>
-                          Deployment of RFID vault scanners, real-time weight tracking job cards, and digital POS reconciliation is recommended for Phase 4 rollout.
-                        </p>
-
-                        <div style={{ marginTop: "40px", paddingTop: "16px", borderTop: "1px solid #cbd5e1", display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748b", fontFamily: "sans-serif" }}>
-                          <span>Prepared by: Lead Systems Auditor</span>
-                          <span>Verified by: Principal Advisor</span>
+                    {/* DOCUMENT CONTENT CANVAS */}
+                    <div style={{ padding: "20px", background: "#f1f5f9", minHeight: "500px", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                      {activeDoc?.url && (activeDoc.url.startsWith("data:image") || activeDoc.fileName?.match(/\.(png|jpg|jpeg|gif|webp)$/i)) ? (
+                        <img
+                          src={activeDoc.url}
+                          alt={activeDoc.title}
+                          style={{ maxWidth: "100%", maxHeight: "650px", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", objectFit: "contain" }}
+                        />
+                      ) : activeDoc?.url && (activeDoc.url.startsWith("data:application/pdf") || activeDoc.fileName?.match(/\.pdf$/i)) ? (
+                        <iframe
+                          src={activeDoc.url}
+                          title={activeDoc.title}
+                          style={{ width: "100%", height: "650px", border: "none", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }}
+                        />
+                      ) : (
+                        <div style={{ background: "#ffffff", padding: "40px", borderRadius: "12px", width: "100%", maxWidth: "600px", textAlign: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
+                          <div style={{ fontSize: "3rem", marginBottom: "12px" }}>📄</div>
+                          <h3 style={{ margin: "0 0 8px 0", fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>{activeDoc?.title || activeDoc?.fileName}</h3>
+                          <p style={{ color: "#64748b", fontSize: "0.85rem", margin: "0 0 20px 0" }}>File Type: {activeDoc?.fileType || "Document"} • Size: {activeDoc?.fileSize} • Uploaded: {activeDoc?.uploadedAt}</p>
+                          <a
+                            href={activeDoc?.url}
+                            download={activeDoc?.fileName || "audit_report"}
+                            style={{ background: "#2563eb", color: "#ffffff", textDecoration: "none", padding: "10px 24px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "8px" }}
+                          >
+                            📥 Download {activeDoc?.fileName}
+                          </a>
                         </div>
-                      </div>
-
+                      )}
                     </div>
                   </div>
-
-                </div>
-
+                )}
               </div>
             )}
 

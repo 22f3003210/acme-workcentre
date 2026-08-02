@@ -106,14 +106,10 @@ function MainWorkspace({ initialTab }) {
       case "Accounts Manager":
         return <AdminView activeTab={activeTab} setActiveTab={(tab) => navigate(getRoutePath(tab))} />;
       case "Consultant":
-        return <ConsultantView activeTab={activeTab} />;
+      case "Employee":
+      case "Staff":
       default:
-        return (
-          <div className="empty-state-card glass-card text-center" style={{ padding: "40px" }}>
-            <h3>Invalid Access</h3>
-            <p>Please log out and sign in with a registered account.</p>
-          </div>
-        );
+        return <ConsultantView activeTab={activeTab} />;
     }
   };
 

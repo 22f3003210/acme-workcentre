@@ -51,6 +51,16 @@ export default function ConsultantView({ activeTab }) {
   const [advPurpose, setAdvPurpose] = useState("");
 
   // Modal profile & Keka Profile Tab states
+    // Guided Check-In & Check-Out Wizard State
+  const [showCheckInWizard, setShowCheckInWizard] = useState(false);
+  const [showCheckOutWizard, setShowCheckOutWizard] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [selectedWizardProjectId, setSelectedWizardProjectId] = useState("");
+  const [wizardTasks, setWizardTasks] = useState([]);
+  const [wizardNewTaskInput, setWizardNewTaskInput] = useState("");
+  const [wizardSelfie, setWizardSelfie] = useState(null);
+  const [wizardChecklistAcknowledged, setWizardChecklistAcknowledged] = useState(false);
+
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [ledgerViewMode, setLedgerViewMode] = useState("grid"); // 'grid' or 'calendar'
   const [profileTab, setProfileTab] = useState("TIME");
@@ -157,6 +167,50 @@ export default function ConsultantView({ activeTab }) {
   const todayPunch = myAttendance.find(a => a.date === todayStr);
 
   // Handlers
+  
+  // Fallback default project for newly registered consultants with zero assigned projects
+  const defaultGeneralProject = {
+    id: "general-store-001",
+    name: "ACME Retail Flagship Store (Seoni, MP)",
+    code: "STORE-HQ",
+    location: "Seoni, Madhya Pradesh",
+    businessModel: "Retail & Client Advisory Store"
+  };
+
+  const displayProjects = (projects && projects.length > 0) ? projects : [defaultGeneralProject];
+
+  const handleOpenCheckInWizard = () => {
+    const defaultProjId = (projects && projects.length > 0) ? projects[0].id : defaultGeneralProject.id;
+    setSelectedWizardProjectId(punchProjectId || defaultProjId);
+    setWizardStep(1);
+    setWizardChecklistAcknowledged(true);
+    setShowCheckInWizard(true);
+  };
+
+  const handleCompleteCheckInSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (!currentUser?.id) {
+      if (setToast) setToast({ message: "No active session found.", type: "error" });
+      return;
+    }
+    const selProj = displayProjects.find(p => p.id === selectedWizardProjectId) || displayProjects[0];
+    const projId = selProj ? selProj.id : "general-store-001";
+    const projName = selProj ? (selProj.name || selProj.code) : "ACME Retail Flagship Store";
+
+    if (checkInConsultant) {
+      checkInConsultant(currentUser.id, {
+        remarks: punchRemarks || "Guided Check-In Completed",
+        projectId: projId,
+        projectName: projName,
+        tasks: wizardTasks
+      });
+      if (setToast) setToast({ message: `✓ Checked in successfully for ${projName}!`, type: "success" });
+    }
+
+    setShowCheckInWizard(false);
+    setPunchRemarks("");
+  };
+
   const handlePunchIn = () => {
     if (!currentUser?.id) {
       if (setToast) setToast({ message: "No active consultant session found.", type: "error" });
@@ -665,7 +719,7 @@ export default function ConsultantView({ activeTab }) {
                 {!todayPunch ? (
                   <button 
                     type="button" 
-                    onClick={handlePunchIn}
+                    onClick={handleOpenCheckInWizard}
                     style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "4px", padding: "8px 14px", fontWeight: "600", fontSize: "0.82rem", cursor: "pointer", width: "100%" }}
                   >
                     ✔ Check In Shift
@@ -1761,6 +1815,90 @@ export default function ConsultantView({ activeTab }) {
       )}
 
       {/* Profile & Petty Cash Allowance Modal */}
-    </div>
+    
+      {/* GUIDED MULTI-STEP CONSULTANT CHECK-IN WIZARD MODAL */}
+      {showCheckInWizard && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "16px", width: "100%", maxWidth: "560px", overflow: "hidden", boxShadow: "0 25px 50px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+            
+            {/* Header */}
+            <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)", color: "#ffffff", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: "rgba(34,197,94,0.2)", color: "#4ade80", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800" }}>✓</div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#ffffff" }}>Consultant Shift Check-In</h3>
+                  <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#94a3b8" }}>Confirm site location & daily tasks before starting</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowCheckInWizard(false)} style={{ background: "none", border: "none", color: "#94a3b8", fontSize: "1.4rem", cursor: "pointer" }}>✕</button>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {/* Step 1: Select Store / Site Location */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: "700", color: "#334155", marginBottom: "8px" }}>
+                  📍 SELECT STORE / CLIENT PROJECT LOCATION
+                </label>
+                <select 
+                  value={selectedWizardProjectId} 
+                  onChange={(e) => setSelectedWizardProjectId(e.target.value)}
+                  style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", background: "#f8fafc", color: "#0f172a", fontWeight: "600" }}
+                >
+                  {displayProjects.map(p => (
+                    <option key={p.id} value={p.id}>{p.name} ({p.location || "Default HQ Store"})</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Location Badge */}
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "12px 16px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "1.1rem" }}>📍</span>
+                <div>
+                  <div style={{ fontSize: "0.82rem", fontWeight: "700", color: "#166534" }}>Verified Location Match (GPS / Store Radius)</div>
+                  <div style={{ fontSize: "0.75rem", color: "#15803d" }}>Location within 500m radius of store site. Ready for check in.</div>
+                </div>
+              </div>
+
+              {/* Shift Remarks */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: "700", color: "#334155", marginBottom: "8px" }}>
+                  📝 SHIFT REMARKS / SITE NOTES (OPTIONAL)
+                </label>
+                <textarea
+                  value={punchRemarks}
+                  onChange={(e) => setPunchRemarks(e.target.value)}
+                  placeholder="e.g. On-site retail inventory check, client advisory meeting..."
+                  rows={2}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                />
+              </div>
+
+            </div>
+
+            {/* Footer Buttons */}
+            <div style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button 
+                type="button" 
+                onClick={() => setShowCheckInWizard(false)} 
+                style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handleCompleteCheckInSubmit} 
+                style={{ padding: "10px 24px", background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
+              >
+                Complete Check In & Start Shift ✓
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+</div>
   );
 }

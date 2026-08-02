@@ -227,6 +227,11 @@ export default function ConsultantView({ activeTab }) {
     setAdvPurpose("");
   };
 
+  // Attendance & Punch calculations
+  const todayStr = new Date().toISOString().split("T")[0];
+  const myAttendance = currentUser?.attendance || [];
+  const todayPunch = (myAttendance || []).slice().reverse().find(a => a.date === todayStr || (a.date && new Date(a.date).toDateString() === new Date().toDateString()));
+
   // Calculations for Attendance Dashboard
   const presentDays = myAttendance.filter(a => a.status === "Present" || a.status === "Late").length;
   const targetWorkingDays = settings.requiredWorkingDays || 22;

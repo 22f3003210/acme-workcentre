@@ -461,7 +461,9 @@ export default function ConsultantView({ activeTab }) {
               <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#fff7ed", color: "#ea580c", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>🌴</div>
               <div>
                 <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Annual Leave Balance</div>
-                <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "#0f172a" }}>{getLeaveBalance(currentUser.id)} Days</div>
+                <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "#0f172a" }}>
+                  {((getLeaveBalance(currentUser?.id)?.casual?.available || 0) + (getLeaveBalance(currentUser?.id)?.sick?.available || 0) + (getLeaveBalance(currentUser?.id)?.earned?.available || 0))} Days
+                </div>
               </div>
             </div>
           </div>

@@ -53,6 +53,7 @@ export default function ConsultantView({ activeTab }) {
   
   // Profile & Sub-tab States
   const [ledgerViewMode, setLedgerViewMode] = useState("grid");
+  const [mainNavTab, setMainNavTab] = useState("HOME");
   const [profileTab, setProfileTab] = useState("TIME");
   const [timeSubTab, setTimeSubTab] = useState("Attendance");
   const [statsRange, setStatsRange] = useState("Last Week");
@@ -331,24 +332,260 @@ export default function ConsultantView({ activeTab }) {
 
   return (
     <div className="consultant-view-container">
-      {/* First-Time Self-Onboarding Prompt Banner */}
-      {!currentUser?.profileCompleted && (
-        <div style={{ background: "linear-gradient(135deg, #4f46e5 0%, #3730a3 100%)", color: "#ffffff", padding: "16px 24px", borderRadius: "8px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 4px 12px rgba(79,70,229,0.2)" }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "700" }}>👋 Welcome! Please complete your employee profile details</h3>
-            <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "#e0e7ff" }}>Enter your PAN, Aadhaar, Bank Account, Emergency Contact & Personal Details to finalize your self-service onboarding.</p>
+
+      {/* TOP CONSULTANT WORKSPACE TAB NAVIGATION BAR */}
+      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid #e2e8f0", paddingBottom: "12px", flexWrap: "wrap", alignItems: "center" }}>
+        <button 
+          type="button"
+          onClick={() => setMainNavTab("HOME")} 
+          style={{ background: mainNavTab === "HOME" ? "#2563eb" : "#ffffff", color: mainNavTab === "HOME" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "HOME" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "HOME" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
+        >
+          🏠 Home Dashboard
+        </button>
+        <button 
+          type="button"
+          onClick={() => setMainNavTab("PROJECTS")} 
+          style={{ background: mainNavTab === "PROJECTS" ? "#2563eb" : "#ffffff", color: mainNavTab === "PROJECTS" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "PROJECTS" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "PROJECTS" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
+        >
+          📁 My Assigned Projects ({displayProjects.length})
+        </button>
+        <button 
+          type="button"
+          onClick={() => setMainNavTab("ATTENDANCE")} 
+          style={{ background: mainNavTab === "ATTENDANCE" ? "#2563eb" : "#ffffff", color: mainNavTab === "ATTENDANCE" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "ATTENDANCE" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "ATTENDANCE" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
+        >
+          🕒 Shift Attendance ({myAttendance.length})
+        </button>
+        <button 
+          type="button"
+          onClick={() => setMainNavTab("EXPENSES")} 
+          style={{ background: mainNavTab === "EXPENSES" ? "#2563eb" : "#ffffff", color: mainNavTab === "EXPENSES" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "EXPENSES" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "EXPENSES" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
+        >
+          💰 Expenses & Petty Cash
+        </button>
+        <button 
+          type="button"
+          onClick={() => setMainNavTab("PROFILE")} 
+          style={{ background: mainNavTab === "PROFILE" ? "#2563eb" : "#ffffff", color: mainNavTab === "PROFILE" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "PROFILE" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "PROFILE" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
+        >
+          👤 Employee Profile & Keka HR
+        </button>
+      </div>
+
+      {/* 1. HOME DASHBOARD VIEW */}
+      {mainNavTab === "HOME" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          
+          {/* Ultra-Sleek Hero Welcome Banner */}
+          <div style={{ position: "relative", background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e5c 100%)", borderRadius: "20px", padding: "30px 36px", color: "#ffffff", overflow: "hidden", boxShadow: "0 20px 40px rgba(15,23,42,0.25)" }}>
+            <div style={{ position: "absolute", top: "-50px", right: "-50px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)" }} />
+            
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "20px", position: "relative", zIndex: 2 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                <img 
+                  src={currentUser.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80"} 
+                  alt={currentUser.name}
+                  style={{ width: "80px", height: "80px", borderRadius: "50%", border: "3px solid rgba(255,255,255,0.4)", objectFit: "cover", boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
+                />
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <h1 style={{ margin: 0, fontSize: "1.8rem", fontWeight: "900", color: "#ffffff", letterSpacing: "-0.02em" }}>
+                      👋 Welcome back, {currentUser.name}!
+                    </h1>
+                    <span style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.4)", padding: "4px 10px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "800" }}>
+                      ACTIVE CONSULTANT
+                    </span>
+                  </div>
+                  <p style={{ margin: "6px 0 0 0", fontSize: "0.92rem", color: "#c7d2fe" }}>
+                    {currentUser.title || "Senior Systems Operator"} • {currentUser.department || "Consulting & Operations"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Quick Action Buttons in Hero Banner */}
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                <button 
+                  type="button"
+                  onClick={handleOpenCheckInWizard}
+                  style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 6px 18px rgba(22,163,74,0.4)", display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  ✔ Check In Shift (Site Visit)
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setMainNavTab("EXPENSES")}
+                  style={{ background: "rgba(255,255,255,0.15)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(6px)", borderRadius: "10px", padding: "12px 20px", fontWeight: "700", fontSize: "0.88rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+                >
+                  ➕ Add Expense Claim
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setMainNavTab("PROFILE")}
+                  style={{ background: "rgba(255,255,255,0.1)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "10px", padding: "12px 18px", fontWeight: "700", fontSize: "0.88rem", cursor: "pointer" }}
+                >
+                  👤 View Full Profile →
+                </button>
+              </div>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowSelfOnboardingModal(true)}
-            style={{ background: "#ffffff", color: "#3730a3", border: "none", borderRadius: "6px", padding: "10px 20px", fontWeight: "700", fontSize: "0.88rem", cursor: "pointer", whiteSpace: "nowrap" }}
-          >
-            Complete Profile Now →
-          </button>
+
+          {/* Metric Overview Stat Pills */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>📁</div>
+              <div>
+                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Assigned Projects</div>
+                <div style={{ fontSize: "1.4rem", fontWeight: "900", color: "#0f172a" }}>{displayProjects.length} Client Sites</div>
+              </div>
+            </div>
+
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#f0fdf4", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>🕒</div>
+              <div>
+                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Today's Shift Status</div>
+                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: todayPunch ? "#16a34a" : "#dc2626" }}>
+                  {todayPunch ? (todayPunch.checkOut ? "Shift Completed" : "Currently In") : "Not Checked In"}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#faf5ff", color: "#9333ea", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>💰</div>
+              <div>
+                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Petty Cash Balance</div>
+                <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "#0f172a" }}>₹{balanceDetails.availableBalance.toLocaleString("en-IN")}</div>
+              </div>
+            </div>
+
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#fff7ed", color: "#ea580c", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>🌴</div>
+              <div>
+                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Annual Leave Balance</div>
+                <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "#0f172a" }}>{getLeaveBalance(currentUser.id)} Days</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2-Column Home Dashboard Layout */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "24px" }}>
+            
+            {/* LEFT COLUMN: Assigned Client Projects Grid */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>📁 My Assigned Client Projects</h3>
+                    <p style={{ margin: "2px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>Active store locations and client assignments</p>
+                  </div>
+                  <button type="button" onClick={() => setMainNavTab("PROJECTS")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}>View All Projects →</button>
+                </div>
+
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {displayProjects.map(proj => (
+                    <div key={proj.id} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>{proj.name}</h4>
+                            <span style={{ background: "#dcfce7", color: "#166534", border: "1px solid #86efac", padding: "2px 8px", borderRadius: "4px", fontSize: "0.72rem", fontWeight: "800" }}>ACTIVE SITE</span>
+                          </div>
+                          <div style={{ fontSize: "0.84rem", color: "#64748b", marginTop: "4px" }}>
+                            📍 {proj.location || "Seoni, Madhya Pradesh"} • {proj.businessModel || "Retail Advisory"}
+                          </div>
+                        </div>
+
+                        <button 
+                          type="button" 
+                          onClick={handleOpenCheckInWizard}
+                          style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 14px", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer" }}
+                        >
+                          Check In This Site ✓
+                        </button>
+                      </div>
+
+                      {/* Scope Deliverables Progress Bar */}
+                      <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "#334155" }}>Daily Scope Deliverables:</span>
+                        <span style={{ fontSize: "0.82rem", fontWeight: "800", color: "#16a34a" }}>3 / 3 Tasks Verified ✓</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN: Attendance Control & Quick Actions */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {/* Digital Clock & Shift Control Card */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "22px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div style={{ textAlign: "center", background: "linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)", border: "1px solid #cbd5e1", borderRadius: "12px", padding: "16px" }}>
+                  <div style={{ fontSize: "1.7rem", fontWeight: "900", color: "#0f172a", letterSpacing: "0.02em" }}>
+                    {formatClockTime(time)}
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700", marginTop: "2px" }}>
+                    {formatClockDate(time)}
+                  </div>
+                </div>
+
+                {/* Permanent Action Buttons */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                  {!todayPunch ? (
+                    <button 
+                      type="button" 
+                      onClick={handleOpenCheckInWizard}
+                      style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 14px rgba(22,163,74,0.3)" }}
+                    >
+                      ✔ Check In Shift (Site Visit)
+                    </button>
+                  ) : !todayPunch.checkOut ? (
+                    <button 
+                      type="button" 
+                      onClick={handleOpenCheckOutWizard}
+                      style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 14px rgba(220,38,38,0.3)" }}
+                    >
+                      ✖ Check Out Shift
+                    </button>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "800", textAlign: "center", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px", borderRadius: "8px" }}>
+                        ✓ Shift Completed Today ({todayPunch.checkIn} - {todayPunch.checkOut})
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={handleOpenCheckInWizard}
+                        style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 14px rgba(37,99,235,0.3)" }}
+                      >
+                        + Check In New Shift (Site Visit)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Shortcuts Card */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: "800", color: "#0f172a" }}>⚡ Quick Workspace Actions</h4>
+                <button type="button" onClick={() => setShowApplyLeaveModal(true)} style={{ textAlign: "left", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", color: "#334155", cursor: "pointer" }}>
+                  🌴 Apply for Leave
+                </button>
+                <button type="button" onClick={() => setMainNavTab("EXPENSES")} style={{ textAlign: "left", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", color: "#334155", cursor: "pointer" }}>
+                  💸 Request Petty Cash Advance
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
       )}
 
-      {/* Keka HR Style Employee Profile Top Banner Card */}
+      {/* 2. PROFILE & OTHER TAB VIEWS */}
+      {(mainNavTab === "PROFILE" || mainNavTab === "ATTENDANCE" || mainNavTab === "PROJECTS" || mainNavTab === "EXPENSES") && (
+        <div>
+
+          {/* Keka HR Style Employee Profile Top Banner Card */}
       <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
         
         {/* Purple Wavy Texture Background Banner */}
@@ -1806,6 +2043,9 @@ export default function ConsultantView({ activeTab }) {
       {/* Profile & Petty Cash Allowance Modal */}
     
       
+      </div>
+      )}
+
       {/* GUIDED 3-STEP CONSULTANT CHECK-IN WIZARD MODAL */}
       {showCheckInWizard && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>

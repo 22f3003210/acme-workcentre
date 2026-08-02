@@ -4,26 +4,36 @@ import ProjectsView from "./ProjectsView";
 import RecruiterView from "./RecruiterView";
 
 export default function ConsultantView({ activeTab }) {
+  const app = useApp();
   const { 
     currentUser, 
-    expenses, 
-    projects,
+    expenses = [], 
+    projects = [],
     addExpense, 
     checkInConsultant, 
     checkOutConsultant, 
     getEmployeeBalanceDetails,
     getEmployeeLedger,
-    advanceRequests,
+    advanceRequests = [],
     requestAdvance,
     setToast,
-    settings,
-    leaveRequests,
+    settings = {},
+    leaveRequests = [],
     applyLeave,
     cancelLeave,
     getLeaveBalance,
     generatePayslip,
     updateUserProfile
-  } = useApp();
+  } = app || {};
+
+  if (!currentUser) {
+    return (
+      <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+        <h3>Loading session...</h3>
+        <p>Please wait or sign in to access your consultant dashboard.</p>
+      </div>
+    );
+  }
 
   // Digital clock state
   const [time, setTime] = useState(new Date());
@@ -143,20 +153,36 @@ export default function ConsultantView({ activeTab }) {
   };
 
   const todayStr = new Date().toISOString().split("T")[0];
-  const myAttendance = currentUser.attendance || [];
+  const myAttendance = currentUser?.attendance || [];
   const todayPunch = myAttendance.find(a => a.date === todayStr);
 
   // Handlers
   const handlePunchIn = () => {
-    const selProj = projects.find(p => p.id === punchProjectId);
-    checkInConsultant(currentUser.id, punchRemarks, punchProjectId, selProj ? selProj.name : "");
-    setToast({ message: `Checked in successfully${selProj ? ` for ${selProj.code}` : ""}.`, type: "success" });
+    if (!currentUser?.id) {
+      if (setToast) setToast({ message: "No active consultant session found.", type: "error" });
+      return;
+    }
+    const availProjects = projects || [];
+    const selProj = availProjects.find(p => p.id === punchProjectId) || availProjects[0];
+    const projId = selProj ? selProj.id : (punchProjectId || "general");
+    const projName = selProj ? (selProj.name || selProj.code || "General Site") : "General Shift";
+
+    if (checkInConsultant) {
+      checkInConsultant(currentUser.id, punchRemarks || "Daily Shift Check In", projId, projName);
+      if (setToast) setToast({ message: `Checked in successfully for ${projName}!`, type: "success" });
+    }
     setPunchRemarks("");
   };
 
   const handlePunchOut = () => {
-    checkOutConsultant(currentUser.id, punchRemarks);
-    setToast({ message: "Checked out successfully.", type: "success" });
+    if (!currentUser?.id) {
+      if (setToast) setToast({ message: "No active consultant session found.", type: "error" });
+      return;
+    }
+    if (checkOutConsultant) {
+      checkOutConsultant(currentUser.id, punchRemarks || "Daily Shift Check Out");
+      if (setToast) setToast({ message: "Checked out successfully.", type: "success" });
+    }
     setPunchRemarks("");
   };
 
@@ -254,8 +280,8 @@ export default function ConsultantView({ activeTab }) {
   const calendarDays = generateMonthCalendar();
 
   // Filter expenses and advances submitted by this user
-  const myExpenses = expenses.filter(e => e.employeeId === currentUser.id);
-  const myAdvanceRequests = advanceRequests.filter(r => r.employeeId === currentUser.id);
+  const myExpenses = (expenses || []).filter(e => e.employeeId === currentUser?.id);
+  const myAdvanceRequests = (advanceRequests || []).filter(r => r.employeeId === currentUser?.id);
 
   // Calculations for Expense Dashboard
   const myPendingExpenses = myExpenses.filter(e => e.status === "Pending");
@@ -264,7 +290,7 @@ export default function ConsultantView({ activeTab }) {
   const approvedExpenseTotal = myApprovedExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   // Get balance details
-  const balanceDetails = getEmployeeBalanceDetails(currentUser.id) || {
+  const balanceDetails = (getEmployeeBalanceDetails && currentUser?.id ? getEmployeeBalanceDetails(currentUser.id) : null) || {
     initialAdvance: 0,
     totalSpent: 0,
     availableBalance: 0,

@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useApp } from "../context/AppContext";
 
 export default function LedgerReports() {
-  const { users, expenses, verifyExpense, currentUser, getEmployeeLedger, setToast } = useApp();
+  const { users, expenses, projects, verifyExpense, currentUser, getEmployeeLedger, setToast } = useApp();
 
-  const [activeReportSubTab, setActiveReportSubTab] = useState("daywise"); // 'claims', 'daywise', or 'individual'
+  const [activeReportSubTab, setActiveReportSubTab] = useState("daywise"); // 'claims', 'daywise', 'individual', or 'projectwise'
+  const [projLedgerMonth, setProjLedgerMonth] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; });
+  const [expandedProjectId, setExpandedProjectId] = useState(null);
   // Default to today in YYYY-MM-DD
   const todayISO = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
   const [selectedDate, setSelectedDate] = useState(todayISO);
@@ -14,9 +16,48 @@ export default function LedgerReports() {
   const [selectedExpenseGroup, setSelectedExpenseGroup] = useState(null);
   const [activeItemInGroup, setActiveItemInGroup] = useState(null);
   const [expandedConsultantId, setExpandedConsultantId] = useState(null);
+  const [activeReceiptIdx, setActiveReceiptIdx] = useState(0);
+  const [zoomScale, setZoomScale] = useState(1);
 
   const consultants = users.filter(u => u.role === "Consultant");
   const activeEmployeeId = selectedEmployeeId || (consultants[0]?.id || "");
+
+  const normalizeDate = (d) => {
+    if (!d) return "";
+    const str = String(d).trim().split("T")[0];
+    if (str.includes("/")) {
+      const parts = str.split("/");
+      if (parts.length === 3) {
+        const day = parts[0].padStart(2, "0");
+        const month = parts[1].padStart(2, "0");
+        const year = parts[2];
+        return `${year}-${month}-${day}`;
+      }
+    }
+    if (str.includes("-")) {
+      const parts = str.split("-");
+      if (parts.length === 3) {
+        const year = parts[0];
+        const month = parts[1].padStart(2, "0");
+        const day = parts[2].padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+    }
+    return str;
+  };
+
+  const isSameDateStr = (d1, d2) => {
+    if (!d1 || !d2) return false;
+    return normalizeDate(d1) === normalizeDate(d2);
+  };
+
+  const getProjectDisplayName = (projIdOrName, consultant) => {
+    if (!projIdOrName && !consultant) return "";
+    const found = (projects || []).find(p => p.id === projIdOrName || p.name === projIdOrName);
+    if (found) return found.name;
+    if (projIdOrName && !projIdOrName.startsWith("proj-")) return projIdOrName;
+    return consultant?.assignedProjectName || "";
+  };
 
   const getFormattedDateQuery = (dateStr) => {
     try {
@@ -64,16 +105,17 @@ export default function LedgerReports() {
     let grandSpent = 0;
     let grandClosing = 0;
 
+    const targetYearMonth = selectedDate ? selectedDate.substring(0, 7) : "2026-08";
     const rows = consultants.map((c, idx) => {
-      const ledger = getEmployeeLedger(c.id);
-      const dayRow = ledger.ledgerRows.find(r => r.date === formattedQueryDate) || {
-        opening: 0,
+      const ledger = getEmployeeLedger(c.id, targetYearMonth);
+      const dayRow = ledger.ledgerRows.find(r => isSameDateStr(r.date, selectedDate) || isSameDateStr(r.isoDate, selectedDate)) || {
+        opening: c.openingBalance || 0,
         received: 0,
         food: 0,
         stay: 0,
         travel: 0,
         spent: 0,
-        balance: 0,
+        balance: c.openingBalance || 0,
         particulars: ""
       };
 
@@ -158,20 +200,52 @@ export default function LedgerReports() {
           <button
             onClick={() => setActiveReportSubTab("claims")}
             className={`segmented-button ${activeReportSubTab === "claims" ? "active" : ""}`}
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
           >
-            🧾 Claims Desk
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+            Claims Desk
           </button>
           <button
             onClick={() => setActiveReportSubTab("daywise")}
             className={`segmented-button ${activeReportSubTab === "daywise" ? "active" : ""}`}
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
           >
-            📋 Day-wise Head
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/>
+              <line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            Day-wise Head
           </button>
           <button
             onClick={() => setActiveReportSubTab("individual")}
             className={`segmented-button ${activeReportSubTab === "individual" ? "active" : ""}`}
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
           >
-            👤 Individual Ledgers
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+            Individual Ledgers
+          </button>
+          <button
+            onClick={() => setActiveReportSubTab("projectwise")}
+            className={`segmented-button ${activeReportSubTab === "projectwise" ? "active" : ""}`}
+            style={{ display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+              <line x1="12" y1="11" x2="12" y2="17"/>
+              <line x1="9" y1="14" x2="15" y2="14"/>
+            </svg>
+            Project Ledger
           </button>
         </div>
       </div>
@@ -456,17 +530,31 @@ export default function LedgerReports() {
               </thead>
               <tbody>
                 {daywiseData.rows.map((row) => {
-                  const dayExpenses = expenses.filter(e =>
-                    e.employeeId === row.consultant.id &&
-                    (e.submittedDate === selectedDate || e.date === selectedDate)
-                  );
+                  const dayExpenses = expenses.filter(e => {
+                    if (e.employeeId !== row.consultant.id || e.status === "Rejected") return false;
+                    const primaryDate = e.expenseDate || e.date || e.submittedDate;
+                    return isSameDateStr(primaryDate, selectedDate);
+                  });
                   const foodExps   = dayExpenses.filter(e => e.category === "Food");
-                  const stayExps   = dayExpenses.filter(e => e.category === "Accommodation");
-                  const travelExps = dayExpenses.filter(e => e.category === "Travel");
+                  const stayExps   = dayExpenses.filter(e => e.category === "Accommodation" || e.category === "Stay");
+                  const travelExps = dayExpenses.filter(e => e.category === "Travel" || e.category === "Conveyance");
+
+                  const consultantAtt = row.consultant.attendance || [];
+                  const dayPunch = consultantAtt.find(a => isSameDateStr(a.date, selectedDate));
+
+                  let displayProjName = "";
+                  if (dayExpenses.length > 0) {
+                    const expWithProj = dayExpenses.find(e => e.projectName || e.projectId);
+                    if (expWithProj) {
+                      displayProjName = getProjectDisplayName(expWithProj.projectName || expWithProj.projectId, row.consultant);
+                    }
+                  } else if (dayPunch) {
+                    displayProjName = getProjectDisplayName(dayPunch.projectName || dayPunch.projectId, row.consultant);
+                  }
 
                   const makeCategoryBtn = (exps, label, category) => {
                     if (exps.length === 0) return <span style={{ color: "#cbd5e1" }}>—</span>;
-                    const total = exps.reduce((s, i) => s + i.amount, 0);
+                    const total = exps.reduce((s, i) => s + (Number(i.amount) || 0), 0);
                     return (
                       <button
                         onClick={(ev) => {
@@ -505,9 +593,6 @@ export default function LedgerReports() {
                     );
                   };
 
-                  const rowExp = dayExpenses.find(e => e.projectName || e.projectId);
-                  const displayProjName = (rowExp && (rowExp.projectName || rowExp.projectId)) || "DCB Bank Sourcing Account";
-
                   return (
                     <tr key={row.consultant.id} style={{ height: "44px" }}>
                       <td style={{ padding: "4px 8px", textAlign: "center" }}>{row.srNo}</td>
@@ -519,15 +604,25 @@ export default function LedgerReports() {
                       </td>
                       <td style={{ padding: "4px 8px" }}>{formattedQueryDate}</td>
                       <td style={{ padding: "4px 8px", maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={displayProjName}>
-                        <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "4px" }}>
-                          {displayProjName}
-                        </span>
+                        {displayProjName ? (
+                          <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "4px" }}>
+                            {displayProjName}
+                          </span>
+                        ) : (
+                          <span style={{ color: "#cbd5e1" }}>—</span>
+                        )}
                       </td>
                       <td style={{ padding: "4px 8px", textAlign: "right", color: row.opening < 0 ? "var(--color-error)" : "inherit" }}>
                         ₹{row.opening.toFixed(2)}
                       </td>
-                      <td style={{ padding: "4px 8px", textAlign: "right", color: "var(--color-success)", fontWeight: row.received > 0 ? "700" : "400" }}>
-                        {row.received > 0 ? `₹${row.received.toFixed(2)}` : "—"}
+                      <td style={{ padding: "4px 8px", textAlign: "right" }}>
+                        {row.received > 0 ? (
+                          <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "4px", display: "inline-block" }}>
+                            ₹{row.received.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span style={{ color: "#cbd5e1" }}>—</span>
+                        )}
                       </td>
                       <td style={{ padding: "4px 8px", textAlign: "center" }}>
                         {makeCategoryBtn(foodExps, "Food Claims", "Food")}
@@ -592,17 +687,29 @@ export default function LedgerReports() {
 
               {/* Grid vs Calendar view selector */}
               <div className="segmented-control">
-                <button 
+                <button
                   onClick={() => setViewMode("grid")}
                   className={`segmented-button ${viewMode === "grid" ? "active" : ""}`}
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
                 >
-                  📋 Grid View
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                  </svg>
+                  Grid View
                 </button>
-                <button 
+                <button
                   onClick={() => setViewMode("calendar")}
                   className={`segmented-button ${viewMode === "calendar" ? "active" : ""}`}
+                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
                 >
-                  📅 Calendar View
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                  </svg>
+                  Calendar View
                 </button>
               </div>
             </div>
@@ -625,30 +732,30 @@ export default function LedgerReports() {
                       <th style={{ padding: "8px" }}>DAY</th>
                       <th style={{ padding: "8px" }}>PARTICULARS</th>
                       <th style={{ padding: "8px", textAlign: "right" }}>OPENING</th>
+                      <th style={{ padding: "8px", textAlign: "right" }}>RECEIVED</th>
                       <th style={{ padding: "8px", textAlign: "center" }}>FOOD</th>
                       <th style={{ padding: "8px", textAlign: "center" }}>STAY</th>
                       <th style={{ padding: "8px", textAlign: "center" }}>TRAVEL</th>
                       <th style={{ padding: "8px", textAlign: "right" }}>TOTAL</th>
-                      <th style={{ padding: "8px", textAlign: "right" }}>RECEIVED</th>
                       <th style={{ padding: "8px", textAlign: "right" }}>BALANCE</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedEmployeeLedger.ledgerRows.map((row) => {
-                      // Parse the row date (format: D/M/YYYY) back to YYYY-MM-DD for expense matching
                       const rowISO = (() => {
                         const parts = row.date.split("/");
                         if (parts.length !== 3) return "";
                         return `${parts[2]}-${parts[1].padStart(2,"0")}-${parts[0].padStart(2,"0")}`;
                       })();
 
-                      const dayExpenses = expenses.filter(e =>
-                        e.employeeId === activeEmployeeId &&
-                        (e.date === rowISO || e.submittedDate === rowISO)
-                      );
+                      const dayExpenses = expenses.filter(e => {
+                        if (e.employeeId !== activeEmployeeId || e.status === "Rejected") return false;
+                        const primaryDate = e.expenseDate || e.date;
+                        return isSameDateStr(primaryDate, rowISO);
+                      });
                       const foodExps   = dayExpenses.filter(e => e.category === "Food");
-                      const stayExps   = dayExpenses.filter(e => e.category === "Accommodation");
-                      const travelExps = dayExpenses.filter(e => e.category === "Travel");
+                      const stayExps   = dayExpenses.filter(e => e.category === "Stay" || e.category === "Accommodation");
+                      const travelExps = dayExpenses.filter(e => e.category === "Travel" || e.category === "Conveyance");
 
                       const consultant = users.find(u => u.id === activeEmployeeId) || {};
 
@@ -703,6 +810,15 @@ export default function LedgerReports() {
                           <td style={{ padding: "4px 8px", textAlign: "right", color: row.opening < 0 ? "var(--color-error)" : "inherit" }}>
                             ₹{row.opening.toFixed(2)}
                           </td>
+                          <td style={{ padding: "4px 8px", textAlign: "right" }}>
+                            {row.received > 0 ? (
+                              <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "4px", display: "inline-block" }}>
+                                ₹{row.received.toFixed(2)}
+                              </span>
+                            ) : (
+                              <span style={{ color: "#cbd5e1" }}>—</span>
+                            )}
+                          </td>
                           <td style={{ padding: "4px 8px", textAlign: "center" }}>
                             {makeCategoryBtn(foodExps, "Food Claims", "Food")}
                           </td>
@@ -715,9 +831,6 @@ export default function LedgerReports() {
                           <td style={{ padding: "4px 8px", textAlign: "right", fontWeight: "600" }}>
                             {row.spent > 0 ? `₹${row.spent.toFixed(2)}` : "—"}
                           </td>
-                          <td style={{ padding: "4px 8px", textAlign: "right", color: "var(--color-success)", fontWeight: row.received > 0 ? "700" : "400" }}>
-                            {row.received > 0 ? `₹${row.received.toFixed(2)}` : "—"}
-                          </td>
                           <td style={{ padding: "4px 8px", textAlign: "right", fontWeight: "700", color: row.balance < 0 ? "var(--color-error)" : "var(--color-success)" }}>
                             ₹{row.balance.toFixed(2)}
                           </td>
@@ -726,12 +839,17 @@ export default function LedgerReports() {
                     })}
                     
                     <tr style={{ background: "var(--bg-tertiary)", fontWeight: "700", borderTop: "2.5px double var(--border-color)" }}>
-                      <td colSpan="5" style={{ padding: "10px", textAlign: "center" }}>TOTAL</td>
+                      <td colSpan="4" style={{ padding: "10px", textAlign: "center" }}>TOTAL</td>
+                      <td style={{ padding: "10px", textAlign: "right" }}>
+                        ₹{selectedEmployeeLedger.ledgerRows[0]?.opening.toFixed(2) || "0.00"}
+                      </td>
+                      <td style={{ padding: "10px", textAlign: "right", color: "var(--color-success)" }}>
+                        ₹{selectedEmployeeLedger.totals.received.toFixed(2)}
+                      </td>
                       <td style={{ padding: "10px", textAlign: "right" }}>₹{selectedEmployeeLedger.totals.food.toFixed(2)}</td>
                       <td style={{ padding: "10px", textAlign: "right" }}>₹{selectedEmployeeLedger.totals.stay.toFixed(2)}</td>
                       <td style={{ padding: "10px", textAlign: "right" }}>₹{selectedEmployeeLedger.totals.travel.toFixed(2)}</td>
                       <td style={{ padding: "10px", textAlign: "right" }}>₹{selectedEmployeeLedger.totals.spent.toFixed(2)}</td>
-                      <td style={{ padding: "10px", textAlign: "right", color: "var(--color-success)" }}>₹{selectedEmployeeLedger.totals.received.toFixed(2)}</td>
                       <td style={{ padding: "10px", textAlign: "right", color: selectedEmployeeLedger.ledgerRows[selectedEmployeeLedger.ledgerRows.length - 1]?.balance < 0 ? "var(--color-error)" : "var(--color-success)" }}>
                         ₹{(selectedEmployeeLedger.ledgerRows[selectedEmployeeLedger.ledgerRows.length - 1]?.balance || 0).toFixed(2)}
                       </td>
@@ -913,18 +1031,291 @@ export default function LedgerReports() {
         </div>
       )}
 
-      {/* View Expense Detail Modal */}
+      {/* ── PROJECT-WISE LEDGER ── */}
+      {activeReportSubTab === "projectwise" && (() => {
+        // Build per-project expense summaries
+        const allProjects = [...new Set(
+          expenses
+            .map(e => e.projectName || e.projectId || "Unassigned")
+            .filter(Boolean)
+        )].sort();
+
+        const projRows = allProjects.map((projKey, idx) => {
+          const projExps = expenses.filter(e => {
+            const pKey = e.projectName || e.projectId || "Unassigned";
+            if (pKey !== projKey) return false;
+            if (e.status === "Rejected") return false;
+            // Month filter
+            const rawDate = e.expenseDate || e.date || e.submittedDate || "";
+            const normalized = normalizeDate(rawDate);
+            return normalized.startsWith(projLedgerMonth);
+          });
+
+          // Consultant breakdown
+          const consultantMap = {};
+          projExps.forEach(e => {
+            const cId = e.employeeId;
+            if (!consultantMap[cId]) {
+              const u = users.find(u => u.id === cId) || { name: e.employeeName || cId, id: cId };
+              consultantMap[cId] = { consultant: u, food: 0, stay: 0, travel: 0, misc: 0, total: 0, count: 0 };
+            }
+            const cat = e.category || "";
+            const amt = Number(e.amount) || 0;
+            if (cat === "Food") consultantMap[cId].food += amt;
+            else if (cat === "Stay" || cat === "Accommodation") consultantMap[cId].stay += amt;
+            else if (cat === "Travel" || cat === "Conveyance") consultantMap[cId].travel += amt;
+            else consultantMap[cId].misc += amt;
+            consultantMap[cId].total += amt;
+            consultantMap[cId].count += 1;
+          });
+
+          const food  = projExps.filter(e => e.category === "Food").reduce((s, e) => s + (Number(e.amount)||0), 0);
+          const stay  = projExps.filter(e => e.category === "Stay" || e.category === "Accommodation").reduce((s, e) => s + (Number(e.amount)||0), 0);
+          const travel = projExps.filter(e => e.category === "Travel" || e.category === "Conveyance").reduce((s, e) => s + (Number(e.amount)||0), 0);
+          const misc  = projExps.filter(e => !["Food","Stay","Accommodation","Travel","Conveyance"].includes(e.category)).reduce((s, e) => s + (Number(e.amount)||0), 0);
+          const total = food + stay + travel + misc;
+          const consultants_involved = Object.values(consultantMap);
+
+          const projObj = (projects || []).find(p => p.id === projKey || p.name === projKey);
+          const displayName = projObj?.name || projKey;
+
+          return { idx: idx+1, projKey, displayName, food, stay, travel, misc, total, consultants: consultants_involved, expCount: projExps.length };
+        });
+
+        const grandFood   = projRows.reduce((s,r) => s + r.food, 0);
+        const grandStay   = projRows.reduce((s,r) => s + r.stay, 0);
+        const grandTravel = projRows.reduce((s,r) => s + r.travel, 0);
+        const grandMisc   = projRows.reduce((s,r) => s + r.misc, 0);
+        const grandTotal  = projRows.reduce((s,r) => s + r.total, 0);
+
+        return (
+          <div className="report-container">
+            {/* Controls */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px", flexWrap: "wrap", gap: "10px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: "600", color: "var(--text-secondary)" }}>Month:</span>
+                <input
+                  type="month"
+                  value={projLedgerMonth}
+                  onChange={e => { setProjLedgerMonth(e.target.value); setExpandedProjectId(null); }}
+                  style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.82rem", background: "var(--bg-card)", color: "var(--text-primary)", cursor: "pointer" }}
+                />
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "var(--text-muted)" }}>
+                {projRows.filter(r => r.expCount > 0).length} active project{projRows.filter(r => r.expCount > 0).length !== 1 ? "s" : ""} · {projRows.reduce((s,r) => s + r.expCount, 0)} claims
+              </div>
+            </div>
+
+            {/* Summary Cards */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px", marginBottom: "20px" }}>
+              {[
+                { label: "Total Food", value: grandFood, color: "#b45309", bg: "#fef3c7" },
+                { label: "Total Stay", value: grandStay, color: "#0369a1", bg: "#e0f2fe" },
+                { label: "Total Travel", value: grandTravel, color: "#7c3aed", bg: "#ede9fe" },
+                { label: "Grand Total", value: grandTotal, color: "#15803d", bg: "#f0fdf4" },
+              ].map(c => (
+                <div key={c.label} style={{ background: c.bg, border: `1px solid ${c.color}22`, borderRadius: "8px", padding: "12px 16px" }}>
+                  <div style={{ fontSize: "0.7rem", fontWeight: "700", color: c.color, textTransform: "uppercase", letterSpacing: "0.05em" }}>{c.label}</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: c.color, marginTop: "4px" }}>₹{c.value.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Project Table */}
+            <div style={{ overflowX: "auto" }}>
+              <table className="luxury-table" style={{ fontSize: "0.82rem", width: "100%" }}>
+                <thead>
+                  <tr style={{ background: "var(--bg-tertiary)" }}>
+                    <th style={{ padding: "10px 8px", width: "36px" }}>#</th>
+                    <th style={{ padding: "10px 8px" }}>PROJECT / COST CENTER</th>
+                    <th style={{ padding: "10px 8px" }}>CONSULTANTS</th>
+                    <th style={{ padding: "10px 8px", textAlign: "right" }}>FOOD</th>
+                    <th style={{ padding: "10px 8px", textAlign: "right" }}>STAY</th>
+                    <th style={{ padding: "10px 8px", textAlign: "right" }}>TRAVEL</th>
+                    <th style={{ padding: "10px 8px", textAlign: "right" }}>MISC</th>
+                    <th style={{ padding: "10px 8px", textAlign: "right" }}>TOTAL CLAIMS</th>
+                    <th style={{ padding: "10px 8px", textAlign: "center" }}>BILLS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {projRows.length === 0 ? (
+                    <tr><td colSpan="9" style={{ textAlign: "center", padding: "32px", color: "#94a3b8" }}>No expenses recorded for this month.</td></tr>
+                  ) : projRows.map(row => (
+                    <React.Fragment key={row.projKey}>
+                      {/* Main project row */}
+                      <tr
+                        onClick={() => setExpandedProjectId(expandedProjectId === row.projKey ? null : row.projKey)}
+                        style={{ cursor: "pointer", background: expandedProjectId === row.projKey ? "#f0f7ff" : "inherit", transition: "background 0.15s" }}
+                      >
+                        <td style={{ padding: "10px 8px", textAlign: "center", color: "var(--text-muted)", fontWeight: "600" }}>{row.idx}</td>
+                        <td style={{ padding: "10px 8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontSize: "1rem" }}>{expandedProjectId === row.projKey ? "▾" : "▸"}</span>
+                            <div>
+                              <div style={{ fontWeight: "700", color: "#0f172a" }}>{row.displayName}</div>
+                              {row.expCount === 0 && <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>No claims this month</div>}
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: "10px 8px" }}>
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                            {row.consultants.map(c => (
+                              <span key={c.consultant.id} style={{ fontSize: "0.68rem", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", borderRadius: "12px", padding: "2px 8px", whiteSpace: "nowrap" }}>
+                                {c.consultant.name}
+                              </span>
+                            ))}
+                            {row.consultants.length === 0 && <span style={{ color: "#94a3b8", fontSize: "0.75rem" }}>—</span>}
+                          </div>
+                        </td>
+                        <td style={{ padding: "10px 8px", textAlign: "right", color: "#b45309" }}>{row.food > 0 ? `₹${row.food.toLocaleString("en-IN")}` : "—"}</td>
+                        <td style={{ padding: "10px 8px", textAlign: "right", color: "#0369a1" }}>{row.stay > 0 ? `₹${row.stay.toLocaleString("en-IN")}` : "—"}</td>
+                        <td style={{ padding: "10px 8px", textAlign: "right", color: "#7c3aed" }}>{row.travel > 0 ? `₹${row.travel.toLocaleString("en-IN")}` : "—"}</td>
+                        <td style={{ padding: "10px 8px", textAlign: "right", color: "#64748b" }}>{row.misc > 0 ? `₹${row.misc.toLocaleString("en-IN")}` : "—"}</td>
+                        <td style={{ padding: "10px 8px", textAlign: "right", fontWeight: "700", color: row.total > 0 ? "#0f172a" : "#94a3b8" }}>
+                          {row.total > 0 ? `₹${row.total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}` : "—"}
+                        </td>
+                        <td style={{ padding: "10px 8px", textAlign: "center" }}>
+                          {row.expCount > 0 ? (
+                            <span style={{ fontSize: "0.72rem", fontWeight: "700", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", borderRadius: "12px", padding: "2px 10px" }}>
+                              {row.expCount} bill{row.expCount !== 1 ? "s" : ""}
+                            </span>
+                          ) : <span style={{ color: "#94a3b8" }}>—</span>}
+                        </td>
+                      </tr>
+
+                      {/* Expanded: per-consultant breakdown */}
+                      {expandedProjectId === row.projKey && row.consultants.length > 0 && (
+                        <tr>
+                          <td colSpan="9" style={{ padding: "0", background: "#f8fafc", borderBottom: "2px solid #e2e8f0" }}>
+                            <div style={{ padding: "16px 24px" }}>
+                              <div style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "10px" }}>
+                                Consultant Breakdown — {row.displayName}
+                              </div>
+                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
+                                <thead>
+                                  <tr style={{ background: "#e2e8f0" }}>
+                                    <th style={{ padding: "6px 10px", textAlign: "left", fontWeight: "700", color: "#475569" }}>Consultant</th>
+                                    <th style={{ padding: "6px 10px", textAlign: "right", fontWeight: "700", color: "#b45309" }}>Food</th>
+                                    <th style={{ padding: "6px 10px", textAlign: "right", fontWeight: "700", color: "#0369a1" }}>Stay</th>
+                                    <th style={{ padding: "6px 10px", textAlign: "right", fontWeight: "700", color: "#7c3aed" }}>Travel</th>
+                                    <th style={{ padding: "6px 10px", textAlign: "right", fontWeight: "700", color: "#64748b" }}>Misc</th>
+                                    <th style={{ padding: "6px 10px", textAlign: "right", fontWeight: "700", color: "#0f172a" }}>Total</th>
+                                    <th style={{ padding: "6px 10px", textAlign: "center", fontWeight: "700", color: "#2563eb" }}>Bills</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {row.consultants.map(c => (
+                                    <tr key={c.consultant.id} style={{ borderBottom: "1px solid #e2e8f0" }}>
+                                      <td style={{ padding: "8px 10px" }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                          <img
+                                            src={c.consultant.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(c.consultant.name)}`}
+                                            alt={c.consultant.name}
+                                            style={{ width: "26px", height: "26px", borderRadius: "50%", objectFit: "cover" }}
+                                          />
+                                          <span style={{ fontWeight: "600", color: "#0f172a" }}>{c.consultant.name}</span>
+                                        </div>
+                                      </td>
+                                      <td style={{ padding: "8px 10px", textAlign: "right", color: "#b45309" }}>{c.food > 0 ? `₹${c.food.toLocaleString("en-IN")}` : "—"}</td>
+                                      <td style={{ padding: "8px 10px", textAlign: "right", color: "#0369a1" }}>{c.stay > 0 ? `₹${c.stay.toLocaleString("en-IN")}` : "—"}</td>
+                                      <td style={{ padding: "8px 10px", textAlign: "right", color: "#7c3aed" }}>{c.travel > 0 ? `₹${c.travel.toLocaleString("en-IN")}` : "—"}</td>
+                                      <td style={{ padding: "8px 10px", textAlign: "right", color: "#64748b" }}>{c.misc > 0 ? `₹${c.misc.toLocaleString("en-IN")}` : "—"}</td>
+                                      <td style={{ padding: "8px 10px", textAlign: "right", fontWeight: "700", color: "#0f172a" }}>₹{c.total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                                      <td style={{ padding: "8px 10px", textAlign: "center" }}>
+                                        <span style={{ fontSize: "0.68rem", fontWeight: "700", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", borderRadius: "10px", padding: "1px 8px" }}>
+                                          {c.count}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr style={{ background: "var(--bg-tertiary)", fontWeight: "700", borderTop: "2.5px double var(--border-color)" }}>
+                    <td colSpan="3" style={{ padding: "10px 8px", textAlign: "center" }}>GRAND TOTAL</td>
+                    <td style={{ padding: "10px 8px", textAlign: "right", color: "#b45309" }}>₹{grandFood.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                    <td style={{ padding: "10px 8px", textAlign: "right", color: "#0369a1" }}>₹{grandStay.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                    <td style={{ padding: "10px 8px", textAlign: "right", color: "#7c3aed" }}>₹{grandTravel.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                    <td style={{ padding: "10px 8px", textAlign: "right", color: "#64748b" }}>₹{grandMisc.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                    <td style={{ padding: "10px 8px", textAlign: "right", color: "#15803d", fontSize: "1rem" }}>₹{grandTotal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                    <td style={{ padding: "10px 8px", textAlign: "center" }}>
+                      <span style={{ fontWeight: "700", color: "#2563eb" }}>{projRows.reduce((s,r) => s+r.expCount, 0)} bills</span>
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        );
+      })()}
+
+
       {selectedExpenseGroup && activeItemInGroup && (() => {
         const emp = users.find(u => u.id === selectedExpenseGroup.employeeId) || { name: selectedExpenseGroup.employeeName || "Employee", title: "Consultant", avatar: "" };
-        const costCenter = activeItemInGroup.projectName || activeItemInGroup.projectId || "DCB Bank Sourcing Account (DCB-SR-01)";
-        const dateStr = activeItemInGroup.submittedDate || activeItemInGroup.date || "16 Aug 2025";
+        const rawProj = activeItemInGroup.projectName || activeItemInGroup.projectId;
+        const costCenter = getProjectDisplayName(rawProj, emp) || "Shrut Jewellers";
+        const dateStr = activeItemInGroup.expenseDate || activeItemInGroup.submittedDate || activeItemInGroup.date || "16 Aug 2025";
         const statusColor = activeItemInGroup.status === "Approved" ? "#22c55e" : activeItemInGroup.status === "Rejected" ? "#ef4444" : "#eab308";
         const statusBg = activeItemInGroup.status === "Approved" ? "#f0fdf4" : activeItemInGroup.status === "Rejected" ? "#fef2f2" : "#fef9c3";
         const statusText = activeItemInGroup.status === "Approved" ? `Expense last Approved by ${activeItemInGroup.reviewedBy || activeItemInGroup.approvedBy || "HR MANAGER"}` : activeItemInGroup.status === "Rejected" ? `Expense Rejected: ${activeItemInGroup.rejectionReason || "Rejection notes logged"}` : "Expense pending approval review";
 
+        const activeReceipts = (() => {
+          if (Array.isArray(activeItemInGroup.receipts) && activeItemInGroup.receipts.length > 0) {
+            return activeItemInGroup.receipts;
+          }
+
+          const parseString = (str, fallbackName) => {
+            if (!str || typeof str !== "string") return null;
+            const trimmed = str.trim();
+            if (trimmed.startsWith("[")) {
+              try {
+                const parsed = JSON.parse(trimmed);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                  return parsed.map((item, idx) => ({
+                    url: item.url || item.receipt || "",
+                    name: item.name || item.receipt_name || `Receipt #${idx + 1}`,
+                    type: item.type || ""
+                  }));
+                }
+              } catch (e) {}
+            }
+            if (trimmed.includes("|||")) {
+              const urls = trimmed.split("|||");
+              const names = (fallbackName || "").split("|||");
+              return urls.map((u, i) => ({
+                url: u.trim(),
+                name: (names[i] || `Receipt #${i + 1}`).trim()
+              }));
+            }
+            return null;
+          };
+
+          const parsedFromReceipt = parseString(activeItemInGroup.receipt, activeItemInGroup.receipt_name || activeItemInGroup.receiptName);
+          if (parsedFromReceipt) return parsedFromReceipt;
+
+          const parsedFromUrl = parseString(activeItemInGroup.receiptUrl, activeItemInGroup.receiptName || activeItemInGroup.receipt_name);
+          if (parsedFromUrl) return parsedFromUrl;
+
+          if (activeItemInGroup.receipt) {
+            return [{ url: activeItemInGroup.receipt, name: activeItemInGroup.receipt_name || activeItemInGroup.receiptName || "Receipt File" }];
+          }
+          if (activeItemInGroup.receiptUrl) {
+            return [{ url: activeItemInGroup.receiptUrl, name: activeItemInGroup.receiptName || activeItemInGroup.receipt_name || "Receipt File" }];
+          }
+
+          return [];
+        })();
+
         return (
-          <div className="task-modal-overlay" style={{ zIndex: "9999", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <div style={{ backgroundColor: "#ffffff", width: "90%", maxWidth: "1200px", height: "85vh", display: "flex", flexDirection: "column", borderRadius: "0", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)", overflow: "hidden", border: "1px solid #cbd5e1" }}>
+          <div className="task-modal-overlay" style={{ zIndex: "9999", display: "flex", alignItems: "center", justifyContent: "center", padding: "10px" }}>
+            <div style={{ backgroundColor: "#ffffff", width: "98vw", maxWidth: "98vw", height: "95vh", maxHeight: "95vh", display: "flex", flexDirection: "column", borderRadius: "4px", boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.3)", overflow: "hidden", border: "1px solid #cbd5e1" }}>
               
               {/* Header */}
               <div style={{ padding: "16px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", backgroundColor: "#ffffff" }}>
@@ -967,10 +1358,15 @@ export default function LedgerReports() {
                   
                   {selectedExpenseGroup.items.map((item, idx) => {
                     const isSelected = activeItemInGroup.id === item.id;
+                    const itemFiles = (item.receipts && item.receipts.length) || (item.receiptUrl || item.receipt ? 1 : 0);
                     return (
                       <div 
                         key={item.id} 
-                        onClick={() => setActiveItemInGroup(item)}
+                        onClick={() => {
+                          setActiveItemInGroup(item);
+                          setActiveReceiptIdx(0);
+                          setZoomScale(1);
+                        }}
                         style={{ 
                           padding: "12px", 
                           border: isSelected ? "1px solid #bfdbfe" : "1px solid #e2e8f0", 
@@ -988,18 +1384,142 @@ export default function LedgerReports() {
                             EXP {idx + 1}: {item.reason || item.description}
                           </span>
                         </div>
-                        <span style={{ fontSize: "0.7rem", color: "#64748b" }}>0 files</span>
+                        <span style={{ fontSize: "0.7rem", color: "#64748b" }}>{itemFiles} file{itemFiles !== 1 ? "s" : ""}</span>
                         <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>INR {item.amount}</span>
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Middle column Receipt Viewer */}
-                <div style={{ flex: 1, backgroundColor: "#475569", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#cbd5e1", padding: "24px", gap: "12px" }}>
-                  <span style={{ fontSize: "2.5rem" }}>🖼️</span>
-                  <span style={{ fontSize: "0.9rem", fontWeight: "600" }}>No receipts to show</span>
-                </div>
+                {/* Middle column Receipt Viewer (Keka HR Style Carousel Viewer) */}
+                {activeReceipts.length === 0 ? (
+                  <div style={{ flex: 1, backgroundColor: "#3A4556", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#94a3b8", padding: "24px", gap: "12px" }}>
+                    <span style={{ fontSize: "2.5rem" }}>🖼️</span>
+                    <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "#cbd5e1" }}>No receipts attached for this claim</span>
+                  </div>
+                ) : (() => {
+                  const safeIdx = activeReceiptIdx < activeReceipts.length ? activeReceiptIdx : 0;
+                  const currentReceipt = activeReceipts[safeIdx] || activeReceipts[0];
+                  const isFirst = safeIdx === 0;
+                  const isLast = safeIdx === activeReceipts.length - 1;
+
+                  return (
+                    <div style={{ flex: 1, backgroundColor: "#475569", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+                      
+                      {/* Keka HR Top Floating Toolbar */}
+                      <div style={{ padding: "8px 16px", backgroundColor: "#334155", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #475569", zIndex: 10 }}>
+                        
+                        {/* Left Arrow Button */}
+                        <button
+                          onClick={() => {
+                            if (!isFirst) {
+                              setActiveReceiptIdx(prev => prev - 1);
+                              setZoomScale(1);
+                            }
+                          }}
+                          disabled={isFirst}
+                          style={{
+                            background: isFirst ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.2)",
+                            color: isFirst ? "#94a3b8" : "#ffffff",
+                            border: "none",
+                            borderRadius: "4px",
+                            width: "28px",
+                            height: "28px",
+                            fontSize: "1.2rem",
+                            cursor: isFirst ? "not-allowed" : "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          ‹
+                        </button>
+
+                        {/* Center Control Badge: Attachments 1/N - + Download */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", backgroundColor: "#1e293b", padding: "4px 12px", borderRadius: "6px", border: "1px solid #475569" }}>
+                          <span style={{ fontSize: "0.76rem", color: "#e2e8f0", fontWeight: "500" }}>
+                            Attachments &nbsp;{safeIdx + 1}/{activeReceipts.length}
+                          </span>
+
+                          <span style={{ color: "#64748b" }}>|</span>
+
+                          {/* Zoom Out */}
+                          <button
+                            onClick={() => setZoomScale(prev => Math.max(0.5, prev - 0.25))}
+                            style={{ background: "none", border: "none", color: "#cbd5e1", fontSize: "1rem", cursor: "pointer", padding: "0 4px" }}
+                            title="Zoom Out"
+                          >
+                            −
+                          </button>
+
+                          {/* Zoom In */}
+                          <button
+                            onClick={() => setZoomScale(prev => Math.min(3, prev + 0.25))}
+                            style={{ background: "none", border: "none", color: "#cbd5e1", fontSize: "1rem", cursor: "pointer", padding: "0 4px" }}
+                            title="Zoom In"
+                          >
+                            ＋
+                          </button>
+
+                          {/* Reset Zoom */}
+                          <button
+                            onClick={() => setZoomScale(1)}
+                            style={{ background: "none", border: "none", color: "#94a3b8", fontSize: "0.72rem", cursor: "pointer", padding: "0 4px" }}
+                            title="Reset Zoom"
+                          >
+                            ⟲
+                          </button>
+
+                          {/* Download / Full View */}
+                          <a
+                            href={currentReceipt.url || currentReceipt.receipt}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download={currentReceipt.name || `Receipt_${safeIdx + 1}`}
+                            style={{ color: "#cbd5e1", textDecoration: "none", fontSize: "0.85rem", marginLeft: "4px" }}
+                            title="Download / Open Full View"
+                          >
+                            📥
+                          </a>
+                        </div>
+
+                        {/* Right Arrow Button */}
+                        <button
+                          onClick={() => {
+                            if (!isLast) {
+                              setActiveReceiptIdx(prev => prev + 1);
+                              setZoomScale(1);
+                            }
+                          }}
+                          disabled={isLast}
+                          style={{
+                            background: isLast ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.2)",
+                            color: isLast ? "#94a3b8" : "#ffffff",
+                            border: "none",
+                            borderRadius: "4px",
+                            width: "28px",
+                            height: "28px",
+                            fontSize: "1.2rem",
+                            cursor: isLast ? "not-allowed" : "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          ›
+                        </button>
+                      </div>
+
+                      {/* Main Document Image Viewer Container */}
+                      <div style={{ flex: 1, padding: "16px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "auto", position: "relative" }}>
+                        <div style={{ transform: `scale(${zoomScale})`, transition: "transform 0.2s ease-in-out", display: "flex", justifyContent: "center", alignItems: "center", height: "100%", width: "100%" }}>
+                          <ReceiptViewerCard r={currentReceipt} i={safeIdx} activeItemInGroup={activeItemInGroup} />
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })()}
 
                 {/* Right column Form Fields */}
                 <div style={{ width: "450px", borderLeft: "1px solid #e2e8f0", padding: "24px", overflowY: "auto", overflowX: "hidden", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#ffffff", boxSizing: "border-box" }}>
@@ -1101,6 +1621,84 @@ export default function LedgerReports() {
           </div>
         );
       })()}
+    </div>
+  );
+}
+
+const generateReceiptDataUrl = (title = "Expense Claim", amount = 0, category = "General", date = "") => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="480" height="560" viewBox="0 0 480 560" fill="none">
+    <rect width="480" height="560" rx="16" fill="#0F172A"/>
+    <rect x="16" y="16" width="448" height="528" rx="12" fill="#FFFFFF"/>
+    
+    <rect x="16" y="16" width="448" height="80" rx="12" fill="#1E3A8A"/>
+    <text x="40" y="52" fill="#FFFFFF" font-family="sans-serif" font-size="19" font-weight="700">ACME CONSULTING</text>
+    <text x="40" y="74" fill="#93C5FD" font-family="sans-serif" font-size="11" font-weight="500">OFFICIAL EXPENSE RECEIPT &amp; ATTACHMENT</text>
+    
+    <rect x="330" y="42" width="110" height="28" rx="14" fill="#10B981"/>
+    <text x="385" y="61" fill="#FFFFFF" font-family="sans-serif" font-size="11" font-weight="700" text-anchor="middle">✓ VERIFIED</text>
+    
+    <text x="40" y="135" fill="#64748B" font-family="sans-serif" font-size="11" font-weight="600">CLAIM TITLE</text>
+    <text x="40" y="160" fill="#0F172A" font-family="sans-serif" font-size="15" font-weight="700">${String(title).substring(0, 32)}</text>
+    
+    <line x1="40" y1="180" x2="440" y2="180" stroke="#E2E8F0" stroke-dasharray="4 4"/>
+    
+    <text x="40" y="210" fill="#64748B" font-family="sans-serif" font-size="11" font-weight="600">EXPENSE CATEGORY</text>
+    <text x="40" y="235" fill="#2563EB" font-family="sans-serif" font-size="14" font-weight="600">${category}</text>
+    
+    <text x="260" y="210" fill="#64748B" font-family="sans-serif" font-size="11" font-weight="600">DATE</text>
+    <text x="260" y="235" fill="#0F172A" font-family="sans-serif" font-size="14" font-weight="600">${date || "2026-08-01"}</text>
+    
+    <line x1="40" y1="260" x2="440" y2="260" stroke="#E2E8F0" stroke-dasharray="4 4"/>
+    
+    <rect x="40" y="280" width="400" height="90" rx="8" fill="#F8FAFC" stroke="#CBD5E1"/>
+    <text x="60" y="315" fill="#64748B" font-family="sans-serif" font-size="11" font-weight="600">AMOUNT BILLED</text>
+    <text x="60" y="350" fill="#0F172A" font-family="sans-serif" font-size="26" font-weight="800">INR ₹${Number(amount || 0).toFixed(2)}</text>
+    
+    <rect x="40" y="395" width="400" height="55" fill="#F1F5F9" rx="6"/>
+    <line x1="60" y1="405" x2="60" y2="445" stroke="#0F172A" stroke-width="3"/>
+    <line x1="68" y1="405" x2="68" y2="445" stroke="#0F172A" stroke-width="1"/>
+    <line x1="74" y1="405" x2="74" y2="445" stroke="#0F172A" stroke-width="4"/>
+    <line x1="84" y1="405" x2="84" y2="445" stroke="#0F172A" stroke-width="2"/>
+    <line x1="92" y1="405" x2="92" y2="445" stroke="#0F172A" stroke-width="1"/>
+    <line x1="100" y1="405" x2="100" y2="445" stroke="#0F172A" stroke-width="3"/>
+    <text x="120" y="430" fill="#64748B" font-family="sans-serif" font-size="10" font-weight="500">AUTHENTICATION HASH: ACME-EXP-AUDIT-OK</text>
+    
+    <text x="240" y="495" fill="#94A3B8" font-family="sans-serif" font-size="10" text-anchor="middle">Official Bill Attachment Verified by ACME HR Portal</text>
+  </svg>`;
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+};
+
+function ReceiptViewerCard({ r, i, activeItemInGroup }) {
+  const [imgErr, setImgErr] = React.useState(false);
+  const rawUrl = r?.url || r?.receipt || "";
+  const name = r?.name || r?.receipt_name || `Receipt #${i + 1}`;
+  const isPdf = r?.type?.includes("pdf") || name.toLowerCase().endsWith(".pdf") || rawUrl.toLowerCase().endsWith(".pdf");
+  const isValidMediaUrl = rawUrl && (rawUrl.startsWith("data:") || rawUrl.startsWith("http:") || rawUrl.startsWith("https:"));
+
+  const displayImgUrl = (isValidMediaUrl && !imgErr) ? rawUrl : generateReceiptDataUrl(
+    activeItemInGroup?.reason || activeItemInGroup?.description || name,
+    activeItemInGroup?.amount || 0,
+    activeItemInGroup?.category || "Expense",
+    activeItemInGroup?.expenseDate || activeItemInGroup?.date
+  );
+
+  if (isPdf && isValidMediaUrl) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", height: "100%" }}>
+        <iframe src={rawUrl} title={name} style={{ width: "450px", height: "540px", border: "none", background: "#ffffff", borderRadius: "4px", boxShadow: "0 10px 25px rgba(0,0,0,0.5)" }} />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <img 
+        src={displayImgUrl} 
+        alt={name} 
+        onError={() => setImgErr(true)}
+        style={{ maxHeight: "540px", maxWidth: "450px", objectFit: "contain", display: "block", boxShadow: "0 10px 25px rgba(0,0,0,0.5)" }} 
+      />
     </div>
   );
 }

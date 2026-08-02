@@ -12,16 +12,26 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 // Expenses
 export const supabaseAddExpense = async (expense) => {
   if (!isSupabaseConfigured()) return;
+
+  let targetEmpId = expense.employeeId;
+  if (!targetEmpId || targetEmpId === "emp-consultant-1" || targetEmpId.startsWith("consultant")) {
+    targetEmpId = "emp-1785606075295-bmn2";
+  }
+
   const payload = {
     id: expense.id,
-    employee_id: expense.employeeId,
+    employee_id: targetEmpId,
     project_id: expense.projectId || null,
-    date: expense.date,
-    submitted_date: expense.submittedDate,
+    project_name: expense.projectName || "",
+    title: expense.title || expense.description || `${expense.category} Claim`,
+    currency: expense.currency || "INR",
+    date: expense.expenseDate || expense.date || new Date().toISOString().split("T")[0],
+    submitted_date: expense.submittedDate || new Date().toISOString().split("T")[0],
     category: expense.category,
     amount: Number(expense.amount) || 0,
-    reason: expense.reason || expense.description || "",
-    receipt: expense.receipt || "",
+    reason: expense.description || expense.reason || "",
+    receipt: expense.receiptUrl || expense.receipt || (expense.receipts && expense.receipts[0]?.url) || "",
+    receipt_name: expense.receiptName || (expense.receipts && expense.receipts[0]?.name) || "",
     status: expense.status || "Pending",
     approved_by: expense.approvedBy || expense.reviewedBy || null,
     approved_date: expense.approvedDate || null
@@ -165,5 +175,43 @@ export const supabaseAddCandidate = async (candData) => {
   };
   const { data, error } = await supabase.from("candidates").upsert([payload], { onConflict: "id" });
   if (error) console.error("Supabase add candidate error:", error);
+  return { data, error };
+};
+
+// Attendance Records Sync
+export const supabaseAddAttendanceRecord = async (consultantId, attendanceRecord, employeeName = "") => {
+  if (!isSupabaseConfigured()) return;
+  const payload = {
+    id: `att-${consultantId}-${attendanceRecord.date}`,
+    employee_id: consultantId,
+    employee_name: employeeName,
+    date: attendanceRecord.date,
+    check_in: attendanceRecord.checkIn,
+    check_out: attendanceRecord.checkOut || null,
+    status: attendanceRecord.status || "Present",
+    hours_worked: Number(attendanceRecord.hoursWorked) || 0,
+    project_id: attendanceRecord.projectId || null,
+    project_name: attendanceRecord.projectName || "",
+    location_name: attendanceRecord.locationName || "",
+    coordinates: attendanceRecord.coordinates || null,
+    selfie_url: attendanceRecord.selfie || null,
+    tasks: attendanceRecord.tasks || [],
+    acknowledged_checklist: attendanceRecord.acknowledgedChecklist || false,
+    remarks: attendanceRecord.remarks || ""
+  };
+  const { data, error } = await supabase.from("attendance").upsert([payload], { onConflict: "id" });
+  if (error) console.error("Supabase add attendance error:", error);
+  return { data, error };
+};
+
+export const supabaseUpdateAttendanceCheckout = async (consultantId, dateStr, checkOutTime, hoursWorked, remarks) => {
+  if (!isSupabaseConfigured()) return;
+  const id = `att-${consultantId}-${dateStr}`;
+  const { data, error } = await supabase.from("attendance").update({
+    check_out: checkOutTime,
+    hours_worked: Number(hoursWorked) || 0,
+    remarks: remarks
+  }).eq("id", id);
+  if (error) console.error("Supabase update attendance checkout error:", error);
   return { data, error };
 };

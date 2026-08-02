@@ -19,7 +19,9 @@ import {
   supabaseRequestAdvance,
   supabaseVerifyAdvanceRequest,
   supabaseAddHiringRequisition,
-  supabaseAddCandidate
+  supabaseAddCandidate,
+  supabaseAddAttendanceRecord,
+  supabaseUpdateAttendanceCheckout
 } from "../lib/supabaseClient";
 
 const AppContext = createContext();
@@ -30,6 +32,14 @@ export const useApp = () => {
     throw new Error("useApp must be used within an AppProvider");
   }
   return context;
+};
+
+// Helper to get local date string YYYY-MM-DD (avoiding UTC timezone shift bugs from toISOString)
+export const getTodayDateString = (d = new Date()) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 // Helper to convert time string (e.g., "08:15 AM") to minutes from midnight
@@ -191,6 +201,44 @@ export const AppProvider = ({ children }) => {
     }
   });
 
+  const [clientPendingTasks, setClientPendingTasks] = useState(() => {
+    try {
+      const saved = localStorage.getItem("workcentre_client_pending_tasks");
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("workcentre_client_pending_tasks", JSON.stringify(clientPendingTasks));
+    } catch (e) {}
+  }, [clientPendingTasks]);
+
+  const addClientPendingTasks = (projectId, tasks) => {
+    if (!projectId || !tasks || tasks.length === 0) return;
+    setClientPendingTasks(prev => {
+      const existing = prev[projectId] || [];
+      const newTitles = tasks.map(t => typeof t === "string" ? t : t.title);
+      const combined = Array.from(new Set([...existing, ...newTitles]));
+      return { ...prev, [projectId]: combined };
+    });
+  };
+
+  const getClientPendingTasks = (projectId) => {
+    return clientPendingTasks[projectId] || [];
+  };
+
+  const removeClientPendingTask = (projectId, taskTitle) => {
+    if (!projectId) return;
+    setClientPendingTasks(prev => {
+      const existing = prev[projectId] || [];
+      const updated = existing.filter(t => t !== taskTitle);
+      return { ...prev, [projectId]: updated };
+    });
+  };
+
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     try {
       return localStorage.getItem("workcentre_authenticated") === "true";
@@ -313,36 +361,83 @@ export const AppProvider = ({ children }) => {
 
       // 2. Expenses
       supabase.from("expenses").select("*").then(({ data, error }) => {
-        if (!error && data) {
-          setExpenses(data.map(e => ({
-            id: e.id,
-            employeeId: e.employee_id,
-            projectId: e.project_id,
-            date: e.date,
-            submittedDate: e.submitted_date,
-            category: e.category,
-            amount: Number(e.amount) || 0,
-            reason: e.reason,
-            receipt: e.receipt,
-            status: e.status,
-            approvedBy: e.approved_by,
-            approvedDate: e.approved_date
-          })));
+        if (!error && data && data.length > 0) {
+          const fetched = data.map(e => {
+            let parsedReceipts = [];
+            try {
+              if (e.receipts) {
+                parsedReceipts = typeof e.receipts === "string" ? JSON.parse(e.receipts) : e.receipts;
+              } else if (e.receipt && typeof e.receipt === "string" && e.receipt.trim().startsWith("[")) {
+                parsedReceipts = JSON.parse(e.receipt);
+              } else if (e.receipt && typeof e.receipt === "string" && e.receipt.includes("|||")) {
+                const urls = e.receipt.split("|||");
+                const names = (e.receipt_name || "").split("|||");
+                parsedReceipts = urls.map((u, i) => ({ name: names[i] || `Receipt #${i+1}`, url: u.trim() }));
+              } else if (e.receipt) {
+                parsedReceipts = [{ name: e.receipt_name || "Receipt File", url: e.receipt }];
+              }
+            } catch (err) {
+              parsedReceipts = e.receipt ? [{ name: e.receipt_name || "Receipt File", url: e.receipt }] : [];
+            }
+
+            return {
+              id: e.id,
+              employeeId: e.employee_id,
+              projectId: e.project_id || "",
+              projectName: e.project_name || "",
+              title: e.title || e.reason || "",
+              date: e.date,
+              expenseDate: e.date,
+              submittedDate: e.submitted_date || e.date,
+              category: e.category,
+              amount: Number(e.amount) || 0,
+              reason: e.reason || "",
+              description: e.reason || "",
+              receipt: e.receipt || "",
+              receiptUrl: e.receipt || "",
+              receiptName: e.receipt_name || "",
+              receipts: parsedReceipts,
+              status: e.status || "Pending",
+              approvedBy: e.approved_by || null,
+              approvedDate: e.approved_date || null
+            };
+          });
+
+          setExpenses(prevExpenses => {
+            const fetchedMap = new Map(fetched.map(x => [x.id, x]));
+            const mergedLocal = prevExpenses.map(localExp => {
+              const fromDb = fetchedMap.get(localExp.id);
+              return fromDb ? { ...localExp, ...fromDb } : localExp;
+            });
+            const dbOnly = fetched.filter(dbExp => !prevExpenses.some(l => l.id === dbExp.id));
+            return [...mergedLocal, ...dbOnly];
+          });
         }
       }).catch(err => console.error("Supabase fetch expenses error:", err));
 
       // 3. Advance Requests
       supabase.from("advance_requests").select("*").then(({ data, error }) => {
-        if (!error && data) {
-          setAdvanceRequests(data.map(r => ({
+        if (!error && data && data.length > 0) {
+          const fetchedAdv = data.map(r => ({
             id: r.id,
             employeeId: r.employee_id,
             amount: Number(r.amount) || 0,
-            purpose: r.purpose,
+            purpose: r.purpose || "",
             date: r.date,
-            status: r.status,
-            reviewedBy: r.reviewed_by
-          })));
+            allocatedDate: r.date,
+            approvedDate: r.date,
+            status: r.status || "Approved",
+            reviewedBy: r.reviewed_by || "ACME Admin"
+          }));
+          setAdvanceRequests(prev => {
+            const fetchedMap = new Map(fetchedAdv.map(x => [x.id, x]));
+            const mergedLocal = prev.map(localReq => {
+              const dbItem = fetchedMap.get(localReq.id);
+              return dbItem ? { ...localReq, ...dbItem } : localReq;
+            });
+            const dbOnly = fetchedAdv.filter(d => !prev.some(l => l.id === d.id));
+            return [...mergedLocal, ...dbOnly];
+          });
         }
       }).catch(err => console.error("Supabase fetch advance_requests error:", err));
 
@@ -477,6 +572,53 @@ export const AppProvider = ({ children }) => {
           })));
         }
       }).catch(err => console.error("Supabase fetch weekly_offs error:", err));
+
+      // 12. Attendance Records Sync
+      supabase.from("attendance").select("*").then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setUsers(prevUsers => {
+            const attMap = new Map();
+            data.forEach(a => {
+              const empId = a.employee_id;
+              if (!empId) return;
+              if (!attMap.has(empId)) attMap.set(empId, []);
+              attMap.get(empId).push({
+                date: a.date,
+                checkIn: a.check_in,
+                checkOut: a.check_out,
+                status: a.status || "Present",
+                hoursWorked: Number(a.hours_worked) || 0,
+                projectId: a.project_id || "",
+                projectName: a.project_name || "",
+                locationName: a.location_name || "",
+                coordinates: a.coordinates || null,
+                selfie: a.selfie_url || null,
+                tasks: a.tasks || [],
+                acknowledgedChecklist: a.acknowledged_checklist || false,
+                remarks: a.remarks || ""
+              });
+            });
+
+            return prevUsers.map(u => {
+              const dbAtt = attMap.get(u.id) || [];
+              const existingAtt = u.attendance || [];
+              const merged = [...existingAtt];
+              dbAtt.forEach(da => {
+                const idx = merged.findIndex(ca => ca.date === da.date);
+                if (idx >= 0) {
+                  merged[idx] = { ...merged[idx], ...da };
+                } else {
+                  merged.push(da);
+                }
+              });
+              return {
+                ...u,
+                attendance: merged
+              };
+            });
+          });
+        }
+      }).catch(err => console.error("Supabase fetch attendance error:", err));
     }
   }, []);
 
@@ -861,7 +1003,7 @@ export const AppProvider = ({ children }) => {
   };
 
   // Compile full-month ledger rows (Date, Particulars, Opening, Food, Stay, Travel, Total Spent, Received, Balance)
-  const getEmployeeLedger = (employeeId, yearMonth = "2026-07") => {
+  const getEmployeeLedger = (employeeId, yearMonth = getTodayDateString().substring(0, 7)) => {
     const user = users.find(u => u.id === employeeId);
     if (!user || user.role !== "Consultant") {
       return { 
@@ -871,7 +1013,7 @@ export const AppProvider = ({ children }) => {
       };
     }
 
-    const empExpenses = expenses.filter(e => e.employeeId === employeeId && e.status === "Approved");
+    const empExpenses = expenses.filter(e => e.employeeId === employeeId && e.status !== "Rejected");
     const empRefills = advanceRequests.filter(r => r.employeeId === employeeId && r.status === "Approved");
 
     const ledgerRows = [];
@@ -889,28 +1031,57 @@ export const AppProvider = ({ children }) => {
 
     for (let day = 1; day <= totalDays; day++) {
       const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const queryDateFormatted = `${day}/${month}/${year}`;
+      const altQueryDate = `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
       const dayOfWeek = weekdaysNames[new Date(year, month - 1, day).getDay()];
 
-      const dailyExpenses = empExpenses.filter(e => e.date === dateStr);
-      const dailyRefills = empRefills.filter(r => r.date === dateStr);
+      const isDateMatch = (d1, targetStr) => {
+        if (!d1 || !targetStr) return false;
+        const s1 = String(d1).trim().split("T")[0];
+        const s2 = String(targetStr).trim().split("T")[0];
+        if (s1 === s2) return true;
+        const norm = (s) => {
+          if (s.includes("-")) {
+            const p = s.split("-");
+            if (p.length === 3 && p[0].length === 4) return `${p[0]}-${p[1].padStart(2, "0")}-${p[2].padStart(2, "0")}`;
+          }
+          if (s.includes("/")) {
+            const p = s.split("/");
+            if (p.length === 3) {
+              if (p[2].length === 4) return `${p[2]}-${p[1].padStart(2, "0")}-${p[0].padStart(2, "0")}`;
+              if (p[0].length === 4) return `${p[0]}-${p[1].padStart(2, "0")}-${p[2].padStart(2, "0")}`;
+            }
+          }
+          return s;
+        };
+        return norm(s1) === norm(s2);
+      };
 
-      const food = dailyExpenses.filter(e => e.category === "Food").reduce((sum, e) => sum + e.amount, 0);
-      const stay = dailyExpenses.filter(e => e.category === "Accommodation").reduce((sum, e) => sum + e.amount, 0);
-      const travel = dailyExpenses.filter(e => e.category === "Travel").reduce((sum, e) => sum + e.amount, 0);
-      const spent = food + stay + travel;
+      const dailyExpenses = empExpenses.filter(e => {
+        const primaryDate = e.expenseDate || e.date || e.submittedDate;
+        return isDateMatch(primaryDate, dateStr);
+      });
+      const dailyRefills = empRefills.filter(r => isDateMatch(r.date, dateStr) || isDateMatch(r.allocatedDate, dateStr) || isDateMatch(r.approvedDate, dateStr) || isDateMatch(r.submittedDate, dateStr));
 
-      const received = dailyRefills.reduce((sum, r) => sum + r.amount, 0);
+      const food = dailyExpenses.filter(e => e.category === "Food").reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      const stay = dailyExpenses.filter(e => e.category === "Accommodation" || e.category === "Stay").reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      const travel = dailyExpenses.filter(e => e.category === "Travel" || e.category === "Conveyance").reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      const misc = dailyExpenses.filter(e => !["Food", "Accommodation", "Stay", "Travel", "Conveyance"].includes(e.category)).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+      const spent = food + stay + travel + misc;
+
+      const received = dailyRefills.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
       const opening = currentBalance;
       
       const particularsParts = [];
       if (received > 0) {
         dailyRefills.forEach(r => {
-          particularsParts.push(`Refill: ${r.purpose}`);
+          particularsParts.push(`Refill: ${r.purpose || "Petty Cash Allocation"}`);
         });
       }
-      dailyExpenses.forEach(e => {
-        particularsParts.push(e.description);
-      });
+      if (dailyExpenses.length > 0) {
+        const projNames = [...new Set(dailyExpenses.map(e => e.projectName || e.projectId || "Shrut Jewellers").filter(Boolean))];
+        particularsParts.push(...projNames);
+      }
       const particulars = particularsParts.join(" / ") || "";
 
       const closing = opening + received - spent;
@@ -924,7 +1095,8 @@ export const AppProvider = ({ children }) => {
 
       ledgerRows.push({
         srNo: day,
-        date: `${day}/${month}/${year}`,
+        date: queryDateFormatted,
+        isoDate: dateStr,
         day: dayOfWeek,
         particulars,
         opening,
@@ -937,15 +1109,9 @@ export const AppProvider = ({ children }) => {
       });
     }
 
-    const refillingDetails = empRefills.map((r, i) => ({
-      srNo: i + 1,
-      date: r.date,
-      amount: r.amount
-    }));
-
     return {
       ledgerRows,
-      refillingDetails,
+      refillingDetails: empRefills,
       totals: {
         food: totalFood,
         stay: totalStay,
@@ -957,8 +1123,8 @@ export const AppProvider = ({ children }) => {
   };
 
   // Daily Punch Card (Check In / Check Out)
-  const checkInConsultant = (consultantId, remarks = "", projectId = "", projectName = "") => {
-    const todayStr = new Date().toISOString().split("T")[0];
+  const checkInConsultant = (consultantId, remarksOrData = "", projectId = "", projectName = "") => {
+    const todayStr = getTodayDateString();
     const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     
     // Check if late based on settings
@@ -966,51 +1132,118 @@ export const AppProvider = ({ children }) => {
     const limitMin = parseTimeToMinutes(settings.lateCheckInLimit);
     const status = checkInMin > limitMin ? "Late" : "Present";
 
-    setUsers(prev => prev.map(u => {
-      if (u.id === consultantId) {
-        const attendance = u.attendance || [];
-        const alreadyCheckedIn = attendance.some(a => a.date === todayStr);
-        if (alreadyCheckedIn) return u;
+    let payload = {};
+    if (typeof remarksOrData === "object" && remarksOrData !== null) {
+      payload = remarksOrData;
+    } else {
+      payload = { remarks: remarksOrData, projectId, projectName };
+    }
 
-        return {
+    setUsers(prev => prev.map(u => {
+      if (String(u.id) === String(consultantId)) {
+        const attendance = u.attendance || [];
+        const activeUnclosedPunch = attendance.find(a => a.date === todayStr && !a.checkOut);
+        if (activeUnclosedPunch) return u;
+
+        const otherAttendance = attendance.filter(a => a.date !== todayStr);
+
+        const newRecord = {
+          date: todayStr,
+          checkIn: timeStr,
+          checkOut: null,
+          status,
+          hoursWorked: 0,
+          remarks: payload.remarks || "",
+          projectId: payload.projectId || "",
+          projectName: payload.projectName || "",
+          locationName: payload.locationName || payload.location || "",
+          coordinates: payload.coordinates || null,
+          selfie: payload.selfie || null,
+          tasks: payload.tasks || [],
+          acknowledgedChecklist: payload.acknowledgedChecklist || false
+        };
+
+        const userObj = prev.find(user => String(user.id) === String(consultantId));
+        if (isSupabaseConfigured()) {
+          supabaseAddAttendanceRecord(consultantId, newRecord, userObj?.name || "");
+        }
+
+        const updatedUser = {
           ...u,
           attendance: [
-            ...attendance,
-            { date: todayStr, checkIn: timeStr, checkOut: null, status, hoursWorked: 0, remarks, projectId, projectName }
+            ...otherAttendance,
+            newRecord
           ]
         };
+
+        if (currentUser && String(currentUser.id) === String(consultantId)) {
+          setCurrentUser(updatedUser);
+        }
+
+        return updatedUser;
       }
       return u;
     }));
   };
 
-  const checkOutConsultant = (consultantId, remarks = "") => {
-    const todayStr = new Date().toISOString().split("T")[0];
+  const checkOutConsultant = (consultantId, payload = "") => {
+    const todayStr = getTodayDateString();
     const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+    let checkoutData = {};
+    if (typeof payload === "object" && payload !== null) {
+      checkoutData = payload;
+    } else {
+      checkoutData = { remarks: payload };
+    }
+
     setUsers(prev => prev.map(u => {
-      if (u.id === consultantId) {
+      if (String(u.id) === String(consultantId)) {
         const attendance = u.attendance || [];
+        let updatedHours = 0;
+        let updatedRemarks = checkoutData.remarks || "";
+
         const updatedAttendance = attendance.map(a => {
-          if (a.date === todayStr && !a.checkOut) {
+          if ((a.date === todayStr || (a.date && new Date(a.date).toDateString() === new Date().toDateString())) && !a.checkOut) {
             const inMin = parseTimeToMinutes(a.checkIn);
             const outMin = parseTimeToMinutes(timeStr);
             const minutesDiff = outMin - inMin;
             const hours = parseFloat(Math.max(0, (minutesDiff / 60)).toFixed(1));
+            updatedHours = hours;
+            const combinedRemarks = checkoutData.remarks ? `${a.remarks ? a.remarks + " | " : ""}${checkoutData.remarks}` : a.remarks;
+            
+            // Handle pending tasks auto-forward
+            if (checkoutData.pendingTasks && checkoutData.pendingTasks.length > 0) {
+              const projId = a.projectId || a.projectName || "General";
+              addClientPendingTasks(projId, checkoutData.pendingTasks);
+            }
+
             return {
               ...a,
               checkOut: timeStr,
               hoursWorked: hours,
-              remarks: remarks ? `${a.remarks ? a.remarks + " | " : ""}${remarks}` : a.remarks
+              remarks: combinedRemarks,
+              completedTasks: checkoutData.completedTasks || [],
+              pendingTasks: checkoutData.pendingTasks || []
             };
           }
           return a;
         });
 
-        return {
+        if (isSupabaseConfigured()) {
+          supabaseUpdateAttendanceCheckout(consultantId, todayStr, timeStr, updatedHours, updatedRemarks);
+        }
+
+        const updatedUser = {
           ...u,
           attendance: updatedAttendance
         };
+
+        if (currentUser && String(currentUser.id) === String(consultantId)) {
+          setCurrentUser(updatedUser);
+        }
+
+        return updatedUser;
       }
       return u;
     }));
@@ -1018,16 +1251,30 @@ export const AppProvider = ({ children }) => {
 
   // Expense Submissions
   const addExpense = (expenseData) => {
+    const rawDate = expenseData.expenseDate || expenseData.date || getTodayDateString();
+    const dateFormatted = rawDate.replace(/-/g, "").replace(/\//g, "");
+    
+    let projTag = "GEN";
+    if (expenseData.projectId) {
+      projTag = expenseData.projectId.replace(/proj-/gi, "").replace(/[^a-zA-Z0-9]/g, "").slice(0, 10).toUpperCase();
+    } else if (expenseData.projectName) {
+      projTag = expenseData.projectName.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8).toUpperCase();
+    }
+
+    const uniqueId = `EXP-${projTag}-${dateFormatted}-${Math.floor(100 + Math.random() * 900)}`;
+
     const newExpense = {
-      id: `exp-${Date.now()}`,
+      id: expenseData.id || uniqueId,
       status: "Pending",
-      date: expenseData.expenseDate || new Date().toISOString().split("T")[0],
+      date: rawDate,
+      expenseDate: rawDate,
       reviewedBy: "",
       reviewerNotes: "",
-      submittedDate: new Date().toISOString().split("T")[0],
+      submittedDate: getTodayDateString(),
       approvedDate: "",
       projectId: expenseData.projectId || "",
       projectName: expenseData.projectName || "",
+      receipts: expenseData.receipts || [],
       ...expenseData
     };
     setExpenses(prev => [newExpense, ...prev]);
@@ -1190,17 +1437,32 @@ export const AppProvider = ({ children }) => {
   };
 
   // Cash Advance Requests
-  const requestAdvance = (employeeId, amount, purpose) => {
+  const requestAdvance = (employeeId, amount, purpose, status = "Pending", customDate = null, reviewerName = "") => {
+    const allocDate = customDate || new Date().toISOString().split("T")[0];
     const newRequest = {
       id: `adv-${Date.now()}`,
       employeeId,
       amount: parseFloat(amount),
       purpose,
-      date: new Date().toISOString().split("T")[0],
-      status: "Pending",
-      reviewedBy: ""
+      date: allocDate,
+      allocatedDate: allocDate,
+      approvedDate: allocDate,
+      status: status,
+      reviewedBy: reviewerName || (status === "Approved" ? "ACME Admin" : "")
     };
     setAdvanceRequests(prev => [newRequest, ...prev]);
+
+    if (status === "Approved") {
+      setUsers(prevUsers => prevUsers.map(u => {
+        if (u.id === employeeId) {
+          return {
+            ...u,
+            advanceAmount: (u.advanceAmount || 0) + parseFloat(amount)
+          };
+        }
+        return u;
+      }));
+    }
 
     if (isSupabaseConfigured()) {
       supabaseRequestAdvance(newRequest).catch(err => console.error("Supabase write-back requestAdvance error:", err));
@@ -1666,6 +1928,10 @@ export const AppProvider = ({ children }) => {
         getEmployeeLedger,
         checkInConsultant,
         checkOutConsultant,
+        clientPendingTasks,
+        addClientPendingTasks,
+        getClientPendingTasks,
+        removeClientPendingTask,
         addExpense,
         verifyExpense,
         advanceRequests,

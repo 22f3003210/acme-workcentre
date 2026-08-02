@@ -93,18 +93,18 @@ describe('Tier 1: UI Route & View Components', () => {
     it('renders LedgerReports claims desk, daywise head, and individual ledger tabs', () => {
       renderWithProviders(<LedgerReports />);
       expect(screen.getAllByText(/Expense Claims & Ledgers/i)[0]).toBeInTheDocument();
-      expect(screen.getByText(/🧾 Claims Desk/i)).toBeInTheDocument();
-      expect(screen.getByText(/📋 Day-wise Head/i)).toBeInTheDocument();
-      expect(screen.getByText(/👤 Individual Ledgers/i)).toBeInTheDocument();
+      expect(screen.getByText(/Claims Desk/i)).toBeInTheDocument();
+      expect(screen.getByText(/Day-wise Head/i)).toBeInTheDocument();
+      expect(screen.getByText(/Individual Ledgers/i)).toBeInTheDocument();
     });
 
     it('allows switching sub-tabs inside LedgerReports', () => {
       renderWithProviders(<LedgerReports />);
-      const daywiseBtn = screen.getByText(/📋 Day-wise Head/i);
+      const daywiseBtn = screen.getByText(/Day-wise Head/i);
       fireEvent.click(daywiseBtn);
       expect(screen.getByText(/Select Date/i)).toBeInTheDocument();
 
-      const individualBtn = screen.getByText(/👤 Individual Ledgers/i);
+      const individualBtn = screen.getByText(/Individual Ledgers/i);
       fireEvent.click(individualBtn);
       expect(screen.getByText(/Select Consultant:/i)).toBeInTheDocument();
     });

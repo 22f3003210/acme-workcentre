@@ -65,27 +65,45 @@ export default function AddEmployeeWizard() {
     }
   }, [firstName, lastName]);
 
-  // Set default series if available and auto-generate code
+  // Auto-select first series and generate code when numberSeries/users load
   useEffect(() => {
     if (numberSeries && numberSeries.length > 0 && !selectedSeriesId) {
       setSelectedSeriesId(numberSeries[0].id);
-      generateEmpCode(numberSeries[0]);
+      generateEmpCode(numberSeries[0], users);
     }
-  }, [numberSeries]);
+  }, [numberSeries, users]);
 
   const handleSeriesChange = (seriesId) => {
     setSelectedSeriesId(seriesId);
     const series = numberSeries.find(s => s.id === seriesId);
     if (series) {
-      generateEmpCode(series);
+      generateEmpCode(series, users);
     }
   };
 
-  const generateEmpCode = (series) => {
+  // Scans existing employees with the same prefix to find the next available number
+  const generateEmpCode = (series, existingUsers) => {
     const prefix = series.prefix || "";
-    const digits = series.digits || 3;
-    const nextNum = series.nextNumber || 101;
+    const digits = series.digits || 4;
     const suffix = series.suffix || "";
+    const allUsers = existingUsers || users || [];
+
+    // Find all employees whose empCode starts with this prefix (and ends with suffix if any)
+    const regex = new RegExp(
+      `^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(\\d+)${suffix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`
+    );
+    let maxNum = 0;
+    allUsers.forEach(u => {
+      const code = u.empCode || u.emp_code || "";
+      const match = code.match(regex);
+      if (match) {
+        const num = parseInt(match[1], 10);
+        if (!isNaN(num) && num > maxNum) maxNum = num;
+      }
+    });
+
+    // If no existing employees found for this series, fall back to stored nextNumber
+    const nextNum = maxNum > 0 ? maxNum + 1 : (series.nextNumber || 1);
     const numStr = String(nextNum).padStart(digits, "0");
     setEmpCode(`${prefix}${numStr}${suffix}`);
   };
@@ -298,8 +316,19 @@ export default function AddEmployeeWizard() {
               </div>
 
               <div style={{ gridColumn: "1 / -1" }}>
-                <label style={labelStyle}>Employee Number *</label>
-                <input type="text" required value={empCode} onChange={e => setEmpCode(e.target.value)} style={{ ...inputStyle, background: "#f8fafc", fontWeight: "700" }} />
+                <label style={{ ...labelStyle, display: "flex", alignItems: "center", gap: "6px" }}>
+                  EMPLOYEE NUMBER
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", fontSize: "0.68rem", background: "#f1f5f9", color: "#64748b", padding: "1px 7px", borderRadius: "4px", fontWeight: "600", letterSpacing: "0.03em" }}>
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    AUTO-ASSIGNED
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  value={empCode}
+                  style={{ ...inputStyle, background: "#f1f5f9", fontWeight: "700", color: "#334155", cursor: "not-allowed", userSelect: "none", letterSpacing: "0.08em" }}
+                />
               </div>
             </div>
 

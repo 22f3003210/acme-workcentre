@@ -64,7 +64,7 @@ export const getRoutePath = (tabId) => {
 // Route to ActiveTab Mapping
 const getTabFromPath = (pathname, role) => {
   const p = pathname.toLowerCase().replace(/\/$/, "");
-  if (p === "" || p === "/" || p.includes("dashboard")) return role === "Consultant" ? "punch" : "dashboard";
+  if (p === "" || p === "/" || p.includes("dashboard")) return "dashboard";
   if (p.includes("job-titles")) return "job-titles";
   if (p.includes("number-series")) return "number-series";
   if (p.includes("departments")) return "departments";
@@ -78,11 +78,11 @@ const getTabFromPath = (pathname, role) => {
   if (p.includes("calendar")) return "calendar";
   if (p.includes("expenses") || p.includes("payroll") || p.includes("reports")) return role === "Consultant" ? "expenses" : "reports";
   if (p.includes("employee") || p.includes("directory")) return "directory";
-  if (p.includes("attendance") || p.includes("punch")) return role === "Consultant" ? "punch" : "attendance";
+  if (p.includes("attendance") || p.includes("punch")) return "attendance";
   if (p.includes("recruiting") || p.includes("recruitment")) return "recruitment";
   if (p.includes("settings")) return "settings";
   if (p.includes("ledger")) return "ledger";
-  return role === "Consultant" ? "punch" : "dashboard";
+  return "dashboard";
 };
 
 // Main Authenticated Workspace Frame

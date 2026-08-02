@@ -129,7 +129,12 @@ const DocxViewer = ({ doc }) => {
         </div>
         <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid #cbd5e1" }}>
           <a href={doc?.url} download={doc?.fileName} style={{ background: "#2563eb", color: "#ffffff", padding: "8px 20px", borderRadius: "8px", textDecoration: "none", fontWeight: "800", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "8px" }}>
-            📥 Download {doc?.fileName}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            Download {doc?.fileName}
           </a>
         </div>
       </div>
@@ -175,14 +180,51 @@ export default function ProjectsView() {
 
   const [selectedProject, setSelectedProject] = useState(null);
 
-  // Clean PDF document URL memo for direct inline web viewer (prevents browser download popups)
+  // Convert data: URL to same-origin blob: URL for inline PDF display
+  // Chrome blocks data: URLs inside iframes (downloads instead of displaying).
+  // blob: URLs are same-origin and display correctly inline.
   const pdfBlobUrl = useMemo(() => {
     if (!selectedProject) return "";
     const docs = selectedProject.auditReports || [];
     const doc = docs[0];
     if (!doc) return "";
-    return getCachedDocumentUrl(doc.id, doc.url);
+    const rawUrl = getCachedDocumentUrl(doc.id, doc.url);
+    if (!rawUrl) return "";
+
+    // If it's already an http(s) URL, use directly — no conversion needed
+    if (rawUrl.startsWith("http")) return rawUrl;
+
+    // If it's a data: URL, convert to blob: URL for iframe compatibility
+    if (rawUrl.startsWith("data:")) {
+      try {
+        const parts = rawUrl.split(",");
+        const mimeMatch = parts[0].match(/data:(.*?)[;,]/);
+        const mime = mimeMatch ? mimeMatch[1] : "application/pdf";
+        const base64Data = parts[1];
+        const binaryStr = window.atob(base64Data);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: mime });
+        return URL.createObjectURL(blob);
+      } catch (e) {
+        console.warn("Failed to convert data URL to blob URL:", e);
+        return rawUrl;
+      }
+    }
+    return rawUrl;
   }, [selectedProject, selectedProject?.auditReports]);
+
+  // Clean up old blob URLs to prevent memory leaks and multiple-download triggers
+  useEffect(() => {
+    return () => {
+      if (pdfBlobUrl && pdfBlobUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(pdfBlobUrl);
+      }
+    };
+  }, [pdfBlobUrl]);
 
   // Auth Protection Check
   if (!isAuthenticated || !currentUser) {
@@ -272,6 +314,11 @@ export default function ProjectsView() {
   // Business Details Form States
   const [isEditingBusinessDetails, setIsEditingBusinessDetails] = useState(false);
   const [bizStep, setBizStep] = useState(1);
+  const [isGeocodingHeadOffice, setIsGeocodingHeadOffice] = useState(false);
+  const [locationSuggestions, setLocationSuggestions] = useState([]);
+  const [locationSearchDebounce, setLocationSearchDebounce] = useState(null);
+  const [locationSearchNoResults, setLocationSearchNoResults] = useState(false);
+  const [locationCoordsFetched, setLocationCoordsFetched] = useState(false);
   const [bizForm, setBizForm] = useState({
     companyName: "",
     headOffice: "",
@@ -285,8 +332,62 @@ export default function ProjectsView() {
     purposeOfApproach: "",
     primaryChallenge: "",
     staffMembers: [{ name: "", designation: "", contact: "" }],
-    transformationOutcomes: []
+    transformationOutcomes: [],
+    headOfficeCoordinates: { lat: "22.0867", lng: "79.5432", address: "Seoni, Madhya Pradesh" }
   });
+
+  // City/area location search via Nominatim
+  const searchLocationByKeyword = (query) => {
+    if (locationSearchDebounce) clearTimeout(locationSearchDebounce);
+    setBizForm(prev => ({ ...prev, headOffice: query }));
+    setLocationSearchNoResults(false);
+    if (!query || query.length < 2) {
+      setLocationSuggestions([]);
+      return;
+    }
+    setIsGeocodingHeadOffice(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1&featuretype=settlement`,
+          { headers: { "Accept-Language": "en" } }
+        );
+        if (res.ok) {
+          const results = await res.json();
+          if (results && results.length > 0) {
+            setLocationSuggestions(results);
+            setLocationSearchNoResults(false);
+          } else {
+            setLocationSuggestions([]);
+            setLocationSearchNoResults(true);
+          }
+        }
+      } catch (err) {
+        console.warn("Location search error:", err);
+      } finally {
+        setIsGeocodingHeadOffice(false);
+      }
+    }, 350);
+    setLocationSearchDebounce(timer);
+  };
+
+  // Store coordinates when user selects a city suggestion
+  const selectLocationSuggestion = (suggestion) => {
+    const lat = parseFloat(suggestion.lat).toFixed(5);
+    const lng = parseFloat(suggestion.lon).toFixed(5);
+    const label = [suggestion.address?.city || suggestion.address?.town || suggestion.address?.village || suggestion.address?.county, suggestion.address?.state].filter(Boolean).join(", ") || suggestion.display_name.split(",").slice(0, 2).join(",").trim();
+    setBizForm(prev => ({
+      ...prev,
+      headOffice: label,
+      headOfficeCoordinates: { lat: String(lat), lng: String(lng), address: suggestion.display_name }
+    }));
+    setLocationSuggestions([]);
+    setLocationSearchNoResults(false);
+    setLocationCoordsFetched(true);
+    if (typeof setToast === "function") {
+      setToast({ message: `Location set: ${lat}\u00b0 N, ${lng}\u00b0 E`, type: "success" });
+    }
+  };
 
   // Audit Document Direct Upload & Viewer Ref
   const fileInputRef = useRef(null);
@@ -607,7 +708,8 @@ export default function ProjectsView() {
         staffMembers: bizDetails.staffMembers && bizDetails.staffMembers.length > 0 
           ? bizDetails.staffMembers 
           : [{ name: effectiveProject.pocName || "Anant Sarraf", designation: "Managing Director", contact: effectiveProject.pocContact || "9876543233" }],
-        transformationOutcomes: bizDetails.transformationOutcomes || []
+        transformationOutcomes: bizDetails.transformationOutcomes || [],
+        headOfficeCoordinates: bizDetails.headOfficeCoordinates || { lat: "22.0867", lng: "79.5432", address: bizDetails.headOffice || "Seoni, Madhya Pradesh" }
       });
       setIsEditingBusinessDetails(true);
     };
@@ -664,7 +766,12 @@ export default function ProjectsView() {
                   <span>Started on {effectiveProject.startDate || "2026-07-01"}</span>
                   <span>•</span>
                   <span>Owner: <strong style={{ color: "#0f172a" }}>{effectiveProject.owner || (effectiveProject.assignedConsultants && effectiveProject.assignedConsultants[0]) || currentUser?.name || "Darla Manikanta"}</strong></span>
-                  <button onClick={handleStartEditBusiness} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontWeight: "700", padding: 0 }} title="Edit Business Details">✏️</button>
+                  <button onClick={handleStartEditBusiness} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontWeight: "700", padding: "0 4px", display: "inline-flex", alignItems: "center" }} title="Edit Business Details">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -778,334 +885,502 @@ export default function ProjectsView() {
             {/* TAB 1: BUSINESS DETAILS */}
             {activeProjectTab === "business" && (
               <div>
-                {isEditingBusinessDetails ? (
-                  /* 5-SECTION STEPPER INTAKE FORM */
-                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "24px" }}>
-                    
-                    {/* Stepper Progress Bar (1 to 5) */}
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative", padding: "0 10px" }}>
-                      <div style={{ position: "absolute", top: "18px", left: "40px", right: "40px", height: "2px", background: "#e2e8f0", zIndex: 0 }} />
-                      {[
-                        { num: 1, name: "General Info" },
-                        { num: 2, name: "Pain Points" },
-                        { num: 3, name: "Challenges" },
-                        { num: 4, name: "Staff Details" },
-                        { num: 5, name: "Outcomes" }
-                      ].map(s => (
-                        <div key={s.num} style={{ zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
-                          <div style={{
-                            width: "36px",
-                            height: "36px",
-                            borderRadius: "50%",
-                            background: bizStep === s.num ? "#2563eb" : (bizStep > s.num ? "#16a34a" : "#ffffff"),
-                            color: bizStep >= s.num ? "#ffffff" : "#64748b",
-                            border: `2px solid ${bizStep === s.num ? "#2563eb" : (bizStep > s.num ? "#16a34a" : "#cbd5e1")}`,
-                            display: "flex",
-                            alignItems: "center",
-                            justify: "center",
-                            fontWeight: "800",
-                            fontSize: "0.95rem"
-                          }}>
-                            {bizStep > s.num ? "✓" : s.num}
-                          </div>
-                          <span style={{ fontSize: "0.75rem", fontWeight: bizStep === s.num ? "800" : "600", color: bizStep === s.num ? "#2563eb" : "#64748b" }}>
-                            {s.name}
-                          </span>
-                        </div>
-                      ))}
+                {/* STRUCTURED PROFILE DISPLAY CARD */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
+                      Business Profile & Operational Structure
+                    </h3>
+
+                    <button
+                      onClick={handleStartEditBusiness}
+                      style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "8px 16px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      Edit Business Details
+                    </button>
+                  </div>
+
+                  {/* Business Grid Info */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+                    <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                      <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>PRIMARY BUSINESS MODEL</span>
+                      <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#2563eb" }}>
+                        {bizDetails.businessModel || "Pure Retailer"}
+                      </p>
                     </div>
 
-                    {/* SECTION 1: GENERAL BUSINESS INFORMATION */}
-                    {bizStep === 1 && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Section 1: General Business Information</h3>
-                        
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>JEWELLERY / BRAND COMPANY NAME</label>
-                          <input type="text" value={bizForm.companyName} onChange={e => setBizForm({...bizForm, companyName: e.target.value})} placeholder="e.g. Diamond Atelier" style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
-                        </div>
+                    <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                      <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>BOUTIQUES & HEAD OFFICE</span>
+                      <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
+                        {bizDetails.showroomCount || "5"} Showrooms ({bizDetails.headOffice || "Mumbai"})
+                      </p>
+                    </div>
 
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                          <div>
-                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>HEAD OFFICE LOCATION (CITY)</label>
-                            <input type="text" value={bizForm.headOffice} onChange={e => setBizForm({...bizForm, headOffice: e.target.value})} placeholder="e.g. Mumbai, Delhi" style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
+                    <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                      <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>ANNUAL REVENUE & HEADCOUNT</span>
+                      <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
+                        {bizDetails.revenueBracket || "₹25 Cr - ₹50 Cr"} ({bizDetails.headcount || "150"} Staff)
+                      </p>
+                    </div>
+
+                    {/* Store Location GPS Coordinates Card */}
+                    <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "16px", borderRadius: "10px", gridColumn: "span 3" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                           </div>
                           <div>
-                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>BOUTIQUE / SHOWROOM COUNT</label>
-                            <input type="text" value={bizForm.showroomCount} onChange={e => setBizForm({...bizForm, showroomCount: e.target.value})} placeholder="e.g. 5" style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
+                            <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: "800", textTransform: "uppercase" }}>STORE LOCATION GPS COORDINATES (AUDIT TARGET)</span>
+                            <p style={{ margin: "2px 0 0 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
+                              {bizDetails.headOfficeCoordinates?.lat || "22.0867"}° N, {bizDetails.headOfficeCoordinates?.lng || "79.5432"}° E
+                              <span style={{ marginLeft: "10px", fontSize: "0.8rem", color: "#64748b", fontWeight: "600" }}>({bizDetails.headOffice || "Seoni, Madhya Pradesh"})</span>
+                            </p>
                           </div>
                         </div>
-
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>BOUTIQUE & ATELIER BRANCH LOCATIONS</label>
-                          <input type="text" value={bizForm.locations} onChange={e => setBizForm({...bizForm, locations: e.target.value})} placeholder="Type city names (e.g. Mumbai, Jaipur, Delhi NCR)..." style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
-                        </div>
-
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
-                          <div>
-                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>HEADCOUNT / EMPLOYEES</label>
-                            <input type="text" value={bizForm.headcount} onChange={e => setBizForm({...bizForm, headcount: e.target.value})} placeholder="e.g. 150" style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
-                          </div>
-                          <div>
-                            <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>ANNUAL REVENUE BRACKET (INR)</label>
-                            <select value={bizForm.revenueBracket} onChange={e => setBizForm({...bizForm, revenueBracket: e.target.value})} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }}>
-                              <option>Select Range...</option>
-                              <option>Under ₹5 Cr</option>
-                              <option>₹5 Cr - ₹25 Cr</option>
-                              <option>₹25 Cr - ₹50 Cr</option>
-                              <option>₹50 Cr - ₹100 Cr</option>
-                              <option>Above ₹100 Cr</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>PRIMARY BUSINESS MODEL</label>
-                          <select value={bizForm.businessModel} onChange={e => setBizForm({...bizForm, businessModel: e.target.value})} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }}>
-                            <option>Pure Retailer</option>
-                            <option>Wholesaler</option>
-                            <option>Manufacturer</option>
-                            <option>Omnichannel Retail + Wholesale</option>
-                            <option>Bespoke Atelier</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>LINE OF BUSINESS / PRODUCT LINE</label>
-                          <input type="text" value={bizForm.productLine} onChange={e => setBizForm({...bizForm, productLine: e.target.value})} placeholder="e.g. Fine Diamond Jewellery, Solitaires, Polki & Gold" style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
-                        </div>
+                        <a
+                          href={`https://www.openstreetmap.org/?mlat=${bizDetails.headOfficeCoordinates?.lat || "22.0867"}&mlon=${bizDetails.headOfficeCoordinates?.lng || "79.5432"}#map=16/${bizDetails.headOfficeCoordinates?.lat || "22.0867"}/${bizDetails.headOfficeCoordinates?.lng || "79.5432"}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{ background: "#ffffff", color: "#16a34a", border: "1px solid #86efac", padding: "6px 14px", borderRadius: "6px", fontWeight: "800", fontSize: "0.78rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                          View Store on Map
+                        </a>
                       </div>
-                    )}
+                    </div>
+                  </div>
 
-                    {/* SECTION 2: CORE OPERATIONAL PAIN POINTS */}
-                    {bizStep === 2 && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Section 2: Core Operational Pain Points</h3>
-                        <p style={{ margin: 0, fontSize: "0.85rem", color: "#64748b" }}>Select all areas where your brand experiences operational friction or losses:</p>
-                        
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                          {["Inventory", "Sales", "Manufacturing", "CRM", "HR", "Finance", "Marketing", "Procurement", "Reporting"].map(area => (
-                            <label key={area} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9rem", color: "#0f172a", cursor: "pointer" }}>
-                              <input
-                                type="checkbox"
-                                checked={bizForm.painPoints.includes(area)}
-                                onChange={e => {
-                                  if (e.target.checked) setBizForm({...bizForm, painPoints: [...bizForm.painPoints, area]});
-                                  else setBizForm({...bizForm, painPoints: bizForm.painPoints.filter(p => p !== area)});
-                                }}
-                              />
-                              {area}
-                            </label>
+                  {/* Staff Roster Table */}
+                  <div style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px", background: "#ffffff" }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>Key Executive & Staff Details Roster</h4>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                      <thead>
+                        <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0", textAlign: "left", color: "#475569" }}>
+                          <th style={{ padding: "8px" }}>Name</th>
+                          <th style={{ padding: "8px" }}>Designation</th>
+                          <th style={{ padding: "8px" }}>Contact Phone</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(bizDetails.staffMembers || [
+                          { name: effectiveProject.pocName || "Anant Sarraf", designation: "Managing Director", contact: effectiveProject.pocContact || "9876543210" }
+                        ]).map((s, sIdx) => (
+                          <tr key={sIdx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                            <td style={{ padding: "8px", fontWeight: "700", color: "#0f172a" }}>{s.name}</td>
+                            <td style={{ padding: "8px", color: "#2563eb", fontWeight: "600" }}>{s.designation}</td>
+                            <td style={{ padding: "8px", color: "#475569", display: "flex", alignItems: "center", gap: "6px" }}>
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                              </svg>
+                              {s.contact}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Purpose & Challenges Card */}
+                  <div style={{ background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", border: "1px solid #bfdbfe", padding: "18px", borderRadius: "12px" }}>
+                    <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem", fontWeight: "800", color: "#1e3a8a" }}>
+                      Engagement Purpose & Primary Operational Challenges
+                    </h4>
+                    <p style={{ margin: "0 0 10px 0", fontSize: "0.88rem", color: "#1e40af", lineHeight: "1.5" }}>
+                      {bizDetails.purposeOfApproach || effectiveProject.engagementPurpose || "Client approached for consulting advisory, stock reconciliation, and retail growth."}
+                    </p>
+                    <p style={{ margin: 0, fontSize: "0.85rem", color: "#1e3a8a", fontStyle: "italic" }}>
+                      "Challenge: {bizDetails.primaryChallenge || "Describe how metal weight variance, inventory reconciliation, or sales tracking issues affect daily workflow..."}"
+                    </p>
+                  </div>
+                </div>
+
+                {/* RIGHT-SIDE CARD DRAWER (EDIT BUSINESS DETAILS SLIDE-OVER) */}
+                {isEditingBusinessDetails && (
+                  <div
+                    style={{
+                      position: "fixed",
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: "rgba(15, 23, 42, 0.45)",
+                      backdropFilter: "blur(4px)",
+                      zIndex: 9999,
+                      display: "flex",
+                      justifyContent: "flex-end"
+                    }}
+                    onClick={() => setIsEditingBusinessDetails(false)}
+                  >
+                    <div
+                      style={{
+                        width: "640px",
+                        maxWidth: "92vw",
+                        height: "100%",
+                        background: "#ffffff",
+                        boxShadow: "-8px 0 32px rgba(0, 0, 0, 0.2)",
+                        display: "flex",
+                        flexDirection: "column",
+                        animation: "slideInRight 0.25s ease-out"
+                      }}
+                      onClick={e => e.stopPropagation()}
+                    >
+                      {/* Side Card Header */}
+                      <div style={{ padding: "20px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Edit Business Details</h3>
+                            <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Update company profile, operations & staff information</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setIsEditingBusinessDetails(false)}
+                          style={{ background: "#e2e8f0", border: "none", width: "32px", height: "32px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", color: "#475569", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+
+                      {/* Stepper Progress Bar */}
+                      <div style={{ padding: "16px 20px", borderBottom: "1px solid #f1f5f9", background: "#ffffff" }}>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", position: "relative" }}>
+                          <div style={{ position: "absolute", top: "16px", left: "20px", right: "20px", height: "2px", background: "#e2e8f0", zIndex: 0 }} />
+                          {[
+                            { num: 1, name: "General Info" },
+                            { num: 2, name: "Pain Points" },
+                            { num: 3, name: "Challenges" },
+                            { num: 4, name: "Staff Details" },
+                            { num: 5, name: "Outcomes" }
+                          ].map(s => (
+                            <div key={s.num} onClick={() => setBizStep(s.num)} style={{ zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", cursor: "pointer" }}>
+                              <div style={{
+                                width: "32px",
+                                height: "32px",
+                                borderRadius: "50%",
+                                background: bizStep === s.num ? "#2563eb" : (bizStep > s.num ? "#16a34a" : "#ffffff"),
+                                color: bizStep >= s.num ? "#ffffff" : "#64748b",
+                                border: `2px solid ${bizStep === s.num ? "#2563eb" : (bizStep > s.num ? "#16a34a" : "#cbd5e1")}`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontWeight: "800",
+                                fontSize: "0.85rem",
+                                transition: "all 0.15s ease"
+                              }}>
+                                {bizStep > s.num ? "✓" : s.num}
+                              </div>
+                              <span style={{ fontSize: "0.7rem", fontWeight: bizStep === s.num ? "800" : "600", color: bizStep === s.num ? "#2563eb" : "#64748b" }}>
+                                {s.name}
+                              </span>
+                            </div>
                           ))}
                         </div>
-
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>PURPOSE OF APPROACH</label>
-                          <textarea rows="3" value={bizForm.purposeOfApproach} onChange={e => setBizForm({...bizForm, purposeOfApproach: e.target.value})} placeholder="e.g. Custom order tracking delays, designer-craftsman handoffs..." style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
-                        </div>
                       </div>
-                    )}
 
-                    {/* SECTION 3: PRIMARY CHALLENGES */}
-                    {bizStep === 3 && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Section 3: Primary Challenges</h3>
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>DESCRIBE YOUR BIGGEST OPERATIONAL CHALLENGE</label>
-                          <textarea rows="5" value={bizForm.primaryChallenge} onChange={e => setBizForm({...bizForm, primaryChallenge: e.target.value})} placeholder="Describe how metal weight variance, inventory reconciliation, or sales tracking issues affect your daily workflow..." style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }} />
-                        </div>
+                      {/* Side Card Scrollable Content */}
+                      <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+
+                        {/* SECTION 1: GENERAL BUSINESS INFORMATION */}
+                        {bizStep === 1 && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>Section 1: General Business Information</h4>
+                            
+                            <div>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>JEWELLERY / BRAND COMPANY NAME</label>
+                              <input type="text" value={bizForm.companyName} onChange={e => setBizForm({...bizForm, companyName: e.target.value})} placeholder="e.g. Diamond Atelier" style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box" }} />
+                            </div>
+
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                              <div>
+                                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>HEAD OFFICE LOCATION (CITY)</label>
+
+                                {/* Autocomplete search input — keyword search like Google Maps */}
+                                <div style={{ position: "relative" }}>
+                                  <div style={{ display: "flex", alignItems: "center", border: `1px solid ${locationSuggestions.length > 0 ? "#2563eb" : "#cbd5e1"}`, borderRadius: "8px", overflow: "hidden", background: "#fff", transition: "border-color 0.15s" }}>
+                                    <div style={{ padding: "0 12px", color: "#94a3b8", display: "flex", alignItems: "center", flexShrink: 0 }}>
+                                      {isGeocodingHeadOffice
+                                        ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" style={{ animation: "spin 1s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                                        : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                                      }
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={bizForm.headOffice}
+                                      onChange={e => searchLocationByKeyword(e.target.value)}
+                                      onBlur={() => setTimeout(() => setLocationSuggestions([]), 200)}
+                                      placeholder="Type a city, area or address..."
+                                      style={{ flex: 1, padding: "10px 10px 10px 0", border: "none", outline: "none", fontSize: "0.9rem", background: "transparent" }}
+                                    />
+                                    {bizForm.headOffice && (
+                                      <button type="button" onClick={() => { setBizForm(p => ({...p, headOffice: ""})); setLocationSuggestions([]); }} style={{ padding: "0 10px", background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "1rem", lineHeight: 1 }}>×</button>
+                                    )}
+                                  </div>
+
+                                  {/* City suggestions dropdown */}
+                                  {locationSuggestions.length > 0 && (
+                                    <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)", zIndex: 9999, overflow: "hidden" }}>
+                                      {locationSuggestions.map((s, si) => {
+                                        const label = [s.address?.city || s.address?.town || s.address?.village || s.address?.county, s.address?.state].filter(Boolean).join(", ") || s.display_name.split(",")[0];
+                                        const sublabel = s.display_name.split(",").slice(0, 4).join(",");
+                                        return (
+                                          <button
+                                            key={si}
+                                            type="button"
+                                            onMouseDown={() => selectLocationSuggestion(s)}
+                                            style={{ display: "flex", alignItems: "flex-start", gap: "10px", width: "100%", padding: "10px 14px", background: "none", border: "none", borderBottom: si < locationSuggestions.length - 1 ? "1px solid #f1f5f9" : "none", cursor: "pointer", textAlign: "left" }}
+                                          >
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" style={{ flexShrink: 0, marginTop: "3px" }}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                              <div style={{ fontSize: "0.84rem", fontWeight: "700", color: "#0f172a", lineHeight: 1.3 }}>{label}</div>
+                                              <div style={{ fontSize: "0.72rem", color: "#64748b", lineHeight: 1.3, marginTop: "2px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{sublabel}</div>
+                                            </div>
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+
+                                  {/* No results hint */}
+                                  {locationSearchNoResults && !isGeocodingHeadOffice && bizForm.headOffice.length >= 2 && (
+                                    <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "10px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)", zIndex: 9999, padding: "12px 14px" }}>
+                                      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" style={{ flexShrink: 0, marginTop: "1px" }}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        <div>
+                                          <div style={{ fontSize: "0.8rem", fontWeight: "700", color: "#92400e", marginBottom: "3px" }}>No location found for this search</div>
+                                          <div style={{ fontSize: "0.74rem", color: "#78350f", lineHeight: 1.5 }}>Maps search works by <strong>city or area name</strong>, not business names. Try searching:<br/>
+                                            <span style={{ display: "inline-block", marginTop: "4px", background: "#fef3c7", padding: "2px 8px", borderRadius: "4px", fontWeight: "700", cursor: "pointer" }}
+                                              onMouseDown={() => searchLocationByKeyword("Seoni, Madhya Pradesh")}>
+                                              Seoni, Madhya Pradesh
+                                            </span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* GPS Coordinates Badge - only shown after actual selection */}
+                                {locationCoordsFetched && bizForm.headOfficeCoordinates?.lat && (
+                                  <div style={{ marginTop: "8px", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "7px 12px", borderRadius: "6px", fontSize: "0.75rem", color: "#166534", display: "flex", alignItems: "center", gap: "6px" }}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    <span><strong>GPS:</strong> {bizForm.headOfficeCoordinates.lat}\u00b0 N, {bizForm.headOfficeCoordinates.lng}\u00b0 E</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div>
+                                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>SHOWROOM COUNT</label>
+                                <input type="text" value={bizForm.showroomCount} onChange={e => setBizForm({...bizForm, showroomCount: e.target.value})} placeholder="e.g. 5" style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box" }} />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>BOUTIQUE & BRANCH LOCATIONS</label>
+                              <input type="text" value={bizForm.locations} onChange={e => setBizForm({...bizForm, locations: e.target.value})} placeholder="Type city names (e.g. Mumbai, Jaipur, Delhi)..." style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box" }} />
+                            </div>
+
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                              <div>
+                                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>HEADCOUNT / EMPLOYEES</label>
+                                <input type="text" value={bizForm.headcount} onChange={e => setBizForm({...bizForm, headcount: e.target.value})} placeholder="e.g. 150" style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box" }} />
+                              </div>
+                              <div>
+                                <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>ANNUAL REVENUE BRACKET (INR)</label>
+                                <select value={bizForm.revenueBracket} onChange={e => setBizForm({...bizForm, revenueBracket: e.target.value})} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box" }}>
+                                  <option>Select Range...</option>
+                                  <option>Under ₹5 Cr</option>
+                                  <option>₹5 Cr - ₹25 Cr</option>
+                                  <option>₹25 Cr - ₹50 Cr</option>
+                                  <option>₹50 Cr - ₹100 Cr</option>
+                                  <option>Above ₹100 Cr</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>PRIMARY BUSINESS MODEL</label>
+                              <select value={bizForm.businessModel} onChange={e => setBizForm({...bizForm, businessModel: e.target.value})} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box" }}>
+                                <option>Pure Retailer</option>
+                                <option>Wholesaler</option>
+                                <option>Manufacturer</option>
+                                <option>Omnichannel Retail + Wholesale</option>
+                                <option>Bespoke Atelier</option>
+                              </select>
+                            </div>
+
+                            <div>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>LINE OF BUSINESS / PRODUCT LINE</label>
+                              <input type="text" value={bizForm.productLine} onChange={e => setBizForm({...bizForm, productLine: e.target.value})} placeholder="e.g. Fine Diamond Jewellery, Solitaires, Polki & Gold" style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box" }} />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* SECTION 2: CORE OPERATIONAL PAIN POINTS */}
+                        {bizStep === 2 && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>Section 2: Core Operational Pain Points</h4>
+                            <p style={{ margin: 0, fontSize: "0.83rem", color: "#64748b" }}>Select all areas where your brand experiences operational friction or losses:</p>
+                            
+                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                              {["Inventory", "Sales", "Manufacturing", "CRM", "HR", "Finance", "Marketing", "Procurement", "Reporting"].map(area => (
+                                <label key={area} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.88rem", color: "#0f172a", cursor: "pointer" }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={bizForm.painPoints.includes(area)}
+                                    onChange={e => {
+                                      if (e.target.checked) setBizForm({...bizForm, painPoints: [...bizForm.painPoints, area]});
+                                      else setBizForm({...bizForm, painPoints: bizForm.painPoints.filter(p => p !== area)});
+                                    }}
+                                  />
+                                  {area}
+                                </label>
+                              ))}
+                            </div>
+
+                            <div>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>PURPOSE OF APPROACH</label>
+                              <textarea rows="4" value={bizForm.purposeOfApproach} onChange={e => setBizForm({...bizForm, purposeOfApproach: e.target.value})} placeholder="e.g. Custom order tracking delays, designer-craftsman handoffs..." style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }} />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* SECTION 3: PRIMARY CHALLENGES */}
+                        {bizStep === 3 && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>Section 3: Primary Challenges</h4>
+                            <div>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>DESCRIBE YOUR BIGGEST OPERATIONAL CHALLENGE</label>
+                              <textarea rows="6" value={bizForm.primaryChallenge} onChange={e => setBizForm({...bizForm, primaryChallenge: e.target.value})} placeholder="Describe how metal weight variance, inventory reconciliation, or sales tracking issues affect your daily workflow..." style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }} />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* SECTION 4: STAFF & TEAM DETAILS */}
+                        {bizStep === 4 && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>Section 4: Staff & Team Member Details</h4>
+                              <button
+                                type="button"
+                                onClick={() => setBizForm({...bizForm, staffMembers: [...bizForm.staffMembers, { name: "", designation: "", contact: "" }]})}
+                                style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "6px 12px", borderRadius: "6px", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer" }}
+                              >
+                                + Add Staff Row
+                              </button>
+                            </div>
+
+                            {bizForm.staffMembers.map((staff, idx) => (
+                              <div key={idx} style={{ display: "flex", flexDirection: "column", gap: "8px", padding: "12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0", position: "relative" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                  <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "#64748b" }}>STAFF MEMBER #{idx + 1}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const updated = bizForm.staffMembers.filter((_, i) => i !== idx);
+                                      setBizForm({...bizForm, staffMembers: updated});
+                                    }}
+                                    style={{ background: "#fef2f2", color: "#ef4444", border: "1px solid #fecaca", borderRadius: "6px", padding: "2px 8px", cursor: "pointer", fontWeight: "700", fontSize: "0.75rem" }}
+                                  >
+                                    Remove
+                                  </button>
+                                </div>
+                                <input type="text" placeholder="Name (e.g. Anant Sarraf)" value={staff.name} onChange={e => {
+                                  const updated = [...bizForm.staffMembers];
+                                  updated[idx].name = e.target.value;
+                                  setBizForm({...bizForm, staffMembers: updated});
+                                }} style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }} />
+
+                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                                  <input type="text" placeholder="Designation" value={staff.designation} onChange={e => {
+                                    const updated = [...bizForm.staffMembers];
+                                    updated[idx].designation = e.target.value;
+                                    setBizForm({...bizForm, staffMembers: updated});
+                                  }} style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }} />
+
+                                  <input type="text" placeholder="Phone Contact" value={staff.contact} onChange={e => {
+                                    const updated = [...bizForm.staffMembers];
+                                    updated[idx].contact = e.target.value;
+                                    setBizForm({...bizForm, staffMembers: updated});
+                                  }} style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* SECTION 5: EXPECTED TRANSFORMATION OUTCOMES */}
+                        {bizStep === 5 && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                            <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>Section 5: Expected Transformation Outcomes</h4>
+                            
+                            <div style={{ display: "flex", flexDirection: "column", gap: "10px", background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                              {[
+                                "Minimise Stock Shrinkage & Metal Leakage",
+                                "Boost Showroom Conversion & Average Bill Value (ABV)",
+                                "Real-time Showroom & Stock Ledger Reconciliation",
+                                "Atelier Digitization & Job Card Weight-Tracking",
+                                "Standardise Showroom & Vault Operations Compliance",
+                                "Reduce Metal Melting & Handcrafting Wastage"
+                              ].map(outcome => (
+                                <label key={outcome} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.88rem", color: "#0f172a", cursor: "pointer" }}>
+                                  <input
+                                    type="checkbox"
+                                    checked={bizForm.transformationOutcomes.includes(outcome)}
+                                    onChange={e => {
+                                      if (e.target.checked) setBizForm({...bizForm, transformationOutcomes: [...bizForm.transformationOutcomes, outcome]});
+                                      else setBizForm({...bizForm, transformationOutcomes: bizForm.transformationOutcomes.filter(t => t !== outcome)});
+                                    }}
+                                  />
+                                  {outcome}
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
 
-                    {/* SECTION 4: STAFF & TEAM DETAILS */}
-                    {bizStep === 4 && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Section 4: Staff & Team Member Details</h3>
+                      {/* Sticky Footer Controls */}
+                      <div style={{ padding: "16px 24px", borderTop: "1px solid #e2e8f0", background: "#f8fafc", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (bizStep > 1) setBizStep(bizStep - 1);
+                            else setIsEditingBusinessDetails(false);
+                          }}
+                          style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "9px 18px", borderRadius: "8px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", color: "#334155" }}
+                        >
+                          {bizStep === 1 ? "Cancel" : "← Back"}
+                        </button>
+
+                        {bizStep < 5 ? (
                           <button
                             type="button"
-                            onClick={() => setBizForm({...bizForm, staffMembers: [...bizForm.staffMembers, { name: "", designation: "", contact: "" }]})}
-                            style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "6px 12px", borderRadius: "6px", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer" }}
+                            onClick={() => setBizStep(bizStep + 1)}
+                            style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "9px 22px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer" }}
                           >
-                            + Add Staff Row
+                            Next →
                           </button>
-                        </div>
-
-                        {bizForm.staffMembers.map((staff, idx) => (
-                          <div key={idx} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 40px", gap: "10px", alignItems: "center" }}>
-                            <input type="text" placeholder="Name (e.g. Anant Sarraf)" value={staff.name} onChange={e => {
-                              const updated = [...bizForm.staffMembers];
-                              updated[idx].name = e.target.value;
-                              setBizForm({...bizForm, staffMembers: updated});
-                            }} style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }} />
-
-                            <input type="text" placeholder="Designation (e.g. Store Manager)" value={staff.designation} onChange={e => {
-                              const updated = [...bizForm.staffMembers];
-                              updated[idx].designation = e.target.value;
-                              setBizForm({...bizForm, staffMembers: updated});
-                            }} style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }} />
-
-                            <input type="text" placeholder="Contact Phone" value={staff.contact} onChange={e => {
-                              const updated = [...bizForm.staffMembers];
-                              updated[idx].contact = e.target.value;
-                              setBizForm({...bizForm, staffMembers: updated});
-                            }} style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem" }} />
-
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const updated = bizForm.staffMembers.filter((_, i) => i !== idx);
-                                setBizForm({...bizForm, staffMembers: updated});
-                              }}
-                              style={{ background: "#fef2f2", color: "#ef4444", border: "1px solid #fecaca", borderRadius: "6px", padding: "6px", cursor: "pointer", fontWeight: "700" }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleSaveBusinessDetailsForm}
+                            style={{ background: "#16a34a", color: "#ffffff", border: "none", padding: "9px 22px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                          >
+                            Save Business Details ✓
+                          </button>
+                        )}
                       </div>
-                    )}
-
-                    {/* SECTION 5: EXPECTED TRANSFORMATION OUTCOMES */}
-                    {bizStep === 5 && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                        <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Section 5: Expected Transformation Outcomes</h3>
-                        
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                          {[
-                            "Minimise Stock Shrinkage & Metal Leakage",
-                            "Boost Showroom Conversion & Average Bill Value (ABV)",
-                            "Real-time Showroom & Stock Ledger Reconciliation",
-                            "Atelier Digitization & Job Card Weight-Tracking",
-                            "Standardise Showroom & Vault Operations Compliance",
-                            "Reduce Metal Melting & Handcrafting Wastage"
-                          ].map(outcome => (
-                            <label key={outcome} style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.88rem", color: "#0f172a", cursor: "pointer" }}>
-                              <input
-                                type="checkbox"
-                                checked={bizForm.transformationOutcomes.includes(outcome)}
-                                onChange={e => {
-                                  if (e.target.checked) setBizForm({...bizForm, transformationOutcomes: [...bizForm.transformationOutcomes, outcome]});
-                                  else setBizForm({...bizForm, transformationOutcomes: bizForm.transformationOutcomes.filter(t => t !== outcome)});
-                                }}
-                              />
-                              {outcome}
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Form Navigation Controls */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (bizStep > 1) setBizStep(bizStep - 1);
-                          else setIsEditingBusinessDetails(false);
-                        }}
-                        style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "10px 20px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
-                      >
-                        {bizStep === 1 ? "Cancel" : "Back"}
-                      </button>
-
-                      {bizStep < 5 ? (
-                        <button
-                          type="button"
-                          onClick={() => setBizStep(bizStep + 1)}
-                          style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "10px 24px", borderRadius: "8px", fontWeight: "800", cursor: "pointer" }}
-                        >
-                          Next →
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleSaveBusinessDetailsForm}
-                          style={{ background: "#16a34a", color: "#ffffff", border: "none", padding: "10px 24px", borderRadius: "8px", fontWeight: "800", cursor: "pointer" }}
-                        >
-                          Save Business Details ✓
-                        </button>
-                      )}
-                    </div>
-
-                  </div>
-                ) : (
-                  /* STRUCTURED PROFILE DISPLAY CARD */
-                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
-                        Business Profile & Operational Structure
-                      </h3>
-
-                      <button
-                        onClick={handleStartEditBusiness}
-                        style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "8px 16px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
-                      >
-                        ✏️ Edit Business Details
-                      </button>
-                    </div>
-
-                    {/* Business Grid Info */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-                      <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                        <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>PRIMARY BUSINESS MODEL</span>
-                        <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#2563eb" }}>
-                          {bizDetails.businessModel || "Pure Retailer"}
-                        </p>
-                      </div>
-
-                      <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                        <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>BOUTIQUES & HEAD OFFICE</span>
-                        <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
-                          {bizDetails.showroomCount || "5"} Showrooms ({bizDetails.headOffice || "Mumbai"})
-                        </p>
-                      </div>
-
-                      <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                        <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>ANNUAL REVENUE & HEADCOUNT</span>
-                        <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
-                          {bizDetails.revenueBracket || "₹25 Cr - ₹50 Cr"} ({bizDetails.headcount || "150"} Staff)
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Staff Roster Table */}
-                    <div style={{ border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px", background: "#ffffff" }}>
-                      <h4 style={{ margin: "0 0 12px 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>Key Executive & Staff Details Roster</h4>
-                      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
-                        <thead>
-                          <tr style={{ background: "#f8fafc", borderBottom: "2px solid #e2e8f0", textAlign: "left", color: "#475569" }}>
-                            <th style={{ padding: "8px" }}>Name</th>
-                            <th style={{ padding: "8px" }}>Designation</th>
-                            <th style={{ padding: "8px" }}>Contact Phone</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {(bizDetails.staffMembers || [
-                            { name: effectiveProject.pocName || "Anant Sarraf", designation: "Managing Director", contact: effectiveProject.pocContact || "9876543210" }
-                          ]).map((s, sIdx) => (
-                            <tr key={sIdx} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                              <td style={{ padding: "8px", fontWeight: "700", color: "#0f172a" }}>{s.name}</td>
-                              <td style={{ padding: "8px", color: "#2563eb", fontWeight: "600" }}>{s.designation}</td>
-                              <td style={{ padding: "8px", color: "#475569" }}>📞 {s.contact}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Purpose & Challenges Card */}
-                    <div style={{ background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", border: "1px solid #bfdbfe", padding: "18px", borderRadius: "12px" }}>
-                      <h4 style={{ margin: "0 0 8px 0", fontSize: "0.95rem", fontWeight: "800", color: "#1e3a8a" }}>
-                        Engagement Purpose & Primary Operational Challenges
-                      </h4>
-                      <p style={{ margin: "0 0 10px 0", fontSize: "0.88rem", color: "#1e40af", lineHeight: "1.5" }}>
-                        {bizDetails.purposeOfApproach || effectiveProject.engagementPurpose || "Client approached for consulting advisory, stock reconciliation, and retail growth."}
-                      </p>
-                      <p style={{ margin: 0, fontSize: "0.85rem", color: "#1e3a8a", fontStyle: "italic" }}>
-                        "Challenge: {bizDetails.primaryChallenge || "Describe how metal weight variance, inventory reconciliation, or sales tracking issues affect daily workflow..."}"
-                      </p>
                     </div>
                   </div>
                 )}
@@ -1483,11 +1758,144 @@ export default function ProjectsView() {
               </div>
             )}
 
-            {activeProjectTab === "expenses" && (
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
-                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Linked Expenses Billed to Project</h3>
-              </div>
-            )}
+            {activeProjectTab === "expenses" && (() => {
+              const linkedExps = expenses.filter(e =>
+                e.projectId === effectiveProject.id ||
+                e.projectName === effectiveProject.name ||
+                (e.title && e.title.toLowerCase().includes(effectiveProject.name.toLowerCase()))
+              );
+              const totalAmountBilled = linkedExps.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px", fontFamily: "'Poppins', sans-serif" }}>
+                  
+                  {/* Top Expense KPI Cards */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+                    <div style={{ background: "#ffffff", padding: "18px", borderRadius: "10px", border: "1px solid #e2e8f0", borderLeft: "4px solid #5b5fc7" }}>
+                      <div style={{ fontSize: "0.74rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase" }}>Total Billed Expenses</div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
+                        ₹{totalAmountBilled.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                      </div>
+                    </div>
+
+                    <div style={{ background: "#ffffff", padding: "18px", borderRadius: "10px", border: "1px solid #e2e8f0", borderLeft: "4px solid #10b981" }}>
+                      <div style={{ fontSize: "0.74rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase" }}>Total Claims Logged</div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
+                        {linkedExps.length} Claims
+                      </div>
+                    </div>
+
+                    <div style={{ background: "#ffffff", padding: "18px", borderRadius: "10px", border: "1px solid #e2e8f0", borderLeft: "4px solid #f59e0b" }}>
+                      <div style={{ fontSize: "0.74rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase" }}>Pending Approval</div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
+                        {linkedExps.filter(e => e.status === "Pending").length} Pending
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Linked Expenses Table Card */}
+                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", overflow: "hidden", padding: "20px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "600", color: "#0f172a", fontFamily: "'Poppins', sans-serif" }}>
+                          Linked Expenses Billed to {effectiveProject.name}
+                        </h3>
+                        <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                          All consultant travel, food, stay, and site expenses linked with project ID: <code style={{ background: "#eff6ff", color: "#2563eb", padding: "2px 6px", borderRadius: "4px" }}>{effectiveProject.id}</code>
+                        </p>
+                      </div>
+                    </div>
+
+                    {linkedExps.length === 0 ? (
+                      <div style={{ textAlign: "center", padding: "40px 20px", color: "#94a3b8" }}>
+                        <span style={{ fontSize: "2rem", display: "block", marginBottom: "8px" }}>🧾</span>
+                        <span style={{ fontSize: "0.9rem", fontWeight: "500" }}>No expenses logged against this client project yet.</span>
+                      </div>
+                    ) : (
+                      <div style={{ overflowX: "auto" }}>
+                        <table className="luxury-table" style={{ width: "100%", fontSize: "0.82rem" }}>
+                          <thead>
+                            <tr style={{ background: "#f8fafc" }}>
+                              <th style={{ padding: "10px" }}>Linked Ref ID</th>
+                              <th style={{ padding: "10px" }}>Date</th>
+                              <th style={{ padding: "10px" }}>Consultant</th>
+                              <th style={{ padding: "10px" }}>Category</th>
+                              <th style={{ padding: "10px" }}>Expense Title / Description</th>
+                              <th style={{ padding: "10px", textAlign: "right" }}>Amount</th>
+                              <th style={{ padding: "10px", textAlign: "center" }}>Receipts</th>
+                              <th style={{ padding: "10px" }}>Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {linkedExps.map((exp) => {
+                              const emp = users.find(u => u.id === exp.employeeId) || { name: "Consultant" };
+                              const fileCount = (exp.receipts && exp.receipts.length) || (exp.receiptUrl || exp.receipt ? 1 : 0);
+                              const isPending = exp.status === "Pending";
+                              const isApproved = exp.status === "Approved";
+
+                              return (
+                                <tr key={exp.id} style={{ height: "46px" }}>
+                                  <td style={{ fontWeight: "600", color: "#2563eb", fontFamily: "monospace", fontSize: "0.78rem" }}>
+                                    {exp.id}
+                                  </td>
+                                  <td>{exp.expenseDate || exp.date || exp.submittedDate}</td>
+                                  <td>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                      <img src={emp.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(emp.name)}`} alt={emp.name} style={{ width: "22px", height: "22px", borderRadius: "50%" }} />
+                                      <span style={{ fontWeight: "500" }}>{emp.name}</span>
+                                    </div>
+                                  </td>
+                                  <td>
+                                    <span style={{
+                                      fontSize: "0.72rem",
+                                      fontWeight: "500",
+                                      padding: "3px 8px",
+                                      borderRadius: "4px",
+                                      background: exp.category === "Food" ? "#fef3c7" : exp.category === "Accommodation" ? "#e0f2fe" : "#f1f5f9",
+                                      color: exp.category === "Food" ? "#b45309" : exp.category === "Accommodation" ? "#0369a1" : "#475569"
+                                    }}>
+                                      {exp.category}
+                                    </span>
+                                  </td>
+                                  <td style={{ color: "#334155", maxWidth: "240px", wordBreak: "break-word" }}>
+                                    {exp.title || exp.description}
+                                  </td>
+                                  <td style={{ textAlign: "right", fontWeight: "600", color: "#0f172a" }}>
+                                    ₹{Number(exp.amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                                  </td>
+                                  <td style={{ textAlign: "center" }}>
+                                    {fileCount > 0 ? (
+                                      <span style={{ fontSize: "0.75rem", background: "#dcfce7", color: "#15803d", padding: "2px 8px", borderRadius: "4px", fontWeight: "500" }}>
+                                        📎 {fileCount} file{fileCount !== 1 ? "s" : ""}
+                                      </span>
+                                    ) : (
+                                      <span style={{ color: "#cbd5e1" }}>No receipts</span>
+                                    )}
+                                  </td>
+                                  <td>
+                                    <span style={{
+                                      fontSize: "0.72rem",
+                                      fontWeight: "600",
+                                      padding: "3px 8px",
+                                      borderRadius: "4px",
+                                      background: isApproved ? "#dcfce7" : isPending ? "#fef9c3" : "#fee2e2",
+                                      color: isApproved ? "#15803d" : isPending ? "#a16207" : "#b91c1c"
+                                    }}>
+                                      {exp.status}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+              );
+            })()}
 
         </div>
 

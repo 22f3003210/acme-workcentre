@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { useApp, getTodayDateString } from "../context/AppContext";
 import LedgerReports from "../components/LedgerReports";
 import ProjectsView from "./ProjectsView";
 import RecruiterView from "./RecruiterView";
@@ -240,7 +240,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [selectedSwipeRecordId, setSelectedSwipeRecordId] = useState(null);
   const [swipeSearchQuery, setSwipeSearchQuery] = useState("");
   const [selectedSwipeCheckboxes, setSelectedSwipeCheckboxes] = useState([]);
-  const [swipeDateFilter, setSwipeDateFilter] = useState("20 Jul 2026 - 20 Jul 2026");
+  const [swipeDateFilter, setSwipeDateFilter] = useState(getTodayDateString());
   const [swipePayrollMonth, setSwipePayrollMonth] = useState("Jul'26");
   const [swipeDateType, setSwipeDateType] = useState("Swipe Date");
   const [swipeStatusFilter, setSwipeStatusFilter] = useState("All");
@@ -353,6 +353,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [directAdvanceEmployee, setDirectAdvanceEmployee] = useState("");
   const [directAdvanceAmount, setDirectAdvanceAmount] = useState("");
   const [directAdvancePurpose, setDirectAdvancePurpose] = useState("");
+  const [directAdvanceDate, setDirectAdvanceDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [tasksBoardTab, setTasksBoardTab] = useState("Received"); // 'Received', 'Entrusted', 'Query Raised'
   const [taskFormTab, setTaskFormTab] = useState("task"); // 'task', 'query'
   const [taskDurationTab, setTaskDurationTab] = useState("One Time");
@@ -365,45 +366,51 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [newAllocatedEmployee, setNewAllocatedEmployee] = useState("");
   const [newAcceptanceRequired, setNewAcceptanceRequired] = useState(false);
 
-  // Tasks list state
-  const [tasksList, setTasksList] = useState([
-    {
-      id: "task-demo-1",
-      subject: "Review Karam's July Expense Report",
-      description: "Audit and verify food & travel expense claims matching July 2026 logs.",
-      duration: "One Time",
-      dueDate: new Date().toISOString().split("T")[0], // Due Today!
-      status: "Due Today",
-      assignedRole: "Accounts Manager",
-      assignedEmployee: "Amin Gagani"
-    },
-    {
-      id: "task-demo-2",
-      subject: "Setup Quarterly Sourcing Budgets",
-      description: "Establish petty cash refill thresholds for advisory consultants.",
-      duration: "Quarterly",
-      dueDate: "2026-08-15", // Due Later!
-      status: "Due Later",
-      assignedRole: "HR Admin",
-      assignedEmployee: "Sayyada"
-    }
-  ]);
+  // Tasks list state (persisted)
+  const [tasksList, setTasksList] = useState(() => {
+    try {
+      const saved = localStorage.getItem("workcentre_admin_tasks");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return [
+      {
+        id: "task-demo-1",
+        subject: "Review Karam's July Expense Report",
+        description: "Audit and verify food & travel expense claims matching July 2026 logs.",
+        duration: "One Time",
+        dueDate: new Date().toISOString().split("T")[0],
+        status: "Due Today",
+        assignedRole: "Accounts Manager",
+        assignedEmployee: "Amin Gagani"
+      },
+      {
+        id: "task-demo-2",
+        subject: "Setup Quarterly Sourcing Budgets",
+        description: "Establish petty cash refill thresholds for advisory consultants.",
+        duration: "Quarterly",
+        dueDate: "2026-08-15",
+        status: "Due Later",
+        assignedRole: "HR Admin",
+        assignedEmployee: "Sayyada"
+      }
+    ];
+  });
+
+  React.useEffect(() => {
+    localStorage.setItem("workcentre_admin_tasks", JSON.stringify(tasksList));
+  }, [tasksList]);
 
   // Project management states
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectCode, setNewProjectCode] = useState("");
   const [newProjectClient, setNewProjectClient] = useState("");
-  const [projectsList, setProjectsList] = useState([
-    { id: "proj-1", name: "DCB Bank Sourcing Account", code: "DCB-SR-01", client: "DCB Bank Ltd" },
-    { id: "proj-2", name: "Operations Advisory Project", code: "OPS-AD-04", client: "Acme Corporate" }
-  ]);
 
   React.useEffect(() => {
     setAdminViewMode("dashboard");
   }, [activeTab]);
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getTodayDateString();
   const consultantsList = users.filter(u => u.role === "Consultant");
 
   // Calculate attendance summaries for compliance checks
@@ -502,11 +509,12 @@ export default function AdminView({ activeTab, setActiveTab }) {
       setToast({ message: "Please fill all fields.", type: "error" });
       return;
     }
-    requestAdvance(directAdvanceEmployee, directAdvanceAmount, directAdvancePurpose);
-    setToast({ message: "Advance allocated! Please confirm approval in the Requests list below.", type: "success" });
+    requestAdvance(directAdvanceEmployee, directAdvanceAmount, directAdvancePurpose, "Approved", directAdvanceDate, currentUser?.name || "ACME Admin");
+    setToast({ message: `₹${directAdvanceAmount} petty cash allocated for ${directAdvanceDate}!`, type: "success" });
     setDirectAdvanceEmployee("");
     setDirectAdvanceAmount("");
     setDirectAdvancePurpose("");
+    setDirectAdvanceDate(new Date().toISOString().split("T")[0]);
     setShowDirectAdvanceModal(false);
   };
 
@@ -611,7 +619,49 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
   return (
     <div className="admin-view-container">
-      {adminViewMode === "dashboard" && activeTab === "dashboard" && (
+      {adminViewMode === "dashboard" && activeTab === "dashboard" && (() => {
+        const uniqueClients = Array.from(new Set((projects || []).map(p => p.client || p.name).filter(Boolean)));
+        const consultantUsers = users.filter(u => u.role === "Consultant");
+        const todayDateStr = getTodayDateString();
+        const tasksDueToday = tasksList.filter(t => t.dueDate === todayDateStr);
+        const tasksOverdue = tasksList.filter(t => t.dueDate && t.dueDate < todayDateStr && t.status !== "Completed");
+        const upcomingTasks = tasksList.filter(t => t.dueDate && t.dueDate > todayDateStr).sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate)).slice(0, 5);
+        
+        const activeProjectsCount = (projects || []).length;
+        const avgProgress = activeProjectsCount > 0 
+          ? Math.round((projects || []).reduce((acc, p) => acc + (Number(p.progress) || 0), 0) / activeProjectsCount) 
+          : 0;
+
+        const pendingExpensesCount = (expenses || []).filter(e => e.status === "Pending").length;
+        const pendingAdvancesCount = (advanceRequests || []).filter(a => a.status === "Pending").length;
+        const pendingLeavesCount = (leaveRequests || []).filter(l => l.status === "pending").length;
+        const totalNotifCount = pendingExpensesCount + pendingAdvancesCount + pendingLeavesCount;
+
+        const topProjects = (projects || []).slice(0, 5);
+
+        // Phase distribution
+        const phasesCount = {
+          "Vision Alignment": (projects || []).filter(p => p.phase === "Vision Alignment" || p.currentPhase === "Vision Alignment").length,
+          "Business Audit": (projects || []).filter(p => p.phase === "Business Audit" || p.currentPhase === "Business Audit").length,
+          "Process Design": (projects || []).filter(p => p.phase === "Process Design" || p.currentPhase === "Process Design").length,
+          "Implementation": (projects || []).filter(p => p.phase === "Implementation" || p.currentPhase === "Implementation").length,
+          "KPI Monitoring": (projects || []).filter(p => p.phase === "KPI Monitoring" || p.currentPhase === "KPI Monitoring").length
+        };
+
+        const topRisks = (projects || [])
+          .map(p => ({
+            client: p.client || p.name,
+            risk: p.progress < 30 ? "Delayed Setup" : p.progress > 80 && p.phase !== "KPI Monitoring" ? "Testing Overdue" : "Data Pending",
+            severity: p.progress < 30 ? "High" : "Medium",
+            status: "Open"
+          }))
+          .slice(0, 4);
+
+        if (topRisks.length === 0) {
+          topRisks.push({ client: "None", risk: "All systems go", severity: "Low", status: "Closed" });
+        }
+
+        return (
         <div className="project-management-dashboard" style={{ display: "flex", flexDirection: "column", gap: "20px", fontFamily: "Inter, sans-serif", color: "#0f172a" }}>
           
           {/* ------------------------------------------------------------- */}
@@ -627,106 +677,86 @@ export default function AdminView({ activeTab, setActiveTab }) {
               </p>
             </div>
 
-            {/* Right Filters & Date Range Controls */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <select style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 12px", fontSize: "0.82rem", fontWeight: "600", color: "#334155", cursor: "pointer" }}>
                 <option>All Clients</option>
-                <option>GNV Jewellers</option>
-                <option>ABC Jewellers</option>
-                <option>SS Jewellers</option>
-                <option>KLM Jewellers</option>
+                {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
 
               <select style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 12px", fontSize: "0.82rem", fontWeight: "600", color: "#334155", cursor: "pointer" }}>
                 <option>All Phases</option>
-                <option>Vision Alignment</option>
-                <option>Business Audit</option>
-                <option>Process Design</option>
-                <option>Implementation</option>
+                {Object.keys(phasesCount).map(p => <option key={p} value={p}>{p}</option>)}
               </select>
 
               <select style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 12px", fontSize: "0.82rem", fontWeight: "600", color: "#334155", cursor: "pointer" }}>
                 <option>All Consultants</option>
-                <option>Abraham</option>
-                <option>Rahul</option>
-                <option>Sai</option>
-                <option>Arjun</option>
+                {consultantUsers.map(c => <option key={c.id || c.name} value={c.name}>{c.name}</option>)}
               </select>
 
-              <button type="button" style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 14px", fontSize: "0.82rem", fontWeight: "700", color: "#334155", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}>
-                📅 Jul 28 - Aug 03, 2026
-              </button>
-
               {/* Notification Bell Badge */}
-              <div style={{ position: "relative", cursor: "pointer", background: "#f8fafc", border: "1px solid #e2e8f0", width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <div style={{ position: "relative", cursor: "pointer", background: "#f8fafc", border: "1px solid #e2e8f0", width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => setActiveTab("expenses")}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#475569" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                <span style={{ position: "absolute", top: "-4px", right: "-4px", background: "#ef4444", color: "#ffffff", fontSize: "0.65rem", fontWeight: "800", width: "16px", height: "16px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>8</span>
+                {totalNotifCount > 0 && (
+                  <span style={{ position: "absolute", top: "-4px", right: "-4px", background: "#ef4444", color: "#ffffff", fontSize: "0.65rem", fontWeight: "800", width: "16px", height: "16px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}>{totalNotifCount}</span>
+                )}
               </div>
             </div>
           </div>
 
           {/* ------------------------------------------------------------- */}
-          {/* 2. TOP METRIC STRIP (5 PRIMARY CIRCULAR ICON CARDS)            */}
+          {/* 2. TOP METRIC STRIP                                            */}
           {/* ------------------------------------------------------------- */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "16px" }}>
             
-            {/* Card 1: Active Projects */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px 20px", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
               <div style={{ background: "#2563eb", color: "#ffffff", width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 10px rgba(37,99,235,0.3)" }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
               </div>
               <div>
                 <div style={{ fontSize: "0.76rem", color: "#64748b", fontWeight: "700" }}>Active Projects</div>
-                <div style={{ fontSize: "1.7rem", fontWeight: "800", color: "#0f172a", lineHeight: 1.1, marginTop: "2px" }}>{projects?.length > 0 ? projects.length : 24}</div>
-                <div style={{ fontSize: "0.72rem", color: "#16a34a", fontWeight: "700", marginTop: "4px" }}>▲ 12% vs last month</div>
+                <div style={{ fontSize: "1.7rem", fontWeight: "800", color: "#0f172a", lineHeight: 1.1, marginTop: "2px" }}>{activeProjectsCount}</div>
               </div>
             </div>
 
-            {/* Card 2: Active Clients */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px 20px", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
               <div style={{ background: "#16a34a", color: "#ffffff", width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 10px rgba(22,163,74,0.3)" }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </div>
               <div>
                 <div style={{ fontSize: "0.76rem", color: "#64748b", fontWeight: "700" }}>Active Clients</div>
-                <div style={{ fontSize: "1.7rem", fontWeight: "800", color: "#0f172a", lineHeight: 1.1, marginTop: "2px" }}>18</div>
-                <div style={{ fontSize: "0.72rem", color: "#16a34a", fontWeight: "700", marginTop: "4px" }}>▲ 8% vs last month</div>
+                <div style={{ fontSize: "1.7rem", fontWeight: "800", color: "#0f172a", lineHeight: 1.1, marginTop: "2px" }}>{uniqueClients.length}</div>
               </div>
             </div>
 
-            {/* Card 3: Tasks Today */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px 20px", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
               <div style={{ background: "#ea580c", color: "#ffffff", width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 10px rgba(234,88,12,0.3)" }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
               </div>
               <div>
                 <div style={{ fontSize: "0.76rem", color: "#64748b", fontWeight: "700" }}>Tasks Today</div>
-                <div style={{ fontSize: "1.7rem", fontWeight: "800", color: "#0f172a", lineHeight: 1.1, marginTop: "2px" }}>14</div>
-                <div style={{ fontSize: "0.72rem", color: "#ea580c", fontWeight: "700", marginTop: "4px" }}>▲ 3 pending</div>
+                <div style={{ fontSize: "1.7rem", fontWeight: "800", color: "#0f172a", lineHeight: 1.1, marginTop: "2px" }}>{tasksDueToday.length}</div>
+                <div style={{ fontSize: "0.72rem", color: "#ea580c", fontWeight: "700", marginTop: "4px" }}>▲ {tasksDueToday.filter(t => t.status !== "Completed").length} pending</div>
               </div>
             </div>
 
-            {/* Card 4: Overdue Tasks */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px 20px", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
               <div style={{ background: "#dc2626", color: "#ffffff", width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 10px rgba(220,38,38,0.3)" }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               </div>
               <div>
                 <div style={{ fontSize: "0.76rem", color: "#64748b", fontWeight: "700" }}>Overdue Tasks</div>
-                <div style={{ fontSize: "1.7rem", fontWeight: "800", color: "#0f172a", lineHeight: 1.1, marginTop: "2px" }}>4</div>
-                <div style={{ fontSize: "0.72rem", color: "#16a34a", fontWeight: "700", marginTop: "4px" }}>▼ 2 resolved</div>
+                <div style={{ fontSize: "1.7rem", fontWeight: "800", color: "#0f172a", lineHeight: 1.1, marginTop: "2px" }}>{tasksOverdue.length}</div>
+                {tasksOverdue.length === 0 && <div style={{ fontSize: "0.72rem", color: "#16a34a", fontWeight: "700", marginTop: "4px" }}>🟢 All on track</div>}
               </div>
             </div>
 
-            {/* Card 5: Avg. Progress */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px 20px", display: "flex", alignItems: "center", gap: "16px", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
               <div style={{ background: "#9333ea", color: "#ffffff", width: "48px", height: "48px", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 10px rgba(147,51,234,0.3)" }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
               </div>
               <div>
                 <div style={{ fontSize: "0.76rem", color: "#64748b", fontWeight: "700" }}>Avg. Progress</div>
-                <div style={{ fontSize: "1.7rem", fontWeight: "800", color: "#0f172a", lineHeight: 1.1, marginTop: "2px" }}>68%</div>
-                <div style={{ fontSize: "0.72rem", color: "#16a34a", fontWeight: "700", marginTop: "4px" }}>▲ 6% vs last month</div>
+                <div style={{ fontSize: "1.7rem", fontWeight: "800", color: "#0f172a", lineHeight: 1.1, marginTop: "2px" }}>{avgProgress}%</div>
               </div>
             </div>
 
@@ -737,7 +767,6 @@ export default function AdminView({ activeTab, setActiveTab }) {
           {/* ------------------------------------------------------------- */}
           <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: "20px" }}>
             
-            {/* Left 4 Secondary Stat Cards */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "12px" }}>
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "14px", display: "flex", alignItems: "center", gap: "12px" }}>
                 <div style={{ background: "#f0fdf4", color: "#16a34a", width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -745,8 +774,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 </div>
                 <div>
                   <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "700" }}>Meetings Today</div>
-                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>3</div>
-                  <div style={{ fontSize: "0.68rem", color: "#16a34a", fontWeight: "700" }}>▲ 1 completed</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>{tasksDueToday.length > 0 ? 1 : 0}</div>
                 </div>
               </div>
 
@@ -756,8 +784,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 </div>
                 <div>
                   <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "700" }}>Deliverables Due</div>
-                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>5</div>
-                  <div style={{ fontSize: "0.68rem", color: "#ea580c", fontWeight: "700" }}>▲ 2 pending</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>{upcomingTasks.length}</div>
                 </div>
               </div>
 
@@ -766,9 +793,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "700" }}>Risks Open</div>
-                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>6</div>
-                  <div style={{ fontSize: "0.68rem", color: "#9333ea", fontWeight: "700" }}>▲ 1 new risk</div>
+                  <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "700" }}>Pending Requests</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>{totalNotifCount}</div>
                 </div>
               </div>
 
@@ -777,14 +803,12 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "700" }}>Client Feedback</div>
-                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>4</div>
-                  <div style={{ fontSize: "0.68rem", color: "#2563eb", fontWeight: "700" }}>▲ 2 pending</div>
+                  <div style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "700" }}>Active Team</div>
+                  <div style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>{consultantUsers.length}</div>
                 </div>
               </div>
             </div>
 
-            {/* Right QUICK LINKS Panel */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "16px 20px" }}>
               <div style={{ fontSize: "0.75rem", fontWeight: "800", color: "#1e293b", letterSpacing: "0.5px", marginBottom: "10px" }}>
                 QUICK LINKS
@@ -804,19 +828,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     key={item.label}
                     type="button"
                     onClick={() => setActiveTab(item.tab)}
-                    style={{
-                      background: "#f8fafc",
-                      border: "1px solid #e2e8f0",
-                      borderRadius: "8px",
-                      padding: "7px 10px",
-                      fontSize: "0.76rem",
-                      fontWeight: "700",
-                      color: "#334155",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px"
-                    }}
+                    style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "7px 10px", fontSize: "0.76rem", fontWeight: "700", color: "#334155", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
                   >
                     <span>{item.icon}</span>
                     <span>{item.label}</span>
@@ -828,53 +840,33 @@ export default function AdminView({ activeTab, setActiveTab }) {
           </div>
 
           {/* ------------------------------------------------------------- */}
-          {/* 4. MIDDLE OPERATIONS GRID (3 PANELS: TASKS & CLIENTS)          */}
+          {/* 4. MIDDLE OPERATIONS GRID                                      */}
           {/* ------------------------------------------------------------- */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
             
-            {/* Panel 1: TODAY'S TASKS */}
+            {/* TODAY'S TASKS */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                 <h4 style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>TODAY'S TASKS</h4>
                 <button type="button" onClick={() => setActiveTab("projects")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", fontSize: "0.78rem", cursor: "pointer" }}>View All</button>
               </div>
 
+              {tasksDueToday.length > 0 ? (
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #cbd5e1", textAlign: "left", color: "#64748b" }}>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Task</th>
-                    <th style={{ padding: "6px 4px", fontWeight: "800" }}>Client</th>
-                    <th style={{ padding: "6px 4px", fontWeight: "800" }}>Priority</th>
-                    <th style={{ padding: "6px 4px", fontWeight: "800" }}>Due Time</th>
+                    <th style={{ padding: "6px 4px", fontWeight: "800" }}>Assigned</th>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { task: "Store Audit Visit", client: "GNV Jewellers", priority: "High", time: "10:00 AM", status: "Pending" },
-                    { task: "Inventory Verification", client: "ABC Jewellers", priority: "High", time: "12:00 PM", status: "In Progress" },
-                    { task: "SOP Documentation", client: "SS Jewellers", priority: "Medium", time: "03:00 PM", status: "Pending" },
-                    { task: "CRM Review Meeting", client: "KLM Jewellers", priority: "Low", time: "05:00 PM", status: "Pending" }
-                  ].map((row, idx) => (
+                  {tasksDueToday.map((row, idx) => (
                     <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "10px 4px", fontWeight: "800", color: "#0f172a" }}>{row.task}</td>
-                      <td style={{ padding: "10px 4px", color: "#475569" }}>{row.client}</td>
+                      <td style={{ padding: "10px 4px", fontWeight: "800", color: "#0f172a" }}>{row.subject}</td>
+                      <td style={{ padding: "10px 4px", color: "#475569" }}>{row.assignedEmployee}</td>
                       <td style={{ padding: "10px 4px" }}>
-                        <span style={{
-                          background: row.priority === "High" ? "#fef2f2" : row.priority === "Medium" ? "#fff7ed" : "#f0fdf4",
-                          color: row.priority === "High" ? "#dc2626" : row.priority === "Medium" ? "#ea580c" : "#16a34a",
-                          padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: "800"
-                        }}>
-                          {row.priority}
-                        </span>
-                      </td>
-                      <td style={{ padding: "10px 4px", color: "#64748b", fontWeight: "600" }}>{row.time}</td>
-                      <td style={{ padding: "10px 4px" }}>
-                        <span style={{
-                          background: row.status === "In Progress" ? "#eff6ff" : "#fff7ed",
-                          color: row.status === "In Progress" ? "#2563eb" : "#d97706",
-                          padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: "800"
-                        }}>
+                        <span style={{ background: row.status === "In Progress" ? "#eff6ff" : row.status === "Completed" ? "#f0fdf4" : "#fff7ed", color: row.status === "In Progress" ? "#2563eb" : row.status === "Completed" ? "#16a34a" : "#d97706", padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: "800" }}>
                           {row.status}
                         </span>
                       </td>
@@ -882,182 +874,153 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   ))}
                 </tbody>
               </table>
-
-              <div style={{ marginTop: "auto", paddingTop: "12px", borderTop: "1px solid #f1f5f9", display: "flex", gap: "12px", fontSize: "0.72rem", color: "#475569", fontWeight: "700" }}>
-                <span>Total <strong>14</strong></span>
-                <span>🟢 Completed <strong>5</strong></span>
-                <span>🟡 Pending <strong>6</strong></span>
-                <span>🔴 Overdue <strong>3</strong></span>
-              </div>
+              ) : (
+                <div style={{ padding: "32px 16px", textAlign: "center", color: "#64748b", margin: "auto" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px auto", color: "#94a3b8" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                  </div>
+                  <div style={{ fontWeight: "700", fontSize: "0.85rem", color: "#334155" }}>No tasks due today</div>
+                </div>
+              )}
             </div>
 
-            {/* Panel 2: UPCOMING TASKS (NEXT 7 DAYS) */}
+            {/* UPCOMING TASKS */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-                <h4 style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>UPCOMING TASKS (NEXT 7 DAYS)</h4>
+                <h4 style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>UPCOMING TASKS</h4>
                 <button type="button" onClick={() => setActiveTab("projects")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", fontSize: "0.78rem", cursor: "pointer" }}>View All</button>
               </div>
 
+              {upcomingTasks.length > 0 ? (
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #cbd5e1", textAlign: "left", color: "#64748b" }}>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Date</th>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Task</th>
-                    <th style={{ padding: "6px 4px", fontWeight: "800" }}>Client</th>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Consultant</th>
-                    <th style={{ padding: "6px 4px", fontWeight: "800" }}>Priority</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { date: "02 Aug", task: "Inventory Audit", client: "GNV Jewellers", consultant: "Abraham", priority: "High" },
-                    { date: "03 Aug", task: "SOP Review", client: "SS Jewellers", consultant: "Rahul", priority: "Medium" },
-                    { date: "05 Aug", task: "Training Session", client: "KLM Jewellers", consultant: "Sai", priority: "Low" },
-                    { date: "06 Aug", task: "CRM Go Live", client: "ABC Jewellers", consultant: "Arjun", priority: "High" },
-                    { date: "07 Aug", task: "Store Layout Review", client: "XYZ Jewellers", consultant: "Rahul", priority: "Medium" }
-                  ].map((row, idx) => (
+                  {upcomingTasks.map((row, idx) => (
                     <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "8px 4px", color: "#64748b", fontWeight: "700" }}>{row.date}</td>
-                      <td style={{ padding: "8px 4px", fontWeight: "800", color: "#0f172a" }}>{row.task}</td>
-                      <td style={{ padding: "8px 4px", color: "#475569" }}>{row.client}</td>
-                      <td style={{ padding: "8px 4px", color: "#475569", fontWeight: "600" }}>{row.consultant}</td>
-                      <td style={{ padding: "8px 4px" }}>
-                        <span style={{
-                          background: row.priority === "High" ? "#fef2f2" : row.priority === "Medium" ? "#fff7ed" : "#f0fdf4",
-                          color: row.priority === "High" ? "#dc2626" : row.priority === "Medium" ? "#ea580c" : "#16a34a",
-                          padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: "800"
-                        }}>
-                          {row.priority}
-                        </span>
-                      </td>
+                      <td style={{ padding: "8px 4px", color: "#64748b", fontWeight: "700" }}>{new Date(row.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</td>
+                      <td style={{ padding: "8px 4px", fontWeight: "800", color: "#0f172a" }}>{row.subject}</td>
+                      <td style={{ padding: "8px 4px", color: "#475569", fontWeight: "600" }}>{row.assignedEmployee}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-
-              <div style={{ marginTop: "auto", paddingTop: "12px", borderTop: "1px solid #f1f5f9", display: "flex", gap: "14px", fontSize: "0.72rem", color: "#475569", fontWeight: "700" }}>
-                <span>This Week <strong>9</strong></span>
-                <span>🟡 Due Tomorrow <strong>3</strong></span>
-                <span>🟣 Milestones <strong>2</strong></span>
-              </div>
+              ) : (
+                <div style={{ padding: "32px 16px", textAlign: "center", color: "#64748b", margin: "auto" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px auto", color: "#94a3b8" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  </div>
+                  <div style={{ fontWeight: "700", fontSize: "0.85rem", color: "#334155" }}>No upcoming tasks scheduled</div>
+                </div>
+              )}
             </div>
 
-            {/* Panel 3: HIGH PRIORITY CLIENTS */}
+            {/* HIGH PRIORITY CLIENTS */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-                <h4 style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>HIGH PRIORITY CLIENTS</h4>
+                <h4 style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>ACTIVE PROJECTS</h4>
                 <button type="button" onClick={() => setActiveTab("projects")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", fontSize: "0.78rem", cursor: "pointer" }}>View All</button>
               </div>
 
+              {topProjects.length > 0 ? (
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #cbd5e1", textAlign: "left", color: "#64748b" }}>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Client</th>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Phase</th>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Progress</th>
-                    <th style={{ padding: "6px 4px", fontWeight: "800" }}>Health Score</th>
-                    <th style={{ padding: "6px 4px", fontWeight: "800" }}>Next Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { client: "GNV Jewellers", phase: "Implementation", progress: 72, health: 85, action: "Audit Visit" },
-                    { client: "ABC Jewellers", phase: "Process Design", progress: 64, health: 70, action: "SOP Approval" },
-                    { client: "SS Jewellers", phase: "Business Audit", progress: 45, health: 60, action: "Mgt. Meeting" },
-                    { client: "KLM Jewellers", phase: "Implementation", progress: 58, health: 75, action: "Training Plan" }
-                  ].map((row, idx) => (
+                  {topProjects.map((row, idx) => (
                     <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "10px 4px", fontWeight: "800", color: "#0f172a" }}>{row.client}</td>
-                      <td style={{ padding: "10px 4px", color: "#475569" }}>{row.phase}</td>
+                      <td style={{ padding: "10px 4px", fontWeight: "800", color: "#0f172a" }}>{row.client || row.name}</td>
+                      <td style={{ padding: "10px 4px", color: "#475569" }}>{row.phase || row.currentPhase || "Implementation"}</td>
                       <td style={{ padding: "10px 4px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <span style={{ fontWeight: "700", color: "#334155" }}>{row.progress}%</span>
+                          <span style={{ fontWeight: "700", color: "#334155" }}>{row.progress || 0}%</span>
                           <div style={{ width: "45px", height: "6px", background: "#e2e8f0", borderRadius: "3px", overflow: "hidden" }}>
-                            <div style={{ width: `${row.progress}%`, height: "100%", background: "#2563eb" }} />
+                            <div style={{ width: `${row.progress || 0}%`, height: "100%", background: "#2563eb" }} />
                           </div>
                         </div>
                       </td>
-                      <td style={{ padding: "10px 4px" }}>
-                        <span style={{
-                          background: row.health >= 75 ? "#f0fdf4" : row.health >= 65 ? "#fff7ed" : "#fef2f2",
-                          color: row.health >= 75 ? "#16a34a" : row.health >= 65 ? "#d97706" : "#dc2626",
-                          border: `1px solid ${row.health >= 75 ? "#bbf7d0" : row.health >= 65 ? "#fed7aa" : "#fecaca"}`,
-                          padding: "2px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: "800"
-                        }}>
-                          {row.health}%
-                        </span>
-                      </td>
-                      <td style={{ padding: "10px 4px", color: "#475569", fontWeight: "600" }}>{row.action}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-
-              <div style={{ marginTop: "auto", paddingTop: "12px", borderTop: "1px solid #f1f5f9", display: "flex", gap: "10px", fontSize: "0.68rem", color: "#475569", fontWeight: "700" }}>
-                <span>🔴 Critical (&lt;60%)</span>
-                <span>🟡 Needs Attention (60%-75%)</span>
-                <span>🟢 Healthy (&gt;75%)</span>
-              </div>
+              ) : (
+                <div style={{ padding: "32px 16px", textAlign: "center", color: "#64748b", margin: "auto" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px auto", color: "#94a3b8" }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                  </div>
+                  <div style={{ fontWeight: "700", fontSize: "0.85rem", color: "#334155" }}>No active projects</div>
+                </div>
+              )}
             </div>
 
           </div>
 
           {/* ------------------------------------------------------------- */}
-          {/* 5. BOTTOM OPERATIONS & ANALYTICS GRID (3 PANELS)             */}
+          {/* 5. BOTTOM OPERATIONS & ANALYTICS GRID                          */}
           {/* ------------------------------------------------------------- */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "20px" }}>
             
-            {/* Panel 1: TEAM PRODUCTIVITY */}
+            {/* TEAM PRODUCTIVITY */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                 <h4 style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>TEAM PRODUCTIVITY</h4>
                 <button type="button" onClick={() => setActiveTab("directory")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", fontSize: "0.78rem", cursor: "pointer" }}>View Report</button>
               </div>
 
+              {consultantUsers.length > 0 ? (
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid #cbd5e1", textAlign: "left", color: "#64748b" }}>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Consultant</th>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Tasks</th>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Done</th>
-                    <th style={{ padding: "6px 4px", fontWeight: "800" }}>Pending</th>
-                    <th style={{ padding: "6px 4px", fontWeight: "800" }}>Overdue</th>
                     <th style={{ padding: "6px 4px", fontWeight: "800" }}>Productivity</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    { name: "Abraham", assigned: 42, done: 39, pending: 2, overdue: 1, prod: 93 },
-                    { name: "Rahul", assigned: 35, done: 31, pending: 3, overdue: 1, prod: 89 },
-                    { name: "Sai", assigned: 28, done: 23, pending: 4, overdue: 1, prod: 82 },
-                    { name: "Arjun", assigned: 25, done: 20, pending: 3, overdue: 2, prod: 80 }
-                  ].map((c, i) => (
-                    <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "8px 4px", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
-                        <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#4f46e5", color: "#ffffff", fontSize: "0.7rem", fontWeight: "800", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          {c.name.charAt(0)}
-                        </div>
-                        {c.name}
-                      </td>
-                      <td style={{ padding: "8px 4px", fontWeight: "700" }}>{c.assigned}</td>
-                      <td style={{ padding: "8px 4px", color: "#16a34a", fontWeight: "700" }}>{c.done}</td>
-                      <td style={{ padding: "8px 4px", color: "#d97706", fontWeight: "700" }}>{c.pending}</td>
-                      <td style={{ padding: "8px 4px", color: "#dc2626", fontWeight: "700" }}>{c.overdue}</td>
-                      <td style={{ padding: "8px 4px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                          <div style={{ flex: 1, height: "6px", background: "#e2e8f0", borderRadius: "3px", overflow: "hidden" }}>
-                            <div style={{ width: `${c.prod}%`, height: "100%", background: "#16a34a" }} />
+                  {consultantUsers.map((c, i) => {
+                    const cTasks = tasksList.filter(t => t.assignedEmployee === c.name);
+                    const doneTasks = cTasks.filter(t => t.status === "Completed").length;
+                    const prod = cTasks.length > 0 ? Math.round((doneTasks / cTasks.length) * 100) : 100;
+                    return (
+                      <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ padding: "8px 4px", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#4f46e5", color: "#ffffff", fontSize: "0.7rem", fontWeight: "800", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            {c.name.charAt(0)}
                           </div>
-                          <span style={{ fontWeight: "800", color: "#16a34a" }}>{c.prod}%</span>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          {c.name}
+                        </td>
+                        <td style={{ padding: "8px 4px", fontWeight: "700" }}>{cTasks.length}</td>
+                        <td style={{ padding: "8px 4px", color: "#16a34a", fontWeight: "700" }}>{doneTasks}</td>
+                        <td style={{ padding: "8px 4px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <div style={{ flex: 1, height: "6px", background: "#e2e8f0", borderRadius: "3px", overflow: "hidden" }}>
+                              <div style={{ width: `${prod}%`, height: "100%", background: "#16a34a" }} />
+                            </div>
+                            <span style={{ fontWeight: "800", color: "#16a34a" }}>{prod}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
+              ) : (
+                <div style={{ padding: "32px 16px", textAlign: "center", color: "#64748b", margin: "auto" }}>No consultants registered.</div>
+              )}
             </div>
 
-            {/* Panel 2: PHASE DISTRIBUTION (DONUT CHART) */}
+            {/* PHASE DISTRIBUTION */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "flex", flexDirection: "column" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
                 <h4 style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>PHASE DISTRIBUTION</h4>
@@ -1065,30 +1028,25 @@ export default function AdminView({ activeTab, setActiveTab }) {
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                {/* SVG Donut Chart */}
                 <div style={{ position: "relative", width: "130px", height: "130px", flexShrink: 0 }}>
                   <svg width="130" height="130" viewBox="0 0 100 100">
                     <circle cx="50" cy="50" r="38" fill="none" stroke="#2563eb" strokeWidth="16" strokeDasharray="60 180" strokeDashoffset="0" />
                     <circle cx="50" cy="50" r="38" fill="none" stroke="#7c3aed" strokeWidth="16" strokeDasharray="50 190" strokeDashoffset="-60" />
                     <circle cx="50" cy="50" r="38" fill="none" stroke="#f59e0b" strokeWidth="16" strokeDasharray="40 200" strokeDashoffset="-110" />
                     <circle cx="50" cy="50" r="38" fill="none" stroke="#10b981" strokeWidth="16" strokeDasharray="40 200" strokeDashoffset="-150" />
-                    <circle cx="50" cy="50" r="38" fill="none" stroke="#ec4899" strokeWidth="16" strokeDasharray="50 190" strokeDashoffset="-190" />
                   </svg>
                   <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a", lineHeight: 1 }}>24</span>
+                    <span style={{ fontSize: "1.2rem", fontWeight: "800", color: "#0f172a", lineHeight: 1 }}>{activeProjectsCount}</span>
                     <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "700" }}>Projects</span>
                   </div>
                 </div>
 
-                {/* Donut Legend Breakdown */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "0.72rem", color: "#334155" }}>
                   {[
-                    { name: "Phase 1 - Vision Alignment", count: "3 (12%)", color: "#2563eb" },
-                    { name: "Phase 2 - Business Audit", count: "5 (21%)", color: "#7c3aed" },
-                    { name: "Phase 3 - Gap Analysis", count: "2 (8%)", color: "#f59e0b" },
-                    { name: "Phase 4 - Process Design", count: "4 (17%)", color: "#10b981" },
-                    { name: "Phase 5 - Implementation", count: "6 (25%)", color: "#ec4899" },
-                    { name: "Phase 6 - KPI Monitoring", count: "3 (12%)", color: "#6366f1" }
+                    { name: "Phase 1 - Vision Alignment", count: phasesCount["Vision Alignment"], color: "#2563eb" },
+                    { name: "Phase 2 - Business Audit", count: phasesCount["Business Audit"], color: "#7c3aed" },
+                    { name: "Phase 4 - Process Design", count: phasesCount["Process Design"], color: "#f59e0b" },
+                    { name: "Phase 5 - Implementation", count: phasesCount["Implementation"], color: "#10b981" }
                   ].map((p, idx) => (
                     <div key={idx} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                       <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: p.color, flexShrink: 0 }} />
@@ -1099,88 +1057,53 @@ export default function AdminView({ activeTab, setActiveTab }) {
               </div>
             </div>
 
-            {/* Panel 3: PRODUCTIVITY OVERVIEW & RECENT RISKS */}
+            {/* PRODUCTIVITY & RISKS */}
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-              
-              {/* Productivity Overview (3 Sparklines) */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column", gap: "10px" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <h4 style={{ fontSize: "0.85rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>PRODUCTIVITY OVERVIEW</h4>
                   <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700" }}>30 Days ∨</span>
                 </div>
-
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "8px" }}>
-                  {/* Sparkline 1 */}
                   <div style={{ background: "#f8fafc", padding: "8px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
                     <div style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "700" }}>Task Completion</div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", marginTop: "2px" }}>87% <span style={{ fontSize: "0.68rem", color: "#16a34a" }}>▲ 7%</span></div>
-                    <svg width="100%" height="20" viewBox="0 0 100 20" fill="none" style={{ marginTop: "4px" }}>
-                      <path d="M0 15 Q25 5, 50 12 T100 4" stroke="#16a34a" strokeWidth="2" fill="none" />
-                    </svg>
+                    <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", marginTop: "2px" }}>87%</div>
+                    <svg width="100%" height="20" viewBox="0 0 100 20" fill="none" style={{ marginTop: "4px" }}><path d="M0 15 Q25 5, 50 12 T100 4" stroke="#16a34a" strokeWidth="2" fill="none" /></svg>
                   </div>
-
-                  {/* Sparkline 2 */}
                   <div style={{ background: "#f8fafc", padding: "8px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
                     <div style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "700" }}>Consultant Util.</div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", marginTop: "2px" }}>84% <span style={{ fontSize: "0.68rem", color: "#9333ea" }}>▲ 5%</span></div>
-                    <svg width="100%" height="20" viewBox="0 0 100 20" fill="none" style={{ marginTop: "4px" }}>
-                      <path d="M0 12 Q25 18, 50 8 T100 5" stroke="#9333ea" strokeWidth="2" fill="none" />
-                    </svg>
+                    <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", marginTop: "2px" }}>84%</div>
+                    <svg width="100%" height="20" viewBox="0 0 100 20" fill="none" style={{ marginTop: "4px" }}><path d="M0 12 Q25 18, 50 8 T100 5" stroke="#9333ea" strokeWidth="2" fill="none" /></svg>
                   </div>
-
-                  {/* Sparkline 3 */}
                   <div style={{ background: "#f8fafc", padding: "8px", borderRadius: "8px", border: "1px solid #f1f5f9" }}>
                     <div style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "700" }}>Project Progress</div>
-                    <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", marginTop: "2px" }}>68% <span style={{ fontSize: "0.68rem", color: "#2563eb" }}>▲ 6%</span></div>
-                    <svg width="100%" height="20" viewBox="0 0 100 20" fill="none" style={{ marginTop: "4px" }}>
-                      <path d="M0 16 Q25 8, 50 14 T100 6" stroke="#2563eb" strokeWidth="2" fill="none" />
-                    </svg>
+                    <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", marginTop: "2px" }}>{avgProgress}%</div>
+                    <svg width="100%" height="20" viewBox="0 0 100 20" fill="none" style={{ marginTop: "4px" }}><path d="M0 16 Q25 8, 50 14 T100 6" stroke="#2563eb" strokeWidth="2" fill="none" /></svg>
                   </div>
                 </div>
               </div>
 
-              {/* Recent Risks Table */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                   <h4 style={{ fontSize: "0.85rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>RECENT RISKS</h4>
                   <button type="button" onClick={() => setActiveTab("projects")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", fontSize: "0.75rem", cursor: "pointer" }}>View All</button>
                 </div>
-
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.74rem" }}>
                   <thead>
                     <tr style={{ borderBottom: "1px solid #cbd5e1", textAlign: "left", color: "#64748b" }}>
                       <th style={{ padding: "4px", fontWeight: "800" }}>Risk</th>
                       <th style={{ padding: "4px", fontWeight: "800" }}>Client</th>
                       <th style={{ padding: "4px", fontWeight: "800" }}>Severity</th>
-                      <th style={{ padding: "4px", fontWeight: "800" }}>Status</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {[
-                      { risk: "Inventory Delay", client: "GNV Jewellers", severity: "High", status: "Open" },
-                      { risk: "SOP Approval Pending", client: "ABC Jewellers", severity: "Medium", status: "In Progress" },
-                      { risk: "Data Missing", client: "SS Jewellers", severity: "High", status: "Open" },
-                      { risk: "Staff Shortage", client: "KLM Jewellers", severity: "Low", status: "Monitoring" }
-                    ].map((rk, i) => (
+                    {topRisks.map((rk, i) => (
                       <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
                         <td style={{ padding: "6px 4px", fontWeight: "800", color: "#0f172a" }}>{rk.risk}</td>
                         <td style={{ padding: "6px 4px", color: "#475569" }}>{rk.client}</td>
                         <td style={{ padding: "6px 4px" }}>
-                          <span style={{
-                            background: rk.severity === "High" ? "#fef2f2" : rk.severity === "Medium" ? "#fff7ed" : "#f0fdf4",
-                            color: rk.severity === "High" ? "#dc2626" : rk.severity === "Medium" ? "#ea580c" : "#16a34a",
-                            padding: "1px 6px", borderRadius: "8px", fontWeight: "800", fontSize: "0.68rem"
-                          }}>
+                          <span style={{ background: rk.severity === "High" ? "#fef2f2" : rk.severity === "Medium" ? "#fff7ed" : "#f0fdf4", color: rk.severity === "High" ? "#dc2626" : rk.severity === "Medium" ? "#ea580c" : "#16a34a", padding: "1px 6px", borderRadius: "8px", fontWeight: "800", fontSize: "0.68rem" }}>
                             {rk.severity}
-                          </span>
-                        </td>
-                        <td style={{ padding: "6px 4px" }}>
-                          <span style={{
-                            background: rk.status === "Open" ? "#fef2f2" : rk.status === "In Progress" ? "#eff6ff" : "#fff7ed",
-                            color: rk.status === "Open" ? "#dc2626" : rk.status === "In Progress" ? "#2563eb" : "#d97706",
-                            padding: "1px 6px", borderRadius: "8px", fontWeight: "800", fontSize: "0.68rem"
-                          }}>
-                            {rk.status}
                           </span>
                         </td>
                       </tr>
@@ -1188,14 +1111,13 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   </tbody>
                 </table>
               </div>
-
             </div>
 
           </div>
 
         </div>
-      )}
-
+        );
+      })()}
       {adminViewMode === "tasks" && activeTab === "dashboard" && (
         <div className="sea-dashboard-container">
           <div className="tasks-board-container">
@@ -2209,13 +2131,18 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 </div>
               </div>
 
-              {/* Add Employee Number Series Modal Overlay (Matching Reference Screenshot 2) */}
+              {/* Add Employee Number Series Modal — Premium Redesign */}
               {showAddNumSeriesModal && (
-                <div className="task-modal-overlay">
-                  <div className="task-modal" style={{ maxWidth: "620px", padding: "24px" }}>
-                    <div className="task-modal-header" style={{ borderBottom: "1px solid #e2e8f0", paddingBottom: "14px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "600", color: "#0f172a" }}>Add Employee Number Series</h3>
-                      <button type="button" onClick={() => setShowAddNumSeriesModal(false)} className="close-btn" style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "#64748b" }}>&times;</button>
+                <div style={{ position: "fixed", inset: 0, background: "rgba(2,6,23,0.80)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+                  <div style={{ background: "#ffffff", borderRadius: "16px", width: "100%", maxWidth: "560px", boxShadow: "0 32px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,0,0,0.08)", overflow: "hidden" }}>
+
+                    {/* Gradient Header */}
+                    <div style={{ background: "linear-gradient(135deg, #5b50a1 0%, #7c3aed 100%)", padding: "22px 28px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div>
+                        <div style={{ fontSize: "1.15rem", fontWeight: "800", color: "#ffffff", letterSpacing: "-0.01em" }}>New Number Series</div>
+                        <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.7)", marginTop: "2px" }}>Define employee code format for a department</div>
+                      </div>
+                      <button type="button" onClick={() => setShowAddNumSeriesModal(false)} style={{ background: "rgba(255,255,255,0.15)", border: "none", borderRadius: "8px", width: "32px", height: "32px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: "1.1rem", fontWeight: "700" }}>×</button>
                     </div>
 
                     <form onSubmit={(e) => {
@@ -2233,182 +2160,112 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           status: newSeriesForm.status ? "Active" : "Inactive"
                         };
                         addNumberSeries(newEntry);
-                        setNewSeriesForm({
-                          seriesName: "",
-                          description: "",
-                          prefix: "",
-                          digits: "3",
-                          suffix: "",
-                          nextNumber: "101",
-                          department: "All Departments",
-                          status: true
-                        });
+                        setNewSeriesForm({ seriesName: "", description: "", prefix: "", digits: "3", suffix: "", nextNumber: "101", department: "All Departments", status: true });
                         setShowAddNumSeriesModal(false);
                       }
-                    }}>
-                      {/* Series Name */}
-                      <div className="form-group" style={{ marginBottom: "16px" }}>
-                        <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
-                          Series Name
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Series Name"
-                          value={newSeriesForm.seriesName}
-                          onChange={e => setNewSeriesForm({ ...newSeriesForm, seriesName: e.target.value })}
-                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
-                        />
+                    }} style={{ padding: "24px 28px" }}>
+
+                      {/* Series Name + Department row */}
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
+                        <div>
+                          <label style={{ fontSize: "0.72rem", fontWeight: "700", color: "#64748b", letterSpacing: "0.06em", display: "block", marginBottom: "6px" }}>SERIES NAME *</label>
+                          <input type="text" required placeholder="e.g. Consultant Series" value={newSeriesForm.seriesName}
+                            onChange={e => setNewSeriesForm({ ...newSeriesForm, seriesName: e.target.value })}
+                            style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "0.88rem", outline: "none", boxSizing: "border-box", transition: "border-color 0.2s" }}
+                            onFocus={e => e.target.style.borderColor = "#5b50a1"} onBlur={e => e.target.style.borderColor = "#e2e8f0"} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "0.72rem", fontWeight: "700", color: "#64748b", letterSpacing: "0.06em", display: "block", marginBottom: "6px" }}>DEPARTMENT</label>
+                          <select value={newSeriesForm.department} onChange={e => setNewSeriesForm({ ...newSeriesForm, department: e.target.value })}
+                            style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "0.88rem", background: "#fff", outline: "none", boxSizing: "border-box" }}>
+                            <option value="All Departments">All Departments</option>
+                            {departments.map((d, i) => { const name = typeof d === "string" ? d : d.name; return <option key={i} value={name}>{name}</option>; })}
+                          </select>
+                        </div>
                       </div>
 
                       {/* Description */}
-                      <div className="form-group" style={{ marginBottom: "16px" }}>
-                        <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
-                          Description
-                        </label>
-                        <textarea
-                          placeholder="Description"
-                          rows={2}
-                          value={newSeriesForm.description}
+                      <div style={{ marginBottom: "14px" }}>
+                        <label style={{ fontSize: "0.72rem", fontWeight: "700", color: "#64748b", letterSpacing: "0.06em", display: "block", marginBottom: "6px" }}>DESCRIPTION</label>
+                        <textarea placeholder="Brief description of this series..." rows={2} value={newSeriesForm.description}
                           onChange={e => setNewSeriesForm({ ...newSeriesForm, description: e.target.value })}
-                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", resize: "vertical", outline: "none" }}
-                        />
+                          style={{ width: "100%", padding: "10px 12px", border: "1.5px solid #e2e8f0", borderRadius: "8px", fontSize: "0.88rem", resize: "none", outline: "none", boxSizing: "border-box" }}
+                          onFocus={e => e.target.style.borderColor = "#5b50a1"} onBlur={e => e.target.style.borderColor = "#e2e8f0"} />
                       </div>
 
-                      {/* Department Select (Added per user requirement) */}
-                      <div className="form-group" style={{ marginBottom: "16px" }}>
-                        <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
-                          Department
-                        </label>
-                        <select
-                          value={newSeriesForm.department}
-                          onChange={e => setNewSeriesForm({ ...newSeriesForm, department: e.target.value })}
-                          style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", background: "#ffffff", outline: "none" }}
-                        >
-                          <option value="All Departments">All Departments</option>
-                          {departments.map((d, i) => {
-                            const name = typeof d === "string" ? d : d.name;
-                            return <option key={i} value={name}>{name}</option>;
-                          })}
-                        </select>
-                      </div>
+                      {/* Format Builder */}
+                      <div style={{ background: "#f8fafc", borderRadius: "10px", padding: "16px", marginBottom: "16px", border: "1px solid #e2e8f0" }}>
+                        <div style={{ fontSize: "0.72rem", fontWeight: "700", color: "#64748b", letterSpacing: "0.06em", marginBottom: "12px" }}>FORMAT BUILDER</div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr 1fr", gap: "10px" }}>
+                          <div>
+                            <label style={{ fontSize: "0.72rem", fontWeight: "600", color: "#94a3b8", display: "block", marginBottom: "5px" }}>PREFIX</label>
+                            <input type="text" placeholder="C" value={newSeriesForm.prefix}
+                              onChange={e => setNewSeriesForm({ ...newSeriesForm, prefix: e.target.value })}
+                              style={{ width: "100%", padding: "9px 11px", border: "1.5px solid #e2e8f0", borderRadius: "7px", fontSize: "0.9rem", fontWeight: "700", outline: "none", boxSizing: "border-box", textTransform: "uppercase", letterSpacing: "0.08em" }}
+                              onFocus={e => e.target.style.borderColor = "#5b50a1"} onBlur={e => e.target.style.borderColor = "#e2e8f0"} />
+                          </div>
+                          <div>
+                            <label style={{ fontSize: "0.72rem", fontWeight: "600", color: "#94a3b8", display: "block", marginBottom: "5px" }}>DIGITS</label>
+                            <select value={newSeriesForm.digits} onChange={e => setNewSeriesForm({ ...newSeriesForm, digits: e.target.value })}
+                              style={{ width: "100%", padding: "9px 11px", border: "1.5px solid #e2e8f0", borderRadius: "7px", fontSize: "0.88rem", background: "#fff", outline: "none", boxSizing: "border-box" }}>
+                              <option value="2">2 Digits</option>
+                              <option value="3">3 Digits</option>
+                              <option value="4">4 Digits</option>
+                              <option value="5">5 Digits</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label style={{ fontSize: "0.72rem", fontWeight: "600", color: "#94a3b8", display: "block", marginBottom: "5px" }}>SUFFIX</label>
+                            <input type="text" placeholder="-IN" value={newSeriesForm.suffix}
+                              onChange={e => setNewSeriesForm({ ...newSeriesForm, suffix: e.target.value })}
+                              style={{ width: "100%", padding: "9px 11px", border: "1.5px solid #e2e8f0", borderRadius: "7px", fontSize: "0.9rem", fontWeight: "700", outline: "none", boxSizing: "border-box" }}
+                              onFocus={e => e.target.style.borderColor = "#5b50a1"} onBlur={e => e.target.style.borderColor = "#e2e8f0"} />
+                          </div>
+                        </div>
 
-                      {/* Row: Prefix, Digits In Number, Suffix */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-                        <div>
-                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
-                            Prefix
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Prefix"
-                            value={newSeriesForm.prefix}
-                            onChange={e => setNewSeriesForm({ ...newSeriesForm, prefix: e.target.value })}
-                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
-                            Digits In Number
-                          </label>
-                          <select
-                            value={newSeriesForm.digits}
-                            onChange={e => setNewSeriesForm({ ...newSeriesForm, digits: e.target.value })}
-                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", background: "#ffffff", outline: "none" }}
-                          >
-                            <option value="2">2 Digits</option>
-                            <option value="3">3 Digits</option>
-                            <option value="4">4 Digits</option>
-                            <option value="5">5 Digits</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
-                            Suffix
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Suffix"
-                            value={newSeriesForm.suffix}
-                            onChange={e => setNewSeriesForm({ ...newSeriesForm, suffix: e.target.value })}
-                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
-                          />
+                        {/* Live Preview Card */}
+                        <div style={{ marginTop: "14px", background: "linear-gradient(135deg, #5b50a1, #7c3aed)", borderRadius: "10px", padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div>
+                            <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.65)", fontWeight: "700", letterSpacing: "0.08em", marginBottom: "4px" }}>LIVE PREVIEW</div>
+                            <div style={{ fontFamily: "monospace", fontSize: "1.6rem", fontWeight: "900", color: "#ffffff", letterSpacing: "0.14em" }}>
+                              {(() => {
+                                const p = (newSeriesForm.prefix || "").toUpperCase();
+                                const s = newSeriesForm.suffix || "";
+                                const d = parseInt(newSeriesForm.digits) || 3;
+                                const n = parseInt(newSeriesForm.nextNumber) || 1;
+                                return `${p}${String(n).padStart(d, "0")}${s}`;
+                              })()}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.65)", fontWeight: "700", letterSpacing: "0.08em", marginBottom: "4px" }}>STARTS FROM</div>
+                            <input type="number" min="1" value={newSeriesForm.nextNumber}
+                              onChange={e => setNewSeriesForm({ ...newSeriesForm, nextNumber: e.target.value })}
+                              style={{ width: "80px", padding: "6px 10px", borderRadius: "6px", border: "none", background: "rgba(255,255,255,0.2)", color: "#fff", fontSize: "1rem", fontWeight: "700", outline: "none", textAlign: "center" }} />
+                          </div>
                         </div>
                       </div>
 
-                      {/* Row: Next Number, Number Preview */}
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-                        <div>
-                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
-                            Next Number
-                          </label>
-                          <input
-                            type="number"
-                            placeholder="Next number"
-                            value={newSeriesForm.nextNumber}
-                            onChange={e => setNewSeriesForm({ ...newSeriesForm, nextNumber: e.target.value })}
-                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #cbd5e1", borderRadius: "4px", fontSize: "0.85rem", outline: "none" }}
-                          />
-                        </div>
-                        <div>
-                          <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#334155", display: "block", marginBottom: "6px" }}>
-                            Number Preview
-                          </label>
-                          <input
-                            type="text"
-                            readOnly
-                            value={`${newSeriesForm.prefix}${String(newSeriesForm.nextNumber || 101).padStart(parseInt(newSeriesForm.digits) || 3, "0")}${newSeriesForm.suffix}`}
-                            style={{ width: "100%", padding: "10px 12px", border: "1px solid #e2e8f0", borderRadius: "4px", fontSize: "0.85rem", background: "#f8fafc", color: "#475569", fontWeight: "700" }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Status Active Toggle Switch */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px" }}>
-                        <button
-                          type="button"
-                          onClick={() => setNewSeriesForm({ ...newSeriesForm, status: !newSeriesForm.status })}
-                          style={{
-                            width: "44px",
-                            height: "22px",
-                            borderRadius: "12px",
-                            background: newSeriesForm.status ? "#5b50a1" : "#cbd5e1",
-                            border: "none",
-                            position: "relative",
-                            cursor: "pointer",
-                            transition: "all 0.2s ease"
-                          }}
-                        >
-                          <div style={{
-                            width: "16px",
-                            height: "16px",
-                            borderRadius: "50%",
-                            background: "#ffffff",
-                            position: "absolute",
-                            top: "3px",
-                            left: newSeriesForm.status ? "25px" : "3px",
-                            transition: "all 0.2s ease"
-                          }} />
+                      {/* Status Toggle */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "22px" }}>
+                        <button type="button" onClick={() => setNewSeriesForm({ ...newSeriesForm, status: !newSeriesForm.status })}
+                          style={{ width: "44px", height: "24px", borderRadius: "12px", background: newSeriesForm.status ? "#5b50a1" : "#cbd5e1", border: "none", position: "relative", cursor: "pointer", transition: "background 0.25s", flexShrink: 0 }}>
+                          <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#fff", position: "absolute", top: "3px", left: newSeriesForm.status ? "23px" : "3px", transition: "left 0.25s", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
                         </button>
-                        <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155" }}>
-                          Status : {newSeriesForm.status ? "Active" : "Inactive"}
+                        <span style={{ fontSize: "0.85rem", fontWeight: "600", color: newSeriesForm.status ? "#5b50a1" : "#94a3b8" }}>
+                          {newSeriesForm.status ? "Active" : "Inactive"}
                         </span>
                       </div>
 
-                      {/* Modal Action Buttons */}
-                      <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
-                        <button
-                          type="button"
-                          onClick={() => setShowAddNumSeriesModal(false)}
-                          style={{ padding: "9px 20px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "4px", color: "#475569", fontWeight: "600", cursor: "pointer", fontSize: "0.85rem" }}
-                        >
+                      {/* Action Buttons */}
+                      <div style={{ display: "flex", gap: "10px", justifyContent: "flex-end", borderTop: "1px solid #f1f5f9", paddingTop: "18px" }}>
+                        <button type="button" onClick={() => setShowAddNumSeriesModal(false)}
+                          style={{ padding: "10px 22px", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: "8px", color: "#64748b", fontWeight: "600", cursor: "pointer", fontSize: "0.88rem" }}>
                           Cancel
                         </button>
-                        <button
-                          type="submit"
-                          style={{ padding: "9px 24px", background: "#5b50a1", border: "none", borderRadius: "4px", color: "#ffffff", fontWeight: "600", cursor: "pointer", fontSize: "0.85rem" }}
-                        >
-                          Save
+                        <button type="submit"
+                          style={{ padding: "10px 28px", background: "linear-gradient(135deg, #5b50a1, #7c3aed)", border: "none", borderRadius: "8px", color: "#fff", fontWeight: "700", cursor: "pointer", fontSize: "0.88rem", boxShadow: "0 4px 14px rgba(91,80,161,0.4)" }}>
+                          Save Series
                         </button>
                       </div>
                     </form>
@@ -2782,60 +2639,84 @@ export default function AdminView({ activeTab, setActiveTab }) {
               <h4 style={{ fontSize: "0.95rem", fontWeight: "500", color: "#334155", margin: "0 0 14px 0" }}>Not in yet today</h4>
               
               <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
-                {users.filter(u => u.role === "Consultant").length === 0 ? (
-                  <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: "400" }}>No consultants onboarded yet.</span>
-                ) : (
-                  users.filter(u => u.role === "Consultant").slice(0, 4).map(c => (
+                {(() => {
+                  const hasPunchedToday = (u) => {
+                    const att = u.attendance || [];
+                    return att.some(a => {
+                      if (!a.checkIn) return false;
+                      if (a.date === todayStr) return true;
+                      const d = new Date(a.date);
+                      const now = new Date();
+                      return !isNaN(d.getTime()) && (d.toDateString() === now.toDateString() || Math.abs(now.getTime() - d.getTime()) < 20 * 3600 * 1000);
+                    });
+                  };
+                  const notInYetList = users.filter(u => u.role === "Consultant" && !hasPunchedToday(u));
+                  if (users.filter(u => u.role === "Consultant").length === 0) {
+                    return <span style={{ fontSize: "0.85rem", color: "#64748b", fontWeight: "400" }}>No consultants onboarded yet.</span>;
+                  }
+                  if (notInYetList.length === 0) {
+                    return <span style={{ fontSize: "0.85rem", color: "#16a34a", fontWeight: "600" }}>🎉 All consultants have checked in today!</span>;
+                  }
+                  return notInYetList.map(c => (
                     <div key={c.id} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "6px" }}>
                       <img src={c.avatar} alt={c.name} style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover", border: "2px solid #e2e8f0" }} />
-                      <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: "400", maxWidth: "70px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {c.name.split(" ")[0]}...
+                      <span style={{ fontSize: "0.75rem", color: "#475569", fontWeight: "400", maxWidth: "75px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {c.name.split(" ")[0]}
                       </span>
                     </div>
-                  ))
-                )}
+                  ));
+                })()}
               </div>
             </div>
           </div>
 
           {/* Middle Row: 4 Stat Cards */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
-            {/* Stat 1: On Time */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#06b6d4" }} />
-              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Employees On Time today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
-                {swipeRecords.filter(r => r.status === "Approved" || r.status === "On Time" || r.status === "Present").length}
-              </span>
-            </div>
+          {(() => {
+            const onTimeCount = users.filter(u => (u.attendance || []).some(a => a.date === todayStr && (a.status === "Present" || a.status === "On Time"))).length;
+            const lateCount = users.filter(u => (u.attendance || []).some(a => a.date === todayStr && a.status === "Late")).length;
+            const leaveCount = users.filter(u => (u.attendance || []).some(a => a.date === todayStr && (a.status === "Leave" || a.status === "On Leave"))).length;
+            const remoteClockInsCount = users.filter(u => (u.attendance || []).some(a => a.date === todayStr && a.checkIn)).length;
 
-            {/* Stat 2: Late Arrivals */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#c026d3" }} />
-              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Late Arrivals today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
-                {swipeRecords.filter(r => r.status === "Late").length}
-              </span>
-            </div>
+            return (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px" }}>
+                {/* Stat 1: On Time */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                  <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#06b6d4" }} />
+                  <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Employees On Time today</span>
+                  <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
+                    {onTimeCount}
+                  </span>
+                </div>
 
-            {/* Stat 3: Employees on Leave today */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#84cc16" }} />
-              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Employees on Leave today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
-                {users.filter(u => (u.attendance || []).some(a => a.status === "Leave" || a.status === "On Leave")).length}
-              </span>
-            </div>
+                {/* Stat 2: Late Arrivals */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                  <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#c026d3" }} />
+                  <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Late Arrivals today</span>
+                  <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
+                    {lateCount}
+                  </span>
+                </div>
 
-            {/* Stat 4: Remote Clock-ins */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
-              <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#f97316" }} />
-              <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Remote Clock-ins today</span>
-              <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
-                {swipeRecords.filter(r => r.door && r.door.toLowerCase().includes("mobile")).length}
-              </span>
-            </div>
-          </div>
+                {/* Stat 3: Employees on Leave today */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                  <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#84cc16" }} />
+                  <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Employees on Leave today</span>
+                  <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
+                    {leaveCount}
+                  </span>
+                </div>
+
+                {/* Stat 4: Remote Clock-ins */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "18px 20px", position: "relative", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                  <div style={{ position: "absolute", left: 0, top: "16px", bottom: "16px", width: "4px", background: "#f97316" }} />
+                  <span style={{ fontSize: "0.82rem", color: "#64748b", fontWeight: "500", display: "block" }}>Remote Clock-ins today</span>
+                  <span style={{ fontSize: "1.8rem", fontWeight: "500", color: "#0f172a", marginTop: "6px", display: "block" }}>
+                    {remoteClockInsCount}
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* Section: Enterprise Attendance Grid */}
           <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "0px", padding: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -3333,17 +3214,52 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
           {/* Main Content Layout: Table + Right Sidebar Card */}
           {(() => {
-            let filteredSwipes = swipeRecords.filter(s => {
+            const dynamicSwipes = (users || []).flatMap(u => {
+              const attList = u.attendance || [];
+              return attList.map((a, idx) => ({
+                id: `live-swipe-${u.id}-${a.date}-${idx}`,
+                name: u.name,
+                code: u.empCode || `EMP-${u.id.substring(0,4)}`,
+                avatar: a.selfie || u.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+                time: a.checkIn,
+                date: a.date,
+                shift: u.shift || "General Shift",
+                inOut: a.checkOut ? "OUT" : "IN",
+                receivedTime: a.checkIn,
+                receivedDate: a.date,
+                door: a.projectName || a.locationName || u.location || "Main Gate POS",
+                fullAddress: a.locationName || `${a.projectName || "Shrut Jewellers"} - Seoni, MP`,
+                coordinates: a.coordinates || { lat: "22.0867", lng: "79.5432" },
+                status: a.status || "Present",
+                mobile: u.phone || "+91 98201 12345",
+                tasks: a.tasks || []
+              }));
+            });
+
+            const allSwipesList = [...dynamicSwipes, ...swipeRecords];
+
+            let filteredSwipes = allSwipesList.filter(s => {
               if (swipeSearchQuery.trim()) {
                 const q = swipeSearchQuery.toLowerCase().trim();
                 const match = s.name.toLowerCase().includes(q) || s.code.toLowerCase().includes(q) || s.shift.toLowerCase().includes(q);
                 if (!match) return false;
               }
-              if (swipeDateFilter.trim()) {
+              if (swipeDateFilter && swipeDateFilter.trim()) {
                 const dQ = swipeDateFilter.toLowerCase().trim();
-                const targetDateStr = swipeDateType === "Received Date" ? s.receivedDate.toLowerCase() : s.date.toLowerCase();
                 if (dQ !== "20 jul 2026 - 20 jul 2026" && dQ !== "") {
-                  if (!targetDateStr.includes(dQ) && !s.date.toLowerCase().includes(dQ)) return false;
+                  const targetDateStr = (swipeDateType === "Received Date" ? s.receivedDate : s.date) || "";
+                  
+                  const matchesDate = () => {
+                    if (targetDateStr.toLowerCase().includes(dQ) || dQ.includes(targetDateStr.toLowerCase())) return true;
+                    const filterDate = new Date(swipeDateFilter);
+                    const recordDate = new Date(targetDateStr);
+                    if (!isNaN(filterDate.getTime()) && !isNaN(recordDate.getTime())) {
+                      return filterDate.toISOString().split("T")[0] === recordDate.toISOString().split("T")[0];
+                    }
+                    return false;
+                  };
+
+                  if (!matchesDate()) return false;
                 }
               }
               if (swipeStatusFilter !== "All") {
@@ -3609,118 +3525,119 @@ export default function AdminView({ activeTab, setActiveTab }) {
         </div>
       )}
 
-      {/* MAP VIEW Standalone Full-Screen View Page (Matching Keka HR Screenshot 2 Exactly) */}
-      {showMapModal && mapModalSwipe && (
-        <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "#ffffff", zIndex: 10000, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-          
-          {/* Top Header Bar across full browser width */}
-          <div style={{ borderBottom: "1px solid #e2e8f0", padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", height: "48px", flexShrink: 0 }}>
-            <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155", letterSpacing: "0.03em" }}>
-              MAP VIEW - 12 JUL 2026 - {mapModalSwipe.name.toUpperCase()}
-            </span>
-            <button 
-              type="button" 
-              onClick={() => setShowMapModal(false)}
-              style={{ background: "none", border: "none", fontSize: "1.3rem", color: "#64748b", cursor: "pointer", fontWeight: "600", padding: "0 8px" }}
-              title="Close Map View"
-            >
-              ✕
-            </button>
-          </div>
+      {/* MAP VIEW Standalone Full-Screen View Page */}
+      {showMapModal && mapModalSwipe && (() => {
+        const lat = mapModalSwipe.coordinates?.lat || "22.0867";
+        const lng = mapModalSwipe.coordinates?.lng || "79.5432";
+        const mapEmbedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
 
-          {/* Full-Height Standalone Page Layout (Timeline Sidebar + 100% Height Map Canvas) */}
-          <div style={{ flex: 1, display: "grid", gridTemplateColumns: "260px 1fr", overflow: "hidden", height: "calc(100vh - 48px)" }}>
+        return (
+          <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "#ffffff", zIndex: 10000, display: "flex", flexDirection: "column", overflow: "hidden" }}>
             
-            {/* Left Column: Full-Height Timeline Sidebar */}
-            <div style={{ background: "#ffffff", borderRight: "1px solid #e2e8f0", padding: "20px 18px", display: "flex", flexDirection: "column", gap: "20px", overflowY: "auto" }}>
-              
-              {/* Section 1: HBJ MEHDIPATNAM */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155", letterSpacing: "0.02em" }}>HBJ MEHDIPATNAM</div>
-                <div style={{ fontSize: "0.76rem", color: "#16a34a", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span>↙</span> <span>10:22 AM</span>
-                </div>
-                <div style={{ fontSize: "0.76rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span>↗</span> <span>9:40 PM</span>
-                </div>
-              </div>
-
-              {/* Section 2: REMOTE CLOCK IN */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
-                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155", letterSpacing: "0.02em" }}>REMOTE CLOCK IN</div>
-                <div style={{ fontSize: "0.76rem", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    <span>↙</span> <span>8:52 PM</span>
-                  </div>
-                  <span style={{ background: "#64748b", color: "#ffffff", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: "700" }}>B</span>
-                </div>
-                <div style={{ fontSize: "0.7rem", color: "#94a3b8" }}>17.398873,78.447274</div>
-                <div style={{ fontSize: "0.76rem", color: "#ef4444", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span>↗</span> <span>9:40 PM</span>
-                </div>
-              </div>
-
-              {/* Section 3: LOCATION PUNCH */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
-                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155", letterSpacing: "0.02em" }}>LOCATION PUNCH</div>
-                
-                {[
-                  { time: "8:52 PM", coords: "17.398865,78.447267", badge: "E" },
-                  { time: "10:26 AM", coords: "17.422621,78.461908", badge: "I" },
-                  { time: "10:41 AM", coords: "17.398775,78.447284", badge: "J" },
-                  { time: "10:56 AM", coords: "17.398707,78.447291", badge: "K" },
-                  { time: "11:11 AM", coords: "17.398707,78.447291", badge: "L" },
-                  { time: "11:26 AM", coords: "17.398682,78.447309", badge: "M" }
-                ].map((punch) => (
-                  <div key={punch.badge} style={{ display: "flex", flexDirection: "column", gap: "2px", borderBottom: "1px dashed #f1f5f9", paddingBottom: "6px" }}>
-                    <div style={{ fontSize: "0.76rem", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span>↙</span> <span>{punch.time}</span>
-                      </div>
-                      <span style={{ background: "#64748b", color: "#ffffff", width: "20px", height: "20px", borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: "700" }}>{punch.badge}</span>
-                    </div>
-                    <div style={{ fontSize: "0.7rem", color: "#94a3b8" }}>{punch.coords}</div>
-                  </div>
-                ))}
-              </div>
-
+            {/* Top Header Bar across full browser width */}
+            <div style={{ borderBottom: "1px solid #e2e8f0", padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", height: "48px", flexShrink: 0 }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155", letterSpacing: "0.03em" }}>
+                MAP VIEW - {mapModalSwipe.date || getTodayDateString()} - {mapModalSwipe.name.toUpperCase()}
+              </span>
+              <button 
+                type="button" 
+                onClick={() => setShowMapModal(false)}
+                style={{ background: "none", border: "none", fontSize: "1.3rem", color: "#64748b", cursor: "pointer", fontWeight: "600", padding: "0 8px" }}
+                title="Close Map View"
+              >
+                ✕
+              </button>
             </div>
 
-            {/* Right Column: Full-Width Full-Height Google Maps Canvas (Matching Screenshot 2 Exactly) */}
-            <div style={{ position: "relative", width: "100%", height: "100%", background: "#e5e3df", overflow: "hidden" }}>
+            {/* Full-Height Standalone Page Layout */}
+            <div style={{ flex: 1, display: "grid", gridTemplateColumns: "300px 1fr", overflow: "hidden", height: "calc(100vh - 48px)" }}>
               
-              {/* Full-Height Authentic Google Maps Embed API Iframe */}
-              <iframe 
-                title="Full Screen Google Maps Location View"
-                width="100%" 
-                height="100%" 
-                style={{ border: 0, width: "100%", height: "100%" }}
-                loading="lazy"
-                allowFullScreen
-                src="https://maps.google.com/maps?q=17.422754,78.462235&amp;z=16&amp;output=embed"
-              />
+              {/* Left Column: Full-Height Timeline Sidebar */}
+              <div style={{ background: "#ffffff", borderRight: "1px solid #e2e8f0", padding: "20px 18px", display: "flex", flexDirection: "column", gap: "20px", overflowY: "auto" }}>
+                
+                {/* Section 1: SITE / LOCATION PUNCH */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "#0f172a" }}>
+                    📍 {mapModalSwipe.door || mapModalSwipe.fullAddress || "Site Visit"}
+                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                    {mapModalSwipe.fullAddress}
+                  </div>
+                </div>
 
-              {/* On-Map Photo Overlay Popup Card (Matching Reference Screenshot 1 & 2) */}
-              <div style={{ position: "absolute", top: "30px", left: "50%", transform: "translateX(-50%)", background: "#ffffff", borderRadius: "8px", border: "1px solid #cbd5e1", padding: "14px", boxShadow: "0 12px 30px rgba(0,0,0,0.25)", width: "260px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 10 }}>
-                <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                  <span onClick={() => setShowMapModal(false)} style={{ cursor: "pointer", fontSize: "0.95rem", color: "#64748b", fontWeight: "700" }}>✕</span>
+                {/* Section 2: PUNCH DETAILS */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155", letterSpacing: "0.02em" }}>ATTENDANCE PUNCH DETAILS</div>
+                  <div style={{ fontSize: "0.78rem", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>Check In Time:</span> <strong>{mapModalSwipe.time || mapModalSwipe.receivedTime}</strong>
+                  </div>
+                  <div style={{ fontSize: "0.78rem", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>Status:</span> 
+                    <span style={{ padding: "2px 8px", borderRadius: "4px", background: "#dcfce7", color: "#15803d", fontWeight: "700", fontSize: "0.7rem" }}>
+                      {mapModalSwipe.status || "Present"}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
+                    GPS Coordinates: {lat}, {lng}
+                  </div>
                 </div>
-                <img 
-                  src={mapModalSwipe.avatar} 
-                  alt={mapModalSwipe.name}
-                  style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "6px" }}
+
+                {/* Section 3: SCHEDULED TASKS */}
+                {mapModalSwipe.tasks && mapModalSwipe.tasks.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
+                    <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155", letterSpacing: "0.02em" }}>TASKS RECORDED</div>
+                    {mapModalSwipe.tasks.map((t, i) => (
+                      <div key={i} style={{ fontSize: "0.75rem", color: "#334155", background: "#f8fafc", padding: "6px 10px", borderRadius: "4px" }}>
+                        ✓ {t}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              </div>
+
+              {/* Right Column: Dynamic Google Maps Canvas */}
+              <div style={{ position: "relative", width: "100%", height: "100%", background: "#e5e3df", overflow: "hidden" }}>
+                
+                <iframe 
+                  title="Full Screen Google Maps Location View"
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0, width: "100%", height: "100%" }}
+                  loading="lazy"
+                  allowFullScreen
+                  src={mapEmbedUrl}
                 />
-                <div style={{ fontSize: "0.75rem", color: "#475569", lineHeight: 1.4, textAlign: "center" }}>
-                  {mapModalSwipe.fullAddress || "Ram Janki Mandir Road, Sector 4, Hyderabad, Telangana, Pin-500081 (India)"}
+
+                {/* On-Map Photo Overlay Popup Card */}
+                <div style={{ position: "absolute", top: "30px", left: "50%", transform: "translateX(-50%)", background: "#ffffff", borderRadius: "8px", border: "1px solid #cbd5e1", padding: "14px", boxShadow: "0 12px 30px rgba(0,0,0,0.25)", width: "260px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#0f172a" }}>Verification Selfie</span>
+                    <span onClick={() => setShowMapModal(false)} style={{ cursor: "pointer", fontSize: "0.95rem", color: "#64748b", fontWeight: "700" }}>✕</span>
+                  </div>
+                  {mapModalSwipe.avatar ? (
+                    <img 
+                      src={mapModalSwipe.avatar} 
+                      alt={mapModalSwipe.name}
+                      style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "6px", border: "1px solid #cbd5e1" }}
+                    />
+                  ) : (
+                    <div style={{ width: "100%", height: "120px", background: "#f1f5f9", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: "0.8rem" }}>
+                      No Selfie Captured
+                    </div>
+                  )}
+                  <div style={{ fontSize: "0.75rem", color: "#475569", lineHeight: 1.4, textAlign: "center" }}>
+                    {mapModalSwipe.fullAddress || mapModalSwipe.door}
+                  </div>
                 </div>
+
               </div>
 
             </div>
 
           </div>
-
-        </div>
-      )}
+        );
+      })()}
 
       {/* SHIFTS / WEEKLY OFFS & ASSIGNMENTS View (Holidays and Shift Allowance Removed as requested) */}
       {subModuleTab === "SHIFTS" && (
@@ -4610,7 +4527,15 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     transition: "all 0.15s"
                   }}
                 >
-                  📋 Past Advances
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                      <polyline points="14 2 14 8 20 8"/>
+                      <line x1="16" y1="13" x2="8" y2="13"/>
+                      <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                    Past Advances
+                  </span>
                 </button>
                 <button
                   onClick={() => setActivePettyCashTab("pending_payments")}
@@ -4627,7 +4552,13 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     transition: "all 0.15s"
                   }}
                 >
-                  ⏳ Pending Payments
+                  <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/>
+                      <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    Pending Payments
+                  </span>
                   {(() => {
                     const count = advanceRequests.filter(r => r.status === "Pending").length;
                     return count > 0 ? (
@@ -4859,6 +4790,16 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   placeholder="e.g. 5000" 
                   value={directAdvanceAmount} 
                   onChange={(e) => setDirectAdvanceAmount(e.target.value)} 
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>Allocation Date</label>
+                <input 
+                  type="date" 
+                  value={directAdvanceDate} 
+                  onChange={(e) => setDirectAdvanceDate(e.target.value)} 
                   required
                 />
               </div>

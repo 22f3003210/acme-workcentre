@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "../context/AppContext";
+import { useApp, getTodayDateString } from "../context/AppContext";
 import { getRoutePath } from "../App";
 import logoImg from "../assets/logo.png";
 
@@ -35,6 +35,9 @@ export default function Layout({ children, activeTab, setActiveTab }) {
 
   // 9-Dots Button Side Navigation Toggle State
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
+
+  // Mobile Bottom App Drawer State
+  const [showMobileDrawer, setShowMobileDrawer] = useState(false);
 
   // Filter employees for top search bar
   const filteredEmployees = (users || []).filter(u => {
@@ -102,12 +105,12 @@ export default function Layout({ children, activeTab, setActiveTab }) {
         ];
       case "Consultant":
         return [
-          { id: "punch",    label: "Attendance & Leave", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>) },
-          { id: "calendar", label: "Calendar", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>) },
-          { id: "leaves",   label: "My Leaves", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>) },
-          { id: "expenses", label: "My Expenses", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>) },
-          { id: "projects", label: "My Projects", icon: projectIcon },
-          { id: "payslips", label: "My Payslips", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="12" x="2" y="6" rx="2" /><circle cx="12" cy="12" r="2" /><path d="M6 12h.01M18 12h.01" /></svg>) }
+          { id: "dashboard",  label: "Home", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>) },
+          { id: "attendance", label: "Consultant Attendance", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>) },
+          { id: "expenses",   label: "My Expenses", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>) },
+          { id: "projects",   label: "My Projects", icon: projectIcon },
+          { id: "calendar",   label: "Calendar", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>) },
+          { id: "leaves",     label: "My Leaves", icon: (<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>) }
         ];
       default: return [];
     }
@@ -599,8 +602,8 @@ export default function Layout({ children, activeTab, setActiveTab }) {
       {/* Main Body Layout under Top Navbar */}
       <div className="app-body-layout" style={{ display: "flex", flexGrow: 1, width: "100%", minHeight: "calc(100vh - 80px)", position: "relative" }}>
         
-        {/* YouTube-Style Collapsible Side Navigation Bar for Admin View */}
-        {currentUser?.role === "Admin" && (
+        {/* YouTube-Style Collapsible Side Navigation Bar for All Authenticated Users */}
+        {currentUser && (
           <aside className={`youtube-sidebar ${isSidebarExpanded ? "expanded" : ""}`}>
             <div className="youtube-sidebar-nav">
               {navItems.map((item) => {
@@ -626,15 +629,15 @@ export default function Layout({ children, activeTab, setActiveTab }) {
             <div className="youtube-sidebar-divider" />
 
             <div className="youtube-sidebar-footer">
-              <div className="youtube-user-card" onClick={openModal} title="Admin Profile & Account Settings">
+              <div className="youtube-user-card" onClick={openModal} title={`${currentUser?.name} Profile & Settings`}>
                 <img
-                  src={currentUser?.avatar || "https://api.dicebear.com/7.x/initials/svg?seed=Admin"}
+                  src={currentUser?.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120"}
                   alt={currentUser?.name}
                   className="youtube-user-avatar"
                 />
                 <div className="youtube-user-info">
-                  <span className="youtube-user-name">{currentUser?.name || "Admin"}</span>
-                  <span className="youtube-user-role">System Admin</span>
+                  <span className="youtube-user-name">{currentUser?.name || "User"}</span>
+                  <span className="youtube-user-role">{currentUser?.role || "Consultant"}</span>
                 </div>
               </div>
             </div>
@@ -645,14 +648,23 @@ export default function Layout({ children, activeTab, setActiveTab }) {
         <div className="main-wrapper" style={{ flex: 1, width: "100%", maxWidth: "100%", minWidth: 0 }}>
           <header className="mobile-header">
             <div className="mobile-brand">
-              <span className="brand-logo">
-                <img src={logoImg} alt="Acme Logo" style={{ width: "30px", height: "30px", objectFit: "contain", display: "inline-block", verticalAlign: "middle" }} />
-              </span>
-              <h1>Acme</h1>
+              <img src={logoImg} alt="Acme Logo" style={{ height: "28px", objectFit: "contain" }} />
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <span style={{ fontSize: "1rem", fontWeight: "800", color: "#0f172a", lineHeight: "1.1" }}>Acme</span>
+                <span style={{ fontSize: "0.6rem", color: "#2563eb", fontWeight: "800", textTransform: "uppercase" }}>Internal Portal</span>
+              </div>
             </div>
-            <div className="mobile-user-actions" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+
+            <div className="mobile-user-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => setShowMobileDrawer(true)}
+                style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", width: "34px", height: "34px", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                title="Open Navigation Menu"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+              </button>
               <img src={currentUser?.avatar} alt={currentUser?.name} className="mobile-avatar" onClick={openModal} style={{ cursor: "pointer" }} />
-              <button onClick={() => { logout(); navigate("/auth/login"); }} style={{ fontSize: "0.75rem", color: "var(--color-error)", border: "1px solid var(--color-error)", padding: "4px 8px", borderRadius: "4px", fontWeight: "600" }}>Log Out</button>
             </div>
           </header>
 
@@ -660,10 +672,12 @@ export default function Layout({ children, activeTab, setActiveTab }) {
             {children}
           </main>
 
+          {/* Native Mobile App Bottom Navigation Bar (Max 4 Primary Tabs + "More") */}
           <nav className="mobile-bottom-nav">
-            {navItems.map((item) => (
+            {navItems.slice(0, 4).map((item) => (
               <button
                 key={item.id}
+                type="button"
                 className={`mobile-nav-item ${activeTab === item.id ? "active" : ""}`}
                 onClick={() => {
                   if (setActiveTab) setActiveTab(item.id);
@@ -674,238 +688,414 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                 <span className="mobile-nav-label">{item.label}</span>
               </button>
             ))}
+
+            <button
+              type="button"
+              className={`mobile-nav-item ${showMobileDrawer ? "active" : ""}`}
+              onClick={() => setShowMobileDrawer(!showMobileDrawer)}
+            >
+              <span className="mobile-nav-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+              </span>
+              <span className="mobile-nav-label">More</span>
+            </button>
           </nav>
         </div>
       </div>
 
-      {/* ── Standalone Full-Page View for Employee Profile (Matching User Request) ── */}
-      {viewingProfileUser && (
+      {/* Mobile App Slide-Up Navigation Drawer */}
+      {showMobileDrawer && (
         <div
+          onClick={() => setShowMobileDrawer(false)}
           style={{
             position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "#f8fafc",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.6)",
+            backdropFilter: "blur(4px)",
             zIndex: 10000,
             display: "flex",
             flexDirection: "column",
-            overflow: "hidden"
+            justifyContent: "flex-end"
           }}
         >
-          {/* Top Full-Width Header Bar */}
-          <div style={{ borderBottom: "1px solid #e2e8f0", padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", height: "48px", flexShrink: 0 }}>
-            <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "#334155", letterSpacing: "0.03em", textTransform: "uppercase" }}>
-              EMPLOYEE PROFILE — {viewingProfileUser.empCode || "-"}
-            </span>
-            <button
-              type="button"
-              onClick={() => setViewingProfileUser(null)}
-              style={{
-                background: "#f1f5f9",
-                border: "1px solid #cbd5e1",
-                borderRadius: "50%",
-                width: "32px",
-                height: "32px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                fontWeight: "700",
-                color: "#475569"
-              }}
-              title="Close Profile View"
-            >
-              ✕
-            </button>
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: "#ffffff",
+              borderRadius: "20px 20px 0 0",
+              padding: "20px",
+              boxShadow: "0 -10px 30px rgba(0,0,0,0.2)",
+              maxHeight: "85vh",
+              overflowY: "auto"
+            }}
+          >
+            {/* Drag Pill */}
+            <div style={{ width: "40px", height: "4px", background: "#cbd5e1", borderRadius: "2px", margin: "0 auto 16px auto" }} />
+
+            {/* User Profile Header in Drawer */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingBottom: "16px", borderBottom: "1px solid #f1f5f9", marginBottom: "16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <img src={currentUser?.avatar} alt={currentUser?.name} style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover", border: "2px solid #2563eb" }} />
+                <div>
+                  <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>{currentUser?.name}</h3>
+                  <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", padding: "2px 8px", borderRadius: "4px", fontWeight: "700" }}>{currentUser?.role}</span>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowMobileDrawer(false)} style={{ background: "#f1f5f9", border: "none", width: "32px", height: "32px", borderRadius: "50%", fontWeight: "800", cursor: "pointer", color: "#64748b" }}>✕</button>
+            </div>
+
+            {/* All Modules Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "20px" }}>
+              {navItems.map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    setShowMobileDrawer(false);
+                    if (setActiveTab) setActiveTab(item.id);
+                    navigate(getRoutePath(item.id));
+                  }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "12px",
+                    background: activeTab === item.id ? "#eff6ff" : "#f8fafc",
+                    border: activeTab === item.id ? "1px solid #bfdbfe" : "1px solid #e2e8f0",
+                    borderRadius: "10px",
+                    color: activeTab === item.id ? "#2563eb" : "#334155",
+                    fontWeight: activeTab === item.id ? "700" : "600",
+                    fontSize: "0.85rem",
+                    textAlign: "left",
+                    cursor: "pointer"
+                  }}
+                >
+                  <span style={{ color: activeTab === item.id ? "#2563eb" : "#64748b" }}>{item.icon}</span>
+                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</span>
+                </button>
+              ))}
+            </div>
+
+            {/* Account & Logout */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
+              <button
+                type="button"
+                onClick={() => { setShowMobileDrawer(false); openModal(); }}
+                style={{ width: "100%", padding: "12px", background: "#f1f5f9", border: "none", borderRadius: "8px", fontWeight: "700", fontSize: "0.88rem", color: "#334155", cursor: "pointer" }}
+              >
+                👤 Profile & Account Settings
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowMobileDrawer(false); logout(); navigate("/auth/login"); }}
+                style={{ width: "100%", padding: "12px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", fontWeight: "700", fontSize: "0.88rem", color: "#ef4444", cursor: "pointer" }}
+              >
+                🚪 Log Out
+              </button>
+            </div>
           </div>
+        </div>
+      )}
 
-          {/* Full-Height Standalone Page Content Area */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "24px 32px" }}>
-            
-            {/* Keka HR Style Banner Header */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
-                
-                {/* Purple Wavy Gradient Banner */}
-                <div style={{ position: "relative", height: "150px", background: "linear-gradient(135deg, #4c478a 0%, #312e5c 50%, #1e1b4b 100%)" }}>
-                  <div style={{ position: "absolute", bottom: "16px", left: "20px", display: "flex", alignItems: "center", gap: "20px" }}>
-                    <img 
-                      src={viewingProfileUser.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300"} 
-                      alt={viewingProfileUser.name}
-                      style={{ width: "96px", height: "96px", borderRadius: "50%", border: "4px solid #ffffff", objectFit: "cover" }}
-                    />
-                    <div style={{ color: "#ffffff" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <h1 style={{ fontSize: "1.6rem", fontWeight: "700", margin: 0, color: "#ffffff" }}>{viewingProfileUser.name}</h1>
-                        <span style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #86efac", padding: "2px 8px", borderRadius: "3px", fontSize: "0.7rem", fontWeight: "700" }}>
-                          IN
-                        </span>
-                        <span style={{ background: "rgba(255,255,255,0.2)", color: "#ffffff", padding: "2px 8px", borderRadius: "3px", fontSize: "0.7rem", fontWeight: "600", textTransform: "uppercase" }}>
-                          WEEKLY OFF
-                        </span>
-                      </div>
-                      <div style={{ fontSize: "0.85rem", color: "#e2e8f0", marginTop: "4px" }}>
-                        🧰 {viewingProfileUser.title || "Systems Operator"}
+      {/* ── Standalone Full-Page View for Employee Profile (Matching User Request) ── */}
+      {viewingProfileUser && (() => {
+        const activeProfileUser = (users || []).find(u => u.id === viewingProfileUser?.id) || viewingProfileUser;
+        const empAttList = activeProfileUser.attendance || [];
+        const todayStr = getTodayDateString();
+        const todayAtt = empAttList.find(a => a.date === todayStr);
+
+        const totalPunches = empAttList.length;
+        const totalHours = empAttList.reduce((acc, curr) => acc + (curr.hoursWorked || 0), 0);
+        const avgHours = totalPunches > 0 ? (totalHours / totalPunches).toFixed(1) : "0.0";
+        const onTimePunches = empAttList.filter(a => a.status === "Present" || a.status === "On Time").length;
+        const onTimePct = totalPunches > 0 ? Math.round((onTimePunches / totalPunches) * 100) : 100;
+
+        return (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "#f8fafc",
+              zIndex: 10000,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden"
+            }}
+          >
+            {/* Top Full-Width Header Bar */}
+            <div style={{ borderBottom: "1px solid #e2e8f0", padding: "12px 24px", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", height: "48px", flexShrink: 0 }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: "700", color: "#334155", letterSpacing: "0.03em", textTransform: "uppercase" }}>
+                EMPLOYEE PROFILE — {activeProfileUser.empCode || `EMP-${activeProfileUser.id?.substring(0,4)}`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setViewingProfileUser(null)}
+                style={{
+                  background: "#f1f5f9",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "50%",
+                  width: "32px",
+                  height: "32px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontWeight: "700",
+                  color: "#475569"
+                }}
+                title="Close Profile View"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Full-Height Standalone Page Content Area */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "24px 32px" }}>
+              
+              {/* Keka HR Style Banner Header */}
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", overflow: "hidden", marginBottom: "20px" }}>
+                  
+                  {/* Purple Wavy Gradient Banner */}
+                  <div style={{ position: "relative", height: "150px", background: "linear-gradient(135deg, #4c478a 0%, #312e5c 50%, #1e1b4b 100%)" }}>
+                    <div style={{ position: "absolute", bottom: "16px", left: "20px", display: "flex", alignItems: "center", gap: "20px" }}>
+                      <img 
+                        src={activeProfileUser.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300"} 
+                        alt={activeProfileUser.name}
+                        style={{ width: "96px", height: "96px", borderRadius: "50%", border: "4px solid #ffffff", objectFit: "cover" }}
+                      />
+                      <div style={{ color: "#ffffff" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <h1 style={{ fontSize: "1.6rem", fontWeight: "700", margin: 0, color: "#ffffff" }}>{activeProfileUser.name}</h1>
+                          <span style={{ background: todayAtt ? "#dcfce7" : "#fee2e2", color: todayAtt ? "#15803d" : "#b91c1c", border: `1px solid ${todayAtt ? "#86efac" : "#fca5a5"}`, padding: "2px 8px", borderRadius: "3px", fontSize: "0.7rem", fontWeight: "700" }}>
+                            {todayAtt ? (todayAtt.checkOut ? "CHECKED OUT" : "CLOCKED IN") : "NOT CLOCKED IN TODAY"}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "0.85rem", color: "#e2e8f0", marginTop: "4px" }}>
+                          🧰 {activeProfileUser.title || `${activeProfileUser.role} Lead`}
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Contact Info Strip */}
-                <div style={{ padding: "12px 20px", background: "#ffffff", borderBottom: "1px solid #f1f5f9", display: "flex", gap: "24px", fontSize: "0.82rem", color: "#475569", flexWrap: "wrap" }}>
-                  <span>✉ {viewingProfileUser.email}</span>
-                  <span>📞 {viewingProfileUser.phone || "+91-7569099549"}</span>
-                  <span>📍 {viewingProfileUser.location || "Mehdipatnam"}</span>
-                  <span>🪪 {viewingProfileUser.empCode || "-"}</span>
-                </div>
+                  {/* Contact Info Strip */}
+                  <div style={{ padding: "12px 20px", background: "#ffffff", borderBottom: "1px solid #f1f5f9", display: "flex", gap: "24px", fontSize: "0.82rem", color: "#475569", flexWrap: "wrap" }}>
+                    <span>✉ {activeProfileUser.email}</span>
+                    <span>📞 {activeProfileUser.phone || "+91 98201 12345"}</span>
+                    <span>📍 {activeProfileUser.location || "Hyderabad"}</span>
+                    <span>🪪 {activeProfileUser.empCode || `EMP-${activeProfileUser.id?.substring(0,4)}`}</span>
+                  </div>
 
-                {/* Joining / Department / Reporting Manager Strip */}
-                <div style={{ padding: "14px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", gap: "48px", fontSize: "0.82rem" }}>
-                  <div>
-                    <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>JOINING DATE</span>
-                    <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>24 Jan 2025</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>DEPARTMENT</span>
-                    <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>{(viewingProfileUser.department || "IT & SYSTEMS SUPPORT").toUpperCase()}</span>
-                  </div>
-                  <div>
-                    <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>REPORTING MANAGER</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                      <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100" alt="Manager" style={{ width: "20px", height: "20px", borderRadius: "50%" }} />
-                      <span style={{ fontWeight: "600", color: "#2563eb" }}>Shikhar Jain</span>
+                  {/* Joining / Department / Reporting Manager Strip */}
+                  <div style={{ padding: "14px 20px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", display: "flex", gap: "48px", fontSize: "0.82rem" }}>
+                    <div>
+                      <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>JOINING DATE</span>
+                      <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>24 Jan 2025</span>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>DEPARTMENT</span>
+                      <span style={{ fontWeight: "600", color: "#0f172a", marginTop: "2px", display: "block" }}>{(activeProfileUser.department || "Advisory").toUpperCase()}</span>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: "0.68rem", color: "#64748b", fontWeight: "600", textTransform: "uppercase", display: "block" }}>REPORTING MANAGER</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100" alt="Manager" style={{ width: "20px", height: "20px", borderRadius: "50%" }} />
+                        <span style={{ fontWeight: "600", color: "#2563eb" }}>ACME Admin</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Profile Navigation Tabs Row */}
-                <div style={{ display: "flex", gap: "24px", padding: "0 20px", background: "#ffffff", borderBottom: "1px solid #e2e8f0", overflowX: "auto" }}>
-                  {["ABOUT", "PROFILE", "JOB", "TIME", "DOCUMENTS", "ASSETS", "FINANCES", "EXPENSES", "PERFORMANCE"].map(tab => {
-                    const isActive = profileModalTab === tab;
-                    return (
-                      <button
-                        key={tab}
-                        type="button"
-                        onClick={() => setProfileModalTab(tab)}
-                        style={{
-                          padding: "12px 0",
-                          background: "none",
-                          border: "none",
-                          borderBottom: isActive ? "2px solid #4c478a" : "2px solid transparent",
-                          color: isActive ? "#4c478a" : "#64748b",
-                          fontWeight: isActive ? "700" : "500",
-                          fontSize: "0.78rem",
-                          cursor: "pointer"
-                        }}
-                      >
-                        {tab}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Sub-Tabs Row under TIME */}
-                {profileModalTab === "TIME" && (
-                  <div style={{ display: "flex", gap: "16px", padding: "10px 20px", background: "#ffffff" }}>
-                    {["Attendance", "Leave"].map(subTab => {
-                      const isActive = timeSubTab === subTab;
+                  {/* Profile Navigation Tabs Row */}
+                  <div style={{ display: "flex", gap: "24px", padding: "0 20px", background: "#ffffff", borderBottom: "1px solid #e2e8f0", overflowX: "auto" }}>
+                    {["ABOUT", "PROFILE", "JOB", "TIME", "DOCUMENTS", "ASSETS", "FINANCES", "EXPENSES", "PERFORMANCE"].map(tab => {
+                      const isActive = profileModalTab === tab;
                       return (
                         <button
-                          key={subTab}
+                          key={tab}
                           type="button"
-                          onClick={() => setTimeSubTab(subTab)}
+                          onClick={() => setProfileModalTab(tab)}
                           style={{
-                            padding: "5px 16px",
-                            background: isActive ? "#f3e8ff" : "#ffffff",
-                            color: isActive ? "#6b21a8" : "#475569",
-                            border: isActive ? "1px solid #d8b4fe" : "1px solid #e2e8f0",
-                            borderRadius: "4px",
-                            fontWeight: isActive ? "600" : "500",
-                            fontSize: "0.8rem",
+                            padding: "12px 0",
+                            background: "none",
+                            border: "none",
+                            borderBottom: isActive ? "2px solid #4c478a" : "2px solid transparent",
+                            color: isActive ? "#4c478a" : "#64748b",
+                            fontWeight: isActive ? "700" : "500",
+                            fontSize: "0.78rem",
                             cursor: "pointer"
                           }}
                         >
-                          {subTab}
+                          {tab}
                         </button>
                       );
                     })}
                   </div>
+
+                  {/* Sub-Tabs Row under TIME */}
+                  {profileModalTab === "TIME" && (
+                    <div style={{ display: "flex", gap: "16px", padding: "10px 20px", background: "#ffffff" }}>
+                      {["Attendance", "Leave"].map(subTab => {
+                        const isActive = timeSubTab === subTab;
+                        return (
+                          <button
+                            key={subTab}
+                            type="button"
+                            onClick={() => setTimeSubTab(subTab)}
+                            style={{
+                              padding: "5px 16px",
+                              background: isActive ? "#f3e8ff" : "#ffffff",
+                              color: isActive ? "#6b21a8" : "#475569",
+                              border: isActive ? "1px solid #d8b4fe" : "1px solid #e2e8f0",
+                              borderRadius: "4px",
+                              fontWeight: isActive ? "600" : "500",
+                              fontSize: "0.8rem",
+                              cursor: "pointer"
+                            }}
+                          >
+                            {subTab}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                </div>
+
+                {/* Attendance Grid */}
+                {profileModalTab === "TIME" && timeSubTab === "Attendance" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                    
+                    {/* Top Row: Attendance Summary Cards */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1.2fr 1fr", gap: "16px" }}>
+                      
+                      {/* Card 1: Attendance Stats */}
+                      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                          <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>Attendance Overview</h3>
+                          <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Live Sync</span>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: "14px", marginBottom: "14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#fef3c7", color: "#d97706", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700" }}>👤</div>
+                            <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155" }}>{activeProfileUser.name}</span>
+                          </div>
+                          <div style={{ display: "flex", gap: "20px", textAlign: "right" }}>
+                            <div><span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>AVG HRS / SHIFT</span><strong style={{ fontSize: "1.05rem" }}>{avgHours}h</strong></div>
+                            <div><span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>ON TIME RATE</span><strong style={{ fontSize: "1.05rem" }}>{onTimePct}%</strong></div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <span style={{ fontSize: "0.82rem", color: "#64748b" }}>Total Shift Logs</span>
+                          <strong style={{ fontSize: "1.1rem", color: "#4c478a" }}>{totalPunches} Days Logged</strong>
+                        </div>
+                      </div>
+
+                      {/* Card 2: Today's Shift Status */}
+                      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px" }}>
+                        <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 0 14px 0" }}>Today's Shift Status</h3>
+                        {todayAtt ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "8px", fontSize: "0.82rem" }}>
+                            <div><strong>Check In:</strong> <span style={{ color: "#16a34a", fontWeight: "600" }}>{todayAtt.checkIn}</span></div>
+                            <div><strong>Check Out:</strong> <span style={{ color: "#dc2626", fontWeight: "600" }}>{todayAtt.checkOut || "Active Shift (In Progress)"}</span></div>
+                            <div><strong>Location / Project:</strong> {todayAtt.projectName || todayAtt.locationName || "Site Visit"}</div>
+                            {todayAtt.tasks && todayAtt.tasks.length > 0 && (
+                              <div style={{ fontSize: "0.78rem", color: "#64748b", background: "#f8fafc", padding: "6px 10px", borderRadius: "4px" }}>
+                                📋 <strong>Tasks Today:</strong> {todayAtt.tasks.join(", ")}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: "0.82rem", color: "#94a3b8", padding: "12px 0" }}>
+                            No attendance logged yet for today ({todayStr}).
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Card 3: Employee Details Quick Summary */}
+                      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px" }}>
+                        <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 0 16px 0" }}>Compliance & Status</h3>
+                        <div style={{ border: "1px solid #e2e8f0", borderRadius: "6px", padding: "12px", background: "#f8fafc", textAlign: "center", marginBottom: "14px" }}>
+                          <div style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a" }}>{activeProfileUser.status || "Active Employee"}</div>
+                          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>GPS & Selfie Geotagging Enabled</div>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-around", fontSize: "0.78rem", color: "#4c478a", fontWeight: "600" }}>
+                          <span>💼 Field Consultant</span>
+                          <span>📋 Verified</span>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* Employee Attendance Logs Table */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px" }}>
+                      <h3 style={{ fontSize: "1.05rem", fontWeight: "700", color: "#0f172a", margin: "0 0 16px 0" }}>
+                        Detailed Attendance Logs ({empAttList.length})
+                      </h3>
+
+                      {empAttList.length === 0 ? (
+                        <div style={{ padding: "30px", textAlign: "center", color: "#94a3b8", background: "#f8fafc", border: "1px dashed #cbd5e1" }}>
+                          No attendance records found for this employee yet.
+                        </div>
+                      ) : (
+                        <div style={{ overflowX: "auto" }}>
+                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.82rem", textAlign: "left" }}>
+                            <thead>
+                              <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", color: "#64748b" }}>
+                                <th style={{ padding: "10px 14px", fontWeight: "600" }}>Selfie / Verification</th>
+                                <th style={{ padding: "10px 14px", fontWeight: "600" }}>Date</th>
+                                <th style={{ padding: "10px 14px", fontWeight: "600" }}>Check In</th>
+                                <th style={{ padding: "10px 14px", fontWeight: "600" }}>Check Out</th>
+                                <th style={{ padding: "10px 14px", fontWeight: "600" }}>Hours Worked</th>
+                                <th style={{ padding: "10px 14px", fontWeight: "600" }}>Project / Location</th>
+                                <th style={{ padding: "10px 14px", fontWeight: "600" }}>Status</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {empAttList.map((att, idx) => (
+                                <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                                  <td style={{ padding: "10px 14px" }}>
+                                    {att.selfie ? (
+                                      <img src={att.selfie} alt="Selfie" style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "1px solid #cbd5e1" }} />
+                                    ) : (
+                                      <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>No Selfie</span>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: "10px 14px", fontWeight: "600", color: "#0f172a" }}>{att.date}</td>
+                                  <td style={{ padding: "10px 14px", color: "#16a34a", fontWeight: "600" }}>{att.checkIn || "-"}</td>
+                                  <td style={{ padding: "10px 14px", color: "#dc2626", fontWeight: "600" }}>{att.checkOut || "In Progress"}</td>
+                                  <td style={{ padding: "10px 14px", fontWeight: "600" }}>{att.hoursWorked ? `${att.hoursWorked} hrs` : "-"}</td>
+                                  <td style={{ padding: "10px 14px", color: "#334155" }}>{att.projectName || att.locationName || "Site Visit"}</td>
+                                  <td style={{ padding: "10px 14px" }}>
+                                    <span style={{
+                                      padding: "3px 8px",
+                                      borderRadius: "4px",
+                                      fontSize: "0.72rem",
+                                      fontWeight: "700",
+                                      background: att.status === "Late" ? "#fef3c7" : "#dcfce7",
+                                      color: att.status === "Late" ? "#d97706" : "#15803d"
+                                    }}>
+                                      {att.status || "Present"}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
                 )}
 
               </div>
-
-              {/* Attendance Grid (Matching Keka HR Screenshot) */}
-              {profileModalTab === "TIME" && timeSubTab === "Attendance" && (
-                <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1.2fr 1fr", gap: "16px" }}>
-                  
-                  {/* Card 1: Attendance Stats */}
-                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                      <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>Attendance Stats</h3>
-                      <span style={{ fontSize: "0.75rem", color: "#64748b" }}>Last Week ▾</span>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid #f1f5f9", paddingBottom: "14px", marginBottom: "14px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#fef3c7", color: "#d97706", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700" }}>👤</div>
-                        <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155" }}>Me</span>
-                      </div>
-                      <div style={{ display: "flex", gap: "20px", textAlign: "right" }}>
-                        <div><span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>AVG HRS / DAY</span><strong style={{ fontSize: "1.05rem" }}>9h 3m</strong></div>
-                        <div><span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>ON TIME ARRIVAL</span><strong style={{ fontSize: "1.05rem" }}>83%</strong></div>
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#e0f2fe", color: "#0284c7", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "700" }}>👥</div>
-                        <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#334155" }}>My Team</span>
-                      </div>
-                      <div style={{ display: "flex", gap: "20px", textAlign: "right" }}>
-                        <div><span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>AVG HRS / DAY</span><strong style={{ fontSize: "1.05rem" }}>8h 49m</strong></div>
-                        <div><span style={{ fontSize: "0.68rem", color: "#94a3b8", display: "block" }}>ON TIME ARRIVAL</span><strong style={{ fontSize: "1.05rem" }}>81%</strong></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card 2: Timings */}
-                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px" }}>
-                    <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 0 16px 0" }}>Timings</h3>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "16px" }}>
-                      {["M", "T", "W", "T", "F", "S", "S"].map((d, idx) => (
-                        <div key={idx} style={{ width: "26px", height: "26px", borderRadius: "50%", background: idx === 1 ? "#38bdf8" : "#f1f5f9", color: idx === 1 ? "#ffffff" : "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.75rem", fontWeight: idx === 1 ? "700" : "500" }}>{d}</div>
-                      ))}
-                    </div>
-                    <div style={{ fontSize: "0.8rem", color: "#475569", fontWeight: "600", marginBottom: "10px" }}>Today (10:30 AM - 9:00 PM)</div>
-                    <div style={{ background: "#e0f2fe", height: "10px", borderRadius: "5px", overflow: "hidden", marginBottom: "12px" }}>
-                      <div style={{ background: "#38bdf8", width: "70%", height: "100%" }} />
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.74rem", color: "#64748b" }}>
-                      <span>Duration: 10h 30m</span>
-                      <span>☕ 40 min</span>
-                    </div>
-                  </div>
-
-                  {/* Card 3: Actions */}
-                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", padding: "20px" }}>
-                    <h3 style={{ fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", margin: "0 0 16px 0" }}>Actions</h3>
-                    <div style={{ border: "1px solid #e2e8f0", borderRadius: "6px", padding: "12px", background: "#f8fafc", textAlign: "center", marginBottom: "14px" }}>
-                      <div style={{ fontSize: "1.25rem", fontWeight: "800", color: "#0f172a" }}>03:40:20 AM</div>
-                      <div style={{ fontSize: "0.75rem", color: "#64748b" }}>Tue, 21 Jul 2026</div>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-around", fontSize: "0.78rem", color: "#4c478a", fontWeight: "600" }}>
-                      <span>💼 On Duty</span>
-                      <span>📋 Attendance Policy</span>
-                    </div>
-                  </div>
-
-                </div>
-              )}
-
             </div>
-          </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

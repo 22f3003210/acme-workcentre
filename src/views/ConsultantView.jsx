@@ -46,6 +46,7 @@ export default function ConsultantView({ activeTab }) {
   const [showCheckOutWizard, setShowCheckOutWizard] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showApplyLeaveModal, setShowApplyLeaveModal] = useState(false);
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showSelfOnboardingModal, setShowSelfOnboardingModal] = useState(false);
   const [profileStep, setProfileStep] = useState(1);
   const [wizardStep, setWizardStep] = useState(1);
@@ -216,26 +217,21 @@ export default function ConsultantView({ activeTab }) {
 
   const handleExpenseSubmit = (e) => {
     e.preventDefault();
-    if (!amount || !description.trim() || !expenseDate) return;
-
-    const selProj = projects.find(p => p.id === expenseProjectId);
+    if (!amount || !description.trim()) return;
 
     addExpense({
       employeeId: currentUser.id,
       amount: parseFloat(amount),
       category,
       description,
-      expenseDate,
-      projectId: expenseProjectId,
-      projectName: selProj ? selProj.name : ""
+      date: expenseDate || new Date().toISOString().split("T")[0],
+      projectId: expenseProjectId || null
     });
 
-    setToast({ message: "Expense claim submitted for verification review.", type: "success" });
+    setToast({ message: "Expense claim submitted successfully.", type: "success" });
     setAmount("");
     setDescription("");
-    setExpenseDate("");
-    setExpenseProjectId("");
-    setCategory("Travel");
+    setShowExpenseModal(false);
   };
 
   const handleAdvanceSubmit = (e) => {
@@ -358,7 +354,7 @@ export default function ConsultantView({ activeTab }) {
         </button>
         <button 
           type="button"
-          onClick={() => setMainNavTab("EXPENSES")} 
+          onClick={() => { setShowExpenseModal(true); setMainNavTab("EXPENSES"); }} 
           style={{ background: mainNavTab === "EXPENSES" ? "#2563eb" : "#ffffff", color: mainNavTab === "EXPENSES" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "EXPENSES" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "EXPENSES" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
         >
           💰 Expenses & Petty Cash
@@ -413,7 +409,7 @@ export default function ConsultantView({ activeTab }) {
                 </button>
                 <button 
                   type="button"
-                  onClick={() => setMainNavTab("EXPENSES")}
+                  onClick={() => { setShowExpenseModal(true); setMainNavTab("EXPENSES"); }}
                   style={{ background: "rgba(255,255,255,0.15)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(6px)", borderRadius: "10px", padding: "12px 20px", fontWeight: "700", fontSize: "0.88rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
                 >
                   ➕ Add Expense Claim
@@ -571,7 +567,7 @@ export default function ConsultantView({ activeTab }) {
                 <button type="button" onClick={() => setShowApplyLeaveModal(true)} style={{ textAlign: "left", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", color: "#334155", cursor: "pointer" }}>
                   🌴 Apply for Leave
                 </button>
-                <button type="button" onClick={() => setMainNavTab("EXPENSES")} style={{ textAlign: "left", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", color: "#334155", cursor: "pointer" }}>
+                <button type="button" onClick={() => { setShowExpenseModal(true); setMainNavTab("EXPENSES"); }} style={{ textAlign: "left", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", color: "#334155", cursor: "pointer" }}>
                   💸 Request Petty Cash Advance
                 </button>
               </div>
@@ -584,7 +580,246 @@ export default function ConsultantView({ activeTab }) {
       )}
 
       {/* 2. PROFILE & OTHER TAB VIEWS */}
-      {(mainNavTab === "PROFILE" || mainNavTab === "ATTENDANCE" || mainNavTab === "PROJECTS" || mainNavTab === "EXPENSES") && (
+      
+      {/* 3. DEDICATED EXPENSES & PETTY CASH DESK VIEW */}
+      {mainNavTab === "EXPENSES" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          
+          {/* Header Card */}
+          <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e5c 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "18px", boxShadow: "0 12px 30px rgba(30,27,75,0.25)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "900", color: "#ffffff" }}>💰 Expenses & Petty Cash Claim Desk</h2>
+              <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#c7d2fe" }}>Submit travel, food & site visit expense claims for manager reimbursement</p>
+            </div>
+            
+            <div style={{ display: "flex", gap: "12px" }}>
+              <div style={{ background: "rgba(255,255,255,0.15)", padding: "10px 18px", borderRadius: "10px", backdropFilter: "blur(6px)" }}>
+                <div style={{ fontSize: "0.72rem", color: "#a5b4fc", fontWeight: "700", textTransform: "uppercase" }}>Available Petty Cash</div>
+                <div style={{ fontSize: "1.2rem", fontWeight: "900", color: "#ffffff" }}>₹{balanceDetails.availableBalance.toLocaleString("en-IN")}</div>
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.15)", padding: "10px 18px", borderRadius: "10px", backdropFilter: "blur(6px)" }}>
+                <div style={{ fontSize: "0.72rem", color: "#a5b4fc", fontWeight: "700", textTransform: "uppercase" }}>Total Approved Claims</div>
+                <div style={{ fontSize: "1.2rem", fontWeight: "900", color: "#4ade80" }}>₹{approvedExpenseTotal.toLocaleString("en-IN")}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid Layout: Add Expense Claim Form + Expense Claims History */}
+          <div style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: "24px" }}>
+            
+            {/* Form Column: Submit New Expense Claim */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "18px" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>➕ Submit New Expense Claim</h3>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.8rem", color: "#64748b" }}>Enter expense details & project assignment</p>
+              </div>
+
+              <form onSubmit={handleExpenseSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                <div>
+                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>EXPENSE CATEGORY</label>
+                  <select 
+                    value={category} 
+                    onChange={(e) => setCategory(e.target.value)}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                  >
+                    <option value="Travel">✈️ Travel & Transport</option>
+                    <option value="Food">🍲 Food & Meals</option>
+                    <option value="Accommodation">🏨 Hotel & Lodging</option>
+                    <option value="Client Meeting">🤝 Client Meeting & Advisory</option>
+                    <option value="Other">📦 Other Miscellaneous</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>AMOUNT (₹)</label>
+                  <input 
+                    type="number" 
+                    placeholder="e.g. 1500" 
+                    value={amount} 
+                    onChange={(e) => setAmount(e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>EXPENSE DATE</label>
+                  <input 
+                    type="date" 
+                    value={expenseDate} 
+                    onChange={(e) => setExpenseDate(e.target.value)}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>ASSIGNED CLIENT PROJECT</label>
+                  <select 
+                    value={expenseProjectId} 
+                    onChange={(e) => setExpenseProjectId(e.target.value)}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                  >
+                    <option value="">General Store HQ (Seoni)</option>
+                    {displayProjects.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>DESCRIPTION / PURPOSE</label>
+                  <textarea 
+                    placeholder="Provide details about the expense claim..." 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                <button 
+                  type="submit" 
+                  style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(37,99,235,0.3)", marginTop: "6px" }}
+                >
+                  Submit Expense Claim ✓
+                </button>
+              </form>
+            </div>
+
+            {/* Table Column: Expense Claims History */}
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "16px" }}>
+              <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>📋 My Expense Claims History</h3>
+
+              {myExpenses.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px", background: "#f8fafc", borderRadius: "12px", color: "#64748b", fontSize: "0.9rem" }}>
+                  No expense claims submitted yet. Use the form on the left to submit a claim.
+                </div>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                  <thead>
+                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", textAlign: "left", color: "#64748b" }}>
+                      <th style={{ padding: "10px 12px" }}>Date</th>
+                      <th style={{ padding: "10px 12px" }}>Category</th>
+                      <th style={{ padding: "10px 12px" }}>Description</th>
+                      <th style={{ padding: "10px 12px" }}>Amount</th>
+                      <th style={{ padding: "10px 12px" }}>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {myExpenses.slice().reverse().map(exp => (
+                      <tr key={exp.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <td style={{ padding: "12px", fontWeight: "600" }}>{exp.date}</td>
+                        <td style={{ padding: "12px" }}>{exp.category}</td>
+                        <td style={{ padding: "12px", color: "#475569" }}>{exp.description}</td>
+                        <td style={{ padding: "12px", fontWeight: "800", color: "#0f172a" }}>₹{exp.amount}</td>
+                        <td style={{ padding: "12px" }}>
+                          <span style={{ 
+                            background: exp.status === "Approved" ? "#dcfce7" : exp.status === "Rejected" ? "#fee2e2" : "#fef3c7", 
+                            color: exp.status === "Approved" ? "#166534" : exp.status === "Rejected" ? "#991b1b" : "#92400e", 
+                            padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" 
+                          }}>
+                            {exp.status || "Pending"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* 4. DEDICATED ASSIGNED CLIENT PROJECTS VIEW */}
+      {mainNavTab === "PROJECTS" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "18px", boxShadow: "0 12px 30px rgba(15,23,42,0.25)" }}>
+            <h2 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "900", color: "#ffffff" }}>📁 My Assigned Client Projects</h2>
+            <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#94a3b8" }}>Store sites & consulting advisory projects assigned to you</p>
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "20px" }}>
+            {displayProjects.map(proj => (
+              <div key={proj.id} style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "16px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>{proj.name}</h3>
+                    <div style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "4px" }}>📍 {proj.location || "Seoni, MP"} • {proj.code || "STORE-HQ"}</div>
+                  </div>
+                  <span style={{ background: "#dcfce7", color: "#166534", border: "1px solid #86efac", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800" }}>ACTIVE</span>
+                </div>
+
+                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px", fontSize: "0.84rem", color: "#334155" }}>
+                  <div><strong>Business Model:</strong> {proj.businessModel || "Retail & Client Advisory Store"}</div>
+                  <div style={{ marginTop: "4px" }}><strong>Location Radius:</strong> Verified GPS Match (Within 500m)</div>
+                </div>
+
+                <button 
+                  type="button" 
+                  onClick={handleOpenCheckInWizard}
+                  style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(22,163,74,0.3)" }}
+                >
+                  ✔ Check In This Store Site
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 5. DEDICATED SHIFT ATTENDANCE REGISTER VIEW */}
+      {mainNavTab === "ATTENDANCE" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div style={{ background: "linear-gradient(135deg, #15803d 0%, #166534 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "18px", boxShadow: "0 12px 30px rgba(21,128,61,0.25)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <h2 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "900", color: "#ffffff" }}>🕒 Shift Attendance & Clock Register</h2>
+              <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#bbf7d0" }}>View check-in logs, total working hours & monthly stats</p>
+            </div>
+            <button 
+              type="button"
+              onClick={handleOpenCheckInWizard}
+              style={{ background: "#ffffff", color: "#166534", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.2)" }}
+            >
+              + Check In Shift (Site Visit)
+            </button>
+          </div>
+
+          <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)" }}>
+            <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Historical Attendance Register</h3>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+              <thead>
+                <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", textAlign: "left", color: "#64748b" }}>
+                  <th style={{ padding: "10px 12px" }}>Date</th>
+                  <th style={{ padding: "10px 12px" }}>Store / Client Project</th>
+                  <th style={{ padding: "10px 12px" }}>Check In</th>
+                  <th style={{ padding: "10px 12px" }}>Check Out</th>
+                  <th style={{ padding: "10px 12px" }}>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {myAttendance.slice().reverse().map((a, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    <td style={{ padding: "12px", fontWeight: "700" }}>{a.date}</td>
+                    <td style={{ padding: "12px" }}>{a.projectName || "ACME Flagship Store"}</td>
+                    <td style={{ padding: "12px", color: "#16a34a", fontWeight: "700" }}>{a.checkIn || "10:30 AM"}</td>
+                    <td style={{ padding: "12px", color: "#dc2626", fontWeight: "700" }}>{a.checkOut || "In Shift"}</td>
+                    <td style={{ padding: "12px" }}>
+                      <span style={{ background: "#dcfce7", color: "#166534", padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" }}>
+                        {a.status || "Present"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+
+      {mainNavTab === "PROFILE" && (
         <div>
 
           {/* Keka HR Style Employee Profile Top Banner Card */}
@@ -2047,6 +2282,110 @@ export default function ConsultantView({ activeTab }) {
       
       </div>
       )}
+
+      
+      {/* INTERACTIVE ADD EXPENSE CLAIM MODAL OVERLAY */}
+      {showExpenseModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "18px", width: "100%", maxWidth: "520px", overflow: "hidden", boxShadow: "0 25px 50px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+            
+            {/* Header */}
+            <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e5c 100%)", color: "#ffffff", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: "rgba(255,255,255,0.2)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.1rem" }}>💰</div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#ffffff" }}>Submit New Expense Claim</h3>
+                  <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#c7d2fe" }}>Enter expense claim details for manager reimbursement</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowExpenseModal(false)} style={{ background: "none", border: "none", color: "#c7d2fe", fontSize: "1.4rem", cursor: "pointer" }}>✕</button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleExpenseSubmit} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#334155", marginBottom: "6px" }}>EXPENSE CATEGORY</label>
+                <select 
+                  value={category} 
+                  onChange={(e) => setCategory(e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", background: "#f8fafc", color: "#0f172a", fontWeight: "700" }}
+                >
+                  <option value="Travel">✈️ Travel & Transport</option>
+                  <option value="Food">🍲 Food & Meals</option>
+                  <option value="Accommodation">🏨 Hotel & Lodging</option>
+                  <option value="Client Meeting">🤝 Client Meeting & Advisory</option>
+                  <option value="Other">📦 Other Miscellaneous</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#334155", marginBottom: "6px" }}>CLAIM AMOUNT (₹)</label>
+                <input 
+                  type="number" 
+                  placeholder="e.g. 1500" 
+                  value={amount} 
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box", fontWeight: "700" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#334155", marginBottom: "6px" }}>EXPENSE DATE</label>
+                <input 
+                  type="date" 
+                  value={expenseDate} 
+                  onChange={(e) => setExpenseDate(e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#334155", marginBottom: "6px" }}>ASSIGNED CLIENT PROJECT</label>
+                <select 
+                  value={expenseProjectId} 
+                  onChange={(e) => setExpenseProjectId(e.target.value)}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", background: "#f8fafc", color: "#0f172a", fontWeight: "700" }}
+                >
+                  <option value="">General Store HQ (Seoni)</option>
+                  {displayProjects.map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#334155", marginBottom: "6px" }}>DESCRIPTION / REMARKS</label>
+                <textarea 
+                  placeholder="Describe purpose of expense..." 
+                  value={description} 
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                />
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+                <button 
+                  type="button" 
+                  onClick={() => setShowExpenseModal(false)} 
+                  style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  style={{ padding: "10px 22px", background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(37,99,235,0.3)" }}
+                >
+                  Submit Expense Claim ✓
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      )}
+
 
       {/* GUIDED 3-STEP CONSULTANT CHECK-IN WIZARD MODAL */}
       {showCheckInWizard && (

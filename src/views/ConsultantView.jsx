@@ -78,6 +78,16 @@ export default function ConsultantView({ activeTab }) {
   const [wizardCompletedTasks, setWizardCompletedTasks] = useState([]);
   const [wizardPendingTasks, setWizardPendingTasks] = useState([]);
 
+  const formatClockTime = (dateObj) => {
+    if (!dateObj) return "";
+    return dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  };
+
+  const formatClockDate = (dateObj) => {
+    if (!dateObj) return "";
+    return dateObj.toLocaleDateString([], { weekday: "long", month: "short", day: "numeric", year: "numeric" });
+  };
+
   // Fallback default project for newly registered consultants
   const defaultGeneralProject = {
     id: "general-store-001",

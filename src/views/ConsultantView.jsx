@@ -4,36 +4,26 @@ import ProjectsView from "./ProjectsView";
 import RecruiterView from "./RecruiterView";
 
 export default function ConsultantView({ activeTab }) {
-  const app = useApp();
   const { 
     currentUser, 
-    expenses = [], 
-    projects = [],
+    expenses, 
+    projects,
     addExpense, 
     checkInConsultant, 
     checkOutConsultant, 
     getEmployeeBalanceDetails,
     getEmployeeLedger,
-    advanceRequests = [],
+    advanceRequests,
     requestAdvance,
     setToast,
-    settings = {},
-    leaveRequests = [],
+    settings,
+    leaveRequests,
     applyLeave,
     cancelLeave,
     getLeaveBalance,
     generatePayslip,
     updateUserProfile
-  } = app || {};
-
-  if (!currentUser) {
-    return (
-      <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
-        <h3>Loading session...</h3>
-        <p>Please wait or sign in to access your consultant dashboard.</p>
-      </div>
-    );
-  }
+  } = useApp();
 
   // Digital clock state
   const [time, setTime] = useState(new Date());
@@ -51,15 +41,15 @@ export default function ConsultantView({ activeTab }) {
   const [advPurpose, setAdvPurpose] = useState("");
 
   // Modal profile & Keka Profile Tab states
-    // Guided Check-In & Check-Out Wizard State
+  // Guided Check-In & Check-Out Wizard State
   const [showCheckInWizard, setShowCheckInWizard] = useState(false);
   const [showCheckOutWizard, setShowCheckOutWizard] = useState(false);
-  const [wizardStep, setWizardStep] = useState(1);
   const [selectedWizardProjectId, setSelectedWizardProjectId] = useState("");
   const [wizardTasks, setWizardTasks] = useState([]);
   const [wizardNewTaskInput, setWizardNewTaskInput] = useState("");
-  const [wizardSelfie, setWizardSelfie] = useState(null);
-  const [wizardChecklistAcknowledged, setWizardChecklistAcknowledged] = useState(false);
+  const [wizardCheckOutRemarks, setWizardCheckOutRemarks] = useState("");
+  const [wizardCompletedTasks, setWizardCompletedTasks] = useState([]);
+  const [wizardPendingTasks, setWizardPendingTasks] = useState([]);
 
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [ledgerViewMode, setLedgerViewMode] = useState("grid"); // 'grid' or 'calendar'
@@ -163,11 +153,11 @@ export default function ConsultantView({ activeTab }) {
   };
 
   const todayStr = new Date().toISOString().split("T")[0];
-  const myAttendance = currentUser?.attendance || [];
+  const myAttendance = currentUser.attendance || [];
   const todayPunch = myAttendance.find(a => a.date === todayStr);
 
   // Handlers
-  
+
   // Fallback default project for newly registered consultants with zero assigned projects
   const defaultGeneralProject = {
     id: "general-store-001",
@@ -182,9 +172,12 @@ export default function ConsultantView({ activeTab }) {
   const handleOpenCheckInWizard = () => {
     const defaultProjId = (projects && projects.length > 0) ? projects[0].id : defaultGeneralProject.id;
     setSelectedWizardProjectId(punchProjectId || defaultProjId);
-    setWizardStep(1);
-    setWizardChecklistAcknowledged(true);
     setShowCheckInWizard(true);
+  };
+
+  const handleOpenCheckOutWizard = () => {
+    setWizardCheckOutRemarks(punchRemarks || "");
+    setShowCheckOutWizard(true);
   };
 
   const handleCompleteCheckInSubmit = (e) => {
@@ -211,32 +204,34 @@ export default function ConsultantView({ activeTab }) {
     setPunchRemarks("");
   };
 
-  const handlePunchIn = () => {
+  const handleCompleteCheckOutSubmit = (e) => {
+    if (e) e.preventDefault();
     if (!currentUser?.id) {
-      if (setToast) setToast({ message: "No active consultant session found.", type: "error" });
+      if (setToast) setToast({ message: "No active session found.", type: "error" });
       return;
     }
-    const availProjects = projects || [];
-    const selProj = availProjects.find(p => p.id === punchProjectId) || availProjects[0];
-    const projId = selProj ? selProj.id : (punchProjectId || "general");
-    const projName = selProj ? (selProj.name || selProj.code || "General Site") : "General Shift";
-
-    if (checkInConsultant) {
-      checkInConsultant(currentUser.id, punchRemarks || "Daily Shift Check In", projId, projName);
-      if (setToast) setToast({ message: `Checked in successfully for ${projName}!`, type: "success" });
+    if (checkOutConsultant) {
+      checkOutConsultant(currentUser.id, {
+        remarks: wizardCheckOutRemarks || punchRemarks || "Daily Shift Check Out",
+        completedTasks: wizardCompletedTasks,
+        pendingTasks: wizardPendingTasks
+      });
+      if (setToast) setToast({ message: "✓ Checked out successfully. Shift logged!", type: "success" });
     }
+    setShowCheckOutWizard(false);
+    setPunchRemarks("");
+  };
+
+  const handlePunchIn = () => {
+    const selProj = projects.find(p => p.id === punchProjectId);
+    checkInConsultant(currentUser.id, punchRemarks, punchProjectId, selProj ? selProj.name : "");
+    setToast({ message: `Checked in successfully${selProj ? ` for ${selProj.code}` : ""}.`, type: "success" });
     setPunchRemarks("");
   };
 
   const handlePunchOut = () => {
-    if (!currentUser?.id) {
-      if (setToast) setToast({ message: "No active consultant session found.", type: "error" });
-      return;
-    }
-    if (checkOutConsultant) {
-      checkOutConsultant(currentUser.id, punchRemarks || "Daily Shift Check Out");
-      if (setToast) setToast({ message: "Checked out successfully.", type: "success" });
-    }
+    checkOutConsultant(currentUser.id, punchRemarks);
+    setToast({ message: "Checked out successfully.", type: "success" });
     setPunchRemarks("");
   };
 
@@ -334,8 +329,8 @@ export default function ConsultantView({ activeTab }) {
   const calendarDays = generateMonthCalendar();
 
   // Filter expenses and advances submitted by this user
-  const myExpenses = (expenses || []).filter(e => e.employeeId === currentUser?.id);
-  const myAdvanceRequests = (advanceRequests || []).filter(r => r.employeeId === currentUser?.id);
+  const myExpenses = expenses.filter(e => e.employeeId === currentUser.id);
+  const myAdvanceRequests = advanceRequests.filter(r => r.employeeId === currentUser.id);
 
   // Calculations for Expense Dashboard
   const myPendingExpenses = myExpenses.filter(e => e.status === "Pending");
@@ -344,7 +339,7 @@ export default function ConsultantView({ activeTab }) {
   const approvedExpenseTotal = myApprovedExpenses.reduce((sum, e) => sum + e.amount, 0);
 
   // Get balance details
-  const balanceDetails = (getEmployeeBalanceDetails && currentUser?.id ? getEmployeeBalanceDetails(currentUser.id) : null) || {
+  const balanceDetails = getEmployeeBalanceDetails(currentUser.id) || {
     initialAdvance: 0,
     totalSpent: 0,
     availableBalance: 0,
@@ -720,20 +715,31 @@ export default function ConsultantView({ activeTab }) {
                   <button 
                     type="button" 
                     onClick={handleOpenCheckInWizard}
-                    style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "4px", padding: "8px 14px", fontWeight: "600", fontSize: "0.82rem", cursor: "pointer", width: "100%" }}
+                    style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "6px", padding: "10px 14px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 12px rgba(22,163,74,0.25)" }}
                   >
-                    ✔ Check In Shift
+                    ✔ Check In Shift (Site Visit)
                   </button>
                 ) : !todayPunch.checkOut ? (
                   <button 
                     type="button" 
-                    onClick={handlePunchOut}
-                    style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "4px", padding: "8px 14px", fontWeight: "600", fontSize: "0.82rem", cursor: "pointer", width: "100%" }}
+                    onClick={handleOpenCheckOutWizard}
+                    style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "6px", padding: "10px 14px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 12px rgba(220,38,38,0.25)" }}
                   >
                     ✖ Check Out Shift
                   </button>
                 ) : (
-                  <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "600", textAlign: "center" }}>✓ Shift Completed Today</span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    <div style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "700", textAlign: "center", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "6px", borderRadius: "6px" }}>
+                      ✓ Shift Completed Today ({todayPunch.checkIn} - {todayPunch.checkOut})
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={handleOpenCheckInWizard}
+                      style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "6px", padding: "8px 14px", fontWeight: "700", fontSize: "0.82rem", cursor: "pointer", width: "100%" }}
+                    >
+                      + Check In New Shift (Site Visit)
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -1826,8 +1832,8 @@ export default function ConsultantView({ activeTab }) {
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: "rgba(34,197,94,0.2)", color: "#4ade80", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800" }}>✓</div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#ffffff" }}>Consultant Shift Check-In</h3>
-                  <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#94a3b8" }}>Confirm site location & daily tasks before starting</p>
+                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#ffffff" }}>Consultant Shift Check-In Form</h3>
+                  <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#94a3b8" }}>Select site location & remarks to start your shift</p>
                 </div>
               </div>
               <button type="button" onClick={() => setShowCheckInWizard(false)} style={{ background: "none", border: "none", color: "#94a3b8", fontSize: "1.4rem", cursor: "pointer" }}>✕</button>
@@ -1870,7 +1876,7 @@ export default function ConsultantView({ activeTab }) {
                   value={punchRemarks}
                   onChange={(e) => setPunchRemarks(e.target.value)}
                   placeholder="e.g. On-site retail inventory check, client advisory meeting..."
-                  rows={2}
+                  rows={3}
                   style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
                 />
               </div>
@@ -1892,6 +1898,72 @@ export default function ConsultantView({ activeTab }) {
                 style={{ padding: "10px 24px", background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
               >
                 Complete Check In & Start Shift ✓
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* GUIDED CONSULTANT CHECK-OUT WIZARD MODAL */}
+      {showCheckOutWizard && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "16px", width: "100%", maxWidth: "560px", overflow: "hidden", boxShadow: "0 25px 50px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+            
+            {/* Header */}
+            <div style={{ background: "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)", color: "#ffffff", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: "rgba(255,255,255,0.2)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800" }}>✖</div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#ffffff" }}>End Shift Check-Out Form</h3>
+                  <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#fca5a5" }}>Log shift summary & complete day check-out</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowCheckOutWizard(false)} style={{ background: "none", border: "none", color: "#fca5a5", fontSize: "1.4rem", cursor: "pointer" }}>✕</button>
+            </div>
+
+            {/* Content */}
+            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
+              
+              {/* Shift Summary Box */}
+              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "14px 18px", borderRadius: "8px" }}>
+                <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "#991b1b" }}>Shift Check-In Summary</div>
+                <div style={{ fontSize: "0.78rem", color: "#7f1d1d", marginTop: "4px" }}>
+                  Check In Time: <strong>{todayPunch?.checkIn || "10:30 AM"}</strong> • Date: <strong>{todayStr}</strong>
+                </div>
+              </div>
+
+              {/* Check Out Remarks */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: "700", color: "#334155", marginBottom: "8px" }}>
+                  📝 END OF SHIFT REMARKS / WORK COMPLETED
+                </label>
+                <textarea
+                  value={wizardCheckOutRemarks}
+                  onChange={(e) => setWizardCheckOutRemarks(e.target.value)}
+                  placeholder="Summary of advisory tasks completed during shift..."
+                  rows={3}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                />
+              </div>
+
+            </div>
+
+            {/* Footer Buttons */}
+            <div style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button 
+                type="button" 
+                onClick={() => setShowCheckOutWizard(false)} 
+                style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                onClick={handleCompleteCheckOutSubmit} 
+                style={{ padding: "10px 24px", background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(220,38,38,0.3)" }}
+              >
+                Complete Check Out & Close Shift ✖
               </button>
             </div>
 

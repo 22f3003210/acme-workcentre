@@ -41,14 +41,17 @@ export default function ConsultantView({ activeTab }) {
   const [advPurpose, setAdvPurpose] = useState("");
 
   // Modal profile & Keka Profile Tab states
-  // Guided Check-In & Check-Out Wizard State
+  // All Modal States
   const [showCheckInWizard, setShowCheckInWizard] = useState(false);
   const [showCheckOutWizard, setShowCheckOutWizard] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showApplyLeaveModal, setShowApplyLeaveModal] = useState(false);
+  const [showSelfOnboardingModal, setShowSelfOnboardingModal] = useState(false);
+  const [profileStep, setProfileStep] = useState(1);
   const [wizardStep, setWizardStep] = useState(1);
   const [selectedWizardProjectId, setSelectedWizardProjectId] = useState("");
   
   // Profile & Sub-tab States
-  const [showProfileModal, setShowProfileModal] = useState(false);
   const [ledgerViewMode, setLedgerViewMode] = useState("grid");
   const [profileTab, setProfileTab] = useState("TIME");
   const [timeSubTab, setTimeSubTab] = useState("Attendance");

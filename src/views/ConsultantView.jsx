@@ -47,6 +47,13 @@ export default function ConsultantView({ activeTab }) {
   const [wizardStep, setWizardStep] = useState(1);
   const [selectedWizardProjectId, setSelectedWizardProjectId] = useState("");
   
+  // Profile & Sub-tab States
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [ledgerViewMode, setLedgerViewMode] = useState("grid");
+  const [profileTab, setProfileTab] = useState("TIME");
+  const [timeSubTab, setTimeSubTab] = useState("Attendance");
+  const [statsRange, setStatsRange] = useState("Last Week");
+
   // Step 1: Purpose & Scope of Work
   const [visitPurpose, setVisitPurpose] = useState("Client Site Advisory & Store Operations Audit");
   const [scopeTasks, setScopeTasks] = useState([

@@ -783,7 +783,65 @@ export default function ProjectsView() {
             </div>
 
             {/* Quick Action Buttons & Right Close ✕ Button */}
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              
+              {/* Assign Consultant Dropdown Widget */}
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "4px 10px", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
+                <span style={{ fontSize: "0.8rem", fontWeight: "800", color: "#334155", display: "flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}>
+                  👤 Assign Consultant:
+                </span>
+                <select
+                  value={effectiveProject.assignedConsultantId || (effectiveProject.assignedConsultants && effectiveProject.assignedConsultants[0]) || ""}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    const selectedUser = (users || []).find(u => u.id === selectedId || u.empCode === selectedId);
+                    const consultantName = selectedUser ? selectedUser.name : "";
+                    
+                    updateProject(effectiveProject.id, {
+                      assignedConsultantId: selectedId,
+                      assignedConsultantName: consultantName,
+                      assignedConsultant: consultantName,
+                      assignedConsultants: selectedId ? [selectedId] : []
+                    });
+
+                    const updated = projects.find(p => p.id === selectedProject.id);
+                    if (updated) {
+                      setSelectedProject({ 
+                        ...updated, 
+                        assignedConsultantId: selectedId, 
+                        assignedConsultantName: consultantName,
+                        assignedConsultant: consultantName,
+                        assignedConsultants: selectedId ? [selectedId] : []
+                      });
+                    }
+
+                    if (setToast) {
+                      setToast({ 
+                        message: selectedId ? `✓ Project assigned to ${consultantName}! It will now appear in their login portal.` : "Consultant assignment removed.", 
+                        type: "success" 
+                      });
+                    }
+                  }}
+                  style={{
+                    padding: "6px 10px",
+                    borderRadius: "6px",
+                    border: "1px solid #cbd5e1",
+                    fontSize: "0.82rem",
+                    fontWeight: "800",
+                    background: "#ffffff",
+                    color: "#0f172a",
+                    cursor: "pointer",
+                    outline: "none"
+                  }}
+                >
+                  <option value="">-- Select Active Consultant --</option>
+                  {(users || []).map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.role || "Consultant"} • {u.email || u.empCode || u.id})
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button style={{ background: "#f1f5f9", border: "none", width: "36px", height: "36px", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Send Email">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </button>
@@ -2185,39 +2243,6 @@ export default function ProjectsView() {
                   }}
                   required
                 />
-              </div>
-
-              {/* Assign Consultant Field */}
-              <div>
-                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#374151", marginBottom: "6px", display: "block" }}>
-                  👤 Assign Consultant / Staff Operator
-                </label>
-                <select
-                  value={assignedConsultantId}
-                  onChange={e => setAssignedConsultantId(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    fontSize: "0.9rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "6px",
-                    outline: "none",
-                    boxSizing: "border-box",
-                    background: "#ffffff",
-                    color: "#111827",
-                    fontWeight: "600"
-                  }}
-                >
-                  <option value="">-- Select Consultant to Assign --</option>
-                  {(users || []).map(u => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.role || "Consultant"} • {u.email || u.empCode || u.id})
-                    </option>
-                  ))}
-                </select>
-                <span style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "4px", display: "block" }}>
-                  Assigned consultant will see project details in their login portal & check-in form.
-                </span>
               </div>
 
               {/* POC */}

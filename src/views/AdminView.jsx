@@ -3684,10 +3684,12 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   </div>
                 ) : (() => {
                   const isOutMode = selectedSwipeMode === "OUT";
-                  const displaySelfie = isOutMode ? (activeRecord.checkOutSelfie || activeRecord.selfie || activeRecord.avatar) : (activeRecord.checkInSelfie || activeRecord.selfie || activeRecord.avatar);
-                  const displayTime = isOutMode ? (activeRecord.checkOut || activeRecord.time) : (activeRecord.checkIn || activeRecord.time);
-                  const displayAddress = isOutMode ? (activeRecord.checkOutAddress || activeRecord.fullAddress) : (activeRecord.checkInAddress || activeRecord.fullAddress);
-                  const displayCoords = isOutMode ? (activeRecord.checkOutCoordinates || activeRecord.coordinates) : (activeRecord.checkInCoordinates || activeRecord.coordinates);
+                  const isOutMissing = isOutMode && !activeRecord.checkOut && !activeRecord.checkOutSelfie;
+
+                  const displaySelfie = isOutMode ? (activeRecord.checkOutSelfie || null) : (activeRecord.checkInSelfie || activeRecord.selfie || activeRecord.avatar);
+                  const displayTime = isOutMode ? (activeRecord.checkOut || null) : (activeRecord.checkIn || activeRecord.time);
+                  const displayAddress = isOutMode ? (activeRecord.checkOutAddress || null) : (activeRecord.checkInAddress || activeRecord.fullAddress);
+                  const displayCoords = isOutMode ? (activeRecord.checkOutCoordinates || null) : (activeRecord.checkInCoordinates || activeRecord.coordinates);
 
                   return (
                     <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 10px 25px rgba(0,0,0,0.05)" }}>
@@ -3709,40 +3711,58 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           >
                             IN
                           </button>
-                          <button 
-                            type="button" 
-                            onClick={() => setSelectedSwipeMode("OUT")}
-                            style={{
-                              padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer",
-                              background: isOutMode ? "#dc2626" : "#ffffff", color: isOutMode ? "#ffffff" : "#475569",
-                              border: isOutMode ? "none" : "1px solid #cbd5e1"
-                            }}
-                          >
-                            OUT
-                          </button>
+                          {activeRecord.checkOut ? (
+                            <button 
+                              type="button" 
+                              onClick={() => setSelectedSwipeMode("OUT")}
+                              style={{
+                                padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer",
+                                background: isOutMode ? "#dc2626" : "#ffffff", color: isOutMode ? "#ffffff" : "#475569",
+                                border: isOutMode ? "none" : "1px solid #cbd5e1"
+                              }}
+                            >
+                              OUT
+                            </button>
+                          ) : (
+                            <span style={{ padding: "4px 8px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: "800", background: "#fff7ed", color: "#c2410c", border: "1px solid #fed7aa" }}>
+                              ⚠️ Swipe Missing
+                            </span>
+                          )}
                         </div>
                       </div>
 
                       {/* Selfie Image Container */}
                       <div style={{ background: "#f8fafc", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                        {displaySelfie && (displaySelfie.startsWith("data:") || displaySelfie.startsWith("http")) ? (
-                          <img 
-                            src={displaySelfie} 
-                            alt={activeRecord.name}
-                            style={{ width: "100%", height: "240px", objectFit: "cover", borderRadius: "8px", border: "1px solid #cbd5e1", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
-                          />
-                        ) : (
-                          <div style={{ width: "100%", height: "220px", background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)", borderRadius: "8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#ffffff", fontWeight: "800", fontSize: "3.5rem" }}>
-                            {activeRecord.name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2)}
+                        {isOutMissing ? (
+                          <div style={{ width: "100%", padding: "32px 16px", background: "#fff7ed", border: "1px dashed #fdba74", borderRadius: "10px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "8px" }}>
+                            <div style={{ fontSize: "2.4rem" }}>⚠️</div>
+                            <div style={{ fontWeight: "800", color: "#c2410c", fontSize: "0.95rem" }}>Swipe Missing</div>
+                            <div style={{ fontSize: "0.78rem", color: "#9a3412", lineHeight: 1.4 }}>
+                              Employee is currently clocked in. No check-out timestamp or photo recorded yet.
+                            </div>
                           </div>
+                        ) : (
+                          <>
+                            {displaySelfie && (displaySelfie.startsWith("data:") || displaySelfie.startsWith("http")) ? (
+                              <img 
+                                src={displaySelfie} 
+                                alt={activeRecord.name}
+                                style={{ width: "100%", height: "240px", objectFit: "cover", borderRadius: "8px", border: "1px solid #cbd5e1", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                              />
+                            ) : (
+                              <div style={{ width: "100%", height: "220px", background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)", borderRadius: "8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#ffffff", fontWeight: "800", fontSize: "3.5rem" }}>
+                                {activeRecord.name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2)}
+                              </div>
+                            )}
+                          </>
                         )}
                         <div style={{ width: "100%", marginTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div>
                             <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>
                               {isOutMode ? "Swipe-out Time" : "Swipe-in Time"}
                             </span>
-                            <span style={{ fontSize: "1.15rem", fontWeight: "800", color: isOutMode ? "#991b1b" : "#166534" }}>
-                              {displayTime || "-"}
+                            <span style={{ fontSize: "1.15rem", fontWeight: "800", color: isOutMode ? (isOutMissing ? "#c2410c" : "#991b1b") : "#166534" }}>
+                              {isOutMissing ? "⚠️ Swipe Missing" : (displayTime || "-")}
                             </span>
                           </div>
                           <span style={{ padding: "4px 10px", borderRadius: "12px", background: isOutMode ? "#fef2f2" : "#f0fdf4", color: isOutMode ? "#dc2626" : "#16a34a", fontSize: "0.75rem", fontWeight: "800" }}>
@@ -3915,13 +3935,19 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     >
                       🟢 Check-In ({mapModalSwipe.checkIn || mapModalSwipe.time})
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMapSelfieTab("OUT")}
-                      style={{ flex: 1, padding: "6px 0", border: "none", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer", background: selectedMapSelfieTab === "OUT" ? "#ffffff" : "transparent", color: selectedMapSelfieTab === "OUT" ? "#991b1b" : "#64748b", boxShadow: selectedMapSelfieTab === "OUT" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
-                    >
-                      🔴 Check-Out ({mapModalSwipe.checkOut || "Active"})
-                    </button>
+                    {mapModalSwipe.checkOut ? (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMapSelfieTab("OUT")}
+                        style={{ flex: 1, padding: "6px 0", border: "none", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer", background: selectedMapSelfieTab === "OUT" ? "#ffffff" : "transparent", color: selectedMapSelfieTab === "OUT" ? "#991b1b" : "#64748b", boxShadow: selectedMapSelfieTab === "OUT" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
+                      >
+                        🔴 Check-Out ({mapModalSwipe.checkOut})
+                      </button>
+                    ) : (
+                      <div style={{ flex: 1, padding: "6px 0", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "800", background: "#fff7ed", color: "#c2410c", textAlign: "center" }}>
+                        ⚠️ Swipe Missing
+                      </div>
+                    )}
                   </div>
 
                   {/* Selfie Display */}
@@ -3943,22 +3969,32 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       </div>
                     </>
                   ) : (
-                    <>
-                      {mapModalSwipe.checkOutSelfie ? (
-                        <img 
-                          src={mapModalSwipe.checkOutSelfie} 
-                          alt="Check-Out Selfie"
-                          style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "8px", border: "2px solid #fecaca" }}
-                        />
-                      ) : (
-                        <div style={{ width: "100%", height: "140px", background: "#f8fafc", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: "0.8rem" }}>
-                          {mapModalSwipe.checkOut ? "No Check-Out Selfie Captured" : "Shift Currently In Progress"}
+                    !mapModalSwipe.checkOut && !mapModalSwipe.checkOutSelfie ? (
+                      <div style={{ padding: "28px 14px", background: "#fff7ed", border: "1px dashed #fdba74", borderRadius: "10px", textAlign: "center" }}>
+                        <div style={{ fontSize: "2rem", marginBottom: "4px" }}>⚠️</div>
+                        <div style={{ fontWeight: "800", color: "#c2410c", fontSize: "0.95rem" }}>Swipe Missing</div>
+                        <div style={{ fontSize: "0.75rem", color: "#9a3412", marginTop: "4px", lineHeight: 1.3 }}>
+                          Employee has not checked out for this shift yet. Shift currently active.
                         </div>
-                      )}
-                      <div style={{ fontSize: "0.73rem", color: mapModalSwipe.checkOut ? "#991b1b" : "#64748b", lineHeight: 1.3, textAlign: "center", fontWeight: "700" }}>
-                        📍 Check-Out: {mapModalSwipe.checkOutAddress || (mapModalSwipe.checkOut ? mapModalSwipe.fullAddress : "Not Checked Out Yet")}
                       </div>
-                    </>
+                    ) : (
+                      <>
+                        {mapModalSwipe.checkOutSelfie ? (
+                          <img 
+                            src={mapModalSwipe.checkOutSelfie} 
+                            alt="Check-Out Selfie"
+                            style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "8px", border: "2px solid #fecaca" }}
+                          />
+                        ) : (
+                          <div style={{ width: "100%", height: "140px", background: "#f8fafc", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: "0.8rem" }}>
+                            No Check-Out Selfie Captured
+                          </div>
+                        )}
+                        <div style={{ fontSize: "0.73rem", color: "#991b1b", lineHeight: 1.3, textAlign: "center", fontWeight: "700" }}>
+                          📍 Check-Out: {mapModalSwipe.checkOutAddress || mapModalSwipe.fullAddress}
+                        </div>
+                      </>
+                    )
                   )}
                 </div>
 

@@ -1,3 +1,95 @@
+
+// -------------------------------------------------------------
+// LEAFLET MAP VIEW COMPONENT (SELFIE CARD ANCHORED TO LOCATION PIN)
+// -------------------------------------------------------------
+const LeafletMapView = ({ lat, lng, name, avatar, fullAddress, date, time }) => {
+  const containerRef = useRef(null);
+  const mapRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    // Inject Leaflet CSS
+    if (!document.getElementById("leaflet-css")) {
+      const link = document.createElement("link");
+      link.id = "leaflet-css";
+      link.rel = "stylesheet";
+      link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+      document.head.appendChild(link);
+    }
+
+    const numLat = parseFloat(lat) || 17.3933;
+    const numLng = parseFloat(lng) || 78.4758;
+
+    const initMap = () => {
+      if (!window.L || !containerRef.current) return;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+
+      const map = window.L.map(containerRef.current, {
+        center: [numLat, numLng],
+        zoom: 16,
+        zoomControl: true
+      });
+      mapRef.current = map;
+
+      // Add OpenStreetMap Tile Layer
+      window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Custom Red Location Pin Icon
+      const pinIcon = window.L.divIcon({
+        className: 'custom-pin-icon',
+        html: `<div style="font-size: 2.2rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.35)); line-height: 1;">📍</div>`,
+        iconSize: [36, 36],
+        iconAnchor: [18, 36],
+        popupAnchor: [0, -34]
+      });
+
+      const marker = window.L.marker([numLat, numLng], { icon: pinIcon }).addTo(map);
+
+      // Selfie Popup Card content anchored directly to the location pin
+      const popupHtml = `
+        <div style="width: 220px; font-family: Inter, sans-serif; text-align: center; padding: 4px;">
+          <div style="font-weight: 800; font-size: 0.82rem; color: #0f172a; margin-bottom: 6px;">📸 Verification Selfie</div>
+          ${avatar ? `<img src="${avatar}" alt="${name}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);" />` : `<div style="height: 100px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 0.78rem;">No Selfie Captured</div>`}
+          <div style="font-size: 0.76rem; font-weight: 800; color: #2563eb; line-height: 1.3;">${fullAddress || "Abids, Hyderabad"}</div>
+          <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px; font-weight: 600;">Check-In Time: ${time || "05:22 pm"}</div>
+        </div>
+      `;
+
+      marker.bindPopup(popupHtml, {
+        closeButton: true,
+        autoClose: false,
+        closeOnClick: false,
+        minWidth: 230
+      }).openPopup();
+    };
+
+    if (window.L) {
+      initMap();
+    } else {
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+      script.onload = initMap;
+      document.body.appendChild(script);
+    }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [lat, lng, name, avatar, fullAddress, date, time]);
+
+  return <div ref={containerRef} style={{ width: "100%", height: "100%", zIndex: 1 }} />;
+};
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp, getTodayDateString } from "../context/AppContext";

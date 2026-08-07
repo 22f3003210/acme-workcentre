@@ -6,6 +6,14 @@ const LeafletMapView = ({ lat, lng, name, avatar, fullAddress, date, time }) => 
   const containerRef = useRef(null);
   const mapRef = useRef(null);
 
+  // Clean ward/mandal administrative jargon from address
+  const cleanDisplayAddress = (addr) => {
+    if (!addr) return "Abids, Hyderabad, Telangana, India";
+    return addr.replace(/Ward\s*\d*\s*Gunfoundry,?/gi, "Abids,").replace(/Gunfoundry,?/gi, "Abids,").replace(/,\s*,/g, ",");
+  };
+
+  const finalAddr = cleanDisplayAddress(fullAddress);
+
   useEffect(() => {
     if (!containerRef.current) return;
     
@@ -41,32 +49,35 @@ const LeafletMapView = ({ lat, lng, name, avatar, fullAddress, date, time }) => 
         attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
 
-      // Custom Red Location Pin Icon
+      // Custom Location Pin Icon
       const pinIcon = window.L.divIcon({
         className: 'custom-pin-icon',
-        html: `<div style="font-size: 2.2rem; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.35)); line-height: 1;">📍</div>`,
-        iconSize: [36, 36],
-        iconAnchor: [18, 36],
-        popupAnchor: [0, -34]
+        html: `<div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer;" title="Click location pin to view Verification Selfie">
+          <div style="background: #2563eb; color: #ffffff; border: 3px solid #ffffff; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; box-shadow: 0 6px 16px rgba(37,99,235,0.45);">📍</div>
+        </div>`,
+        iconSize: [44, 44],
+        iconAnchor: [22, 44],
+        popupAnchor: [0, -42]
       });
 
       const marker = window.L.marker([numLat, numLng], { icon: pinIcon }).addTo(map);
 
-      // Selfie Popup Card content anchored directly to the location pin
+      // Selfie Popup Card content bound to location pin
       const popupHtml = `
-        <div style="width: 220px; font-family: Inter, sans-serif; text-align: center; padding: 4px;">
-          <div style="font-weight: 800; font-size: 0.82rem; color: #0f172a; margin-bottom: 6px;">📸 Verification Selfie</div>
-          ${avatar ? `<img src="${avatar}" alt="${name}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 6px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);" />` : `<div style="height: 100px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 0.78rem;">No Selfie Captured</div>`}
-          <div style="font-size: 0.76rem; font-weight: 800; color: #2563eb; line-height: 1.3;">${fullAddress || "Abids, Hyderabad"}</div>
-          <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px; font-weight: 600;">Check-In Time: ${time || "05:22 pm"}</div>
+        <div style="width: 230px; font-family: Inter, sans-serif; text-align: center; padding: 4px;">
+          <div style="font-weight: 800; font-size: 0.85rem; color: #0f172a; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 4px;">📸 Verification Selfie</div>
+          ${avatar ? `<img src="${avatar}" alt="${name}" style="width: 100%; height: 155px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />` : `<div style="height: 110px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748b; font-size: 0.78rem;">No Selfie Captured</div>`}
+          <div style="font-size: 0.78rem; font-weight: 800; color: #2563eb; line-height: 1.35;">${finalAddr}</div>
+          <div style="font-size: 0.72rem; color: #64748b; margin-top: 4px; font-weight: 600;">Check-In Time: ${time || "05:22 pm"}</div>
         </div>
       `;
 
+      // Bind popup: Clicking pin opens selfie card; clicking ✕ returns to location pin icon!
       marker.bindPopup(popupHtml, {
         closeButton: true,
         autoClose: false,
         closeOnClick: false,
-        minWidth: 230
+        minWidth: 240
       }).openPopup();
     };
 
@@ -3310,6 +3321,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
               const attList = u.attendance || [];
               return attList.map((a, idx) => {
                 let recAddress = a.address || (a.remarks && a.remarks.includes("Location: ") ? a.remarks.split("Location: ")[1] : null) || a.locationName || a.projectName || "Abids, Hyderabad, Telangana, India";
+                recAddress = recAddress.replace(/Ward\s*\d*\s*Gunfoundry,?/gi, "Abids,").replace(/Gunfoundry,?/gi, "Abids,").replace(/,\s*,/g, ",");
                 let recDoor = recAddress.includes(",") ? recAddress.split(",")[0].trim() : (a.projectName || "Store Site");
 
                 let parsedCoords = { lat: "17.3933", lng: "78.4758" };

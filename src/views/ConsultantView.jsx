@@ -213,8 +213,21 @@ export default function ConsultantView({ activeTab }) {
             const nomData = await nomRes.json();
             if (nomData && nomData.address) {
               const a = nomData.address;
-              const areaName = a.suburb || a.neighbourhood || a.quarter || a.residential || a.road || a.subdistrict || a.locality || "";
-              const cityName = a.city || a.town || a.city_district || a.county || "Hyderabad";
+              
+              const isJargon = (str) => {
+                if (!str) return true;
+                return /ward|mandal|corporation|zone|circle|district|municipality/i.test(str);
+              };
+
+              let areaName = "";
+              if (!isJargon(a.suburb)) areaName = a.suburb;
+              else if (!isJargon(a.neighbourhood)) areaName = a.neighbourhood;
+              else if (!isJargon(a.locality)) areaName = a.locality;
+              else if (!isJargon(a.residential)) areaName = a.residential;
+              else if (!isJargon(a.road)) areaName = a.road;
+              else areaName = "Abids";
+
+              const cityName = a.city || a.town || "Hyderabad";
               const stateName = a.state || "Telangana";
               const countryName = a.country || "India";
               

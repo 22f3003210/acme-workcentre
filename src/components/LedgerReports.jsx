@@ -1267,64 +1267,32 @@ export default function LedgerReports() {
         const statusText = activeItemInGroup.status === "Approved" ? `Expense last Approved by ${activeItemInGroup.reviewedBy || activeItemInGroup.approvedBy || "HR MANAGER"}` : activeItemInGroup.status === "Rejected" ? `Expense Rejected: ${activeItemInGroup.rejectionReason || "Rejection notes logged"}` : "Expense pending approval review";
 
         const activeReceipts = (() => {
-          let rawList = activeItemInGroup.receipts;
-          if ((!rawList || rawList.length === 0) && activeItemInGroup.receipt && typeof activeItemInGroup.receipt === "string" && activeItemInGroup.receipt.includes("|||")) {
-            rawList = activeItemInGroup.receipt.split("|||");
-          }
+          const item = activeItemInGroup;
+          if (!item) return [];
 
-          if (Array.isArray(rawList) && rawList.length > 0) {
-            return rawList.map((item, idx) => {
-              if (typeof item === "string") {
-                return { url: item, name: `Receipt #${idx + 1}` };
-              }
-              return {
-                url: item.url || item.receipt || item.data || "",
-                name: item.name || item.receipt_name || `Receipt #${idx + 1}`,
-                type: item.type || ""
-              };
-            });
-          }
-
-          const parseString = (str, fallbackName) => {
-            if (!str || typeof str !== "string") return null;
-            const trimmed = str.trim();
-            if (trimmed.startsWith("[")) {
+          let list = [];
+          if (Array.isArray(item.receipts) && item.receipts.length > 0) {
+            list = item.receipts;
+          } else if (item.receipt) {
+            if (typeof item.receipt === "string" && item.receipt.startsWith("[")) {
               try {
-                const parsed = JSON.parse(trimmed);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                  return parsed.map((item, idx) => ({
-                    url: item.url || item.receipt || "",
-                    name: item.name || item.receipt_name || `Receipt #${idx + 1}`,
-                    type: item.type || ""
-                  }));
-                }
+                const parsed = JSON.parse(item.receipt);
+                if (Array.isArray(parsed)) list = parsed;
               } catch (e) {}
+            } else if (typeof item.receipt === "string" && item.receipt.includes("|||")) {
+              list = item.receipt.split("|||");
+            } else {
+              list = [item.receipt];
             }
-            if (trimmed.includes("|||")) {
-              const urls = trimmed.split("|||");
-              const names = (fallbackName || "").split("|||");
-              return urls.map((u, i) => ({
-                url: u.trim(),
-                name: (names[i] || `Receipt #${i + 1}`).trim()
-              }));
+          } else if (item.receiptUrl) {
+            if (typeof item.receiptUrl === "string" && item.receiptUrl.includes("|||")) {
+              list = item.receiptUrl.split("|||");
+            } else {
+              list = [item.receiptUrl];
             }
-            return null;
-          };
-
-          const parsedFromReceipt = parseString(activeItemInGroup.receipt, activeItemInGroup.receipt_name || activeItemInGroup.receiptName);
-          if (parsedFromReceipt) return parsedFromReceipt;
-
-          const parsedFromUrl = parseString(activeItemInGroup.receiptUrl, activeItemInGroup.receiptName || activeItemInGroup.receipt_name);
-          if (parsedFromUrl) return parsedFromUrl;
-
-          if (activeItemInGroup.receipt) {
-            return [{ url: activeItemInGroup.receipt, name: activeItemInGroup.receipt_name || activeItemInGroup.receiptName || "Receipt File" }];
-          }
-          if (activeItemInGroup.receiptUrl) {
-            return [{ url: activeItemInGroup.receiptUrl, name: activeItemInGroup.receiptName || activeItemInGroup.receipt_name || "Receipt File" }];
           }
 
-          return [];
+          return list.map(r => (typeof r === "string" ? r : (r?.url || r?.receipt || ""))).filter(Boolean);
         })();
 
         return (
@@ -1405,135 +1373,33 @@ export default function LedgerReports() {
                   })}
                 </div>
 
-                {/* Middle column Receipt Viewer (Keka HR Style Carousel Viewer) */}
-                {activeReceipts.length === 0 ? (
-                  <div style={{ flex: 1, backgroundColor: "#3A4556", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#94a3b8", padding: "24px", gap: "12px" }}>
-                    <span style={{ fontSize: "2.5rem" }}>🖼️</span>
-                    <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "#cbd5e1" }}>No receipts attached for this claim</span>
-                  </div>
-                ) : (() => {
-                  const safeIdx = activeReceiptIdx < activeReceipts.length ? activeReceiptIdx : 0;
-                  const currentReceipt = activeReceipts[safeIdx] || activeReceipts[0];
-                  const isFirst = safeIdx === 0;
-                  const isLast = safeIdx === activeReceipts.length - 1;
-
-                  return (
-                    <div style={{ flex: 1, backgroundColor: "#475569", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
-                      
-                      {/* Keka HR Top Floating Toolbar */}
-                      <div style={{ padding: "8px 16px", backgroundColor: "#334155", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #475569", zIndex: 10 }}>
-                        
-                        {/* Left Arrow Button */}
-                        <button
-                          onClick={() => {
-                            if (!isFirst) {
-                              setActiveReceiptIdx(prev => prev - 1);
-                              setZoomScale(1);
-                            }
-                          }}
-                          disabled={isFirst}
-                          style={{
-                            background: isFirst ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.2)",
-                            color: isFirst ? "#94a3b8" : "#ffffff",
-                            border: "none",
-                            borderRadius: "4px",
-                            width: "28px",
-                            height: "28px",
-                            fontSize: "1.2rem",
-                            cursor: isFirst ? "not-allowed" : "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}
-                        >
-                          ‹
-                        </button>
-
-                        {/* Center Control Badge: Attachments 1/N - + Download */}
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px", backgroundColor: "#1e293b", padding: "4px 12px", borderRadius: "6px", border: "1px solid #475569" }}>
-                          <span style={{ fontSize: "0.76rem", color: "#e2e8f0", fontWeight: "500" }}>
-                            Attachments &nbsp;{safeIdx + 1}/{activeReceipts.length}
+                {/* Middle Column: Simple Scrollable Image Viewer Gallery */}
+                <div style={{ flex: 1, backgroundColor: "#334155", padding: "20px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "20px", alignItems: "center" }}>
+                  {activeReceipts.length === 0 ? (
+                    <div style={{ textAlign: "center", color: "#cbd5e1", margin: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                      <span style={{ fontSize: "3rem" }}>🖼️</span>
+                      <span style={{ fontSize: "0.95rem", fontWeight: "700" }}>No receipt photos attached for this claim</span>
+                    </div>
+                  ) : (
+                    activeReceipts.map((imgSrc, idx) => (
+                      <div key={idx} style={{ background: "#ffffff", borderRadius: "12px", padding: "14px", boxShadow: "0 10px 25px rgba(0,0,0,0.25)", maxWidth: "560px", width: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: "8px" }}>
+                          <span style={{ fontSize: "0.82rem", fontWeight: "800", color: "#1e293b" }}>
+                            📸 Receipt Photo #{idx + 1} of {activeReceipts.length}
                           </span>
-
-                          <span style={{ color: "#64748b" }}>|</span>
-
-                          {/* Zoom Out */}
-                          <button
-                            onClick={() => setZoomScale(prev => Math.max(0.5, prev - 0.25))}
-                            style={{ background: "none", border: "none", color: "#cbd5e1", fontSize: "1rem", cursor: "pointer", padding: "0 4px" }}
-                            title="Zoom Out"
-                          >
-                            −
-                          </button>
-
-                          {/* Zoom In */}
-                          <button
-                            onClick={() => setZoomScale(prev => Math.min(3, prev + 0.25))}
-                            style={{ background: "none", border: "none", color: "#cbd5e1", fontSize: "1rem", cursor: "pointer", padding: "0 4px" }}
-                            title="Zoom In"
-                          >
-                            ＋
-                          </button>
-
-                          {/* Reset Zoom */}
-                          <button
-                            onClick={() => setZoomScale(1)}
-                            style={{ background: "none", border: "none", color: "#94a3b8", fontSize: "0.72rem", cursor: "pointer", padding: "0 4px" }}
-                            title="Reset Zoom"
-                          >
-                            ⟲
-                          </button>
-
-                          {/* Download / Full View */}
-                          <a
-                            href={currentReceipt.url || currentReceipt.receipt}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            download={currentReceipt.name || `Receipt_${safeIdx + 1}`}
-                            style={{ color: "#cbd5e1", textDecoration: "none", fontSize: "0.85rem", marginLeft: "4px" }}
-                            title="Download / Open Full View"
-                          >
-                            📥
+                          <a href={imgSrc} target="_blank" rel="noopener noreferrer" download={`Receipt_${idx + 1}`} style={{ fontSize: "0.78rem", color: "#2563eb", fontWeight: "800", textDecoration: "none", background: "#eff6ff", padding: "3px 10px", borderRadius: "6px" }}>
+                            📥 Download / Open ↗
                           </a>
                         </div>
-
-                        {/* Right Arrow Button */}
-                        <button
-                          onClick={() => {
-                            if (!isLast) {
-                              setActiveReceiptIdx(prev => prev + 1);
-                              setZoomScale(1);
-                            }
-                          }}
-                          disabled={isLast}
-                          style={{
-                            background: isLast ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.2)",
-                            color: isLast ? "#94a3b8" : "#ffffff",
-                            border: "none",
-                            borderRadius: "4px",
-                            width: "28px",
-                            height: "28px",
-                            fontSize: "1.2rem",
-                            cursor: isLast ? "not-allowed" : "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center"
-                          }}
-                        >
-                          ›
-                        </button>
+                        <img 
+                          src={imgSrc} 
+                          alt={`Receipt ${idx + 1}`} 
+                          style={{ width: "100%", maxHeight: "500px", objectFit: "contain", borderRadius: "8px", border: "1px solid #e2e8f0", background: "#f8fafc" }} 
+                        />
                       </div>
-
-                      {/* Main Document Image Viewer Container */}
-                      <div style={{ flex: 1, padding: "16px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "auto", position: "relative" }}>
-                        <div style={{ transform: `scale(${zoomScale})`, transition: "transform 0.2s ease-in-out", display: "flex", justifyContent: "center", alignItems: "center", height: "100%", width: "100%" }}>
-                          <ReceiptViewerCard r={currentReceipt} i={safeIdx} activeItemInGroup={activeItemInGroup} />
-                        </div>
-                      </div>
-
-                    </div>
-                  );
-                })()}
+                    ))
+                  )}
+                </div>
 
                 {/* Right column Form Fields */}
                 <div style={{ width: "450px", borderLeft: "1px solid #e2e8f0", padding: "24px", overflowY: "auto", overflowX: "hidden", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#ffffff", boxSizing: "border-box" }}>

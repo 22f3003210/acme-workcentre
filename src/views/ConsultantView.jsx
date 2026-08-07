@@ -45,12 +45,16 @@ export default function ConsultantView({ activeTab }) {
     const files = e.target.files;
     if (files && files.length > 0) {
       const fileList = Array.from(files);
-      fileList.forEach((file) => {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          setReceiptPreviews((prev) => [...prev, ev.target.result]);
-        };
-        reader.readAsDataURL(file);
+      Promise.all(
+        fileList.map((file) => {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => resolve(ev.target.result);
+            reader.readAsDataURL(file);
+          });
+        })
+      ).then((newImages) => {
+        setReceiptPreviews((prev) => [...prev, ...newImages]);
       });
     }
   };

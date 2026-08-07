@@ -738,13 +738,12 @@ export default function ConsultantView({ activeTab }) {
                   <select 
                     value={category} 
                     onChange={(e) => setCategory(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", fontWeight: "600" }}
                   >
-                    <option value="Travel">✈️ Travel & Transport</option>
-                    <option value="Food">🍲 Food & Meals</option>
-                    <option value="Accommodation">🏨 Hotel & Lodging</option>
-                    <option value="Client Meeting">🤝 Client Meeting & Advisory</option>
-                    <option value="Other">📦 Other Miscellaneous</option>
+                    <option value="">Select a category</option>
+                    <option value="Food">Food</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Stay">Stay</option>
                   </select>
                 </div>
 
@@ -2415,103 +2414,177 @@ export default function ConsultantView({ activeTab }) {
       )}
 
       
-      {/* INTERACTIVE ADD EXPENSE CLAIM MODAL OVERLAY */}
+      {/* KEKA HR 2-COLUMN SPLIT ADD/UPDATE EXPENSES MODAL OVERLAY */}
       {showExpenseModal && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-          <div style={{ background: "#ffffff", borderRadius: "18px", width: "100%", maxWidth: "520px", overflow: "hidden", boxShadow: "0 25px 50px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+          <div style={{ background: "#ffffff", borderRadius: "12px", width: "95vw", maxWidth: "1000px", height: "90vh", maxHeight: "680px", overflow: "hidden", boxShadow: "0 25px 50px rgba(0,0,0,0.35)", display: "flex", flexDirection: "column" }}>
             
             {/* Header */}
-            <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e5c 100%)", color: "#ffffff", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: "rgba(255,255,255,0.2)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.1rem" }}>💰</div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#ffffff" }}>Submit New Expense Claim</h3>
-                  <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#c7d2fe" }}>Enter expense claim details for manager reimbursement</p>
-                </div>
-              </div>
-              <button type="button" onClick={() => setShowExpenseModal(false)} style={{ background: "none", border: "none", color: "#c7d2fe", fontSize: "1.4rem", cursor: "pointer" }}>✕</button>
+            <div style={{ padding: "14px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff" }}>
+              <span style={{ fontSize: "1.05rem", fontWeight: "800", color: "#1e293b" }}>Add/Update Expenses</span>
+              <span onClick={() => setShowExpenseModal(false)} style={{ cursor: "pointer", fontSize: "1.3rem", color: "#64748b", fontWeight: "700" }}>✕</span>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleExpenseSubmit} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-              <div>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#334155", marginBottom: "6px" }}>EXPENSE CATEGORY</label>
-                <select 
-                  value={category} 
-                  onChange={(e) => setCategory(e.target.value)}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", background: "#f8fafc", color: "#0f172a", fontWeight: "700" }}
-                >
-                  <option value="Travel">✈️ Travel & Transport</option>
-                  <option value="Food">🍲 Food & Meals</option>
-                  <option value="Accommodation">🏨 Hotel & Lodging</option>
-                  <option value="Client Meeting">🤝 Client Meeting & Advisory</option>
-                  <option value="Other">📦 Other Miscellaneous</option>
-                </select>
+            {/* Split 2-Column Layout Container */}
+            <div style={{ flex: 1, display: "grid", gridTemplateColumns: "42% 58%", overflow: "hidden" }}>
+              
+              {/* Left Column: Dark Slate Preview Container */}
+              <div style={{ background: "#3e4659", padding: "24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative", color: "#ffffff" }}>
+                {receiptPreview ? (
+                  <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                    <img src={receiptPreview} alt="Receipt Preview" style={{ maxWidth: "100%", maxHeight: "80%", objectFit: "contain", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)" }} />
+                    <button 
+                      type="button" 
+                      onClick={() => setReceiptPreview("")} 
+                      style={{ marginTop: "16px", background: "#ef4444", color: "#ffffff", border: "none", borderRadius: "6px", padding: "6px 14px", fontSize: "0.8rem", fontWeight: "700", cursor: "pointer" }}
+                    >
+                      Remove Receipt ✕
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                    <label style={{ background: "#5b5fc7", color: "#ffffff", padding: "10px 22px", borderRadius: "8px", fontWeight: "700", fontSize: "0.9rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}>
+                      Upload Receipts <span style={{ fontSize: "0.8rem", opacity: 0.8 }}>ⓘ</span>
+                      <input type="file" accept="image/*,.pdf" onChange={handleReceiptFileUpload} style={{ display: "none" }} />
+                    </label>
+                    <div style={{ fontSize: "0.82rem", color: "#cbd5e1", marginTop: "4px" }}>
+                      You can preview the uploaded receipt
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#334155", marginBottom: "6px" }}>CLAIM AMOUNT (₹)</label>
-                <input 
-                  type="number" 
-                  placeholder="e.g. 1500" 
-                  value={amount} 
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box", fontWeight: "700" }}
-                />
+              {/* Right Column: Form Inputs */}
+              <div style={{ padding: "24px 32px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "16px" }}>
+                
+                {/* Expense Category (Food, Travel, Stay ONLY) */}
+                <div>
+                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>Expense Category</label>
+                  <select 
+                    value={category} 
+                    onChange={(e) => setCategory(e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", background: "#ffffff", color: "#1e293b", fontWeight: "600" }}
+                  >
+                    <option value="">Select a category</option>
+                    <option value="Food">Food</option>
+                    <option value="Travel">Travel</option>
+                    <option value="Stay">Stay</option>
+                  </select>
+                </div>
+
+                {/* Project / Cost Center */}
+                <div>
+                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>Project / Cost Center</label>
+                  <select 
+                    value={expenseProjectId} 
+                    onChange={(e) => setExpenseProjectId(e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", background: "#ffffff", color: "#1e293b", fontWeight: "600" }}
+                  >
+                    <option value="">Select a project</option>
+                    {displayProjects.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Expense Title & Expense Date Row */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>Expense Title</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g., Client Dinner, Hotel Booking" 
+                      value={expenseTitle} 
+                      onChange={(e) => setExpenseTitle(e.target.value)}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>Expense Date</label>
+                    <input 
+                      type="date" 
+                      value={expenseDate} 
+                      onChange={(e) => setExpenseDate(e.target.value)}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Currency & Amount Row */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>Currency</label>
+                    <select 
+                      value={currency} 
+                      onChange={(e) => setCurrency(e.target.value)}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", background: "#ffffff" }}
+                    >
+                      <option value="INR">Select a currency</option>
+                      <option value="INR">INR (₹)</option>
+                      <option value="USD">USD ($)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>Amount ⓘ</label>
+                    <input 
+                      type="number" 
+                      placeholder="0.00" 
+                      value={amount} 
+                      onChange={(e) => setAmount(e.target.value)}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", fontWeight: "700" }}
+                    />
+                    <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>Payable Amount – INR</div>
+                  </div>
+                </div>
+
+                {/* Comment / Remarks */}
+                <div>
+                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>Comment</label>
+                  <textarea 
+                    rows="3" 
+                    placeholder="Add description or comments..." 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }}
+                  />
+                </div>
+
+                {/* Upload Receipt Link */}
+                <div style={{ marginTop: "4px" }}>
+                  <label style={{ color: "#5b5fc7", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                    📎 Upload Receipt ⓘ
+                    <input type="file" accept="image/*,.pdf" onChange={handleReceiptFileUpload} style={{ display: "none" }} />
+                  </label>
+                </div>
+
               </div>
 
-              <div>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#334155", marginBottom: "6px" }}>EXPENSE DATE</label>
-                <input 
-                  type="date" 
-                  value={expenseDate} 
-                  onChange={(e) => setExpenseDate(e.target.value)}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }}
-                />
-              </div>
+            </div>
 
-              <div>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#334155", marginBottom: "6px" }}>ASSIGNED CLIENT PROJECT</label>
-                <select 
-                  value={expenseProjectId} 
-                  onChange={(e) => setExpenseProjectId(e.target.value)}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", background: "#f8fafc", color: "#0f172a", fontWeight: "700" }}
-                >
-                  <option value="">General Store HQ (Seoni)</option>
-                  {displayProjects.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "800", color: "#334155", marginBottom: "6px" }}>DESCRIPTION / REMARKS</label>
-                <textarea 
-                  placeholder="Describe purpose of expense..." 
-                  value={description} 
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={3}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
-                />
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
-                <button 
-                  type="button" 
-                  onClick={() => setShowExpenseModal(false)} 
-                  style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
-                >
-                  Cancel
-                </button>
-                <button 
-                  type="submit" 
-                  style={{ padding: "10px 22px", background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(37,99,235,0.3)" }}
-                >
-                  Submit Expense Claim ✓
-                </button>
-              </div>
-            </form>
+            {/* Bottom Footer Action Controls */}
+            <div style={{ padding: "14px 24px", borderTop: "1px solid #e2e8f0", background: "#ffffff", display: "flex", justifyContent: "flex-end", gap: "12px", alignItems: "center" }}>
+              <button 
+                type="button" 
+                onClick={(e) => handleExpenseSubmit(e, false)} 
+                style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #5b5fc7", background: "#ffffff", color: "#5b5fc7", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+              >
+                Save Expense
+              </button>
+              <button 
+                type="button" 
+                onClick={(e) => handleExpenseSubmit(e, true)} 
+                style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #5b5fc7", background: "#ffffff", color: "#5b5fc7", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+              >
+                Save and Add Another
+              </button>
+              <button 
+                type="button" 
+                onClick={(e) => handleExpenseSubmit(e, false)} 
+                style={{ padding: "8px 22px", borderRadius: "6px", border: "none", background: "#5b5fc7", color: "#ffffff", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(91,95,199,0.3)" }}
+              >
+                Submit Claim
+              </button>
+            </div>
 
           </div>
         </div>

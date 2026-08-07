@@ -344,7 +344,15 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [selectedSwipeMode, setSelectedSwipeMode] = useState("IN");
   const [swipeSearchQuery, setSwipeSearchQuery] = useState("");
   const [selectedSwipeCheckboxes, setSelectedSwipeCheckboxes] = useState([]);
-  const [swipeDateFilter, setSwipeDateFilter] = useState("");
+  const getTodayFilterDefault = () => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const [swipeDateFilter, setSwipeDateFilter] = useState(getTodayFilterDefault());
   const [swipePayrollMonth, setSwipePayrollMonth] = useState("Jul'26");
   const [swipeDateType, setSwipeDateType] = useState("Swipe Date");
   const [swipeStatusFilter, setSwipeStatusFilter] = useState("All");

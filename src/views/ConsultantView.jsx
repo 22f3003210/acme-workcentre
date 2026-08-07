@@ -128,7 +128,7 @@ export default function ConsultantView({ activeTab }) {
   const displayProjects = consultantAssignedProjects;
 
   const handleOpenCheckInWizard = () => {
-    const defaultProjId = (projects && projects.length > 0) ? projects[0].id : defaultGeneralProject.id;
+    const defaultProjId = (displayProjects && displayProjects.length > 0) ? displayProjects[0].id : "";
     setSelectedWizardProjectId(punchProjectId || defaultProjId);
     setWizardStep(1);
     setShowCheckInWizard(true);
@@ -278,9 +278,17 @@ export default function ConsultantView({ activeTab }) {
       if (setToast) setToast({ message: "No active session found.", type: "error" });
       return;
     }
-    const selProj = displayProjects.find(p => p.id === selectedWizardProjectId) || displayProjects[0];
-    const projId = selProj ? selProj.id : "general-store-001";
-    const projName = selProj ? (selProj.name || selProj.code) : "ACME Retail Flagship Store";
+    if (displayProjects.length === 0 || !selectedWizardProjectId) {
+      if (setToast) setToast({ message: "⚠️ Mandatory Field Missing: You must select an assigned Client Project Site to check in.", type: "error" });
+      return;
+    }
+    const selProj = displayProjects.find(p => p.id === selectedWizardProjectId);
+    if (!selProj) {
+      if (setToast) setToast({ message: "⚠️ Mandatory Field Missing: Selected Client Project is invalid or unassigned.", type: "error" });
+      return;
+    }
+    const projId = selProj.id;
+    const projName = selProj.name || selProj.code || "Client Project Site";
 
     if (checkInConsultant) {
       checkInConsultant(currentUser.id, {
@@ -2547,7 +2555,7 @@ export default function ConsultantView({ activeTab }) {
                   {/* Select Store / Project Site */}
                   <div>
                     <label style={{ display: "block", fontSize: "0.82rem", fontWeight: "800", color: "#1e293b", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                      📍 1. Select Store / Client Project Site Location
+                      📍 1. Select Store / Client Project Site Location <span style={{ color: "#dc2626" }}>(Required)*</span>
                     </label>
                     {displayProjects.length > 0 ? (
                       <select 

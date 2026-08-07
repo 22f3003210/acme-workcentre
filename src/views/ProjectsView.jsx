@@ -1810,9 +1810,145 @@ export default function ProjectsView() {
               </div>
             )}
 
-            {activeProjectTab === "team" && (
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
-                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Assigned Business Consultants & Team</h3>
+            {activeProjectTab === "team" && (() => {
+              const assignedIds = effectiveProject.assignedConsultants || (effectiveProject.assignedConsultantId ? [effectiveProject.assignedConsultantId] : []);
+              const assignedTeamMembers = (users || []).filter(u => 
+                assignedIds.includes(u.id) || 
+                assignedIds.includes(u.empCode) || 
+                (effectiveProject.assignedConsultantId && (u.id === effectiveProject.assignedConsultantId || u.empCode === effectiveProject.assignedConsultantId))
+              );
+
+              return (
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "28px", boxShadow: "0 4px 14px rgba(0,0,0,0.02)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px", flexWrap: "wrap", gap: "12px" }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>👥 Assigned Business Consultants & Team ({assignedTeamMembers.length})</h3>
+                      <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "#64748b" }}>Consultants assigned to support and audit {effectiveProject.name}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowAssignModal(true)}
+                      style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", padding: "10px 18px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(37,99,235,0.25)" }}
+                    >
+                      + Assign / Manage Consultants
+                    </button>
+                  </div>
+
+                  {assignedTeamMembers.length === 0 ? (
+                    <div style={{ padding: "48px 20px", textAlign: "center", background: "#f8fafc", borderRadius: "14px", border: "1px dashed #cbd5e1" }}>
+                      <div style={{ fontSize: "2.5rem", marginBottom: "8px" }}>👤</div>
+                      <div style={{ fontWeight: "800", color: "#0f172a", fontSize: "1rem" }}>No Consultants Assigned Yet</div>
+                      <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "4px", marginBottom: "16px" }}>Assign consultants to enable project access in their login portals.</div>
+                      <button
+                        type="button"
+                        onClick={() => setShowAssignModal(true)}
+                        style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 18px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer" }}
+                      >
+                        + Assign Consultants Now
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "16px" }}>
+                      {assignedTeamMembers.map((member) => (
+                        <div key={member.id} style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "16px" }}>
+                            <img src={member.avatar || member.selfiePhoto} alt={member.name} style={{ width: "48px", height: "48px", borderRadius: "50%", objectFit: "cover", border: "2px solid #2563eb" }} />
+                            <div>
+                              <div style={{ fontWeight: "800", fontSize: "0.95rem", color: "#0f172a" }}>{member.name}</div>
+                              <div style={{ fontSize: "0.78rem", color: "#2563eb", fontWeight: "700" }}>{member.title || member.role || "Consultant"}</div>
+                              <div style={{ fontSize: "0.72rem", color: "#64748b" }}>{member.email}</div>
+                            </div>
+                          </div>
+
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "12px", borderTop: "1px solid #f1f5f9" }}>
+                            <span style={{ fontSize: "0.75rem", background: "#f0fdf4", color: "#166534", padding: "3px 8px", borderRadius: "6px", fontWeight: "700" }}>
+                              ✓ Active Team Member
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updatedList = assignedIds.filter(id => id !== member.id && id !== member.empCode);
+                                const names = updatedList.map(id => (users.find(u => u.id === id || u.empCode === id) || {}).name).filter(Boolean).join(", ");
+                                updateProject(effectiveProject.id, {
+                                  assignedConsultants: updatedList,
+                                  assignedConsultantId: updatedList[0] || "",
+                                  assignedConsultantName: names,
+                                  assignedConsultant: names
+                                });
+                                if (setToast) setToast({ message: `Removed ${member.name} from project team.`, type: "info" });
+                              }}
+                              style={{ background: "#fef2f2", color: "#dc2626", border: "none", borderRadius: "6px", padding: "5px 12px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                            >
+                              Remove ✖
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* Multi-Consultant Assignment Modal */}
+            {showAssignModal && (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.6)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+                <div style={{ background: "#ffffff", borderRadius: "18px", width: "100%", maxWidth: "520px", padding: "24px", boxShadow: "0 25px 50px rgba(0,0,0,0.25)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px", borderBottom: "1px solid #e2e8f0", paddingBottom: "12px" }}>
+                    <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>👥 Assign Consultants to {effectiveProject.name}</h3>
+                    <span onClick={() => setShowAssignModal(false)} style={{ cursor: "pointer", fontSize: "1.2rem", fontWeight: "700", color: "#64748b" }}>✕</span>
+                  </div>
+
+                  <p style={{ margin: "0 0 16px 0", fontSize: "0.82rem", color: "#64748b" }}>Check all consultants who should have access to this client project in their portals.</p>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "320px", overflowY: "auto", paddingRight: "4px" }}>
+                    {users.filter(u => u.role === "Consultant" || u.role === "Employee" || u.role === "Admin").map(u => {
+                      const currentAssigned = effectiveProject.assignedConsultants || (effectiveProject.assignedConsultantId ? [effectiveProject.assignedConsultantId] : []);
+                      const isChecked = currentAssigned.includes(u.id) || currentAssigned.includes(u.empCode);
+
+                      return (
+                        <label key={u.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", border: isChecked ? "2px solid #2563eb" : "1px solid #cbd5e1", borderRadius: "10px", background: isChecked ? "#eff6ff" : "#ffffff", cursor: "pointer", transition: "all 0.15s" }}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              let updatedList = [...currentAssigned];
+                              if (e.target.checked) {
+                                if (!updatedList.includes(u.id)) updatedList.push(u.id);
+                              } else {
+                                updatedList = updatedList.filter(id => id !== u.id && id !== u.empCode);
+                              }
+                              const names = updatedList.map(id => (users.find(usr => usr.id === id || usr.empCode === id) || {}).name).filter(Boolean).join(", ");
+                              updateProject(effectiveProject.id, {
+                                assignedConsultants: updatedList,
+                                assignedConsultantId: updatedList[0] || "",
+                                assignedConsultantName: names,
+                                assignedConsultant: names
+                              });
+                            }}
+                            style={{ width: "18px", height: "18px", cursor: "pointer", accentColor: "#2563eb" }}
+                          />
+                          <img src={u.avatar || u.selfiePhoto} alt={u.name} style={{ width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover" }} />
+                          <div>
+                            <div style={{ fontWeight: "800", fontSize: "0.88rem", color: "#0f172a" }}>{u.name}</div>
+                            <div style={{ fontSize: "0.75rem", color: "#64748b" }}>{u.title || u.role} • {u.email}</div>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div style={{ marginTop: "20px", display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowAssignModal(false)}
+                      style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", padding: "10px 22px", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(37,99,235,0.3)" }}
+                    >
+                      Done / Save Team Roster
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 

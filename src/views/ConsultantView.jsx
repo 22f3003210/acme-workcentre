@@ -349,7 +349,7 @@ export default function ConsultantView({ activeTab }) {
       amount: parseFloat(amount),
       category,
       description,
-      date: expenseDate || new Date().toISOString().split("T")[0],
+      date: expenseDate || getTodayDateString(),
       projectId: expenseProjectId || null
     });
 
@@ -370,7 +370,7 @@ export default function ConsultantView({ activeTab }) {
   };
 
   // Attendance & Punch calculations
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = getTodayDateString();
   const myAttendance = currentUser?.attendance || [];
   const unclosedPunch = (myAttendance || []).slice().reverse().find(a => !a.checkOut);
   const todayPunch = unclosedPunch || (myAttendance || []).slice().reverse().find(a => a.date === todayStr || (a.date && new Date(a.date).toDateString() === new Date().toDateString()));
@@ -2876,7 +2876,7 @@ export default function ConsultantView({ activeTab }) {
                   <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "14px 18px", borderRadius: "10px" }}>
                     <div style={{ fontSize: "0.88rem", fontWeight: "800", color: "#991b1b" }}>Shift Check-In Summary</div>
                     <div style={{ fontSize: "0.8rem", color: "#7f1d1d", marginTop: "4px" }}>
-                      Check In Time: <strong>{todayPunch?.checkIn || "10:30 AM"}</strong> • Date: <strong>{todayStr}</strong>
+                      Check In Time: <strong>{todayPunch?.checkIn || "10:30 AM"}</strong> • Date: <strong>{todayPunch?.date || todayStr}</strong>
                     </div>
                   </div>
 

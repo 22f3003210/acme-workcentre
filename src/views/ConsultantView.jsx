@@ -349,9 +349,7 @@ export default function ConsultantView({ activeTab }) {
   };
 
   const handlePunchOut = () => {
-    checkOutConsultant(currentUser.id, punchRemarks);
-    setToast({ message: "Checked out successfully.", type: "success" });
-    setPunchRemarks("");
+    handleOpenCheckOutWizard();
   };
 
   const handleExpenseSubmit = (e) => {

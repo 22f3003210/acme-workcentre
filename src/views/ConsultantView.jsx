@@ -340,23 +340,33 @@ export default function ConsultantView({ activeTab }) {
     handleOpenCheckOutWizard();
   };
 
-  const handleExpenseSubmit = (e) => {
-    e.preventDefault();
-    if (!amount || !description.trim()) return;
+  const handleExpenseSubmit = (e, addAnother = false) => {
+    if (e) e.preventDefault();
+    if (!amount || !category || category === "Select a category") {
+      if (setToast) setToast({ message: "⚠️ Mandatory: Please select an expense category and enter claim amount.", type: "error" });
+      return;
+    }
 
     addExpense({
       employeeId: currentUser.id,
       amount: parseFloat(amount),
       category,
-      description,
+      title: expenseTitle || `${category} Expense`,
+      description: description || expenseTitle || `${category} Expense`,
       date: expenseDate || getTodayLocalStr(),
-      projectId: expenseProjectId || null
+      projectId: expenseProjectId || null,
+      currency: currency || "INR",
+      receipt: receiptPreview || null
     });
 
-    setToast({ message: "Expense claim submitted successfully.", type: "success" });
+    if (setToast) setToast({ message: "Expense claim submitted successfully.", type: "success" });
     setAmount("");
     setDescription("");
-    setShowExpenseModal(false);
+    setExpenseTitle("");
+    setReceiptPreview("");
+    if (!addAnother) {
+      setShowExpenseModal(false);
+    }
   };
 
   const handleAdvanceSubmit = (e) => {

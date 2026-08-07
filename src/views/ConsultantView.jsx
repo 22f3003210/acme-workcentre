@@ -102,28 +102,26 @@ export default function ConsultantView({ activeTab }) {
     businessModel: "Retail & Client Advisory Store"
   };
 
-  // Filter projects assigned specifically to the logged in consultant
+  // Filter projects assigned STRICTLY to the logged in consultant
   const consultantAssignedProjects = (projects || []).filter(p => {
-    if (!p) return false;
+    if (!p || !currentUser) return false;
 
-    // Check direct assignment match
-    if (p.assignedConsultantId && (p.assignedConsultantId === currentUser?.id || p.assignedConsultantId === currentUser?.empCode)) return true;
+    // Check direct assignment match by ID or Employee Code
+    if (p.assignedConsultantId && (p.assignedConsultantId === currentUser.id || p.assignedConsultantId === currentUser.empCode)) return true;
     
-    // Check array match
+    // Check assignedConsultants array match by ID, Employee Code, or Email
     if (p.assignedConsultants && Array.isArray(p.assignedConsultants)) {
-      if (p.assignedConsultants.includes(currentUser?.id) || p.assignedConsultants.includes(currentUser?.empCode) || p.assignedConsultants.includes(currentUser?.email)) return true;
+      if (p.assignedConsultants.includes(currentUser.id) || p.assignedConsultants.includes(currentUser.empCode) || p.assignedConsultants.includes(currentUser.email)) return true;
     }
     
-    // Check string match
-    if (p.assignedConsultant && (p.assignedConsultant === currentUser?.id || p.assignedConsultant === currentUser?.empCode || p.assignedConsultant === currentUser?.email || p.assignedConsultant === currentUser?.name)) return true;
+    // Check assignedConsultant string match by ID, Employee Code, Email, or Name
+    if (p.assignedConsultant && (p.assignedConsultant === currentUser.id || p.assignedConsultant === currentUser.empCode || p.assignedConsultant === currentUser.email || p.assignedConsultant === currentUser.name)) return true;
 
-    // Fallback: If project has no assignment criteria set yet, show as accessible
-    if (!p.assignedConsultantId && !p.assignedConsultant && (!p.assignedConsultants || p.assignedConsultants.length === 0)) return true;
-
+    // DO NOT show unassigned projects unless explicitly assigned by Admin
     return false;
   });
 
-  const displayProjects = (consultantAssignedProjects && consultantAssignedProjects.length > 0) ? consultantAssignedProjects : [defaultGeneralProject];
+  const displayProjects = consultantAssignedProjects;
 
   const handleOpenCheckInWizard = () => {
     const defaultProjId = (projects && projects.length > 0) ? projects[0].id : defaultGeneralProject.id;
@@ -514,7 +512,13 @@ export default function ConsultantView({ activeTab }) {
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {displayProjects.map(proj => (
+                  {displayProjects.length === 0 ? (
+                    <div style={{ background: "#f8fafc", border: "1px dashed #cbd5e1", borderRadius: "14px", padding: "28px", textAlign: "center", color: "#64748b" }}>
+                      <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔒</div>
+                      <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>No Client Projects Assigned Yet</h4>
+                      <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "#64748b" }}>An Admin must assign you to a project in the Admin Panel before project details will be visible here.</p>
+                    </div>
+                  ) : displayProjects.map(proj => (
                     <div key={proj.id} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                         <div>
@@ -771,6 +775,13 @@ export default function ConsultantView({ activeTab }) {
             <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#94a3b8" }}>Store sites & consulting advisory projects assigned to you</p>
           </div>
 
+          {displayProjects.length === 0 ? (
+            <div style={{ background: "#ffffff", border: "1px dashed #cbd5e1", borderRadius: "16px", padding: "40px", textAlign: "center", color: "#64748b", boxShadow: "0 4px 14px rgba(0,0,0,0.03)" }}>
+              <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>🔒</div>
+              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>No Client Projects Assigned Yet</h3>
+              <p style={{ margin: "6px 0 0 0", fontSize: "0.88rem", color: "#64748b" }}>You currently have zero assigned client projects. Please contact your Admin to assign you to a store site project.</p>
+            </div>
+          ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "20px" }}>
             {displayProjects.map(proj => (
               <div key={proj.id} style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -784,7 +795,6 @@ export default function ConsultantView({ activeTab }) {
 
                 <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px", fontSize: "0.84rem", color: "#334155" }}>
                   <div><strong>Business Model:</strong> {proj.businessModel || "Retail & Client Advisory Store"}</div>
-                  <div style={{ marginTop: "4px" }}><strong>Location Radius:</strong> Verified GPS Match (Within 500m)</div>
                 </div>
 
                 <div style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #86efac", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.85rem", textAlign: "center" }}>
@@ -793,6 +803,7 @@ export default function ConsultantView({ activeTab }) {
               </div>
             ))}
           </div>
+          )}
         </div>
       )}
 
@@ -2474,9 +2485,13 @@ export default function ConsultantView({ activeTab }) {
                       onChange={(e) => setSelectedWizardProjectId(e.target.value)}
                       style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.92rem", background: "#f8fafc", color: "#0f172a", fontWeight: "700" }}
                     >
-                      {displayProjects.map(p => (
-                        <option key={p.id} value={p.id}>{p.name} — ({p.location || "Store HQ"})</option>
-                      ))}
+                      {displayProjects.length === 0 ? (
+                        <option value="general-store-001">General Store HQ (Seoni, MP)</option>
+                      ) : (
+                        displayProjects.map(p => (
+                          <option key={p.id} value={p.id}>{p.name} — ({p.location || "Store HQ"})</option>
+                        ))
+                      )}
                     </select>
                   </div>
 

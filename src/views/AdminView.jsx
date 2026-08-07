@@ -3216,24 +3216,37 @@ export default function AdminView({ activeTab, setActiveTab }) {
           {(() => {
             const dynamicSwipes = (users || []).flatMap(u => {
               const attList = u.attendance || [];
-              return attList.map((a, idx) => ({
-                id: `live-swipe-${u.id}-${a.date}-${idx}`,
-                name: u.name,
-                code: u.empCode || `EMP-${u.id.substring(0,4)}`,
-                avatar: a.selfie || u.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
-                time: a.checkIn,
-                date: a.date,
-                shift: u.shift || "General Shift",
-                inOut: a.checkOut ? "OUT" : "IN",
-                receivedTime: a.checkIn,
-                receivedDate: a.date,
-                door: a.projectName || a.locationName || u.location || "Main Gate POS",
-                fullAddress: a.locationName || `${a.projectName || "Shrut Jewellers"} - Seoni, MP`,
-                coordinates: a.coordinates || { lat: "22.0867", lng: "79.5432" },
-                status: a.status || "Present",
-                mobile: u.phone || "+91 98201 12345",
-                tasks: a.tasks || []
-              }));
+              return attList.map((a, idx) => {
+                let recAddress = a.address || (a.remarks && a.remarks.includes("Location: ") ? a.remarks.split("Location: ")[1] : null) || a.locationName || a.projectName || "Abids, Hyderabad, Telangana, India";
+                let recDoor = recAddress.includes(",") ? recAddress.split(",")[0].trim() : (a.projectName || "Store Site");
+
+                let parsedCoords = { lat: "17.3933", lng: "78.4758" };
+                if (typeof a.coordinates === "string" && a.coordinates.includes(",")) {
+                  const parts = a.coordinates.split(",");
+                  parsedCoords = { lat: parts[0].trim(), lng: parts[1].trim() };
+                } else if (a.coordinates && typeof a.coordinates === "object") {
+                  parsedCoords = { lat: a.coordinates.lat || "17.3933", lng: a.coordinates.lng || "78.4758" };
+                }
+
+                return {
+                  id: `live-swipe-${u.id}-${a.date}-${idx}`,
+                  name: u.name,
+                  code: u.empCode || `EMP-${u.id.substring(0,4)}`,
+                  avatar: a.selfie || u.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+                  time: a.checkIn,
+                  date: a.date,
+                  shift: u.shift || "General Shift",
+                  inOut: a.checkOut ? "OUT" : "IN",
+                  receivedTime: a.checkIn,
+                  receivedDate: a.date,
+                  door: recDoor,
+                  fullAddress: recAddress,
+                  coordinates: parsedCoords,
+                  status: a.status || "Present",
+                  mobile: u.phone || "+91 98201 12345",
+                  tasks: a.tasks || []
+                };
+              });
             });
 
             const allSwipesList = [...dynamicSwipes, ...swipeRecords];
@@ -3272,7 +3285,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
               filteredSwipes = [...filteredSwipes].sort((a, b) => a.receivedTime.localeCompare(b.receivedTime));
             }
 
-            const activeRecord = swipeRecords.find(s => s.id === selectedSwipeRecordId) || swipeRecords[0];
+            const activeRecord = allSwipesList.find(s => s.id === selectedSwipeRecordId) || dynamicSwipes[0] || swipeRecords[0];
 
             const isAllSwipesChecked = filteredSwipes.length > 0 && filteredSwipes.every(s => selectedSwipeCheckboxes.includes(s.id));
             const toggleAllSwipes = () => {
@@ -3527,8 +3540,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
       {/* MAP VIEW Standalone Full-Screen View Page */}
       {showMapModal && mapModalSwipe && (() => {
-        const lat = mapModalSwipe.coordinates?.lat || "22.0867";
-        const lng = mapModalSwipe.coordinates?.lng || "79.5432";
+        const lat = (typeof mapModalSwipe.coordinates === "string" ? mapModalSwipe.coordinates.split(",")[0]?.trim() : mapModalSwipe.coordinates?.lat) || "17.3933";
+        const lng = (typeof mapModalSwipe.coordinates === "string" ? mapModalSwipe.coordinates.split(",")[1]?.trim() : mapModalSwipe.coordinates?.lng) || "78.4758";
         const mapEmbedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
 
         return (

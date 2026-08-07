@@ -361,6 +361,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
   // Map Modal & Location Pin Tooltip State (Matching Reference Screenshots 1 & 2)
   const [showMapModal, setShowMapModal] = useState(false);
   const [mapModalSwipe, setMapModalSwipe] = useState(null);
+  const [selectedMapSelfieTab, setSelectedMapSelfieTab] = useState("IN");
   const [hoveredLocationPinId, setHoveredLocationPinId] = useState(null);
 
   // Dynamic Team Calendar Month & Year State
@@ -3835,31 +3836,40 @@ export default function AdminView({ activeTab, setActiveTab }) {
               {/* Left Column: Full-Height Timeline Sidebar */}
               <div style={{ background: "#ffffff", borderRight: "1px solid #e2e8f0", padding: "20px 18px", display: "flex", flexDirection: "column", gap: "20px", overflowY: "auto" }}>
                 
-                {/* Section 1: SITE / LOCATION PUNCH */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "#0f172a" }}>
-                    📍 {mapModalSwipe.door || mapModalSwipe.fullAddress || "Site Visit"}
+                {/* Section 1: CHECK-IN DETAILS */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "12px", borderRadius: "10px" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: "800", color: "#166534", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>🟢 CHECK-IN TIME</span>
+                    <span>{mapModalSwipe.checkIn || mapModalSwipe.time}</span>
                   </div>
-                  <div style={{ fontSize: "0.78rem", color: "#64748b" }}>
-                    {mapModalSwipe.fullAddress}
+                  <div style={{ fontSize: "0.75rem", color: "#15803d", marginTop: "2px", lineHeight: 1.3 }}>
+                    📍 {mapModalSwipe.checkInAddress || mapModalSwipe.fullAddress || "Recorded Check-In Location"}
+                  </div>
+                  <div style={{ fontSize: "0.7rem", color: "#16a34a", marginTop: "2px" }}>
+                    GPS: {lat}, {lng}
                   </div>
                 </div>
 
-                {/* Section 2: PUNCH DETAILS */}
-                <div style={{ display: "flex", flexDirection: "column", gap: "10px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
-                  <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155", letterSpacing: "0.02em" }}>ATTENDANCE PUNCH DETAILS</div>
-                  <div style={{ fontSize: "0.78rem", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span>Check In Time:</span> <strong>{mapModalSwipe.time || mapModalSwipe.receivedTime}</strong>
+                {/* Section 2: CHECK-OUT DETAILS */}
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px", background: mapModalSwipe.checkOut ? "#fef2f2" : "#f8fafc", border: mapModalSwipe.checkOut ? "1px solid #fecaca" : "1px solid #e2e8f0", padding: "12px", borderRadius: "10px" }}>
+                  <div style={{ fontSize: "0.78rem", fontWeight: "800", color: mapModalSwipe.checkOut ? "#991b1b" : "#64748b", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span>🔴 CHECK-OUT TIME</span>
+                    <span>{mapModalSwipe.checkOut || "Not Checked Out Yet"}</span>
                   </div>
-                  <div style={{ fontSize: "0.78rem", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <span>Status:</span> 
-                    <span style={{ padding: "2px 8px", borderRadius: "4px", background: "#dcfce7", color: "#15803d", fontWeight: "700", fontSize: "0.7rem" }}>
-                      {mapModalSwipe.status || "Present"}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
-                    GPS Coordinates: {lat}, {lng}
-                  </div>
+                  {mapModalSwipe.checkOut ? (
+                    <>
+                      <div style={{ fontSize: "0.75rem", color: "#b91c1c", marginTop: "2px", lineHeight: 1.3 }}>
+                        📍 {mapModalSwipe.checkOutAddress || mapModalSwipe.fullAddress || "Recorded Check-Out Location"}
+                      </div>
+                      <div style={{ fontSize: "0.7rem", color: "#dc2626", marginTop: "2px" }}>
+                        GPS: {mapModalSwipe.checkOutCoordinates ? (typeof mapModalSwipe.checkOutCoordinates === "object" ? `${mapModalSwipe.checkOutCoordinates.lat}, ${mapModalSwipe.checkOutCoordinates.lng}` : mapModalSwipe.checkOutCoordinates) : `${lat}, ${lng}`}
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
+                      Shift currently active (in progress)
+                    </div>
+                  )}
                 </div>
 
                 {/* Section 3: SCHEDULED TASKS */}
@@ -3890,25 +3900,66 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 />
 
                 {/* On-Map Photo Overlay Popup Card */}
-                <div style={{ position: "absolute", top: "30px", left: "50%", transform: "translateX(-50%)", background: "#ffffff", borderRadius: "8px", border: "1px solid #cbd5e1", padding: "14px", boxShadow: "0 12px 30px rgba(0,0,0,0.25)", width: "260px", display: "flex", flexDirection: "column", gap: "10px", zIndex: 10 }}>
+                <div style={{ position: "absolute", top: "20px", left: "50%", transform: "translateX(-50%)", background: "#ffffff", borderRadius: "12px", border: "1px solid #cbd5e1", padding: "16px", boxShadow: "0 20px 40px rgba(0,0,0,0.25)", width: "310px", display: "flex", flexDirection: "column", gap: "12px", zIndex: 10 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#0f172a" }}>Verification Selfie</span>
-                    <span onClick={() => setShowMapModal(false)} style={{ cursor: "pointer", fontSize: "0.95rem", color: "#64748b", fontWeight: "700" }}>✕</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: "800", color: "#0f172a" }}>Shift Verification Photos</span>
+                    <span onClick={() => setShowMapModal(false)} style={{ cursor: "pointer", fontSize: "1rem", color: "#64748b", fontWeight: "800" }}>✕</span>
                   </div>
-                  {mapModalSwipe.avatar ? (
-                    <img 
-                      src={mapModalSwipe.avatar} 
-                      alt={mapModalSwipe.name}
-                      style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "6px", border: "1px solid #cbd5e1" }}
-                    />
+
+                  {/* IN / OUT Mode Toggle */}
+                  <div style={{ display: "flex", gap: "6px", background: "#f1f5f9", padding: "3px", borderRadius: "8px" }}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMapSelfieTab("IN")}
+                      style={{ flex: 1, padding: "6px 0", border: "none", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer", background: selectedMapSelfieTab === "IN" ? "#ffffff" : "transparent", color: selectedMapSelfieTab === "IN" ? "#166534" : "#64748b", boxShadow: selectedMapSelfieTab === "IN" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
+                    >
+                      🟢 Check-In ({mapModalSwipe.checkIn || mapModalSwipe.time})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedMapSelfieTab("OUT")}
+                      style={{ flex: 1, padding: "6px 0", border: "none", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer", background: selectedMapSelfieTab === "OUT" ? "#ffffff" : "transparent", color: selectedMapSelfieTab === "OUT" ? "#991b1b" : "#64748b", boxShadow: selectedMapSelfieTab === "OUT" ? "0 1px 3px rgba(0,0,0,0.1)" : "none" }}
+                    >
+                      🔴 Check-Out ({mapModalSwipe.checkOut || "Active"})
+                    </button>
+                  </div>
+
+                  {/* Selfie Display */}
+                  {selectedMapSelfieTab === "IN" ? (
+                    <>
+                      {(mapModalSwipe.checkInSelfie || mapModalSwipe.selfie || mapModalSwipe.avatar) ? (
+                        <img 
+                          src={mapModalSwipe.checkInSelfie || mapModalSwipe.selfie || mapModalSwipe.avatar} 
+                          alt="Check-In Selfie"
+                          style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "8px", border: "2px solid #bbf7d0" }}
+                        />
+                      ) : (
+                        <div style={{ width: "100%", height: "140px", background: "#f8fafc", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: "0.8rem" }}>
+                          No Check-In Selfie Captured
+                        </div>
+                      )}
+                      <div style={{ fontSize: "0.73rem", color: "#166534", lineHeight: 1.3, textAlign: "center", fontWeight: "700" }}>
+                        📍 Check-In: {mapModalSwipe.checkInAddress || mapModalSwipe.fullAddress}
+                      </div>
+                    </>
                   ) : (
-                    <div style={{ width: "100%", height: "120px", background: "#f1f5f9", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: "0.8rem" }}>
-                      No Selfie Captured
-                    </div>
+                    <>
+                      {mapModalSwipe.checkOutSelfie ? (
+                        <img 
+                          src={mapModalSwipe.checkOutSelfie} 
+                          alt="Check-Out Selfie"
+                          style={{ width: "100%", height: "180px", objectFit: "cover", borderRadius: "8px", border: "2px solid #fecaca" }}
+                        />
+                      ) : (
+                        <div style={{ width: "100%", height: "140px", background: "#f8fafc", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#94a3b8", fontSize: "0.8rem" }}>
+                          {mapModalSwipe.checkOut ? "No Check-Out Selfie Captured" : "Shift Currently In Progress"}
+                        </div>
+                      )}
+                      <div style={{ fontSize: "0.73rem", color: mapModalSwipe.checkOut ? "#991b1b" : "#64748b", lineHeight: 1.3, textAlign: "center", fontWeight: "700" }}>
+                        📍 Check-Out: {mapModalSwipe.checkOutAddress || (mapModalSwipe.checkOut ? mapModalSwipe.fullAddress : "Not Checked Out Yet")}
+                      </div>
+                    </>
                   )}
-                  <div style={{ fontSize: "0.75rem", color: "#475569", lineHeight: 1.4, textAlign: "center" }}>
-                    {mapModalSwipe.fullAddress || mapModalSwipe.door}
-                  </div>
                 </div>
 
               </div>

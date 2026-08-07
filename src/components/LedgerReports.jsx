@@ -1268,7 +1268,16 @@ export default function LedgerReports() {
 
         const activeReceipts = (() => {
           if (Array.isArray(activeItemInGroup.receipts) && activeItemInGroup.receipts.length > 0) {
-            return activeItemInGroup.receipts;
+            return activeItemInGroup.receipts.map((item, idx) => {
+              if (typeof item === "string") {
+                return { url: item, name: `Receipt #${idx + 1}` };
+              }
+              return {
+                url: item.url || item.receipt || item.data || "",
+                name: item.name || item.receipt_name || `Receipt #${idx + 1}`,
+                type: item.type || ""
+              };
+            });
           }
 
           const parseString = (str, fallbackName) => {
@@ -1671,8 +1680,8 @@ const generateReceiptDataUrl = (title = "Expense Claim", amount = 0, category = 
 
 function ReceiptViewerCard({ r, i, activeItemInGroup }) {
   const [imgErr, setImgErr] = React.useState(false);
-  const rawUrl = r?.url || r?.receipt || "";
-  const name = r?.name || r?.receipt_name || `Receipt #${i + 1}`;
+  const rawUrl = typeof r === "string" ? r : (r?.url || r?.receipt || r?.data || "");
+  const name = (typeof r === "object" && (r?.name || r?.receipt_name)) || `Receipt #${i + 1}`;
   const isPdf = r?.type?.includes("pdf") || name.toLowerCase().endsWith(".pdf") || rawUrl.toLowerCase().endsWith(".pdf");
   const isValidMediaUrl = rawUrl && (rawUrl.startsWith("data:") || rawUrl.startsWith("http:") || rawUrl.startsWith("https:"));
 

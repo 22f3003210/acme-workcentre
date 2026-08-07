@@ -63,11 +63,7 @@ export default function ConsultantView({ activeTab }) {
 
   // Step 1: Purpose & Scope of Work
   const [visitPurpose, setVisitPurpose] = useState("Client Site Advisory & Store Operations Audit");
-  const [scopeTasks, setScopeTasks] = useState([
-    { id: 1, text: "Verify store merchandise display & stock inventory", done: true },
-    { id: 2, text: "Conduct morning staff briefing & sales target alignment", done: true },
-    { id: 3, text: "Inspect POS terminal ledger logs & cash register status", done: false }
-  ]);
+  const [scopeTasks, setScopeTasks] = useState([]);
   const [newScopeInput, setNewScopeInput] = useState("");
 
   // Step 2: Location Detection (GPS)
@@ -2553,19 +2549,23 @@ export default function ConsultantView({ activeTab }) {
                     <label style={{ display: "block", fontSize: "0.82rem", fontWeight: "800", color: "#1e293b", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
                       📍 1. Select Store / Client Project Site Location
                     </label>
-                    <select 
-                      value={selectedWizardProjectId} 
-                      onChange={(e) => setSelectedWizardProjectId(e.target.value)}
-                      style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.92rem", background: "#f8fafc", color: "#0f172a", fontWeight: "700" }}
-                    >
-                      {displayProjects.length === 0 ? (
-                        <option value="general-store-001">General Store HQ (Seoni, MP)</option>
-                      ) : (
-                        displayProjects.map(p => (
-                          <option key={p.id} value={p.id}>{p.name} — ({p.location || "Store HQ"})</option>
-                        ))
-                      )}
-                    </select>
+                    {displayProjects.length > 0 ? (
+                      <select 
+                        value={selectedWizardProjectId} 
+                        onChange={(e) => setSelectedWizardProjectId(e.target.value)}
+                        style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.92rem", background: "#ffffff", color: "#0f172a", fontWeight: "700" }}
+                      >
+                        <option value="">-- Select Assigned Client Project Site --</option>
+                        {displayProjects.map(p => (
+                          <option key={p.id} value={p.id}>{p.name} — ({p.location || "Client Site"})</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div style={{ padding: "12px 16px", background: "#fff7ed", border: "1px solid #ffedd5", borderRadius: "10px", color: "#c2410c", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span>⚠️</span>
+                        <span>No Client Projects Assigned Yet. (Projects will be visible here once assigned by Admin)</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Purpose of Shift / Site Visit */}
@@ -2732,10 +2732,7 @@ export default function ConsultantView({ activeTab }) {
                         </button>
                       )}
 
-                      <label style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 14px", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer", color: "#475569", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                        📁 Upload Photo
-                        <input type="file" accept="image/*" capture="user" onChange={handleSelfieFileUpload} style={{ display: "none" }} />
-                      </label>
+
                     </div>
 
                   </div>
@@ -2983,18 +2980,7 @@ export default function ConsultantView({ activeTab }) {
                         </button>
                       )}
 
-                      <label style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 14px", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer", color: "#475569", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                        📁 Upload Photo
-                        <input type="file" accept="image/*" capture="user" onChange={(e) => {
-                          handleSelfieFileUpload(e);
-                          const file = e.target.files && e.target.files[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => setCheckOutSelfiePhoto(ev.target.result);
-                            reader.readAsDataURL(file);
-                          }
-                        }} style={{ display: "none" }} />
-                      </label>
+
                     </div>
 
                   </div>

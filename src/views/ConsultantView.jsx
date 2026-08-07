@@ -34,19 +34,35 @@ export default function ConsultantView({ activeTab }) {
   const [description, setDescription] = useState("");
   const [expenseTitle, setExpenseTitle] = useState("");
   const [currency, setCurrency] = useState("INR");
-  const [receiptPreview, setReceiptPreview] = useState("");
+  const [receiptPreviews, setReceiptPreviews] = useState([]);
+  const [activeReceiptIdx, setActiveReceiptIdx] = useState(0);
   const [expenseDate, setExpenseDate] = useState("");
   const [expenseProjectId, setExpenseProjectId] = useState("");
   const [punchRemarks, setPunchRemarks] = useState("");
   const [punchProjectId, setPunchProjectId] = useState("");
 
   const handleReceiptFileUpload = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => setReceiptPreview(ev.target.result);
-      reader.readAsDataURL(file);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const fileList = Array.from(files);
+      fileList.forEach((file) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setReceiptPreviews((prev) => [...prev, ev.target.result]);
+        };
+        reader.readAsDataURL(file);
+      });
     }
+  };
+
+  const handleRemoveReceipt = (idxToRemove) => {
+    setReceiptPreviews((prev) => {
+      const updated = prev.filter((_, idx) => idx !== idxToRemove);
+      if (activeReceiptIdx >= updated.length) {
+        setActiveReceiptIdx(Math.max(0, updated.length - 1));
+      }
+      return updated;
+    });
   };
 
   const [advAmount, setAdvAmount] = useState("");
@@ -368,14 +384,16 @@ export default function ConsultantView({ activeTab }) {
       date: expenseDate || getTodayLocalStr(),
       projectId: expenseProjectId || null,
       currency: currency || "INR",
-      receipt: receiptPreview || null
+      receipt: receiptPreviews[0] || null,
+      receipts: receiptPreviews
     });
 
     if (setToast) setToast({ message: "Expense claim submitted successfully.", type: "success" });
     setAmount("");
     setDescription("");
     setExpenseTitle("");
-    setReceiptPreview("");
+    setReceiptPreviews([]);
+    setActiveReceiptIdx(0);
     if (!addAnother) {
       setShowExpenseModal(false);
     }
@@ -2440,27 +2458,91 @@ export default function ConsultantView({ activeTab }) {
             {/* Split 2-Column Layout Container */}
             <div style={{ flex: 1, display: "grid", gridTemplateColumns: "42% 58%", overflow: "hidden" }}>
               
-              {/* Left Column: Dark Slate Preview Container */}
-              <div style={{ background: "#3e4659", padding: "24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", position: "relative", color: "#ffffff" }}>
-                {receiptPreview ? (
-                  <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-                    <img src={receiptPreview} alt="Receipt Preview" style={{ maxWidth: "100%", maxHeight: "80%", objectFit: "contain", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)" }} />
+              {/* Left Column: Dark Slate Multi-Receipt Preview Gallery */}
+              <div style={{ background: "#3e4659", padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "space-between", position: "relative", color: "#ffffff" }}>
+                {receiptPreviews.length > 0 ? (
+                  <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", alignItems: "center" }}>
+                    
+                    {/* Top Banner: Image Counter & Add More */}
+                    <div style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+                      <span style={{ fontSize: "0.78rem", fontWeight: "800", background: "rgba(0,0,0,0.4)", padding: "4px 10px", borderRadius: "12px" }}>
+                        🖼️ Photo {activeReceiptIdx + 1} of {receiptPreviews.length}
+                      </span>
+                      <label style={{ background: "#5b5fc7", color: "#ffffff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        + Add More
+                        <input type="file" multiple accept="image/*,.pdf" onChange={handleReceiptFileUpload} style={{ display: "none" }} />
+                      </label>
+                    </div>
+
+                    {/* Main Image Container */}
+                    <div style={{ position: "relative", width: "100%", flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", margin: "6px 0" }}>
+                      <img 
+                        src={receiptPreviews[activeReceiptIdx] || receiptPreviews[0]} 
+                        alt={`Receipt ${activeReceiptIdx + 1}`} 
+                        style={{ maxWidth: "100%", maxHeight: "250px", objectFit: "contain", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }} 
+                      />
+                      
+                      {/* Prev / Next controls */}
+                      {receiptPreviews.length > 1 && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => setActiveReceiptIdx(prev => (prev > 0 ? prev - 1 : receiptPreviews.length - 1))}
+                            style={{ position: "absolute", left: "4px", top: "50%", transform: "translateY(-50%)", background: "rgba(15,23,42,0.8)", color: "#ffffff", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontWeight: "800", fontSize: "1.1rem" }}
+                          >
+                            ‹
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setActiveReceiptIdx(prev => (prev < receiptPreviews.length - 1 ? prev + 1 : 0))}
+                            style={{ position: "absolute", right: "4px", top: "50%", transform: "translateY(-50%)", background: "rgba(15,23,42,0.8)", color: "#ffffff", border: "none", borderRadius: "50%", width: "30px", height: "30px", cursor: "pointer", fontWeight: "800", fontSize: "1.1rem" }}
+                          >
+                            ›
+                          </button>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Thumbnails Row */}
+                    <div style={{ width: "100%", display: "flex", gap: "8px", overflowX: "auto", padding: "6px 2px", alignItems: "center" }}>
+                      {receiptPreviews.map((src, idx) => (
+                        <div 
+                          key={idx} 
+                          onClick={() => setActiveReceiptIdx(idx)}
+                          style={{ position: "relative", flexShrink: 0, cursor: "pointer", borderRadius: "6px", overflow: "hidden", border: activeReceiptIdx === idx ? "2px solid #60a5fa" : "1px solid rgba(255,255,255,0.3)", opacity: activeReceiptIdx === idx ? 1 : 0.65 }}
+                        >
+                          <img src={src} alt={`Thumb ${idx}`} style={{ width: "44px", height: "44px", objectFit: "cover" }} />
+                          <span 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveReceipt(idx);
+                            }}
+                            style={{ position: "absolute", top: "2px", right: "2px", background: "#ef4444", color: "#ffffff", borderRadius: "50%", width: "16px", height: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: "800" }}
+                            title="Delete photo"
+                          >
+                            ✕
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
                     <button 
                       type="button" 
-                      onClick={() => setReceiptPreview("")} 
-                      style={{ marginTop: "16px", background: "#ef4444", color: "#ffffff", border: "none", borderRadius: "6px", padding: "6px 14px", fontSize: "0.8rem", fontWeight: "700", cursor: "pointer" }}
+                      onClick={() => handleRemoveReceipt(activeReceiptIdx)} 
+                      style={{ marginTop: "8px", background: "#ef4444", color: "#ffffff", border: "none", borderRadius: "6px", padding: "5px 14px", fontSize: "0.78rem", fontWeight: "700", cursor: "pointer" }}
                     >
-                      Remove Receipt ✕
+                      Remove Selected Photo ✕
                     </button>
+
                   </div>
                 ) : (
                   <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
-                    <label style={{ background: "#5b5fc7", color: "#ffffff", padding: "10px 22px", borderRadius: "8px", fontWeight: "700", fontSize: "0.9rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", boxShadow: "0 4px 12px rgba(0,0,0,0.2)" }}>
-                      Upload Receipts <span style={{ fontSize: "0.8rem", opacity: 0.8 }}>ⓘ</span>
-                      <input type="file" accept="image/*,.pdf" onChange={handleReceiptFileUpload} style={{ display: "none" }} />
+                    <label style={{ background: "#5b5fc7", color: "#ffffff", padding: "12px 24px", borderRadius: "8px", fontWeight: "800", fontSize: "0.92rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px", boxShadow: "0 4px 14px rgba(0,0,0,0.25)" }}>
+                      📷 Upload Receipts (Multiple) <span style={{ fontSize: "0.8rem", opacity: 0.8 }}>ⓘ</span>
+                      <input type="file" multiple accept="image/*,.pdf" onChange={handleReceiptFileUpload} style={{ display: "none" }} />
                     </label>
                     <div style={{ fontSize: "0.82rem", color: "#cbd5e1", marginTop: "4px" }}>
-                      You can preview the uploaded receipt
+                      Select multiple images or PDFs to attach
                     </div>
                   </div>
                 )}
@@ -2564,8 +2646,8 @@ export default function ConsultantView({ activeTab }) {
                 {/* Upload Receipt Link */}
                 <div style={{ marginTop: "4px" }}>
                   <label style={{ color: "#5b5fc7", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                    📎 Upload Receipt ⓘ
-                    <input type="file" accept="image/*,.pdf" onChange={handleReceiptFileUpload} style={{ display: "none" }} />
+                    📎 Attach Multiple Receipts ({receiptPreviews.length} attached) ⓘ
+                    <input type="file" multiple accept="image/*,.pdf" onChange={handleReceiptFileUpload} style={{ display: "none" }} />
                   </label>
                 </div>
 

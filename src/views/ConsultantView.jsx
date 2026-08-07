@@ -30,12 +30,24 @@ export default function ConsultantView({ activeTab }) {
 
   // Form states
   const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("Travel");
+  const [category, setCategory] = useState("Food");
   const [description, setDescription] = useState("");
+  const [expenseTitle, setExpenseTitle] = useState("");
+  const [currency, setCurrency] = useState("INR");
+  const [receiptPreview, setReceiptPreview] = useState("");
   const [expenseDate, setExpenseDate] = useState("");
   const [expenseProjectId, setExpenseProjectId] = useState("");
   const [punchRemarks, setPunchRemarks] = useState("");
   const [punchProjectId, setPunchProjectId] = useState("");
+
+  const handleReceiptFileUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setReceiptPreview(ev.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
 
   const [advAmount, setAdvAmount] = useState("");
   const [advPurpose, setAdvPurpose] = useState("");

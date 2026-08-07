@@ -44,6 +44,7 @@ export default function ConsultantView({ activeTab }) {
   // All Modal States
   const [showCheckInWizard, setShowCheckInWizard] = useState(false);
   const [showCheckOutWizard, setShowCheckOutWizard] = useState(false);
+  const [checkOutWizardStep, setCheckOutWizardStep] = useState(1);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showApplyLeaveModal, setShowApplyLeaveModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -138,6 +139,8 @@ export default function ConsultantView({ activeTab }) {
 
   const handleOpenCheckOutWizard = () => {
     setWizardCheckOutRemarks(punchRemarks || "");
+    setCheckOutWizardStep(1);
+    setSelfiePhoto("");
     setShowCheckOutWizard(true);
   };
 

@@ -1224,6 +1224,9 @@ export const AppProvider = ({ children }) => {
               checkOut: timeStr,
               hoursWorked: hours,
               remarks: combinedRemarks,
+              checkOutAddress: checkoutData.checkOutAddress || checkoutData.address || a.address,
+              checkOutCoordinates: checkoutData.checkOutCoordinates || checkoutData.coordinates || a.coordinates,
+              checkOutSelfie: checkoutData.checkOutSelfie || checkoutData.selfie || a.selfie,
               completedTasks: checkoutData.completedTasks || [],
               pendingTasks: checkoutData.pendingTasks || []
             };

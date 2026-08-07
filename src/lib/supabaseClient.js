@@ -187,14 +187,17 @@ export const supabaseAddAttendanceRecord = async (consultantId, attendanceRecord
     employee_name: employeeName,
     date: attendanceRecord.date,
     check_in: attendanceRecord.checkIn,
+    check_in_selfie: attendanceRecord.checkInSelfie || attendanceRecord.selfie || null,
+    check_in_address: attendanceRecord.checkInAddress || attendanceRecord.address || attendanceRecord.locationName || "",
+    check_in_coordinates: attendanceRecord.checkInCoordinates || attendanceRecord.coordinates || null,
+    selfie_url: attendanceRecord.checkInSelfie || attendanceRecord.selfie || null,
+    location_name: attendanceRecord.checkInAddress || attendanceRecord.address || attendanceRecord.locationName || "",
+    coordinates: attendanceRecord.coordinates || null,
     check_out: attendanceRecord.checkOut || null,
     status: attendanceRecord.status || "Present",
     hours_worked: Number(attendanceRecord.hoursWorked) || 0,
     project_id: attendanceRecord.projectId || null,
     project_name: attendanceRecord.projectName || "",
-    location_name: attendanceRecord.locationName || "",
-    coordinates: attendanceRecord.coordinates || null,
-    selfie_url: attendanceRecord.selfie || null,
     tasks: attendanceRecord.tasks || [],
     acknowledged_checklist: attendanceRecord.acknowledgedChecklist || false,
     remarks: attendanceRecord.remarks || ""
@@ -209,11 +212,14 @@ export const supabaseUpdateAttendanceCheckout = async (consultantId, dateStr, ch
   const id = `att-${consultantId}-${dateStr}`;
   const updatePayload = {
     check_out: checkOutTime,
-    hours_worked: Number(hoursWorked) || 0,
-    remarks: remarks,
+    check_out_selfie: checkoutData.checkOutSelfie || checkoutData.selfie || null,
+    check_out_address: checkoutData.checkOutAddress || checkoutData.address || null,
+    check_out_coordinates: checkoutData.checkOutCoordinates || checkoutData.coordinates || null,
+    checkout_selfie: checkoutData.checkOutSelfie || checkoutData.selfie || null,
     checkout_address: checkoutData.checkOutAddress || checkoutData.address || null,
     checkout_coordinates: checkoutData.checkOutCoordinates || checkoutData.coordinates || null,
-    checkout_selfie: checkoutData.checkOutSelfie || checkoutData.selfie || null
+    hours_worked: Number(hoursWorked) || 0,
+    remarks: remarks
   };
   const { data, error } = await supabase.from("attendance").update(updatePayload).eq("id", id);
   if (error) console.error("Supabase update attendance checkout error:", error);

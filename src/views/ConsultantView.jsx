@@ -215,39 +215,16 @@ export default function ConsultantView({ activeTab }) {
             // High precision Nominatim Reverse Geocoding
             const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
             const nomData = await nomRes.json();
-            if (nomData && nomData.address) {
-              const a = nomData.address;
-              
-              const isJargon = (str) => {
-                if (!str) return true;
-                return /ward|mandal|corporation|zone|circle|district|municipality/i.test(str);
-              };
-
-              let areaName = "";
-              if (!isJargon(a.suburb)) areaName = a.suburb;
-              else if (!isJargon(a.neighbourhood)) areaName = a.neighbourhood;
-              else if (!isJargon(a.locality)) areaName = a.locality;
-              else if (!isJargon(a.residential)) areaName = a.residential;
-              else if (!isJargon(a.road)) areaName = a.road;
-              else if (!isJargon(a.quarter)) areaName = a.quarter;
-              else if (!isJargon(a.subdistrict)) areaName = a.subdistrict;
-              else areaName = a.village || a.hamlet || a.town || "";
-
-              const cityName = a.city || a.town || a.city_district || a.county || "";
-              const stateName = a.state || "";
-              const countryName = a.country || "";
-              
-              const parts = [areaName, cityName, stateName, countryName].filter(Boolean);
-              if (parts.length > 0) {
-                exactAddr = parts.join(", ");
-              }
+            if (nomData && (nomData.display_name || nomData.address)) {
+              const fullLoc = nomData.display_name || Object.values(nomData.address).filter(Boolean).join(", ");
+              exactAddr = `📍 Verified Address: ${fullLoc} (${lat}, ${lng})`;
             } else {
               // BigDataCloud Fallback
               const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
               const bdcData = await bdcRes.json();
               if (bdcData && (bdcData.locality || bdcData.city || bdcData.principalSubdivision)) {
                 const parts = [bdcData.locality, bdcData.city, bdcData.principalSubdivision, bdcData.countryName].filter(Boolean);
-                exactAddr = parts.join(", ");
+                exactAddr = `📍 Verified Address: ${parts.join(", ")} (${lat}, ${lng})`;
               }
             }
           } catch (e) {

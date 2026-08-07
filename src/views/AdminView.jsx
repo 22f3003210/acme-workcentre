@@ -3321,8 +3321,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
             const dynamicSwipes = (users || []).flatMap(u => {
               const attList = u.attendance || [];
               return attList.map((a, idx) => {
-                let recAddress = a.address || (a.remarks && a.remarks.includes("Location: ") ? a.remarks.split("Location: ")[1] : null) || a.locationName || a.projectName || "Recorded Location";
-                recAddress = recAddress.replace(/Ward\s*\d*\s*/gi, "").replace(/,\s*,/g, ",").trim();
+                let recAddress = a.check_in_address || a.address || (a.remarks && a.remarks.includes("Location: ") ? a.remarks.split("Location: ")[1] : null) || a.locationName || a.projectName || "Recorded Location";
                 let recDoor = recAddress.includes(",") ? recAddress.split(",")[0].trim() : (a.projectName || "Store Site");
 
                 let parsedCoords = { lat: "17.3933", lng: "78.4758" };
@@ -3343,7 +3342,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
                 const checkInSelfie = a.selfie || a.checkInSelfie || u.avatar || u.selfiePhoto;
                 const checkOutSelfie = a.checkOutSelfie || a.selfie || u.avatar || u.selfiePhoto;
-                const checkOutAddress = a.checkOutAddress ? a.checkOutAddress.replace(/Ward\s*\d*\s*/gi, "").replace(/,\s*,/g, ",").trim() : recAddress;
+                const checkOutAddress = a.check_out_address || a.checkOutAddress || a.checkout_address || recAddress;
 
                 return {
                   id: `live-swipe-${u.id}-${a.date}-${idx}`,

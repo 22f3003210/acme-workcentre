@@ -1267,8 +1267,13 @@ export default function LedgerReports() {
         const statusText = activeItemInGroup.status === "Approved" ? `Expense last Approved by ${activeItemInGroup.reviewedBy || activeItemInGroup.approvedBy || "HR MANAGER"}` : activeItemInGroup.status === "Rejected" ? `Expense Rejected: ${activeItemInGroup.rejectionReason || "Rejection notes logged"}` : "Expense pending approval review";
 
         const activeReceipts = (() => {
-          if (Array.isArray(activeItemInGroup.receipts) && activeItemInGroup.receipts.length > 0) {
-            return activeItemInGroup.receipts.map((item, idx) => {
+          let rawList = activeItemInGroup.receipts;
+          if ((!rawList || rawList.length === 0) && activeItemInGroup.receipt && typeof activeItemInGroup.receipt === "string" && activeItemInGroup.receipt.includes("|||")) {
+            rawList = activeItemInGroup.receipt.split("|||");
+          }
+
+          if (Array.isArray(rawList) && rawList.length > 0) {
+            return rawList.map((item, idx) => {
               if (typeof item === "string") {
                 return { url: item, name: `Receipt #${idx + 1}` };
               }

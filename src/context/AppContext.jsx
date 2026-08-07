@@ -1298,7 +1298,11 @@ export const AppProvider = ({ children }) => {
       approvedDate: "",
       projectId: expenseData.projectId || "",
       projectName: expenseData.projectName || "",
-      receipts: expenseData.receipts || [],
+      receipts: (expenseData.receipts && expenseData.receipts.length > 0) 
+        ? expenseData.receipts 
+        : (expenseData.receipt && typeof expenseData.receipt === "string" && expenseData.receipt.includes("|||") 
+            ? expenseData.receipt.split("|||") 
+            : (expenseData.receipt ? [expenseData.receipt] : [])),
       ...expenseData
     };
     setExpenses(prev => [newExpense, ...prev]);

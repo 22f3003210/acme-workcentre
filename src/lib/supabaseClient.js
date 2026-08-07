@@ -30,8 +30,8 @@ export const supabaseAddExpense = async (expense) => {
     category: expense.category,
     amount: Number(expense.amount) || 0,
     reason: expense.description || expense.reason || "",
-    receipt: expense.receiptUrl || expense.receipt || (expense.receipts && expense.receipts[0]?.url) || "",
-    receipt_name: expense.receiptName || (expense.receipts && expense.receipts[0]?.name) || "",
+    receipt: Array.isArray(expense.receipts) && expense.receipts.length > 0 ? expense.receipts.join("|||") : (expense.receiptUrl || expense.receipt || ""),
+    receipt_name: Array.isArray(expense.receipts) && expense.receipts.length > 0 ? expense.receipts.map((_, i) => `Receipt #${i+1}`).join("|||") : (expense.receiptName || ""),
     status: expense.status || "Pending",
     approved_by: expense.approvedBy || expense.reviewedBy || null,
     approved_date: expense.approvedDate || null

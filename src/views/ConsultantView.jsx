@@ -384,7 +384,7 @@ export default function ConsultantView({ activeTab }) {
       date: expenseDate || getTodayLocalStr(),
       projectId: expenseProjectId || null,
       currency: currency || "INR",
-      receipt: receiptPreviews[0] || null,
+      receipt: receiptPreviews.length > 0 ? receiptPreviews.join("|||") : null,
       receipts: receiptPreviews
     });
 

@@ -3330,6 +3330,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   avatar: dateWiseSelfie,
                   selfie: dateWiseSelfie,
                   time: a.checkIn,
+                  checkIn: a.checkIn || null,
+                  checkOut: a.checkOut || null,
                   date: a.date,
                   shift: u.shift || "General Shift",
                   inOut: a.checkOut ? "OUT" : "IN",
@@ -3414,8 +3416,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
                         <th style={{ padding: "12px 14px", fontWeight: "600" }}>Employee Name</th>
                         <th style={{ padding: "12px 14px", fontWeight: "600" }}>Swipe Time & Date</th>
                         <th style={{ padding: "12px 14px", fontWeight: "600" }}>Shift</th>
-                        <th style={{ padding: "12px 14px", fontWeight: "600" }}>In/Out</th>
-                        <th style={{ padding: "12px 14px", fontWeight: "600" }}>Received On</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "700" }}>In & Time</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "700" }}>Out & Time</th>
                         <th style={{ padding: "12px 14px", fontWeight: "600" }}>Door/Address</th>
                         <th style={{ padding: "12px 14px", fontWeight: "600" }}>Status</th>
                       </tr>
@@ -3450,12 +3452,36 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             <td style={{ padding: "12px 14px", color: "#334155", fontSize: "0.8rem" }}>
                               {s.shift}
                             </td>
-                            <td style={{ padding: "12px 14px", color: "#334155", fontWeight: "600", fontSize: "0.78rem" }}>
-                              {s.inOut}
-                            </td>
+                            {/* In & Time Cell */}
                             <td style={{ padding: "12px 14px" }}>
-                              <div style={{ fontWeight: "600", color: "#1e293b" }}>{s.receivedTime}</div>
-                              <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{s.receivedDate}</div>
+                              {(s.checkIn || (s.inOut === "IN" && s.time)) ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                  <span style={{ fontWeight: "800", color: "#166534", fontSize: "0.82rem" }}>
+                                    IN {s.checkIn || s.time}
+                                  </span>
+                                  <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{s.date || s.receivedDate}</span>
+                                </div>
+                              ) : (
+                                <span style={{ background: "#fff7ed", color: "#c2410c", border: "1px solid #ffedd5", padding: "3px 8px", borderRadius: "6px", fontWeight: "700", fontSize: "0.75rem", display: "inline-block" }}>
+                                  ⚠️ Swipe miss
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Out & Time Cell */}
+                            <td style={{ padding: "12px 14px" }}>
+                              {(s.checkOut || (s.inOut === "OUT" && s.time)) ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                                  <span style={{ fontWeight: "800", color: "#1e293b", fontSize: "0.82rem" }}>
+                                    OUT {s.checkOut || (s.inOut === "OUT" ? s.time : "")}
+                                  </span>
+                                  <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{s.date || s.receivedDate}</span>
+                                </div>
+                              ) : (
+                                <span style={{ background: "#fff7ed", color: "#c2410c", border: "1px solid #ffedd5", padding: "3px 8px", borderRadius: "6px", fontWeight: "700", fontSize: "0.75rem", display: "inline-block" }}>
+                                  ⚠️ Swipe miss
+                                </span>
+                              )}
                             </td>
                             <td style={{ padding: "12px 14px", color: "#475569", fontSize: "0.78rem" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>

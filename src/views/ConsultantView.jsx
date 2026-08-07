@@ -45,6 +45,7 @@ export default function ConsultantView({ activeTab }) {
   const [showCheckInWizard, setShowCheckInWizard] = useState(false);
   const [showCheckOutWizard, setShowCheckOutWizard] = useState(false);
   const [checkOutWizardStep, setCheckOutWizardStep] = useState(1);
+  const [checkOutSelfiePhoto, setCheckOutSelfiePhoto] = useState("");
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showApplyLeaveModal, setShowApplyLeaveModal] = useState(false);
   const [showExpenseModal, setShowExpenseModal] = useState(false);

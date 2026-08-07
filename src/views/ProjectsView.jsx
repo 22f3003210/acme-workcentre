@@ -417,6 +417,7 @@ export default function ProjectsView() {
   const [vFollowUp, setVFollowUp] = useState("");
 
   // New Project Form (matches exact Create project drawer design)
+  const [assignedConsultantId, setAssignedConsultantId] = useState("");
   const [newName, setNewName] = useState("");
   const [pocName, setPocName] = useState("");
   const [pocContact, setPocContact] = useState("");
@@ -549,9 +550,13 @@ export default function ProjectsView() {
       return;
     }
 
+    const assignedUser = (users || []).find(u => u.id === assignedConsultantId);
     addProject({
       code: newCode.toUpperCase(),
       name: newName,
+      assignedConsultantId: assignedConsultantId || null,
+      assignedConsultantName: assignedUser ? assignedUser.name : "",
+      assignedConsultants: assignedConsultantId ? [assignedConsultantId] : [],
       client: newName, // Clean client brand name
       pocName: pocName || "N/A",
       pocContact: pocContact || "9876543233",
@@ -568,6 +573,7 @@ export default function ProjectsView() {
 
     setToast({ message: `Project '${newName}' created successfully!`, type: "success" });
     setNewName("");
+    setAssignedConsultantId("");
     setPocName("");
     setPocContact("");
     setNewCode("");
@@ -2179,6 +2185,39 @@ export default function ProjectsView() {
                   }}
                   required
                 />
+              </div>
+
+              {/* Assign Consultant Field */}
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#374151", marginBottom: "6px", display: "block" }}>
+                  👤 Assign Consultant / Staff Operator
+                </label>
+                <select
+                  value={assignedConsultantId}
+                  onChange={e => setAssignedConsultantId(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    fontSize: "0.9rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "6px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    background: "#ffffff",
+                    color: "#111827",
+                    fontWeight: "600"
+                  }}
+                >
+                  <option value="">-- Select Consultant to Assign --</option>
+                  {(users || []).map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.role || "Consultant"} • {u.email || u.empCode || u.id})
+                    </option>
+                  ))}
+                </select>
+                <span style={{ fontSize: "0.75rem", color: "#6b7280", marginTop: "4px", display: "block" }}>
+                  Assigned consultant will see project details in their login portal & check-in form.
+                </span>
               </div>
 
               {/* POC */}

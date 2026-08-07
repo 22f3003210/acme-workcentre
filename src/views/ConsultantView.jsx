@@ -102,7 +102,28 @@ export default function ConsultantView({ activeTab }) {
     businessModel: "Retail & Client Advisory Store"
   };
 
-  const displayProjects = (projects && projects.length > 0) ? projects : [defaultGeneralProject];
+  // Filter projects assigned specifically to the logged in consultant
+  const consultantAssignedProjects = (projects || []).filter(p => {
+    if (!p) return false;
+
+    // Check direct assignment match
+    if (p.assignedConsultantId && (p.assignedConsultantId === currentUser?.id || p.assignedConsultantId === currentUser?.empCode)) return true;
+    
+    // Check array match
+    if (p.assignedConsultants && Array.isArray(p.assignedConsultants)) {
+      if (p.assignedConsultants.includes(currentUser?.id) || p.assignedConsultants.includes(currentUser?.empCode) || p.assignedConsultants.includes(currentUser?.email)) return true;
+    }
+    
+    // Check string match
+    if (p.assignedConsultant && (p.assignedConsultant === currentUser?.id || p.assignedConsultant === currentUser?.empCode || p.assignedConsultant === currentUser?.email || p.assignedConsultant === currentUser?.name)) return true;
+
+    // Fallback: If project has no assignment criteria set yet, show as accessible
+    if (!p.assignedConsultantId && !p.assignedConsultant && (!p.assignedConsultants || p.assignedConsultants.length === 0)) return true;
+
+    return false;
+  });
+
+  const displayProjects = (consultantAssignedProjects && consultantAssignedProjects.length > 0) ? consultantAssignedProjects : [defaultGeneralProject];
 
   const handleOpenCheckInWizard = () => {
     const defaultProjId = (projects && projects.length > 0) ? projects[0].id : defaultGeneralProject.id;
@@ -492,13 +513,9 @@ export default function ConsultantView({ activeTab }) {
                           </div>
                         </div>
 
-                        <button 
-                          type="button" 
-                          onClick={handleOpenCheckInWizard}
-                          style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 14px", fontWeight: "700", fontSize: "0.8rem", cursor: "pointer" }}
-                        >
-                          Check In This Site ✓
-                        </button>
+                        <div style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #86efac", borderRadius: "8px", padding: "6px 12px", fontWeight: "800", fontSize: "0.78rem" }}>
+                          📍 Store Site Assigned
+                        </div>
                       </div>
 
                       {/* Scope Deliverables Progress Bar */}
@@ -756,13 +773,9 @@ export default function ConsultantView({ activeTab }) {
                   <div style={{ marginTop: "4px" }}><strong>Location Radius:</strong> Verified GPS Match (Within 500m)</div>
                 </div>
 
-                <button 
-                  type="button" 
-                  onClick={handleOpenCheckInWizard}
-                  style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(22,163,74,0.3)" }}
-                >
-                  ✔ Check In This Store Site
-                </button>
+                <div style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #86efac", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.85rem", textAlign: "center" }}>
+                  📍 Active Store Assignment (Assigned Consultant)
+                </div>
               </div>
             ))}
           </div>

@@ -215,9 +215,6 @@ export const supabaseUpdateAttendanceCheckout = async (consultantId, dateStr, ch
     check_out_selfie: checkoutData.checkOutSelfie || checkoutData.selfie || null,
     check_out_address: checkoutData.checkOutAddress || checkoutData.address || null,
     check_out_coordinates: checkoutData.checkOutCoordinates || checkoutData.coordinates || null,
-    checkout_selfie: checkoutData.checkOutSelfie || checkoutData.selfie || null,
-    checkout_address: checkoutData.checkOutAddress || checkoutData.address || null,
-    checkout_coordinates: checkoutData.checkOutCoordinates || checkoutData.coordinates || null,
     hours_worked: Number(hoursWorked) || 0,
     remarks: remarks
   };

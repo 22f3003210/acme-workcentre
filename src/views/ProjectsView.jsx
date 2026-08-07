@@ -415,6 +415,7 @@ export default function ProjectsView() {
   const [vUnderstandings, setVUnderstandings] = useState("");
   const [vWorkDone, setVWorkDone] = useState("");
   const [vFollowUp, setVFollowUp] = useState("");
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
   // New Project Form (matches exact Create project drawer design)
   const [assignedConsultantId, setAssignedConsultantId] = useState("");

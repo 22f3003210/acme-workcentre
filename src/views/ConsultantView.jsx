@@ -522,13 +522,23 @@ export default function ConsultantView({ activeTab }) {
 
               {/* Quick Action Buttons in Hero Banner */}
               <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                <button 
-                  type="button"
-                  onClick={handleOpenCheckInWizard}
-                  style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 6px 18px rgba(22,163,74,0.4)", display: "flex", alignItems: "center", gap: "8px" }}
-                >
-                  ✔ Check In Shift (Site Visit)
-                </button>
+                {(!todayPunch || todayPunch.checkOut) ? (
+                  <button 
+                    type="button"
+                    onClick={handleOpenCheckInWizard}
+                    style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 6px 18px rgba(22,163,74,0.4)", display: "flex", alignItems: "center", gap: "8px" }}
+                  >
+                    ✔ Check In Shift (Site Visit)
+                  </button>
+                ) : (
+                  <button 
+                    type="button"
+                    onClick={handleOpenCheckOutWizard}
+                    style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 6px 18px rgba(220,38,38,0.4)", display: "flex", alignItems: "center", gap: "8px" }}
+                  >
+                    ✖ Check Out Shift
+                  </button>
+                )}
                 <button 
                   type="button"
                   onClick={() => { setShowExpenseModal(true); setMainNavTab("EXPENSES"); }}
@@ -904,13 +914,23 @@ export default function ConsultantView({ activeTab }) {
               <h2 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "900", color: "#ffffff" }}>🕒 Shift Attendance & Clock Register</h2>
               <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#bbf7d0" }}>View check-in logs, total working hours & monthly stats</p>
             </div>
-            <button 
-              type="button"
-              onClick={handleOpenCheckInWizard}
-              style={{ background: "#ffffff", color: "#166534", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.2)" }}
-            >
-              + Check In Shift (Site Visit)
-            </button>
+            {(!todayPunch || todayPunch.checkOut) ? (
+              <button 
+                type="button"
+                onClick={handleOpenCheckInWizard}
+                style={{ background: "#ffffff", color: "#166534", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.2)" }}
+              >
+                + Check In Shift (Site Visit)
+              </button>
+            ) : (
+              <button 
+                type="button"
+                onClick={handleOpenCheckOutWizard}
+                style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.2)" }}
+              >
+                ✖ Check Out Shift
+              </button>
+            )}
           </div>
 
           <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)" }}>

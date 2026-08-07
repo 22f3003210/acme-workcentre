@@ -128,8 +128,7 @@ export default function ConsultantView({ activeTab }) {
   const displayProjects = consultantAssignedProjects;
 
   const handleOpenCheckInWizard = () => {
-    const defaultProjId = (displayProjects && displayProjects.length > 0) ? displayProjects[0].id : "";
-    setSelectedWizardProjectId(punchProjectId || defaultProjId);
+    setSelectedWizardProjectId(""); // Mandatory: Starts unselected so user is forced to pick
     setWizardStep(1);
     setShowCheckInWizard(true);
   };
@@ -2561,7 +2560,17 @@ export default function ConsultantView({ activeTab }) {
                       <select 
                         value={selectedWizardProjectId} 
                         onChange={(e) => setSelectedWizardProjectId(e.target.value)}
-                        style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.92rem", background: "#ffffff", color: "#0f172a", fontWeight: "700" }}
+                        style={{ 
+                          width: "100%", 
+                          padding: "12px 14px", 
+                          borderRadius: "10px", 
+                          border: !selectedWizardProjectId ? "2px solid #ef4444" : "1px solid #cbd5e1", 
+                          fontSize: "0.92rem", 
+                          background: !selectedWizardProjectId ? "#fff5f5" : "#ffffff", 
+                          color: "#0f172a", 
+                          fontWeight: "700",
+                          outline: "none"
+                        }}
                       >
                         <option value="">-- Select Assigned Client Project Site --</option>
                         {displayProjects.map(p => (
@@ -2774,11 +2783,29 @@ export default function ConsultantView({ activeTab }) {
                 <button 
                   type="button" 
                   onClick={() => {
+                    if (displayProjects.length === 0) {
+                      if (setToast) setToast({ message: "⚠️ Cannot Proceed: No Client Project is assigned to your account by Admin.", type: "error" });
+                      return;
+                    }
+                    if (!selectedWizardProjectId) {
+                      if (setToast) setToast({ message: "⚠️ Mandatory Field Required: Please select an assigned Client Project Site location to proceed.", type: "error" });
+                      return;
+                    }
                     setWizardStep(2);
                     handleDetectGpsLocation();
                     startCamera();
                   }} 
-                  style={{ padding: "10px 24px", background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(37,99,235,0.3)" }}
+                  style={{ 
+                    padding: "10px 24px", 
+                    background: (!selectedWizardProjectId || displayProjects.length === 0) ? "#94a3b8" : "#2563eb", 
+                    color: "#ffffff", 
+                    border: "none", 
+                    borderRadius: "10px", 
+                    fontWeight: "800", 
+                    fontSize: "0.88rem", 
+                    cursor: (!selectedWizardProjectId || displayProjects.length === 0) ? "not-allowed" : "pointer", 
+                    boxShadow: (!selectedWizardProjectId || displayProjects.length === 0) ? "none" : "0 4px 14px rgba(37,99,235,0.3)" 
+                  }}
                 >
                   Next: Location & Selfie →
                 </button>

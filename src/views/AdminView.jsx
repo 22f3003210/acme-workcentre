@@ -341,6 +341,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
   const [swipeRecords, setSwipeRecords] = useState(initialSwipes);
   const [selectedSwipeRecordId, setSelectedSwipeRecordId] = useState(null);
+  const [selectedSwipeMode, setSelectedSwipeMode] = useState("IN");
   const [swipeSearchQuery, setSwipeSearchQuery] = useState("");
   const [selectedSwipeCheckboxes, setSelectedSwipeCheckboxes] = useState([]);
   const [swipeDateFilter, setSwipeDateFilter] = useState(getTodayDateString());
@@ -3332,15 +3333,26 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   parsedCoords = { lat: a.coordinates.lat || "17.3933", lng: a.coordinates.lng || "78.4758" };
                 }
 
-                // Date-wise selfie photo stored in attendance record
-                const dateWiseSelfie = a.selfie || u.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80";
+                let parsedCheckOutCoords = parsedCoords;
+                if (typeof a.checkOutCoordinates === "string" && a.checkOutCoordinates.includes(",")) {
+                  const parts = a.checkOutCoordinates.split(",");
+                  parsedCheckOutCoords = { lat: parts[0].trim(), lng: parts[1].trim() };
+                } else if (a.checkOutCoordinates && typeof a.checkOutCoordinates === "object") {
+                  parsedCheckOutCoords = { lat: a.checkOutCoordinates.lat || "17.3933", lng: a.checkOutCoordinates.lng || "78.4758" };
+                }
+
+                const checkInSelfie = a.selfie || a.checkInSelfie || u.avatar || u.selfiePhoto;
+                const checkOutSelfie = a.checkOutSelfie || a.selfie || u.avatar || u.selfiePhoto;
+                const checkOutAddress = a.checkOutAddress ? a.checkOutAddress.replace(/Ward\s*\d*\s*/gi, "").replace(/,\s*,/g, ",").trim() : recAddress;
 
                 return {
                   id: `live-swipe-${u.id}-${a.date}-${idx}`,
                   name: u.name,
                   code: u.empCode || `EMP-${u.id.substring(0,4)}`,
-                  avatar: dateWiseSelfie,
-                  selfie: dateWiseSelfie,
+                  avatar: checkInSelfie,
+                  selfie: checkInSelfie,
+                  checkInSelfie: checkInSelfie,
+                  checkOutSelfie: checkOutSelfie,
                   time: a.checkIn,
                   checkIn: a.checkIn || null,
                   checkOut: a.checkOut || null,
@@ -3351,7 +3363,11 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   receivedDate: a.date,
                   door: recDoor,
                   fullAddress: recAddress,
+                  checkInAddress: recAddress,
+                  checkOutAddress: checkOutAddress,
                   coordinates: parsedCoords,
+                  checkInCoordinates: parsedCoords,
+                  checkOutCoordinates: parsedCheckOutCoords,
                   status: a.status || "Present",
                   mobile: u.phone || "+91 98201 12345",
                   tasks: a.tasks || []
@@ -3468,9 +3484,28 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             <td style={{ padding: "12px 14px" }}>
                               {(s.checkIn || (s.inOut === "IN" && s.time)) ? (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                  <span style={{ fontWeight: "800", color: "#166534", fontSize: "0.82rem" }}>
+                                  <button 
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSwipeRecordId(s.id);
+                                      setSelectedSwipeMode("IN");
+                                    }}
+                                    style={{
+                                      background: isSelectedRow && selectedSwipeMode === "IN" ? "#dcfce7" : "#f0fdf4",
+                                      border: isSelectedRow && selectedSwipeMode === "IN" ? "1.5px solid #16a34a" : "1px solid #bbf7d0",
+                                      color: "#166534",
+                                      borderRadius: "6px",
+                                      padding: "4px 8px",
+                                      fontSize: "0.8rem",
+                                      fontWeight: "800",
+                                      cursor: "pointer",
+                                      textAlign: "left"
+                                    }}
+                                    title="Click to view Check-In Selfie & Location"
+                                  >
                                     IN {s.checkIn || s.time}
-                                  </span>
+                                  </button>
                                   <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{s.date || s.receivedDate}</span>
                                 </div>
                               ) : (
@@ -3484,9 +3519,28 @@ export default function AdminView({ activeTab, setActiveTab }) {
                             <td style={{ padding: "12px 14px" }}>
                               {(s.checkOut || (s.inOut === "OUT" && s.time)) ? (
                                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                                  <span style={{ fontWeight: "800", color: "#1e293b", fontSize: "0.82rem" }}>
+                                  <button 
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSwipeRecordId(s.id);
+                                      setSelectedSwipeMode("OUT");
+                                    }}
+                                    style={{
+                                      background: isSelectedRow && selectedSwipeMode === "OUT" ? "#fee2e2" : "#fef2f2",
+                                      border: isSelectedRow && selectedSwipeMode === "OUT" ? "1.5px solid #dc2626" : "1px solid #fecaca",
+                                      color: "#991b1b",
+                                      borderRadius: "6px",
+                                      padding: "4px 8px",
+                                      fontSize: "0.8rem",
+                                      fontWeight: "800",
+                                      cursor: "pointer",
+                                      textAlign: "left"
+                                    }}
+                                    title="Click to view Check-Out Selfie & Location"
+                                  >
                                     OUT {s.checkOut || (s.inOut === "OUT" ? s.time : "")}
-                                  </span>
+                                  </button>
                                   <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>{s.date || s.receivedDate}</span>
                                 </div>
                               ) : (
@@ -3570,100 +3624,123 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   </table>
                 </div>
 
-                {/* Right Column: Swipe Details Sidebar Card */}
-                {activeRecord && (
-                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "6px", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-                    
-                    {/* Top Green Banner */}
-                    <div style={{ background: "#f0fdf4", borderBottom: "1px solid #bbf7d0", padding: "12px 16px", display: "flex", alignItems: "center", gap: "8px", color: "#15803d", fontSize: "0.78rem", fontWeight: "600" }}>
-                      <span>🧭 📷</span>
-                      <span>Geo Tracking + Manual Selfie Capture</span>
-                    </div>
+                {/* Right Column: Swipe Details Sidebar Card (IN / OUT Interactive Mode) */}
+                {activeRecord && (() => {
+                  const isOutMode = selectedSwipeMode === "OUT";
+                  const displaySelfie = isOutMode ? (activeRecord.checkOutSelfie || activeRecord.selfie || activeRecord.avatar) : (activeRecord.checkInSelfie || activeRecord.selfie || activeRecord.avatar);
+                  const displayTime = isOutMode ? (activeRecord.checkOut || activeRecord.time) : (activeRecord.checkIn || activeRecord.time);
+                  const displayAddress = isOutMode ? (activeRecord.checkOutAddress || activeRecord.fullAddress) : (activeRecord.checkInAddress || activeRecord.fullAddress);
+                  const displayCoords = isOutMode ? (activeRecord.checkOutCoordinates || activeRecord.coordinates) : (activeRecord.checkInCoordinates || activeRecord.coordinates);
 
-                    {/* Selfie Image Container */}
-                    <div style={{ background: "#f8fafc", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <img 
-                        src={activeRecord.avatar} 
-                        alt={activeRecord.name}
-                        style={{ width: "100%", height: "240px", objectFit: "cover", borderRadius: "4px", border: "1px solid #e2e8f0" }}
-                      />
-                      <div style={{ width: "100%", marginTop: "12px" }}>
-                        <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>
-                          {activeRecord.inOut === "OUT" ? "Swipe-out Time" : "Swipe-in Time"}
-                        </span>
-                        <span style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a" }}>
-                          {activeRecord.time}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Swipe Details Section */}
-                    <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid #f1f5f9" }}>
-                      <h4 style={{ margin: 0, fontSize: "0.88rem", fontWeight: "700", color: "#0f172a" }}>Swipe Details</h4>
-
-                      <div>
-                        <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>Mobile Name</span>
-                        <span style={{ fontSize: "0.82rem", color: "#1e293b", fontWeight: "500" }}>{activeRecord.mobile}</span>
-                      </div>
-
-                      <div>
-                        <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>Access Card</span>
-                        <span style={{ fontSize: "0.82rem", color: "#1e293b" }}>-</span>
-                      </div>
-
-                      <div>
-                        <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>Door/Address</span>
-                        <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                          <span style={{ fontSize: "0.78rem", color: "#334155", lineHeight: 1.4 }}>{activeRecord.fullAddress}</span>
-                          <svg 
-                            onClick={() => {
-                              setMapModalSwipe(activeRecord);
-                              setShowMapModal(true);
+                  return (
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", overflow: "hidden", display: "flex", flexDirection: "column", boxShadow: "0 10px 25px rgba(0,0,0,0.05)" }}>
+                      
+                      {/* Top Banner with Mode Selector Toggle Buttons */}
+                      <div style={{ background: isOutMode ? "#fef2f2" : "#f0fdf4", borderBottom: isOutMode ? "1px solid #fecaca" : "1px solid #bbf7d0", padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: isOutMode ? "#991b1b" : "#15803d", fontSize: "0.78rem", fontWeight: "800" }}>
+                          <span>{isOutMode ? "🔴 Check-Out Verification" : "🟢 Check-In Verification"}</span>
+                        </div>
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          <button 
+                            type="button" 
+                            onClick={() => setSelectedSwipeMode("IN")}
+                            style={{
+                              padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer",
+                              background: !isOutMode ? "#16a34a" : "#ffffff", color: !isOutMode ? "#ffffff" : "#475569",
+                              border: !isOutMode ? "none" : "1px solid #cbd5e1"
                             }}
-                            width="18" 
-                            height="18" 
-                            viewBox="0 0 24 24" 
-                            fill="none" 
-                            stroke="#6b21a8" 
-                            strokeWidth="2" 
-                            style={{ cursor: "pointer", flexShrink: 0 }}
-                            title="Click to view map"
                           >
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                          </svg>
+                            IN
+                          </button>
+                          <button 
+                            type="button" 
+                            onClick={() => setSelectedSwipeMode("OUT")}
+                            style={{
+                              padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer",
+                              background: isOutMode ? "#dc2626" : "#ffffff", color: isOutMode ? "#ffffff" : "#475569",
+                              border: isOutMode ? "none" : "1px solid #cbd5e1"
+                            }}
+                          >
+                            OUT
+                          </button>
                         </div>
                       </div>
 
-                      <div>
-                        <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>Remarks</span>
-                        <span style={{ fontSize: "0.82rem", color: "#1e293b" }}>-</span>
+                      {/* Selfie Image Container */}
+                      <div style={{ background: "#f8fafc", padding: "16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                        {displaySelfie && (displaySelfie.startsWith("data:") || displaySelfie.startsWith("http")) ? (
+                          <img 
+                            src={displaySelfie} 
+                            alt={activeRecord.name}
+                            style={{ width: "100%", height: "240px", objectFit: "cover", borderRadius: "8px", border: "1px solid #cbd5e1", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}
+                          />
+                        ) : (
+                          <div style={{ width: "100%", height: "220px", background: "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)", borderRadius: "8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#ffffff", fontWeight: "800", fontSize: "3.5rem" }}>
+                            {activeRecord.name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2)}
+                          </div>
+                        )}
+                        <div style={{ width: "100%", marginTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div>
+                            <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>
+                              {isOutMode ? "Swipe-out Time" : "Swipe-in Time"}
+                            </span>
+                            <span style={{ fontSize: "1.15rem", fontWeight: "800", color: isOutMode ? "#991b1b" : "#166534" }}>
+                              {displayTime || "-"}
+                            </span>
+                          </div>
+                          <span style={{ padding: "4px 10px", borderRadius: "12px", background: isOutMode ? "#fef2f2" : "#f0fdf4", color: isOutMode ? "#dc2626" : "#16a34a", fontSize: "0.75rem", fontWeight: "800" }}>
+                            {isOutMode ? "OUT" : "IN"}
+                          </span>
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Bottom Actions Bar */}
-                    <div style={{ background: "#f8fafc", borderTop: "1px solid #e2e8f0", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                      <span style={{ fontSize: "0.72rem", color: "#64748b", textAlign: "center" }}>
-                        Select individual swipes to approve/reject
-                      </span>
-                      <div style={{ display: "flex", gap: "10px" }}>
-                        <button 
-                          type="button"
-                          style={{ flex: 1, background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px", fontSize: "0.82rem", color: "#475569", fontWeight: "500", borderRadius: "4px", cursor: "pointer" }}
-                        >
-                          Reject
-                        </button>
-                        <button 
-                          type="button"
-                          style={{ flex: 1, background: "#f1f5f9", border: "1px solid #cbd5e1", padding: "8px", fontSize: "0.82rem", color: "#94a3b8", fontWeight: "600", borderRadius: "4px", cursor: "pointer" }}
-                        >
-                          Approve
-                        </button>
+                      {/* Swipe Details Section */}
+                      <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", borderTop: "1px solid #f1f5f9" }}>
+                        <h4 style={{ margin: 0, fontSize: "0.88rem", fontWeight: "800", color: "#0f172a" }}>Swipe Details</h4>
+
+                        <div>
+                          <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>Employee Name</span>
+                          <span style={{ fontSize: "0.85rem", color: "#1e293b", fontWeight: "700" }}>{activeRecord.name} ({activeRecord.code})</span>
+                        </div>
+
+                        <div>
+                          <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>Mobile Name</span>
+                          <span style={{ fontSize: "0.82rem", color: "#1e293b", fontWeight: "500" }}>{activeRecord.mobile}</span>
+                        </div>
+
+                        <div>
+                          <span style={{ fontSize: "0.72rem", color: "#64748b", display: "block" }}>{isOutMode ? "Check-Out Location Address" : "Check-In Location Address"}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+                            <span style={{ fontSize: "0.8rem", color: "#2563eb", fontWeight: "800", lineHeight: 1.4 }}>{displayAddress}</span>
+                            <svg 
+                              onClick={() => {
+                                setMapModalSwipe({
+                                  ...activeRecord,
+                                  fullAddress: displayAddress,
+                                  coordinates: displayCoords,
+                                  avatar: displaySelfie
+                                });
+                                setShowMapModal(true);
+                              }}
+                              width="20" 
+                              height="20" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="#2563eb" 
+                              strokeWidth="2.2" 
+                              style={{ cursor: "pointer", flexShrink: 0 }}
+                              title="Click to view interactive map"
+                            >
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                              <circle cx="12" cy="10" r="3" />
+                            </svg>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                  </div>
-                )}
+                    </div>
+                  );
+                })()}
 
               </div>
             );

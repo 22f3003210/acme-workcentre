@@ -344,7 +344,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
   const [selectedSwipeMode, setSelectedSwipeMode] = useState("IN");
   const [swipeSearchQuery, setSwipeSearchQuery] = useState("");
   const [selectedSwipeCheckboxes, setSelectedSwipeCheckboxes] = useState([]);
-  const [swipeDateFilter, setSwipeDateFilter] = useState(getTodayDateString());
+  const [swipeDateFilter, setSwipeDateFilter] = useState("");
   const [swipePayrollMonth, setSwipePayrollMonth] = useState("Jul'26");
   const [swipeDateType, setSwipeDateType] = useState("Swipe Date");
   const [swipeStatusFilter, setSwipeStatusFilter] = useState("All");
@@ -3376,7 +3376,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
               });
             });
 
-            const allSwipesList = [...dynamicSwipes, ...swipeRecords];
+            // Only use real live consultant attendance records from state & Supabase database (no hardcoded mock data)
+            const allSwipesList = dynamicSwipes;
 
             let filteredSwipes = allSwipesList.filter(s => {
               if (swipeSearchQuery.trim()) {
@@ -3385,21 +3386,27 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 if (!match) return false;
               }
               if (swipeDateFilter && swipeDateFilter.trim()) {
-                const dQ = swipeDateFilter.toLowerCase().trim();
-                if (dQ !== "20 jul 2026 - 20 jul 2026" && dQ !== "") {
-                  const targetDateStr = (swipeDateType === "Received Date" ? s.receivedDate : s.date) || "";
-                  
-                  const matchesDate = () => {
-                    if (targetDateStr.toLowerCase().includes(dQ) || dQ.includes(targetDateStr.toLowerCase())) return true;
-                    const filterDate = new Date(swipeDateFilter);
-                    const recordDate = new Date(targetDateStr);
-                    if (!isNaN(filterDate.getTime()) && !isNaN(recordDate.getTime())) {
-                      return filterDate.toISOString().split("T")[0] === recordDate.toISOString().split("T")[0];
-                    }
-                    return false;
-                  };
+                const filterStr = swipeDateFilter.trim();
+                const recordDateStr = (swipeDateType === "Received Date" ? s.receivedDate : s.date) || "";
 
-                  if (!matchesDate()) return false;
+                if (filterStr.includes(" - ")) {
+                  const [startStr, endStr] = filterStr.split(" - ").map(d => d.trim());
+                  const sTime = new Date(startStr).getTime();
+                  const eTime = new Date(endStr).getTime();
+                  const rTime = new Date(recordDateStr).getTime();
+                  if (!isNaN(sTime) && !isNaN(eTime) && !isNaN(rTime)) {
+                    if (rTime < sTime || rTime > eTime) return false;
+                  }
+                } else {
+                  const fTime = new Date(filterStr).getTime();
+                  const rTime = new Date(recordDateStr).getTime();
+                  if (!isNaN(fTime) && !isNaN(rTime)) {
+                    const fIso = new Date(filterStr).toISOString().split("T")[0];
+                    const rIso = new Date(recordDateStr).toISOString().split("T")[0];
+                    if (fIso !== rIso) return false;
+                  } else if (filterStr && !recordDateStr.includes(filterStr)) {
+                    return false;
+                  }
                 }
               }
               if (swipeStatusFilter !== "All") {

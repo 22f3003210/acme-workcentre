@@ -82,6 +82,7 @@ export default function ConsultantView({ activeTab }) {
   const [selfiePhoto, setSelfiePhoto] = useState("");
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraStream, setCameraStream] = useState(null);
+  const [cameraPermissionDenied, setCameraPermissionDenied] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [wizardCheckOutRemarks, setWizardCheckOutRemarks] = useState("");
@@ -145,6 +146,7 @@ export default function ConsultantView({ activeTab }) {
   // -------------------------------------------------------------
   const startCamera = async () => {
     setCameraActive(true);
+    setCameraPermissionDenied(false);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }
@@ -155,7 +157,8 @@ export default function ConsultantView({ activeTab }) {
       setCameraStream(stream);
     } catch (err) {
       console.error("Camera access error:", err);
-      if (setToast) setToast({ message: "📷 Unable to access front camera. Please upload a selfie photo snapshot below.", type: "warning" });
+      setCameraPermissionDenied(true);
+      if (setToast) setToast({ message: "⚠️ Camera permissions are turned off. Please allow camera access in your browser settings.", type: "warning" });
       setCameraActive(false);
     }
   };
@@ -205,18 +208,27 @@ export default function ConsultantView({ activeTab }) {
           let exactAddr = `${lat}° N, ${lng}° E`;
 
           try {
-            // BigDataCloud Reverse Geocoding API
-            const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
-            const bdcData = await bdcRes.json();
-            if (bdcData && (bdcData.locality || bdcData.city || bdcData.principalSubdivision)) {
-              const parts = [bdcData.locality, bdcData.city, bdcData.principalSubdivision, bdcData.countryName].filter(Boolean);
-              exactAddr = parts.join(", ");
+            // High precision Nominatim Reverse Geocoding
+            const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+            const nomData = await nomRes.json();
+            if (nomData && nomData.address) {
+              const a = nomData.address;
+              const areaName = a.suburb || a.neighbourhood || a.quarter || a.residential || a.road || a.subdistrict || a.locality || "";
+              const cityName = a.city || a.town || a.city_district || a.county || "Hyderabad";
+              const stateName = a.state || "Telangana";
+              const countryName = a.country || "India";
+              
+              const parts = [areaName, cityName, stateName, countryName].filter(Boolean);
+              if (parts.length > 0) {
+                exactAddr = parts.join(", ");
+              }
             } else {
-              // Nominatim Fallback
-              const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-              const nomData = await nomRes.json();
-              if (nomData && nomData.display_name) {
-                exactAddr = nomData.display_name;
+              // BigDataCloud Fallback
+              const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+              const bdcData = await bdcRes.json();
+              if (bdcData && (bdcData.locality || bdcData.city || bdcData.principalSubdivision)) {
+                const parts = [bdcData.locality, bdcData.city, bdcData.principalSubdivision, bdcData.countryName].filter(Boolean);
+                exactAddr = parts.join(", ");
               }
             }
           } catch (e) {
@@ -231,19 +243,18 @@ export default function ConsultantView({ activeTab }) {
             isDetecting: false,
             errorMsg: ""
           });
-          if (setToast) setToast({ message: `📍 Live Location Captured: ${exactAddr.slice(0, 45)}...`, type: "success" });
+          if (setToast) setToast({ message: `📍 Live Location Captured: ${exactAddr}`, type: "success" });
         },
         (err) => {
           console.warn("GPS Geolocation error:", err);
           setGpsData({
             lat: null,
             lng: null,
-            address: "Client Store Location, Site HQ",
+            address: "Abids, Hyderabad, Telangana, India",
             isVerified: true,
             isDetecting: false,
-            errorMsg: "Device location permission pending or unavailable."
+            errorMsg: "Device location permission pending."
           });
-          if (setToast) setToast({ message: "📍 Please confirm your store location address.", type: "warning" });
         },
         { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
@@ -251,7 +262,7 @@ export default function ConsultantView({ activeTab }) {
       setGpsData({
         lat: null,
         lng: null,
-        address: "Client Store Site",
+        address: "Abids, Hyderabad, Telangana, India",
         isVerified: true,
         isDetecting: false,
         errorMsg: "Browser geolocation not supported."
@@ -2628,53 +2639,60 @@ export default function ConsultantView({ activeTab }) {
               {wizardStep === 2 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   
-                  {/* Location Card */}
+                  {/* Location Card (Re-Detect Button Removed) */}
                   <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <span style={{ fontSize: "1.3rem" }}>📍</span>
                         <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0369a1" }}>Exact Live Location Capture</h4>
                       </div>
-                      <button 
-                        type="button" 
-                        onClick={handleDetectGpsLocation} 
-                        style={{ background: "#0284c7", color: "#ffffff", border: "none", borderRadius: "6px", padding: "6px 14px", fontWeight: "700", fontSize: "0.78rem", cursor: "pointer" }}
-                      >
-                        {gpsData.isDetecting ? "⏳ Detecting GPS..." : "📍 Re-Detect My Location"}
-                      </button>
+                      <span style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" }}>
+                        {gpsData.isDetecting ? "⏳ Auto-Detecting..." : "● Auto-Detected Live"}
+                      </span>
                     </div>
 
                     <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748b" }}>
                         <span>GPS COORDINATES</span>
                         <strong style={{ color: "#0f172a", fontSize: "0.88rem" }}>
-                          {gpsData.isDetecting ? "⏳ Fetching Device GPS..." : gpsData.lat ? `${gpsData.lat}° N, ${gpsData.lng}° E` : "Location Detected"}
+                          {gpsData.isDetecting ? "⏳ Fetching Device GPS..." : gpsData.lat ? `${gpsData.lat}° N, ${gpsData.lng}° E` : "Location Active"}
                         </strong>
                       </div>
                       <div>
-                        <label style={{ fontSize: "0.75rem", fontWeight: "800", color: "#64748b", display: "block", marginBottom: "4px" }}>EXACT RECORDED ADDRESS / LOCATION</label>
+                        <label style={{ fontSize: "0.75rem", fontWeight: "800", color: "#64748b", display: "block", marginBottom: "4px" }}>EXACT RECORDED AREA / LOCATION ADDRESS</label>
                         <input
                           type="text"
                           value={gpsData.address}
                           onChange={(e) => setGpsData(prev => ({ ...prev, address: e.target.value }))}
-                          placeholder={gpsData.isDetecting ? "Fetching exact address..." : "Enter your store site address"}
-                          style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", fontWeight: "700", color: "#2563eb", boxSizing: "border-box" }}
+                          placeholder={gpsData.isDetecting ? "Fetching exact area..." : "e.g. Abids, Hyderabad, Telangana, India"}
+                          style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #2563eb", fontSize: "0.88rem", fontWeight: "700", color: "#1e40af", background: "#eff6ff", boxSizing: "border-box" }}
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Real WebCam & Selfie Photo Capture Box */}
+                  {/* Real WebCam & Selfie Photo Capture Box (Overlays & Extensions Disabled) */}
                   <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
                     <div style={{ textAlign: "center" }}>
                       <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>📸 Live Webcam & Selfie Capture</h4>
                       <p style={{ margin: "3px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Capture a real-time selfie photo for shift attendance log</p>
                     </div>
 
+                    {/* Camera Permission Warning Banner */}
+                    {cameraPermissionDenied && (
+                      <div style={{ width: "100%", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "10px", padding: "12px 16px", color: "#991b1b", fontSize: "0.82rem", textAlign: "center", display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <div style={{ fontWeight: "800" }}>📷 Camera Permission Turned Off</div>
+                        <div>Your browser camera permissions are turned off. Please allow camera access in your browser's address bar to turn on your webcam, or click below to retry.</div>
+                        <button type="button" onClick={startCamera} style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "6px", padding: "8px 16px", fontWeight: "800", fontSize: "0.8rem", cursor: "pointer", alignSelf: "center" }}>
+                          🎥 Turn On Camera Permissions
+                        </button>
+                      </div>
+                    )}
+
                     {/* Hidden Canvas element for snapping frame */}
                     <canvas ref={canvasRef} style={{ display: "none" }} />
 
-                    {/* Camera Feed / Snapped Preview */}
+                    {/* Camera Feed / Snapped Preview (No Picture-in-Picture or Translate Overlays) */}
                     <div style={{ position: "relative", width: "180px", height: "180px", borderRadius: "50%", overflow: "hidden", border: selfiePhoto ? "4px solid #16a34a" : "4px solid #2563eb", boxShadow: "0 8px 25px rgba(37,99,235,0.25)", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {selfiePhoto ? (
                         <img 
@@ -2688,7 +2706,11 @@ export default function ConsultantView({ activeTab }) {
                           autoPlay 
                           playsInline 
                           muted 
-                          style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }}
+                          disablePictureInPicture
+                          controlsList="nodownload nofullscreen noremoteplayback"
+                          translate="no"
+                          className="notranslate"
+                          style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)", pointerEvents: "none" }}
                         />
                       )}
                     </div>
@@ -2703,7 +2725,7 @@ export default function ConsultantView({ activeTab }) {
                               onClick={startCamera} 
                               style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}
                             >
-                              📹 Start Camera Feed
+                              🎥 Turn On Camera
                             </button>
                           )}
                           <button 

@@ -229,11 +229,13 @@ export default function ConsultantView({ activeTab }) {
               else if (!isJargon(a.locality)) areaName = a.locality;
               else if (!isJargon(a.residential)) areaName = a.residential;
               else if (!isJargon(a.road)) areaName = a.road;
-              else areaName = "Abids";
+              else if (!isJargon(a.quarter)) areaName = a.quarter;
+              else if (!isJargon(a.subdistrict)) areaName = a.subdistrict;
+              else areaName = a.village || a.hamlet || a.town || "";
 
-              const cityName = a.city || a.town || "Hyderabad";
-              const stateName = a.state || "Telangana";
-              const countryName = a.country || "India";
+              const cityName = a.city || a.town || a.city_district || a.county || "";
+              const stateName = a.state || "";
+              const countryName = a.country || "";
               
               const parts = [areaName, cityName, stateName, countryName].filter(Boolean);
               if (parts.length > 0) {

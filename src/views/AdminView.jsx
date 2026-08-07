@@ -8,8 +8,8 @@ const LeafletMapView = ({ lat, lng, name, avatar, fullAddress, date, time }) => 
 
   // Clean ward/mandal administrative jargon from address
   const cleanDisplayAddress = (addr) => {
-    if (!addr) return "Abids, Hyderabad, Telangana, India";
-    return addr.replace(/Ward\s*\d*\s*Gunfoundry,?/gi, "Abids,").replace(/Gunfoundry,?/gi, "Abids,").replace(/,\s*,/g, ",");
+    if (!addr) return "Recorded Location";
+    return addr.replace(/Ward\s*\d*\s*/gi, "").replace(/,\s*,/g, ",").trim();
   };
 
   const finalAddr = cleanDisplayAddress(fullAddress);
@@ -3320,8 +3320,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
             const dynamicSwipes = (users || []).flatMap(u => {
               const attList = u.attendance || [];
               return attList.map((a, idx) => {
-                let recAddress = a.address || (a.remarks && a.remarks.includes("Location: ") ? a.remarks.split("Location: ")[1] : null) || a.locationName || a.projectName || "Abids, Hyderabad, Telangana, India";
-                recAddress = recAddress.replace(/Ward\s*\d*\s*Gunfoundry,?/gi, "Abids,").replace(/Gunfoundry,?/gi, "Abids,").replace(/,\s*,/g, ",");
+                let recAddress = a.address || (a.remarks && a.remarks.includes("Location: ") ? a.remarks.split("Location: ")[1] : null) || a.locationName || a.projectName || "Recorded Location";
+                recAddress = recAddress.replace(/Ward\s*\d*\s*/gi, "").replace(/,\s*,/g, ",").trim();
                 let recDoor = recAddress.includes(",") ? recAddress.split(",")[0].trim() : (a.projectName || "Store Site");
 
                 let parsedCoords = { lat: "17.3933", lng: "78.4758" };

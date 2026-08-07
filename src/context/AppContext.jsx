@@ -1213,12 +1213,20 @@ export const AppProvider = ({ children }) => {
         const attendance = u.attendance || [];
         let updatedHours = 0;
         let updatedRemarks = checkoutData.remarks || "";
+        let recordDateToUpdate = todayStr;
 
-        const updatedAttendance = attendance.map(a => {
-          if ((a.date === todayStr || (a.date && new Date(a.date).toDateString() === new Date().toDateString())) && !a.checkOut) {
+        // Find the index of any active unclosed punch record
+        const unclosedIdx = attendance.findIndex(a => !a.checkOut);
+
+        const updatedAttendance = attendance.map((a, idx) => {
+          const isTargetRecord = (unclosedIdx >= 0 ? idx === unclosedIdx : (!a.checkOut && (a.date === todayStr || (a.date && new Date(a.date).toDateString() === new Date().toDateString()))));
+          
+          if (isTargetRecord) {
+            recordDateToUpdate = a.date || todayStr;
             const inMin = parseTimeToMinutes(a.checkIn);
             const outMin = parseTimeToMinutes(timeStr);
-            const minutesDiff = outMin - inMin;
+            let minutesDiff = outMin - inMin;
+            if (minutesDiff < 0) minutesDiff += 24 * 60; // Midnight rollover calculation
             const hours = parseFloat(Math.max(0, (minutesDiff / 60)).toFixed(1));
             updatedHours = hours;
             const combinedRemarks = checkoutData.remarks ? `${a.remarks ? a.remarks + " | " : ""}${checkoutData.remarks}` : a.remarks;
@@ -1234,9 +1242,9 @@ export const AppProvider = ({ children }) => {
               checkOut: timeStr,
               hoursWorked: hours,
               remarks: combinedRemarks,
-              checkOutAddress: checkoutData.checkOutAddress || checkoutData.address || a.address,
-              checkOutCoordinates: checkoutData.checkOutCoordinates || checkoutData.coordinates || a.coordinates,
-              checkOutSelfie: checkoutData.checkOutSelfie || checkoutData.selfie || a.selfie,
+              checkOutAddress: checkoutData.checkOutAddress || checkoutData.address || a.address || a.locationName || "",
+              checkOutCoordinates: checkoutData.checkOutCoordinates || checkoutData.coordinates || null,
+              checkOutSelfie: checkoutData.checkOutSelfie || checkoutData.selfie || null,
               completedTasks: checkoutData.completedTasks || [],
               pendingTasks: checkoutData.pendingTasks || []
             };
@@ -1245,7 +1253,7 @@ export const AppProvider = ({ children }) => {
         });
 
         if (isSupabaseConfigured()) {
-          supabaseUpdateAttendanceCheckout(consultantId, todayStr, timeStr, updatedHours, updatedRemarks, checkoutData);
+          supabaseUpdateAttendanceCheckout(consultantId, recordDateToUpdate, timeStr, updatedHours, updatedRemarks, checkoutData);
         }
 
         const updatedUser = {

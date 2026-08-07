@@ -452,44 +452,7 @@ export default function ConsultantView({ activeTab }) {
   return (
     <div className="consultant-view-container">
 
-      {/* TOP CONSULTANT WORKSPACE TAB NAVIGATION BAR */}
-      <div style={{ display: "flex", gap: "10px", marginBottom: "20px", borderBottom: "1px solid #e2e8f0", paddingBottom: "12px", flexWrap: "wrap", alignItems: "center" }}>
-        <button 
-          type="button"
-          onClick={() => setMainNavTab("HOME")} 
-          style={{ background: mainNavTab === "HOME" ? "#2563eb" : "#ffffff", color: mainNavTab === "HOME" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "HOME" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "HOME" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
-        >
-          🏠 Home Dashboard
-        </button>
-        <button 
-          type="button"
-          onClick={() => setMainNavTab("PROJECTS")} 
-          style={{ background: mainNavTab === "PROJECTS" ? "#2563eb" : "#ffffff", color: mainNavTab === "PROJECTS" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "PROJECTS" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "PROJECTS" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
-        >
-          📁 My Assigned Projects ({displayProjects.length})
-        </button>
-        <button 
-          type="button"
-          onClick={() => setMainNavTab("ATTENDANCE")} 
-          style={{ background: mainNavTab === "ATTENDANCE" ? "#2563eb" : "#ffffff", color: mainNavTab === "ATTENDANCE" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "ATTENDANCE" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "ATTENDANCE" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
-        >
-          🕒 Shift Attendance ({myAttendance.length})
-        </button>
-        <button 
-          type="button"
-          onClick={() => { setShowExpenseModal(true); setMainNavTab("EXPENSES"); }} 
-          style={{ background: mainNavTab === "EXPENSES" ? "#2563eb" : "#ffffff", color: mainNavTab === "EXPENSES" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "EXPENSES" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "EXPENSES" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
-        >
-          💰 Expenses & Petty Cash
-        </button>
-        <button 
-          type="button"
-          onClick={() => setMainNavTab("PROFILE")} 
-          style={{ background: mainNavTab === "PROFILE" ? "#2563eb" : "#ffffff", color: mainNavTab === "PROFILE" ? "#ffffff" : "#475569", padding: "10px 20px", borderRadius: "10px", border: mainNavTab === "PROFILE" ? "none" : "1px solid #cbd5e1", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: mainNavTab === "PROFILE" ? "0 4px 14px rgba(37,99,235,0.3)" : "none" }}
-        >
-          👤 Employee Profile & Keka HR
-        </button>
-      </div>
+
 
       {/* 1. HOME DASHBOARD VIEW */}
       {mainNavTab === "HOME" && (

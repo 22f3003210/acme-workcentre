@@ -1340,7 +1340,12 @@ export default function LedgerReports() {
                   
                   {selectedExpenseGroup.items.map((item, idx) => {
                     const isSelected = activeItemInGroup.id === item.id;
-                    const itemFiles = (item.receipts && item.receipts.length) || (item.receiptUrl || item.receipt ? 1 : 0);
+                    const itemFiles = (() => {
+                      if (Array.isArray(item.receipts) && item.receipts.length > 0) return item.receipts.length;
+                      if (item.receipt && typeof item.receipt === "string" && item.receipt.includes("|||")) return item.receipt.split("|||").length;
+                      if (item.receipt || item.receiptUrl) return 1;
+                      return 0;
+                    })();
                     return (
                       <div 
                         key={item.id} 
@@ -1373,33 +1378,65 @@ export default function LedgerReports() {
                   })}
                 </div>
 
-                {/* Middle Column: Simple Scrollable Image Viewer Gallery */}
-                <div style={{ flex: 1, backgroundColor: "#334155", padding: "20px", overflowY: "auto", display: "flex", flexDirection: "column", gap: "20px", alignItems: "center" }}>
-                  {activeReceipts.length === 0 ? (
-                    <div style={{ textAlign: "center", color: "#cbd5e1", margin: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
-                      <span style={{ fontSize: "3rem" }}>🖼️</span>
-                      <span style={{ fontSize: "0.95rem", fontWeight: "700" }}>No receipt photos attached for this claim</span>
-                    </div>
-                  ) : (
-                    activeReceipts.map((imgSrc, idx) => (
-                      <div key={idx} style={{ background: "#ffffff", borderRadius: "12px", padding: "14px", boxShadow: "0 10px 25px rgba(0,0,0,0.25)", maxWidth: "560px", width: "100%", display: "flex", flexDirection: "column", gap: "10px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: "8px" }}>
-                          <span style={{ fontSize: "0.82rem", fontWeight: "800", color: "#1e293b" }}>
-                            📸 Receipt Photo #{idx + 1} of {activeReceipts.length}
+                {/* Middle Column: Carousel Viewer with Left/Right Navigation */}
+                {activeReceipts.length === 0 ? (
+                  <div style={{ flex: 1, backgroundColor: "#3A4556", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#94a3b8", padding: "24px", gap: "12px" }}>
+                    <span style={{ fontSize: "2.5rem" }}>🖼️</span>
+                    <span style={{ fontSize: "0.9rem", fontWeight: "500", color: "#cbd5e1" }}>No receipts attached for this claim</span>
+                  </div>
+                ) : (() => {
+                  const safeIdx = activeReceiptIdx < activeReceipts.length ? activeReceiptIdx : 0;
+                  const currentSrc = activeReceipts[safeIdx] || activeReceipts[0];
+                  const isFirst = safeIdx === 0;
+                  const isLast = safeIdx === activeReceipts.length - 1;
+
+                  return (
+                    <div style={{ flex: 1, backgroundColor: "#475569", display: "flex", flexDirection: "column", position: "relative", overflow: "hidden" }}>
+                      
+                      {/* Top Floating Toolbar */}
+                      <div style={{ padding: "8px 16px", backgroundColor: "#334155", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #475569", zIndex: 10 }}>
+                        
+                        {/* Left Arrow */}
+                        <button
+                          onClick={() => { if (!isFirst) { setActiveReceiptIdx(prev => prev - 1); setZoomScale(1); } }}
+                          disabled={isFirst}
+                          style={{ background: isFirst ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.2)", color: isFirst ? "#94a3b8" : "#ffffff", border: "none", borderRadius: "4px", width: "28px", height: "28px", fontSize: "1.2rem", cursor: isFirst ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        >‹</button>
+
+                        {/* Center Badge */}
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px", backgroundColor: "#1e293b", padding: "4px 12px", borderRadius: "6px", border: "1px solid #475569" }}>
+                          <span style={{ fontSize: "0.76rem", color: "#e2e8f0", fontWeight: "500" }}>
+                            Attachments &nbsp;{safeIdx + 1}/{activeReceipts.length}
                           </span>
-                          <a href={imgSrc} target="_blank" rel="noopener noreferrer" download={`Receipt_${idx + 1}`} style={{ fontSize: "0.78rem", color: "#2563eb", fontWeight: "800", textDecoration: "none", background: "#eff6ff", padding: "3px 10px", borderRadius: "6px" }}>
-                            📥 Download / Open ↗
-                          </a>
+                          <span style={{ color: "#64748b" }}>|</span>
+                          <button onClick={() => setZoomScale(prev => Math.max(0.5, prev - 0.25))} style={{ background: "none", border: "none", color: "#cbd5e1", fontSize: "1rem", cursor: "pointer", padding: "0 4px" }} title="Zoom Out">−</button>
+                          <button onClick={() => setZoomScale(prev => Math.min(3, prev + 0.25))} style={{ background: "none", border: "none", color: "#cbd5e1", fontSize: "1rem", cursor: "pointer", padding: "0 4px" }} title="Zoom In">＋</button>
+                          <button onClick={() => setZoomScale(1)} style={{ background: "none", border: "none", color: "#94a3b8", fontSize: "0.72rem", cursor: "pointer", padding: "0 4px" }} title="Reset Zoom">⟲</button>
+                          <a href={currentSrc} target="_blank" rel="noopener noreferrer" download={`Receipt_${safeIdx + 1}`} style={{ color: "#cbd5e1", textDecoration: "none", fontSize: "0.85rem", marginLeft: "4px" }} title="Download / Open Full View">📥</a>
                         </div>
-                        <img 
-                          src={imgSrc} 
-                          alt={`Receipt ${idx + 1}`} 
-                          style={{ width: "100%", maxHeight: "500px", objectFit: "contain", borderRadius: "8px", border: "1px solid #e2e8f0", background: "#f8fafc" }} 
-                        />
+
+                        {/* Right Arrow */}
+                        <button
+                          onClick={() => { if (!isLast) { setActiveReceiptIdx(prev => prev + 1); setZoomScale(1); } }}
+                          disabled={isLast}
+                          style={{ background: isLast ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.2)", color: isLast ? "#94a3b8" : "#ffffff", border: "none", borderRadius: "4px", width: "28px", height: "28px", fontSize: "1.2rem", cursor: isLast ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                        >›</button>
                       </div>
-                    ))
-                  )}
-                </div>
+
+                      {/* Main Image Viewer */}
+                      <div style={{ flex: 1, padding: "16px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "auto", position: "relative" }}>
+                        <div style={{ transform: `scale(${zoomScale})`, transition: "transform 0.2s ease-in-out", display: "flex", justifyContent: "center", alignItems: "center", height: "100%", width: "100%" }}>
+                          <img 
+                            src={currentSrc} 
+                            alt={`Receipt ${safeIdx + 1}`} 
+                            style={{ maxHeight: "540px", maxWidth: "450px", objectFit: "contain", display: "block", boxShadow: "0 10px 25px rgba(0,0,0,0.5)", borderRadius: "4px" }} 
+                          />
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })()}
 
                 {/* Right column Form Fields */}
                 <div style={{ width: "450px", borderLeft: "1px solid #e2e8f0", padding: "24px", overflowY: "auto", overflowX: "hidden", display: "flex", flexDirection: "column", gap: "16px", backgroundColor: "#ffffff", boxSizing: "border-box" }}>

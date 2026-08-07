@@ -328,14 +328,19 @@ export default function ConsultantView({ activeTab }) {
       if (setToast) setToast({ message: "No active session found.", type: "error" });
       return;
     }
+    const finalSelfie = checkOutSelfiePhoto || selfiePhoto;
     if (checkOutConsultant) {
       checkOutConsultant(currentUser.id, {
         remarks: wizardCheckOutRemarks || punchRemarks || "Daily Shift Check Out",
+        checkOutAddress: gpsData.address,
+        checkOutCoordinates: `${gpsData.lat}, ${gpsData.lng}`,
+        checkOutSelfie: finalSelfie,
         completedTasks: wizardCompletedTasks,
         pendingTasks: wizardPendingTasks
       });
-      if (setToast) setToast({ message: "✓ Checked out successfully. Shift logged!", type: "success" });
+      if (setToast) setToast({ message: "✓ Checked out successfully. Shift logged with selfie & location!", type: "success" });
     }
+    stopCamera();
     setShowCheckOutWizard(false);
     setPunchRemarks("");
   };
@@ -2823,66 +2828,259 @@ export default function ConsultantView({ activeTab }) {
         </div>
       )}
 
-      {/* GUIDED CONSULTANT CHECK-OUT WIZARD MODAL */}
+{/* GUIDED CONSULTANT CHECK-OUT WIZARD MODAL (2-STEP LOCATION & SELFIE CAPTURE) */}
       {showCheckOutWizard && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.75)", backdropFilter: "blur(6px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-          <div style={{ background: "#ffffff", borderRadius: "16px", width: "100%", maxWidth: "560px", overflow: "hidden", boxShadow: "0 25px 50px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "20px", width: "100%", maxWidth: "620px", overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.35)", display: "flex", flexDirection: "column" }}>
             
-            {/* Header */}
-            <div style={{ background: "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)", color: "#ffffff", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: "rgba(255,255,255,0.2)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800" }}>✖</div>
+            {/* Modal Header */}
+            <div style={{ background: "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)", color: "#ffffff", padding: "22px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(255,255,255,0.2)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.2rem" }}>✖</div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#ffffff" }}>End Shift Check-Out Form</h3>
-                  <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#fca5a5" }}>Log shift summary & complete day check-out</p>
+                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "800", color: "#ffffff" }}>End Shift Check-Out Form</h3>
+                  <p style={{ margin: "3px 0 0 0", fontSize: "0.82rem", color: "#fca5a5" }}>Exact Location & Selfie Attendance Verification for Shift Close</p>
                 </div>
               </div>
-              <button type="button" onClick={() => setShowCheckOutWizard(false)} style={{ background: "none", border: "none", color: "#fca5a5", fontSize: "1.4rem", cursor: "pointer" }}>✕</button>
+              <button type="button" onClick={() => { stopCamera(); setShowCheckOutWizard(false); }} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fca5a5", borderRadius: "50%", width: "32px", height: "32px", fontSize: "1.2rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
 
-            {/* Content */}
-            <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px" }}>
-              
-              {/* Shift Summary Box */}
-              <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "14px 18px", borderRadius: "8px" }}>
-                <div style={{ fontSize: "0.85rem", fontWeight: "700", color: "#991b1b" }}>Shift Check-In Summary</div>
-                <div style={{ fontSize: "0.78rem", color: "#7f1d1d", marginTop: "4px" }}>
-                  Check In Time: <strong>{todayPunch?.checkIn || "10:30 AM"}</strong> • Date: <strong>{todayStr}</strong>
-                </div>
-              </div>
+            {/* Stepper Bar (2 Steps) */}
+            <div style={{ background: "#f8fafc", padding: "12px 28px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              {[
+                { step: 1, title: "1. Shift Summary & Remarks" },
+                { step: 2, title: "2. Check-Out Location & Selfie" }
+              ].map((s) => {
+                const isActive = checkOutWizardStep === s.step;
+                const isPassed = checkOutWizardStep > s.step;
+                return (
+                  <div key={s.step} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{
+                      width: "26px", height: "26px", borderRadius: "50%",
+                      background: isActive ? "#dc2626" : isPassed ? "#16a34a" : "#cbd5e1",
+                      color: "#ffffff", fontSize: "0.78rem", fontWeight: "800",
+                      display: "flex", alignItems: "center", justifyContent: "center"
+                    }}>
+                      {isPassed ? "✓" : s.step}
+                    </div>
+                    <span style={{ fontSize: "0.82rem", fontWeight: isActive ? "800" : "600", color: isActive ? "#0f172a" : "#64748b" }}>
+                      {s.title}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
 
-              {/* Check Out Remarks */}
-              <div>
-                <label style={{ display: "block", fontSize: "0.82rem", fontWeight: "700", color: "#334155", marginBottom: "8px" }}>
-                  📝 END OF SHIFT REMARKS / WORK COMPLETED
-                </label>
-                <textarea
-                  value={wizardCheckOutRemarks}
-                  onChange={(e) => setWizardCheckOutRemarks(e.target.value)}
-                  placeholder="Summary of advisory tasks completed during shift..."
-                  rows={3}
-                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
-                />
-              </div>
+            {/* Step Content */}
+            <div style={{ padding: "26px", display: "flex", flexDirection: "column", gap: "20px", minHeight: "340px" }}>
+              
+              {/* STEP 1: REMARKS */}
+              {checkOutWizardStep === 1 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                  <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "14px 18px", borderRadius: "10px" }}>
+                    <div style={{ fontSize: "0.88rem", fontWeight: "800", color: "#991b1b" }}>Shift Check-In Summary</div>
+                    <div style={{ fontSize: "0.8rem", color: "#7f1d1d", marginTop: "4px" }}>
+                      Check In Time: <strong>{todayPunch?.checkIn || "10:30 AM"}</strong> • Date: <strong>{todayStr}</strong>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.82rem", fontWeight: "800", color: "#1e293b", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                      📝 End of Shift Remarks / Work Completed
+                    </label>
+                    <textarea
+                      value={wizardCheckOutRemarks}
+                      onChange={(e) => setWizardCheckOutRemarks(e.target.value)}
+                      placeholder="Summary of advisory tasks and store objectives completed during shift..."
+                      rows={4}
+                      style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", fontWeight: "600" }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 2: LOCATION & SELFIE CAPTURE FOR CHECK OUT */}
+              {checkOutWizardStep === 2 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  
+                  {/* Location Card */}
+                  <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "1.3rem" }}>📍</span>
+                        <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0369a1" }}>Check-Out Live Location</h4>
+                      </div>
+                      <span style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" }}>
+                        {gpsData.isDetecting ? "⏳ Auto-Detecting..." : "● Auto-Detected Live"}
+                      </span>
+                    </div>
+
+                    <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748b" }}>
+                        <span>GPS COORDINATES</span>
+                        <strong style={{ color: "#0f172a", fontSize: "0.88rem" }}>
+                          {gpsData.isDetecting ? "⏳ Fetching Device GPS..." : gpsData.lat ? `${gpsData.lat}° N, ${gpsData.lng}° E` : "Location Active"}
+                        </strong>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "0.75rem", fontWeight: "800", color: "#64748b", display: "block", marginBottom: "4px" }}>EXACT RECORDED AREA / LOCATION ADDRESS</label>
+                        <input
+                          type="text"
+                          value={gpsData.address}
+                          onChange={(e) => setGpsData(prev => ({ ...prev, address: e.target.value }))}
+                          placeholder="e.g. Abids, Hyderabad, Telangana, India"
+                          style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #dc2626", fontSize: "0.88rem", fontWeight: "700", color: "#991b1b", background: "#fef2f2", boxSizing: "border-box" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Real WebCam & Selfie Photo Capture Box */}
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
+                    <div style={{ textAlign: "center" }}>
+                      <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>📸 Check-Out Live Selfie Capture</h4>
+                      <p style={{ margin: "3px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Capture a real-time selfie photo to verify shift completion</p>
+                    </div>
+
+                    {/* Camera Permission Warning Banner */}
+                    {cameraPermissionDenied && (
+                      <div style={{ width: "100%", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "10px", padding: "12px 16px", color: "#991b1b", fontSize: "0.82rem", textAlign: "center", display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <div style={{ fontWeight: "800" }}>📷 Camera Permission Turned Off</div>
+                        <div>Your browser camera permissions are turned off. Please allow camera access in your browser's address bar to turn on your webcam, or click below to retry.</div>
+                        <button type="button" onClick={startCamera} style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "6px", padding: "8px 16px", fontWeight: "800", fontSize: "0.8rem", cursor: "pointer", alignSelf: "center" }}>
+                          🎥 Turn On Camera Permissions
+                        </button>
+                      </div>
+                    )}
+
+                    <canvas ref={canvasRef} style={{ display: "none" }} />
+
+                    {/* Camera Feed / Snapped Preview */}
+                    <div style={{ position: "relative", width: "180px", height: "180px", borderRadius: "50%", overflow: "hidden", border: checkOutSelfiePhoto || selfiePhoto ? "4px solid #16a34a" : "4px solid #dc2626", boxShadow: "0 8px 25px rgba(220,38,38,0.25)", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {checkOutSelfiePhoto || selfiePhoto ? (
+                        <img 
+                          src={checkOutSelfiePhoto || selfiePhoto} 
+                          alt="Captured Check-Out Selfie" 
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      ) : (
+                        <video 
+                          ref={videoRef} 
+                          autoPlay 
+                          playsInline 
+                          muted 
+                          disablePictureInPicture
+                          controlsList="nodownload nofullscreen noremoteplayback"
+                          translate="no"
+                          className="notranslate"
+                          style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)", pointerEvents: "none" }}
+                        />
+                      )}
+                    </div>
+
+                    {/* Controls */}
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
+                      {!(checkOutSelfiePhoto || selfiePhoto) ? (
+                        <>
+                          {!cameraActive && (
+                            <button 
+                              type="button" 
+                              onClick={startCamera} 
+                              style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}
+                            >
+                              🎥 Turn On Camera
+                            </button>
+                          )}
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              captureSelfieSnapshot();
+                              if (canvasRef.current && videoRef.current) {
+                                const dataUrl = canvasRef.current.toDataURL("image/jpeg", 0.85);
+                                setCheckOutSelfiePhoto(dataUrl);
+                              }
+                            }} 
+                            style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 18px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
+                          >
+                            📸 Snap Check-Out Selfie
+                          </button>
+                        </>
+                      ) : (
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setSelfiePhoto("");
+                            setCheckOutSelfiePhoto("");
+                            startCamera();
+                          }} 
+                          style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155" }}
+                        >
+                          📷 Retake Selfie Photo
+                        </button>
+                      )}
+
+                      <label style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 14px", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer", color: "#475569", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        📁 Upload Photo
+                        <input type="file" accept="image/*" capture="user" onChange={(e) => {
+                          handleSelfieFileUpload(e);
+                          const file = e.target.files && e.target.files[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => setCheckOutSelfiePhoto(ev.target.result);
+                            reader.readAsDataURL(file);
+                          }
+                        }} style={{ display: "none" }} />
+                      </label>
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
 
             </div>
 
             {/* Footer Buttons */}
-            <div style={{ padding: "16px 24px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
-              <button 
-                type="button" 
-                onClick={() => setShowCheckOutWizard(false)} 
-                style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
-              >
-                Cancel
-              </button>
-              <button 
-                type="button" 
-                onClick={handleCompleteCheckOutSubmit} 
-                style={{ padding: "10px 24px", background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(220,38,38,0.3)" }}
-              >
-                Complete Check Out & Close Shift ✖
-              </button>
+            <div style={{ padding: "18px 28px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              {checkOutWizardStep > 1 ? (
+                <button 
+                  type="button" 
+                  onClick={() => setCheckOutWizardStep(prev => prev - 1)} 
+                  style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                >
+                  ← Previous Step
+                </button>
+              ) : (
+                <button 
+                  type="button" 
+                  onClick={() => { stopCamera(); setShowCheckOutWizard(false); }} 
+                  style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+              )}
+
+              {checkOutWizardStep === 1 ? (
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    setCheckOutWizardStep(2);
+                    handleDetectGpsLocation();
+                    startCamera();
+                  }} 
+                  style={{ padding: "10px 24px", background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(220,38,38,0.3)" }}
+                >
+                  Next: Location & Selfie →
+                </button>
+              ) : (
+                <button 
+                  type="button" 
+                  onClick={handleCompleteCheckOutSubmit} 
+                  style={{ padding: "10px 26px", background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(220,38,38,0.35)" }}
+                >
+                  Complete Check Out & Close Shift ✖
+                </button>
+              )}
             </div>
 
           </div>

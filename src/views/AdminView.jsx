@@ -3167,7 +3167,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     type="text" 
                     value={swipeDateFilter} 
                     onChange={(e) => setSwipeDateFilter(e.target.value)}
-                    placeholder="20 Jul 2026 - 20 Jul 2026"
+                    placeholder="Filter by Date (e.g. 2026-08-08)"
                     style={{ border: "none", outline: "none", fontSize: "0.82rem", color: "#1e293b", width: "100%" }}
                   />
                   {swipeDateFilter && (

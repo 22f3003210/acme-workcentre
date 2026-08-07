@@ -3228,11 +3228,15 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   parsedCoords = { lat: a.coordinates.lat || "17.3933", lng: a.coordinates.lng || "78.4758" };
                 }
 
+                // Date-wise selfie photo stored in attendance record
+                const dateWiseSelfie = a.selfie || u.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80";
+
                 return {
                   id: `live-swipe-${u.id}-${a.date}-${idx}`,
                   name: u.name,
                   code: u.empCode || `EMP-${u.id.substring(0,4)}`,
-                  avatar: a.selfie || u.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80",
+                  avatar: dateWiseSelfie,
+                  selfie: dateWiseSelfie,
                   time: a.checkIn,
                   date: a.date,
                   shift: u.shift || "General Shift",
@@ -3285,7 +3289,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
               filteredSwipes = [...filteredSwipes].sort((a, b) => a.receivedTime.localeCompare(b.receivedTime));
             }
 
-            const activeRecord = allSwipesList.find(s => s.id === selectedSwipeRecordId) || dynamicSwipes[0] || swipeRecords[0];
+            const activeRecord = filteredSwipes.find(s => s.id === selectedSwipeRecordId) || filteredSwipes[0] || allSwipesList.find(s => s.id === selectedSwipeRecordId) || dynamicSwipes[0] || swipeRecords[0];
 
             const isAllSwipesChecked = filteredSwipes.length > 0 && filteredSwipes.every(s => selectedSwipeCheckboxes.includes(s.id));
             const toggleAllSwipes = () => {

@@ -3321,28 +3321,30 @@ export default function AdminView({ activeTab, setActiveTab }) {
             const dynamicSwipes = (users || []).flatMap(u => {
               const attList = u.attendance || [];
               return attList.map((a, idx) => {
-                let recAddress = a.check_in_address || a.address || (a.remarks && a.remarks.includes("Location: ") ? a.remarks.split("Location: ")[1] : null) || a.locationName || a.projectName || "Recorded Location";
+                let recAddress = a.checkInAddress || a.check_in_address || a.address || (a.remarks && a.remarks.includes("Location: ") ? a.remarks.split("Location: ")[1] : null) || a.locationName || a.projectName || "Recorded Location";
                 let recDoor = recAddress.includes(",") ? recAddress.split(",")[0].trim() : (a.projectName || "Store Site");
 
                 let parsedCoords = { lat: "17.3933", lng: "78.4758" };
-                if (typeof a.coordinates === "string" && a.coordinates.includes(",")) {
-                  const parts = a.coordinates.split(",");
+                const rawCoords = a.checkInCoordinates || a.check_in_coordinates || a.coordinates;
+                if (typeof rawCoords === "string" && rawCoords.includes(",")) {
+                  const parts = rawCoords.split(",");
                   parsedCoords = { lat: parts[0].trim(), lng: parts[1].trim() };
-                } else if (a.coordinates && typeof a.coordinates === "object") {
-                  parsedCoords = { lat: a.coordinates.lat || "17.3933", lng: a.coordinates.lng || "78.4758" };
+                } else if (rawCoords && typeof rawCoords === "object") {
+                  parsedCoords = { lat: rawCoords.lat || "17.3933", lng: rawCoords.lng || "78.4758" };
                 }
 
                 let parsedCheckOutCoords = parsedCoords;
-                if (typeof a.checkOutCoordinates === "string" && a.checkOutCoordinates.includes(",")) {
-                  const parts = a.checkOutCoordinates.split(",");
+                const rawCheckOutCoords = a.checkOutCoordinates || a.check_out_coordinates || a.checkout_coordinates;
+                if (typeof rawCheckOutCoords === "string" && rawCheckOutCoords.includes(",")) {
+                  const parts = rawCheckOutCoords.split(",");
                   parsedCheckOutCoords = { lat: parts[0].trim(), lng: parts[1].trim() };
-                } else if (a.checkOutCoordinates && typeof a.checkOutCoordinates === "object") {
-                  parsedCheckOutCoords = { lat: a.checkOutCoordinates.lat || "17.3933", lng: a.checkOutCoordinates.lng || "78.4758" };
+                } else if (rawCheckOutCoords && typeof rawCheckOutCoords === "object") {
+                  parsedCheckOutCoords = { lat: rawCheckOutCoords.lat || "17.3933", lng: rawCheckOutCoords.lng || "78.4758" };
                 }
 
-                const checkInSelfie = a.selfie || a.checkInSelfie || u.avatar || u.selfiePhoto;
-                const checkOutSelfie = a.checkOutSelfie || a.selfie || u.avatar || u.selfiePhoto;
-                const checkOutAddress = a.check_out_address || a.checkOutAddress || a.checkout_address || recAddress;
+                const checkInSelfie = a.checkInSelfie || a.check_in_selfie || a.selfie || u.avatar || u.selfiePhoto;
+                const checkOutSelfie = a.checkOutSelfie || a.check_out_selfie || a.checkout_selfie || checkInSelfie;
+                const checkOutAddress = a.checkOutAddress || a.check_out_address || a.checkout_address || recAddress;
 
                 return {
                   id: `live-swipe-${u.id}-${a.date}-${idx}`,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useApp } from "../context/AppContext";
 import ProjectsView from "./ProjectsView";
 import RecruiterView from "./RecruiterView";
@@ -70,15 +70,20 @@ export default function ConsultantView({ activeTab }) {
 
   // Step 2: Location Detection (GPS)
   const [gpsData, setGpsData] = useState({
-    lat: 22.0869,
-    lng: 79.5435,
-    address: "ACME Retail Store, Main Road, Seoni, MP",
-    isVerified: true,
-    isDetecting: false
+    lat: null,
+    lng: null,
+    address: "",
+    isVerified: false,
+    isDetecting: false,
+    errorMsg: ""
   });
 
-  // Step 3: Selfie Verification
-  const [selfiePhoto, setSelfiePhoto] = useState("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80");
+  // Real Camera & Selfie Capture States
+  const [selfiePhoto, setSelfiePhoto] = useState("");
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraStream, setCameraStream] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const [wizardCheckOutRemarks, setWizardCheckOutRemarks] = useState("");
   const [wizardCompletedTasks, setWizardCompletedTasks] = useState([]);
   const [wizardPendingTasks, setWizardPendingTasks] = useState([]);
@@ -135,23 +140,87 @@ export default function ConsultantView({ activeTab }) {
     setShowCheckOutWizard(true);
   };
 
+  // -------------------------------------------------------------
+  // REAL CAMERA & REVERSE GEOCODING HELPERS
+  // -------------------------------------------------------------
+  const startCamera = async () => {
+    setCameraActive(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      setCameraStream(stream);
+    } catch (err) {
+      console.error("Camera access error:", err);
+      if (setToast) setToast({ message: "📷 Unable to access front camera. Please upload a selfie photo snapshot below.", type: "warning" });
+      setCameraActive(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      setCameraStream(null);
+    }
+    setCameraActive(false);
+  };
+
+  const captureSelfieSnapshot = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth || 400;
+      canvas.height = video.videoHeight || 400;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      setSelfiePhoto(dataUrl);
+      stopCamera();
+      if (setToast) setToast({ message: "📸 Selfie photo captured & saved successfully!", type: "success" });
+    }
+  };
+
+  const handleSelfieFileUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setSelfiePhoto(event.target.result);
+        if (setToast) setToast({ message: "📸 Selfie photo snapshot uploaded!", type: "success" });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleDetectGpsLocation = () => {
-    setGpsData(prev => ({ ...prev, isDetecting: true }));
+    setGpsData({ lat: null, lng: null, address: "", isVerified: false, isDetecting: true, errorMsg: "" });
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
-          const lat = parseFloat(pos.coords.latitude.toFixed(4));
-          const lng = parseFloat(pos.coords.longitude.toFixed(4));
+          const lat = parseFloat(pos.coords.latitude.toFixed(5));
+          const lng = parseFloat(pos.coords.longitude.toFixed(5));
           let exactAddr = `${lat}° N, ${lng}° E`;
 
           try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-            const data = await res.json();
-            if (data && data.display_name) {
-              exactAddr = data.display_name;
+            // BigDataCloud Reverse Geocoding API
+            const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+            const bdcData = await bdcRes.json();
+            if (bdcData && (bdcData.locality || bdcData.city || bdcData.principalSubdivision)) {
+              const parts = [bdcData.locality, bdcData.city, bdcData.principalSubdivision, bdcData.countryName].filter(Boolean);
+              exactAddr = parts.join(", ");
+            } else {
+              // Nominatim Fallback
+              const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+              const nomData = await nomRes.json();
+              if (nomData && nomData.display_name) {
+                exactAddr = nomData.display_name;
+              }
             }
           } catch (e) {
-            console.log("Reverse geocode fallback");
+            console.log("Reverse geocode fetch fallback", e);
           }
 
           setGpsData({
@@ -159,24 +228,34 @@ export default function ConsultantView({ activeTab }) {
             lng,
             address: exactAddr,
             isVerified: true,
-            isDetecting: false
+            isDetecting: false,
+            errorMsg: ""
           });
-          if (setToast) setToast({ message: `📍 Location Captured: ${exactAddr.slice(0, 45)}...`, type: "success" });
+          if (setToast) setToast({ message: `📍 Live Location Captured: ${exactAddr.slice(0, 45)}...`, type: "success" });
         },
         (err) => {
+          console.warn("GPS Geolocation error:", err);
           setGpsData({
-            lat: 17.3933,
-            lng: 78.4758,
-            address: "Hyderabad Store Site, Telangana, India",
+            lat: null,
+            lng: null,
+            address: "Client Store Location, Site HQ",
             isVerified: true,
-            isDetecting: false
+            isDetecting: false,
+            errorMsg: "Device location permission pending or unavailable."
           });
-          if (setToast) setToast({ message: "📍 Exact Location captured for Store Site.", type: "info" });
+          if (setToast) setToast({ message: "📍 Please confirm your store location address.", type: "warning" });
         },
-        { timeout: 8000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
       );
     } else {
-      setGpsData(prev => ({ ...prev, isDetecting: false, isVerified: true }));
+      setGpsData({
+        lat: null,
+        lng: null,
+        address: "Client Store Site",
+        isVerified: true,
+        isDetecting: false,
+        errorMsg: "Browser geolocation not supported."
+      });
     }
   };
 
@@ -2561,43 +2640,99 @@ export default function ConsultantView({ activeTab }) {
                         onClick={handleDetectGpsLocation} 
                         style={{ background: "#0284c7", color: "#ffffff", border: "none", borderRadius: "6px", padding: "6px 14px", fontWeight: "700", fontSize: "0.78rem", cursor: "pointer" }}
                       >
-                        {gpsData.isDetecting ? "⏳ Detecting..." : "📍 Re-Detect GPS"}
+                        {gpsData.isDetecting ? "⏳ Detecting GPS..." : "📍 Re-Detect My Location"}
                       </button>
                     </div>
 
-                    <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", color: "#64748b" }}>
+                    <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748b" }}>
                         <span>GPS COORDINATES</span>
-                        <strong style={{ color: "#0f172a" }}>{gpsData.lat}° N, {gpsData.lng}° E</strong>
+                        <strong style={{ color: "#0f172a", fontSize: "0.88rem" }}>
+                          {gpsData.isDetecting ? "⏳ Fetching Device GPS..." : gpsData.lat ? `${gpsData.lat}° N, ${gpsData.lng}° E` : "Location Detected"}
+                        </strong>
                       </div>
-                      <div style={{ fontSize: "0.82rem", fontWeight: "700", color: "#2563eb", marginTop: "2px" }}>
-                        Recorded Address: {gpsData.address}
+                      <div>
+                        <label style={{ fontSize: "0.75rem", fontWeight: "800", color: "#64748b", display: "block", marginBottom: "4px" }}>EXACT RECORDED ADDRESS / LOCATION</label>
+                        <input
+                          type="text"
+                          value={gpsData.address}
+                          onChange={(e) => setGpsData(prev => ({ ...prev, address: e.target.value }))}
+                          placeholder={gpsData.isDetecting ? "Fetching exact address..." : "Enter your store site address"}
+                          style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", fontWeight: "700", color: "#2563eb", boxSizing: "border-box" }}
+                        />
                       </div>
                     </div>
                   </div>
 
-                  {/* Selfie Photo Capture Box */}
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
+                  {/* Real WebCam & Selfie Photo Capture Box */}
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
                     <div style={{ textAlign: "center" }}>
-                      <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>📸 Capture Selfie Photo for Attendance</h4>
-                      <p style={{ margin: "3px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Face verification snapshot for shift attendance log</p>
+                      <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>📸 Live Webcam & Selfie Capture</h4>
+                      <p style={{ margin: "3px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Capture a real-time selfie photo for shift attendance log</p>
                     </div>
 
-                    <div style={{ position: "relative", width: "140px", height: "140px", borderRadius: "50%", overflow: "hidden", border: "4px solid #2563eb", boxShadow: "0 8px 20px rgba(37,99,235,0.25)" }}>
-                      <img 
-                        src={selfiePhoto} 
-                        alt="Consultant Selfie" 
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
+                    {/* Hidden Canvas element for snapping frame */}
+                    <canvas ref={canvasRef} style={{ display: "none" }} />
+
+                    {/* Camera Feed / Snapped Preview */}
+                    <div style={{ position: "relative", width: "180px", height: "180px", borderRadius: "50%", overflow: "hidden", border: selfiePhoto ? "4px solid #16a34a" : "4px solid #2563eb", boxShadow: "0 8px 25px rgba(37,99,235,0.25)", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      {selfiePhoto ? (
+                        <img 
+                          src={selfiePhoto} 
+                          alt="Captured Consultant Selfie" 
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      ) : (
+                        <video 
+                          ref={videoRef} 
+                          autoPlay 
+                          playsInline 
+                          muted 
+                          style={{ width: "100%", height: "100%", objectFit: "cover", transform: "scaleX(-1)" }}
+                        />
+                      )}
                     </div>
 
-                    <button 
-                      type="button" 
-                      onClick={() => setSelfiePhoto("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80")} 
-                      style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer", color: "#334155" }}
-                    >
-                      📷 Retake Selfie Snapshot
-                    </button>
+                    {/* Controls */}
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
+                      {!selfiePhoto ? (
+                        <>
+                          {!cameraActive && (
+                            <button 
+                              type="button" 
+                              onClick={startCamera} 
+                              style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}
+                            >
+                              📹 Start Camera Feed
+                            </button>
+                          )}
+                          <button 
+                            type="button" 
+                            onClick={captureSelfieSnapshot} 
+                            style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 18px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
+                          >
+                            📸 Snap Selfie Photo
+                          </button>
+                        </>
+                      ) : (
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setSelfiePhoto("");
+                            startCamera();
+                          }} 
+                          style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155" }}
+                        >
+                          📷 Retake Selfie Photo
+                        </button>
+                      )}
+
+                      <label style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 14px", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer", color: "#475569", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        📁 Upload Photo
+                        <input type="file" accept="image/*" capture="user" onChange={handleSelfieFileUpload} style={{ display: "none" }} />
+                      </label>
+                    </div>
+
                   </div>
 
                 </div>
@@ -2628,7 +2763,11 @@ export default function ConsultantView({ activeTab }) {
               {wizardStep === 1 ? (
                 <button 
                   type="button" 
-                  onClick={() => setWizardStep(2)} 
+                  onClick={() => {
+                    setWizardStep(2);
+                    handleDetectGpsLocation();
+                    startCamera();
+                  }} 
                   style={{ padding: "10px 24px", background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(37,99,235,0.3)" }}
                 >
                   Next: Location & Selfie →

@@ -2917,7 +2917,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
                         {users.map((emp, uIdx) => {
                           const getDayStatus = (dayNum, isWeekend) => {
                             const dateStr = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
-                            const todayStr = new Date().toISOString().split("T")[0];
+                            const todayObj = new Date();
+                            const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth() + 1).padStart(2, "0")}-${String(todayObj.getDate()).padStart(2, "0")}`;
 
                             const empAttendance = emp.attendance || [];
                             const rec = empAttendance.find(a => a.date === dateStr);

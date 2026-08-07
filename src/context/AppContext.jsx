@@ -579,7 +579,7 @@ export const AppProvider = ({ children }) => {
           setUsers(prevUsers => {
             const attMap = new Map();
             data.forEach(a => {
-              const empId = a.employee_id;
+              const empId = a.employee_id ? String(a.employee_id).toLowerCase().trim() : "";
               if (!empId) return;
               if (!attMap.has(empId)) attMap.set(empId, []);
               attMap.get(empId).push({
@@ -607,7 +607,9 @@ export const AppProvider = ({ children }) => {
             });
 
             return prevUsers.map(u => {
-              const dbAtt = attMap.get(u.id) || [];
+              const normId = String(u.id).toLowerCase().trim();
+              const normCode = u.empCode ? String(u.empCode).toLowerCase().trim() : "";
+              const dbAtt = attMap.get(normId) || attMap.get(normCode) || attMap.get(String(u.id)) || [];
               const existingAtt = u.attendance || [];
               const merged = [...existingAtt];
               dbAtt.forEach(da => {

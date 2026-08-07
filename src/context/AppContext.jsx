@@ -1235,7 +1235,7 @@ export const AppProvider = ({ children }) => {
         });
 
         if (isSupabaseConfigured()) {
-          supabaseUpdateAttendanceCheckout(consultantId, todayStr, timeStr, updatedHours, updatedRemarks);
+          supabaseUpdateAttendanceCheckout(consultantId, todayStr, timeStr, updatedHours, updatedRemarks, checkoutData);
         }
 
         const updatedUser = {

@@ -3379,6 +3379,21 @@ export default function AdminView({ activeTab, setActiveTab }) {
             // Only use real live consultant attendance records from state & Supabase database (no hardcoded mock data)
             const allSwipesList = dynamicSwipes;
 
+            const normalizeDateStr = (rawStr) => {
+              if (!rawStr || typeof rawStr !== "string") return "";
+              const cleaned = rawStr.trim();
+              if (!cleaned) return "";
+              if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) return cleaned;
+
+              const d = new Date(cleaned);
+              if (isNaN(d.getTime())) return cleaned.toLowerCase();
+              
+              const year = d.getFullYear();
+              const month = String(d.getMonth() + 1).padStart(2, "0");
+              const day = String(d.getDate()).padStart(2, "0");
+              return `${year}-${month}-${day}`;
+            };
+
             let filteredSwipes = allSwipesList.filter(s => {
               if (swipeSearchQuery.trim()) {
                 const q = swipeSearchQuery.toLowerCase().trim();
@@ -3391,19 +3406,19 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
                 if (filterStr.includes(" - ")) {
                   const [startStr, endStr] = filterStr.split(" - ").map(d => d.trim());
-                  const sTime = new Date(startStr).getTime();
-                  const eTime = new Date(endStr).getTime();
-                  const rTime = new Date(recordDateStr).getTime();
-                  if (!isNaN(sTime) && !isNaN(eTime) && !isNaN(rTime)) {
-                    if (rTime < sTime || rTime > eTime) return false;
+                  const normStart = normalizeDateStr(startStr);
+                  const normEnd = normalizeDateStr(endStr);
+                  const normRec = normalizeDateStr(recordDateStr);
+
+                  if (normStart && normEnd && normRec) {
+                    if (normRec < normStart || normRec > normEnd) return false;
                   }
                 } else {
-                  const fTime = new Date(filterStr).getTime();
-                  const rTime = new Date(recordDateStr).getTime();
-                  if (!isNaN(fTime) && !isNaN(rTime)) {
-                    const fIso = new Date(filterStr).toISOString().split("T")[0];
-                    const rIso = new Date(recordDateStr).toISOString().split("T")[0];
-                    if (fIso !== rIso) return false;
+                  const normFilter = normalizeDateStr(filterStr);
+                  const normRec = normalizeDateStr(recordDateStr);
+
+                  if (normFilter && normRec) {
+                    if (normFilter !== normRec) return false;
                   } else if (filterStr && !recordDateStr.includes(filterStr)) {
                     return false;
                   }

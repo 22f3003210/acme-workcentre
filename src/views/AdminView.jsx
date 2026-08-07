@@ -3140,6 +3140,15 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           </tr>
                         );
                       })}
+                      {filteredSwipes.length === 0 && (
+                        <tr>
+                          <td colSpan="8" style={{ padding: "48px 20px", textAlign: "center", color: "#64748b", background: "#f8fafc" }}>
+                            <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔍</div>
+                            <div style={{ fontWeight: "700", color: "#1e293b", fontSize: "0.95rem" }}>No Shift Attendance Swipes Found</div>
+                            <div style={{ fontSize: "0.78rem", color: "#94a3b8", marginTop: "4px" }}>No punches recorded for the selected date or search filter</div>
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -3434,7 +3443,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
               filteredSwipes = [...filteredSwipes].sort((a, b) => a.receivedTime.localeCompare(b.receivedTime));
             }
 
-            const activeRecord = filteredSwipes.find(s => s.id === selectedSwipeRecordId) || filteredSwipes[0] || allSwipesList.find(s => s.id === selectedSwipeRecordId) || dynamicSwipes[0] || swipeRecords[0];
+            const activeRecord = filteredSwipes.find(s => s.id === selectedSwipeRecordId) || filteredSwipes[0] || null;
 
             const isAllSwipesChecked = filteredSwipes.length > 0 && filteredSwipes.every(s => selectedSwipeCheckboxes.includes(s.id));
             const toggleAllSwipes = () => {
@@ -3643,12 +3652,27 @@ export default function AdminView({ activeTab, setActiveTab }) {
                           </tr>
                         );
                       })}
+                      {filteredSwipes.length === 0 && (
+                        <tr>
+                          <td colSpan="8" style={{ padding: "48px 20px", textAlign: "center", color: "#64748b", background: "#f8fafc" }}>
+                            <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔍</div>
+                            <div style={{ fontWeight: "700", color: "#1e293b", fontSize: "0.95rem" }}>No Shift Attendance Swipes Found</div>
+                            <div style={{ fontSize: "0.78rem", color: "#94a3b8", marginTop: "4px" }}>No punches recorded for the selected date or search filter</div>
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
 
                 {/* Right Column: Swipe Details Sidebar Card (IN / OUT Interactive Mode) */}
-                {activeRecord && (() => {
+                {!activeRecord ? (
+                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "48px 20px", textAlign: "center", color: "#64748b", boxShadow: "0 4px 12px rgba(0,0,0,0.03)" }}>
+                    <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>📅</div>
+                    <div style={{ fontWeight: "800", color: "#0f172a", fontSize: "0.95rem" }}>No Swipe Records Selected</div>
+                    <div style={{ fontSize: "0.78rem", color: "#94a3b8", marginTop: "6px", lineHeight: 1.4 }}>Select a date range with active punches or click on a table row to inspect verification details</div>
+                  </div>
+                ) : (() => {
                   const isOutMode = selectedSwipeMode === "OUT";
                   const displaySelfie = isOutMode ? (activeRecord.checkOutSelfie || activeRecord.selfie || activeRecord.avatar) : (activeRecord.checkInSelfie || activeRecord.selfie || activeRecord.avatar);
                   const displayTime = isOutMode ? (activeRecord.checkOut || activeRecord.time) : (activeRecord.checkIn || activeRecord.time);

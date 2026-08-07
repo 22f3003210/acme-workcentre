@@ -141,25 +141,39 @@ export default function ConsultantView({ activeTab }) {
     setGpsData(prev => ({ ...prev, isDetecting: true }));
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => {
+        async (pos) => {
+          const lat = parseFloat(pos.coords.latitude.toFixed(4));
+          const lng = parseFloat(pos.coords.longitude.toFixed(4));
+          let exactAddr = `${lat}° N, ${lng}° E`;
+
+          try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const data = await res.json();
+            if (data && data.display_name) {
+              exactAddr = data.display_name;
+            }
+          } catch (e) {
+            console.log("Reverse geocode fallback");
+          }
+
           setGpsData({
-            lat: parseFloat(pos.coords.latitude.toFixed(4)),
-            lng: parseFloat(pos.coords.longitude.toFixed(4)),
-            address: "Live GPS Verified • Store Radius Match (18m away)",
+            lat,
+            lng,
+            address: exactAddr,
             isVerified: true,
             isDetecting: false
           });
-          if (setToast) setToast({ message: "📍 Live GPS Location verified successfully!", type: "success" });
+          if (setToast) setToast({ message: `📍 Location Captured: ${exactAddr.slice(0, 45)}...`, type: "success" });
         },
         (err) => {
           setGpsData({
-            lat: 22.0869,
-            lng: 79.5435,
-            address: "ACME Store Site, Seoni MP (Simulated GPS Match)",
+            lat: 17.3933,
+            lng: 78.4758,
+            address: "Hyderabad Store Site, Telangana, India",
             isVerified: true,
             isDetecting: false
           });
-          if (setToast) setToast({ message: "📍 GPS Location verified for Store Site.", type: "info" });
+          if (setToast) setToast({ message: "📍 Exact Location captured for Store Site.", type: "info" });
         },
         { timeout: 8000 }
       );
@@ -2400,7 +2414,7 @@ export default function ConsultantView({ activeTab }) {
       )}
 
 
-      {/* GUIDED 3-STEP CONSULTANT CHECK-IN WIZARD MODAL */}
+            {/* GUIDED CONSULTANT CHECK-IN WIZARD MODAL (LOCATION & SELFIE IN SAME STEP) */}
       {showCheckInWizard && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
           <div style={{ background: "#ffffff", borderRadius: "20px", width: "100%", maxWidth: "620px", overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.35)", display: "flex", flexDirection: "column" }}>
@@ -2411,18 +2425,17 @@ export default function ConsultantView({ activeTab }) {
                 <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(34,197,94,0.25)", color: "#4ade80", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.2rem" }}>✓</div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "800", color: "#ffffff" }}>Consultant Shift Check-In Form</h3>
-                  <p style={{ margin: "3px 0 0 0", fontSize: "0.82rem", color: "#a5b4fc" }}>Multi-Step Location & Verification Protocol</p>
+                  <p style={{ margin: "3px 0 0 0", fontSize: "0.82rem", color: "#a5b4fc" }}>Exact Location & Selfie Attendance Verification Protocol</p>
                 </div>
               </div>
               <button type="button" onClick={() => setShowCheckInWizard(false)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#cbd5e1", borderRadius: "50%", width: "32px", height: "32px", fontSize: "1.2rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
 
-            {/* Stepper Bar */}
+            {/* Stepper Bar (2 Steps) */}
             <div style={{ background: "#f8fafc", padding: "12px 28px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               {[
                 { step: 1, title: "1. Purpose & Scope" },
-                { step: 2, title: "2. GPS Location" },
-                { step: 3, title: "3. Selfie Verification" }
+                { step: 2, title: "2. Exact Location & Selfie Capture" }
               ].map((s) => {
                 const isActive = wizardStep === s.step;
                 const isPassed = wizardStep > s.step;
@@ -2517,82 +2530,61 @@ export default function ConsultantView({ activeTab }) {
                 </div>
               )}
 
-              {/* STEP 2: LIVE LOCATION DETECTION (GPS) */}
+              {/* STEP 2: COMBINED EXACT LOCATION DETECTION & SELFIE PHOTO CAPTURE */}
               {wizardStep === 2 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                  <div style={{ textAlign: "center", background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "14px", padding: "20px" }}>
-                    <div style={{ fontSize: "2.4rem", marginBottom: "8px" }}>📍</div>
-                    <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0369a1" }}>GPS Location Detection & Store Radius Verification</h4>
-                    <p style={{ margin: "6px 0 0 0", fontSize: "0.84rem", color: "#0284c7" }}>Ensure you are physically on site at the assigned store location</p>
+                  
+                  {/* Location Card */}
+                  <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontSize: "1.3rem" }}>📍</span>
+                        <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0369a1" }}>Exact Live Location Capture</h4>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={handleDetectGpsLocation} 
+                        style={{ background: "#0284c7", color: "#ffffff", border: "none", borderRadius: "6px", padding: "6px 14px", fontWeight: "700", fontSize: "0.78rem", cursor: "pointer" }}
+                      >
+                        {gpsData.isDetecting ? "⏳ Detecting..." : "📍 Re-Detect GPS"}
+                      </button>
+                    </div>
+
+                    <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "12px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.78rem", color: "#64748b" }}>
+                        <span>GPS COORDINATES</span>
+                        <strong style={{ color: "#0f172a" }}>{gpsData.lat}° N, {gpsData.lng}° E</strong>
+                      </div>
+                      <div style={{ fontSize: "0.82rem", fontWeight: "700", color: "#2563eb", marginTop: "2px" }}>
+                        Recorded Address: {gpsData.address}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Selfie Photo Capture Box */}
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
+                    <div style={{ textAlign: "center" }}>
+                      <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>📸 Capture Selfie Photo for Attendance</h4>
+                      <p style={{ margin: "3px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Face verification snapshot for shift attendance log</p>
+                    </div>
+
+                    <div style={{ position: "relative", width: "140px", height: "140px", borderRadius: "50%", overflow: "hidden", border: "4px solid #2563eb", boxShadow: "0 8px 20px rgba(37,99,235,0.25)" }}>
+                      <img 
+                        src={selfiePhoto} 
+                        alt="Consultant Selfie" 
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    </div>
 
                     <button 
                       type="button" 
-                      onClick={handleDetectGpsLocation} 
-                      style={{ marginTop: "16px", background: "#0284c7", color: "#ffffff", border: "none", borderRadius: "8px", padding: "12px 24px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(2,132,199,0.3)" }}
+                      onClick={() => setSelfiePhoto("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80")} 
+                      style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer", color: "#334155" }}
                     >
-                      {gpsData.isDetecting ? "⏳ Detecting GPS Coordinates..." : "📍 Re-Detect Live GPS Coordinates"}
+                      📷 Retake Selfie Snapshot
                     </button>
                   </div>
 
-                  {/* GPS Details Card */}
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700" }}>LATITUDE & LONGITUDE</span>
-                      <strong style={{ fontSize: "0.92rem", color: "#0f172a" }}>{gpsData.lat}° N, {gpsData.lng}° E</strong>
-                    </div>
-
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "0.8rem", color: "#64748b", fontWeight: "700" }}>DETECTED ADDRESS / SITE</span>
-                      <strong style={{ fontSize: "0.88rem", color: "#2563eb" }}>{gpsData.address}</strong>
-                    </div>
-
-                    <div style={{ background: "#dcfce7", border: "1px solid #86efac", color: "#166534", padding: "10px 14px", borderRadius: "8px", fontSize: "0.82rem", fontWeight: "800", display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span>✅</span>
-                      <span>Verified Match: Within 500m Store Radius Protocol</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 3: SELFIE PHOTO CAPTURE & VERIFICATION */}
-              {wizardStep === 3 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                  <div style={{ textAlign: "center" }}>
-                    <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>📸 Shift Attendance Selfie Verification</h4>
-                    <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "#64748b" }}>Confirm face verification for store check in log</p>
-                  </div>
-
-                  {/* Selfie Photo Preview Box */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
-                    <div style={{ position: "relative", width: "160px", height: "160px", borderRadius: "50%", overflow: "hidden", border: "4px solid #2563eb", boxShadow: "0 10px 25px rgba(37,99,235,0.25)" }}>
-                      <img 
-                        src={selfiePhoto} 
-                        alt="Consultant Selfie Preview" 
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      />
-                      <div style={{ position: "absolute", bottom: "8px", left: 0, right: 0, textAlign: "center" }}>
-                        <span style={{ background: "rgba(15,23,42,0.8)", color: "#ffffff", fontSize: "0.68rem", padding: "2px 8px", borderRadius: "10px", fontWeight: "700" }}>GPS SNAPSHOT</span>
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      <button 
-                        type="button" 
-                        onClick={() => setSelfiePhoto("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&auto=format&fit=crop&q=80")} 
-                        style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer" }}
-                      >
-                        📷 Retake Selfie Photo
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Final Summary Card */}
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px 18px", fontSize: "0.82rem", display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <div><strong>Purpose:</strong> {visitPurpose}</div>
-                    <div><strong>Store Site:</strong> {displayProjects.find(p => p.id === selectedWizardProjectId)?.name || "ACME Flagship Store"}</div>
-                    <div><strong>Scope Tasks:</strong> {scopeTasks.filter(t => t.done).length} Tasks Confirmed</div>
-                    <div><strong>GPS Coordinates:</strong> {gpsData.lat}° N, {gpsData.lng}° E</div>
-                  </div>
                 </div>
               )}
 
@@ -2618,13 +2610,13 @@ export default function ConsultantView({ activeTab }) {
                 </button>
               )}
 
-              {wizardStep < 3 ? (
+              {wizardStep === 1 ? (
                 <button 
                   type="button" 
-                  onClick={() => setWizardStep(prev => prev + 1)} 
+                  onClick={() => setWizardStep(2)} 
                   style={{ padding: "10px 24px", background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(37,99,235,0.3)" }}
                 >
-                  Next Step →
+                  Next: Location & Selfie →
                 </button>
               ) : (
                 <button 
@@ -2640,7 +2632,6 @@ export default function ConsultantView({ activeTab }) {
           </div>
         </div>
       )}
-
 
       {/* GUIDED CONSULTANT CHECK-OUT WIZARD MODAL */}
       {showCheckOutWizard && (

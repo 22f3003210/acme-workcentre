@@ -172,6 +172,23 @@ export default function ConsultantView({ activeTab }) {
     setShowCheckOutWizard(true);
   };
 
+  // Auto-connect camera stream to video element whenever step changes or modal opens
+  useEffect(() => {
+    if (cameraStream && videoRef.current) {
+      videoRef.current.srcObject = cameraStream;
+      videoRef.current.play().catch(e => console.log("Video auto-play handled:", e));
+    }
+  }, [cameraStream, wizardStep, checkOutWizardStep, showCheckInWizard, showCheckOutWizard]);
+
+  // Clean up camera stream on modal close
+  useEffect(() => {
+    if (!showCheckInWizard && !showCheckOutWizard && cameraStream) {
+      cameraStream.getTracks().forEach(t => t.stop());
+      setCameraStream(null);
+      setCameraActive(false);
+    }
+  }, [showCheckInWizard, showCheckOutWizard]);
+
   // -------------------------------------------------------------
   // REAL CAMERA & REVERSE GEOCODING HELPERS
   // -------------------------------------------------------------
@@ -179,17 +196,22 @@ export default function ConsultantView({ activeTab }) {
     setCameraActive(true);
     setCameraPermissionDenied(false);
     try {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(t => t.stop());
+      }
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } }
+        video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+        audio: false
       });
+      setCameraStream(stream);
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play().catch(e => console.log("Video play error:", e));
       }
-      setCameraStream(stream);
     } catch (err) {
       console.error("Camera access error:", err);
       setCameraPermissionDenied(true);
-      if (setToast) setToast({ message: "⚠️ Camera permissions are turned off. Please allow camera access in your browser settings.", type: "warning" });
+      if (setToast) setToast({ message: "⚠️ Browser camera blocked or unavailable. You can use '📱 Open Phone Camera / Upload Photo' below.", type: "warning" });
       setCameraActive(false);
     }
   };
@@ -206,15 +228,26 @@ export default function ConsultantView({ activeTab }) {
     if (videoRef.current && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      canvas.width = video.videoWidth || 400;
-      canvas.height = video.videoHeight || 400;
+      const width = video.videoWidth || 640;
+      const height = video.videoHeight || 480;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      // Mirror the horizontal flip for front camera selfie
+      ctx.translate(width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, width, height);
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
       setSelfiePhoto(dataUrl);
+      if (showCheckOutWizard) {
+        setCheckOutSelfiePhoto(dataUrl);
+      }
       stopCamera();
-      if (setToast) setToast({ message: "📸 Selfie photo captured & saved successfully!", type: "success" });
+      if (setToast) setToast({ message: "📸 Selfie photo captured & verified successfully!", type: "success" });
+      return dataUrl;
     }
+    return null;
   };
 
   const handleSelfieFileUpload = (e) => {
@@ -222,8 +255,35 @@ export default function ConsultantView({ activeTab }) {
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
-        setSelfiePhoto(event.target.result);
-        if (setToast) setToast({ message: "📸 Selfie photo snapshot uploaded!", type: "success" });
+        const rawData = event.target.result;
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 800;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
+          setSelfiePhoto(compressedDataUrl);
+          if (showCheckOutWizard) {
+            setCheckOutSelfiePhoto(compressedDataUrl);
+          }
+          stopCamera();
+          if (setToast) setToast({ message: "📸 Selfie photo verified & attached!", type: "success" });
+        };
+        img.src = rawData;
       };
       reader.readAsDataURL(file);
     }
@@ -313,6 +373,10 @@ export default function ConsultantView({ activeTab }) {
       if (setToast) setToast({ message: "⚠️ Mandatory Field Missing: You must select an assigned Client Project Site to check in.", type: "error" });
       return;
     }
+    if (!selfiePhoto) {
+      if (setToast) setToast({ message: "⚠️ Mandatory: Please take or upload a selfie photo before starting your shift.", type: "error" });
+      return;
+    }
     const selProj = displayProjects.find(p => p.id === selectedWizardProjectId);
     if (!selProj) {
       if (setToast) setToast({ message: "⚠️ Mandatory Field Missing: Selected Client Project is invalid or unassigned.", type: "error" });
@@ -323,18 +387,21 @@ export default function ConsultantView({ activeTab }) {
 
     if (checkInConsultant) {
       checkInConsultant(currentUser.id, {
-        remarks: `${visitPurpose} | Location: ${gpsData.address}`,
+        remarks: `${visitPurpose} | Location: ${gpsData.address || "Client Project Site"}`,
         projectId: projId,
         projectName: projName,
         tasks: scopeTasks.filter(t => t.done).map(t => t.text),
-        coordinates: `${gpsData.lat}, ${gpsData.lng}`,
+        coordinates: gpsData.lat && gpsData.lng ? `${gpsData.lat}, ${gpsData.lng}` : null,
+        address: gpsData.address || "Client Project Site",
         selfie: selfiePhoto
       });
       if (setToast) setToast({ message: `✓ Checked in successfully for ${projName}!`, type: "success" });
     }
 
+    stopCamera();
     setShowCheckInWizard(false);
     setPunchRemarks("");
+    setSelfiePhoto("");
   };
 
   const handleCompleteCheckOutSubmit = (e) => {
@@ -344,11 +411,15 @@ export default function ConsultantView({ activeTab }) {
       return;
     }
     const finalSelfie = checkOutSelfiePhoto || selfiePhoto;
+    if (!finalSelfie) {
+      if (setToast) setToast({ message: "⚠️ Mandatory: Please take or upload a check-out selfie photo before closing your shift.", type: "error" });
+      return;
+    }
     if (checkOutConsultant) {
       checkOutConsultant(currentUser.id, {
         remarks: wizardCheckOutRemarks || punchRemarks || "Daily Shift Check Out",
-        checkOutAddress: gpsData.address,
-        checkOutCoordinates: `${gpsData.lat}, ${gpsData.lng}`,
+        checkOutAddress: gpsData.address || "Client Project Site",
+        checkOutCoordinates: gpsData.lat && gpsData.lng ? `${gpsData.lat}, ${gpsData.lng}` : null,
         checkOutSelfie: finalSelfie,
         completedTasks: wizardCompletedTasks,
         pendingTasks: wizardPendingTasks
@@ -358,14 +429,12 @@ export default function ConsultantView({ activeTab }) {
     stopCamera();
     setShowCheckOutWizard(false);
     setPunchRemarks("");
+    setSelfiePhoto("");
+    setCheckOutSelfiePhoto("");
   };
 
-
   const handlePunchIn = () => {
-    const selProj = projects.find(p => p.id === punchProjectId);
-    checkInConsultant(currentUser.id, punchRemarks, punchProjectId, selProj ? selProj.name : "");
-    setToast({ message: `Checked in successfully${selProj ? ` for ${selProj.code}` : ""}.`, type: "success" });
-    setPunchRemarks("");
+    handleOpenCheckInWizard();
   };
 
   const handlePunchOut = () => {
@@ -2904,14 +2973,14 @@ export default function ConsultantView({ activeTab }) {
                     </div>
 
                     {/* Controls */}
-                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
                       {!selfiePhoto ? (
                         <>
                           {!cameraActive && (
                             <button 
                               type="button" 
                               onClick={startCamera} 
-                              style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}
+                              style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}
                             >
                               🎥 Turn On Camera
                             </button>
@@ -2919,25 +2988,48 @@ export default function ConsultantView({ activeTab }) {
                           <button 
                             type="button" 
                             onClick={captureSelfieSnapshot} 
-                            style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 18px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
+                            style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
                           >
                             📸 Snap Selfie Photo
                           </button>
+                          <label style={{ background: "#334155", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+                            📱 Open Phone Camera / Upload Photo
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              capture="user" 
+                              onChange={handleSelfieFileUpload} 
+                              style={{ display: "none" }} 
+                            />
+                          </label>
                         </>
                       ) : (
-                        <button 
-                          type="button" 
-                          onClick={() => {
-                            setSelfiePhoto("");
-                            startCamera();
-                          }} 
-                          style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155" }}
-                        >
-                          📷 Retake Selfie Photo
-                        </button>
+                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                          <span style={{ padding: "6px 14px", borderRadius: "8px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#16a34a", fontSize: "0.82rem", fontWeight: "800" }}>
+                            ✓ Selfie Ready & Verified
+                          </span>
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              setSelfiePhoto("");
+                              startCamera();
+                            }} 
+                            style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155" }}
+                          >
+                            📷 Retake Selfie Photo
+                          </button>
+                          <label style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            📁 Upload Different Photo
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              capture="user" 
+                              onChange={handleSelfieFileUpload} 
+                              style={{ display: "none" }} 
+                            />
+                          </label>
+                        </div>
                       )}
-
-
                     </div>
 
                   </div>
@@ -3001,9 +3093,19 @@ export default function ConsultantView({ activeTab }) {
                 <button 
                   type="button" 
                   onClick={handleCompleteCheckInSubmit} 
-                  style={{ padding: "10px 26px", background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(22,163,74,0.35)" }}
+                  style={{ 
+                    padding: "10px 26px", 
+                    background: selfiePhoto ? "#16a34a" : "#94a3b8", 
+                    color: "#ffffff", 
+                    border: "none", 
+                    borderRadius: "10px", 
+                    fontWeight: "800", 
+                    fontSize: "0.9rem", 
+                    cursor: selfiePhoto ? "pointer" : "not-allowed", 
+                    boxShadow: selfiePhoto ? "0 4px 14px rgba(22,163,74,0.35)" : "none" 
+                  }}
                 >
-                  Complete Check In & Start Shift ✓
+                  {selfiePhoto ? "Complete Check In & Start Shift ✓" : "📸 Take/Upload Selfie to Complete Check In"}
                 </button>
               )}
             </div>
@@ -3163,14 +3265,14 @@ export default function ConsultantView({ activeTab }) {
                     </div>
 
                     {/* Controls */}
-                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
                       {!(checkOutSelfiePhoto || selfiePhoto) ? (
                         <>
                           {!cameraActive && (
                             <button 
                               type="button" 
                               onClick={startCamera} 
-                              style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}
+                              style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}
                             >
                               🎥 Turn On Camera
                             </button>
@@ -3184,26 +3286,49 @@ export default function ConsultantView({ activeTab }) {
                                 setCheckOutSelfiePhoto(dataUrl);
                               }
                             }} 
-                            style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 18px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
+                            style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
                           >
                             📸 Snap Check-Out Selfie
                           </button>
+                          <label style={{ background: "#334155", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+                            📱 Open Phone Camera / Upload Photo
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              capture="user" 
+                              onChange={handleSelfieFileUpload} 
+                              style={{ display: "none" }} 
+                            />
+                          </label>
                         </>
                       ) : (
-                        <button 
-                          type="button" 
-                          onClick={() => {
-                            setSelfiePhoto("");
-                            setCheckOutSelfiePhoto("");
-                            startCamera();
-                          }} 
-                          style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155" }}
-                        >
-                          📷 Retake Selfie Photo
-                        </button>
+                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                          <span style={{ padding: "6px 14px", borderRadius: "8px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#16a34a", fontSize: "0.82rem", fontWeight: "800" }}>
+                            ✓ Check-Out Selfie Verified
+                          </span>
+                          <button 
+                            type="button" 
+                            onClick={() => {
+                              setSelfiePhoto("");
+                              setCheckOutSelfiePhoto("");
+                              startCamera();
+                            }} 
+                            style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155" }}
+                          >
+                            📷 Retake Selfie Photo
+                          </button>
+                          <label style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            📁 Upload Different Photo
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              capture="user" 
+                              onChange={handleSelfieFileUpload} 
+                              style={{ display: "none" }} 
+                            />
+                          </label>
+                        </div>
                       )}
-
-
                     </div>
 
                   </div>
@@ -3249,9 +3374,19 @@ export default function ConsultantView({ activeTab }) {
                 <button 
                   type="button" 
                   onClick={handleCompleteCheckOutSubmit} 
-                  style={{ padding: "10px 26px", background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(220,38,38,0.35)" }}
+                  style={{ 
+                    padding: "10px 26px", 
+                    background: (checkOutSelfiePhoto || selfiePhoto) ? "#dc2626" : "#94a3b8", 
+                    color: "#ffffff", 
+                    border: "none", 
+                    borderRadius: "10px", 
+                    fontWeight: "800", 
+                    fontSize: "0.9rem", 
+                    cursor: (checkOutSelfiePhoto || selfiePhoto) ? "pointer" : "not-allowed", 
+                    boxShadow: (checkOutSelfiePhoto || selfiePhoto) ? "0 4px 14px rgba(220,38,38,0.35)" : "none" 
+                  }}
                 >
-                  Complete Check Out & Close Shift ✖
+                  {(checkOutSelfiePhoto || selfiePhoto) ? "Complete Check Out & Close Shift ✖" : "📸 Take/Upload Selfie to Complete Check Out"}
                 </button>
               )}
             </div>

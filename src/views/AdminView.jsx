@@ -4880,18 +4880,19 @@ export default function AdminView({ activeTab, setActiveTab }) {
             <div style={{ display: "flex", flexDirection: "column", gap: "0", width: "100%" }}>
 
               {/* Petty Cash Sub-tabs */}
-              <div style={{ display: "flex", gap: "0", borderBottom: "2px solid #e2e8f0", marginBottom: "24px" }}>
+              <div style={{ display: "flex", gap: "8px", borderBottom: "2px solid #e2e8f0", marginBottom: "24px" }}>
                 <button
                   onClick={() => setActivePettyCashTab("past_advances")}
                   style={{
-                    padding: "10px 24px",
+                    padding: "10px 20px",
                     fontSize: "0.85rem",
-                    fontWeight: "700",
+                    fontWeight: "800",
                     border: "none",
-                    borderBottom: activePettyCashTab === "past_advances" ? "2px solid #2563eb" : "2px solid transparent",
+                    borderRadius: "8px 8px 0 0",
+                    borderBottom: activePettyCashTab === "past_advances" ? "3px solid #2563eb" : "3px solid transparent",
                     marginBottom: "-2px",
-                    background: "transparent",
-                    color: activePettyCashTab === "past_advances" ? "#2563eb" : "#64748b",
+                    background: activePettyCashTab === "past_advances" ? "#eff6ff" : "transparent",
+                    color: activePettyCashTab === "past_advances" ? "#1e40af" : "#64748b",
                     cursor: "pointer",
                     transition: "all 0.15s"
                   }}
@@ -4903,20 +4904,21 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       <line x1="16" y1="13" x2="8" y2="13"/>
                       <line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
-                    Past Advances
+                    Past Advances & Holders
                   </span>
                 </button>
                 <button
                   onClick={() => setActivePettyCashTab("pending_payments")}
                   style={{
-                    padding: "10px 24px",
+                    padding: "10px 20px",
                     fontSize: "0.85rem",
-                    fontWeight: "700",
+                    fontWeight: "800",
                     border: "none",
-                    borderBottom: activePettyCashTab === "pending_payments" ? "2px solid #f59e0b" : "2px solid transparent",
+                    borderRadius: "8px 8px 0 0",
+                    borderBottom: activePettyCashTab === "pending_payments" ? "3px solid #f59e0b" : "3px solid transparent",
                     marginBottom: "-2px",
-                    background: "transparent",
-                    color: activePettyCashTab === "pending_payments" ? "#d97706" : "#64748b",
+                    background: activePettyCashTab === "pending_payments" ? "#fffbeb" : "transparent",
+                    color: activePettyCashTab === "pending_payments" ? "#b45309" : "#64748b",
                     cursor: "pointer",
                     transition: "all 0.15s"
                   }}
@@ -4926,12 +4928,12 @@ export default function AdminView({ activeTab, setActiveTab }) {
                       <circle cx="12" cy="12" r="10"/>
                       <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    Pending Payments
+                    Pending Advance Requests
                   </span>
                   {(() => {
                     const count = advanceRequests.filter(r => r.status === "Pending").length;
                     return count > 0 ? (
-                      <span style={{ marginLeft: "6px", background: "#f59e0b", color: "#fff", borderRadius: "10px", padding: "1px 7px", fontSize: "0.7rem" }}>
+                      <span style={{ marginLeft: "8px", background: "#f59e0b", color: "#fff", borderRadius: "10px", padding: "2px 8px", fontSize: "0.72rem", fontWeight: "800" }}>
                         {count}
                       </span>
                     ) : null;
@@ -4944,42 +4946,44 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
 
                   {/* Existing Petty Cash Holders */}
-                  <div style={{ border: "1px solid #e2e8f0", padding: "20px", borderRadius: "0", backgroundColor: "#ffffff" }}>
-                    <h3 style={{ margin: "0 0 4px 0" }}>Existing Petty Cash Holders</h3>
-                    <p className="subtitle" style={{ margin: "0 0 16px 0" }}>Operational cash reserves allocated, spent, and remaining in hand across personnel.</p>
+                  <div style={{ border: "1px solid #e2e8f0", padding: "24px", borderRadius: "14px", backgroundColor: "#ffffff", boxShadow: "0 4px 14px rgba(0,0,0,0.03)" }}>
+                    <h3 style={{ margin: "0 0 4px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Existing Petty Cash Holders</h3>
+                    <p className="subtitle" style={{ margin: "0 0 16px 0", fontSize: "0.82rem", color: "#64748b" }}>Operational cash reserves allocated, spent, and remaining in hand across personnel.</p>
                     <div style={{ overflowX: "auto" }}>
-                      <table className="luxury-table">
+                      <table className="luxury-table" style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
-                          <tr>
-                            <th>Employee</th>
-                            <th>Designation &amp; Dept</th>
-                            <th>Initial Allocated Advance</th>
-                            <th>Total Sourced Spent</th>
-                            <th>Remaining Cash In Hand</th>
+                          <tr style={{ background: "#f8fafc", borderBottom: "1.5px solid #e2e8f0", textAlign: "left" }}>
+                            <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Employee</th>
+                            <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Designation &amp; Dept</th>
+                            <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Initial Allocated Advance</th>
+                            <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Total Sourced Spent</th>
+                            <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Remaining Cash In Hand</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {users.filter(u => u.role === "Consultant").map((u) => {
+                          {users.filter(u => u.role === "Consultant").map((u, idx) => {
                             const details = getEmployeeBalanceDetails(u.id) || { initialAdvance: 0, totalSpent: 0, availableBalance: 0 };
                             return (
-                              <tr key={u.id}>
-                                <td className="user-cell">
-                                  <img src={u.avatar} alt={u.name} className="avatar-small" />
-                                  <div className="user-cell-text">
-                                    <strong>{u.name}</strong>
-                                    <span style={{ textTransform: "none", fontSize: "0.7rem", color: "#94a3b8" }}>{u.email}</span>
+                              <tr key={u.id} style={{ borderBottom: "1px solid #f1f5f9", background: idx % 2 === 0 ? "#ffffff" : "#fafafa" }}>
+                                <td className="user-cell" style={{ padding: "12px 14px" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                    <img src={u.avatar} alt={u.name} style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }} />
+                                    <div className="user-cell-text">
+                                      <strong style={{ color: "#0f172a", fontSize: "0.86rem" }}>{u.name}</strong>
+                                      <span style={{ textTransform: "none", fontSize: "0.7rem", color: "#94a3b8", display: "block" }}>{u.email}</span>
+                                    </div>
                                   </div>
                                 </td>
-                                <td>
+                                <td style={{ padding: "12px 14px" }}>
                                   <div style={{ display: "flex", flexDirection: "column" }}>
                                     <strong style={{ fontSize: "0.82rem", color: "#475569" }}>{u.title || "Consultant"}</strong>
                                     <span style={{ fontSize: "0.7rem", textTransform: "uppercase", color: "#94a3b8" }}>{u.department}</span>
                                   </div>
                                 </td>
-                                <td style={{ fontWeight: "600", color: "#0f172a" }}>₹{details.initialAdvance.toLocaleString()}</td>
-                                <td style={{ fontWeight: "600", color: "#ef4444" }}>₹{details.totalSpent.toLocaleString()}</td>
-                                <td style={{ fontWeight: "700", color: details.availableBalance < 500 ? "#f97316" : "#22c55e" }}>
-                                  ₹{details.availableBalance.toLocaleString()}
+                                <td style={{ padding: "12px 14px", fontWeight: "700", color: "#0f172a", fontSize: "0.92rem" }}>₹{details.initialAdvance.toLocaleString("en-IN")}</td>
+                                <td style={{ padding: "12px 14px", fontWeight: "700", color: "#ef4444", fontSize: "0.92rem" }}>₹{details.totalSpent.toLocaleString("en-IN")}</td>
+                                <td style={{ padding: "12px 14px", fontWeight: "900", color: details.availableBalance < 500 ? "#f97316" : "#16a34a", fontSize: "0.95rem" }}>
+                                  ₹{details.availableBalance.toLocaleString("en-IN")}
                                 </td>
                               </tr>
                             );
@@ -4990,14 +4994,14 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   </div>
 
                   {/* Full Advance History (Approved + Rejected) */}
-                  <div style={{ border: "1px solid #e2e8f0", padding: "20px", borderRadius: "0", backgroundColor: "#ffffff" }}>
-                    <h3 style={{ margin: "0 0 4px 0" }}>Cash Advance Requests &amp; Refill Logs</h3>
-                    <p className="subtitle" style={{ margin: "0 0 16px 0" }}>Full ledger history of requested petty cash refills and administrative approvals.</p>
+                  <div style={{ border: "1px solid #e2e8f0", padding: "24px", borderRadius: "14px", backgroundColor: "#ffffff", boxShadow: "0 4px 14px rgba(0,0,0,0.03)" }}>
+                    <h3 style={{ margin: "0 0 4px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Cash Advance Requests &amp; Refill Logs</h3>
+                    <p className="subtitle" style={{ margin: "0 0 16px 0", fontSize: "0.82rem", color: "#64748b" }}>Full ledger history of requested petty cash refills and administrative approvals.</p>
                     <div style={{ overflowX: "auto" }}>
-                      <table className="luxury-table">
+                      <table className="luxury-table" style={{ width: "100%", borderCollapse: "collapse" }}>
                         <thead>
-                          <tr>
-                            <th>Ref No.</th>
+                          <tr style={{ background: "#f8fafc", borderBottom: "1.5px solid #e2e8f0", textAlign: "left" }}>
+                            <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Ref No.</th>
                             <th>Employee</th>
                             <th>Requested Amount</th>
                             <th>Purpose / Remarks</th>

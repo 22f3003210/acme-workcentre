@@ -807,144 +807,283 @@ export default function ConsultantView({ activeTab }) {
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
           
           {/* Header Card */}
-          <div style={{ background: "linear-gradient(135deg, #1e1b4b 0%, #312e5c 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "18px", boxShadow: "0 12px 30px rgba(30,27,75,0.25)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+          <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "16px", boxShadow: "0 12px 30px rgba(15,23,42,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "18px" }}>
             <div>
-              <h2 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "900", color: "#ffffff" }}>💰 Expenses & Petty Cash Claim Desk</h2>
-              <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#c7d2fe" }}>Submit travel, food & site visit expense claims for manager reimbursement</p>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.1)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.74rem", fontWeight: "700", letterSpacing: "0.04em", textTransform: "uppercase", color: "#93c5fd", marginBottom: "8px" }}>
+                <span>💰 Finance & Reimbursement</span>
+              </div>
+              <h2 style={{ margin: 0, fontSize: "1.65rem", fontWeight: "900", color: "#ffffff", letterSpacing: "-0.02em" }}>Expenses & Petty Cash Desk</h2>
+              <p style={{ margin: "4px 0 0 0", fontSize: "0.86rem", color: "#cbd5e1" }}>Submit travel, food & client site visit expense claims for management approval</p>
             </div>
             
-            <div style={{ display: "flex", gap: "12px" }}>
-              <div style={{ background: "rgba(255,255,255,0.15)", padding: "10px 18px", borderRadius: "10px", backdropFilter: "blur(6px)" }}>
-                <div style={{ fontSize: "0.72rem", color: "#a5b4fc", fontWeight: "700", textTransform: "uppercase" }}>Available Petty Cash</div>
-                <div style={{ fontSize: "1.2rem", fontWeight: "900", color: "#ffffff" }}>₹{balanceDetails.availableBalance.toLocaleString("en-IN")}</div>
+            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
+              <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", padding: "12px 20px", borderRadius: "12px", backdropFilter: "blur(8px)", minWidth: "160px" }}>
+                <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>Available Petty Cash</div>
+                <div style={{ fontSize: "1.35rem", fontWeight: "900", color: "#ffffff", marginTop: "2px" }}>₹{balanceDetails.availableBalance.toLocaleString("en-IN")}</div>
               </div>
-              <div style={{ background: "rgba(255,255,255,0.15)", padding: "10px 18px", borderRadius: "10px", backdropFilter: "blur(6px)" }}>
-                <div style={{ fontSize: "0.72rem", color: "#a5b4fc", fontWeight: "700", textTransform: "uppercase" }}>Total Approved Claims</div>
-                <div style={{ fontSize: "1.2rem", fontWeight: "900", color: "#4ade80" }}>₹{approvedExpenseTotal.toLocaleString("en-IN")}</div>
+              <div style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)", padding: "12px 20px", borderRadius: "12px", backdropFilter: "blur(8px)", minWidth: "160px" }}>
+                <div style={{ fontSize: "0.7rem", color: "#94a3b8", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.05em" }}>Total Approved Claims</div>
+                <div style={{ fontSize: "1.35rem", fontWeight: "900", color: "#4ade80", marginTop: "2px" }}>₹{approvedExpenseTotal.toLocaleString("en-IN")}</div>
               </div>
             </div>
           </div>
 
           {/* Grid Layout: Add Expense Claim Form + Expense Claims History */}
-          <div style={{ display: "grid", gridTemplateColumns: "380px 1fr", gap: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "390px 1fr", gap: "24px", alignItems: "start" }}>
             
             {/* Form Column: Submit New Expense Claim */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "18px" }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>➕ Submit New Expense Claim</h3>
-                <p style={{ margin: "2px 0 0 0", fontSize: "0.8rem", color: "#64748b" }}>Enter expense details & project assignment</p>
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "26px", boxShadow: "0 4px 16px rgba(0,0,0,0.04)", display: "flex", flexDirection: "column", gap: "18px" }}>
+              <div style={{ borderBottom: "1px solid #f1f5f9", paddingBottom: "14px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", letterSpacing: "-0.01em" }}>Submit Expense Claim</h3>
+                  <button 
+                    type="button" 
+                    onClick={() => setShowExpenseModal(true)}
+                    style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2563eb", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: "800", cursor: "pointer" }}
+                  >
+                    ⚡ Full Wizard
+                  </button>
+                </div>
+                <p style={{ margin: "3px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Enter expense claim details & attach receipt photos</p>
               </div>
 
-              <form onSubmit={handleExpenseSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              <form onSubmit={handleExpenseSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                
+                {/* Category Chips */}
                 <div>
-                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>EXPENSE CATEGORY</label>
-                  <select 
-                    value={category} 
-                    onChange={(e) => setCategory(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", fontWeight: "600" }}
-                  >
-                    <option value="">Select a category</option>
-                    <option value="Food">Food</option>
-                    <option value="Travel">Travel</option>
-                    <option value="Stay">Stay</option>
-                  </select>
+                  <label style={{ display: "block", fontSize: "0.74rem", fontWeight: "800", color: "#475569", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    EXPENSE CATEGORY
+                  </label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                    {[
+                      { id: "Food", label: "Food", icon: "🍴" },
+                      { id: "Travel", label: "Travel", icon: "✈️" },
+                      { id: "Stay", label: "Stay", icon: "🏨" }
+                    ].map(cat => {
+                      const isSelected = category === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setCategory(cat.id)}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "4px",
+                            padding: "10px 6px",
+                            borderRadius: "10px",
+                            border: isSelected ? "2px solid #2563eb" : "1px solid #e2e8f0",
+                            background: isSelected ? "#eff6ff" : "#ffffff",
+                            color: isSelected ? "#1e40af" : "#475569",
+                            fontWeight: isSelected ? "800" : "600",
+                            fontSize: "0.8rem",
+                            cursor: "pointer",
+                            transition: "all 0.15s ease"
+                          }}
+                        >
+                          <span style={{ fontSize: "1.15rem" }}>{cat.icon}</span>
+                          <span>{cat.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>AMOUNT (₹)</label>
-                  <input 
-                    type="number" 
-                    placeholder="e.g. 1500" 
-                    value={amount} 
-                    onChange={(e) => setAmount(e.target.value)}
-                    required
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }}
-                  />
+                  <label style={{ display: "block", fontSize: "0.74rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>AMOUNT (₹)</label>
+                  <div style={{ position: "relative" }}>
+                    <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#64748b", fontWeight: "700", fontSize: "0.95rem" }}>₹</span>
+                    <input 
+                      type="number" 
+                      placeholder="0.00" 
+                      value={amount} 
+                      onChange={(e) => setAmount(e.target.value)}
+                      required
+                      style={{ width: "100%", padding: "10px 12px 10px 28px", borderRadius: "10px", border: "1.5px solid #cbd5e1", fontSize: "0.95rem", fontWeight: "700", color: "#0f172a", boxSizing: "border-box", outline: "none", transition: "border 0.2s" }}
+                      onFocus={(e) => e.target.style.borderColor = "#2563eb"}
+                      onBlur={(e) => e.target.style.borderColor = "#cbd5e1"}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.74rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>EXPENSE DATE</label>
+                    <input 
+                      type="date" 
+                      value={expenseDate} 
+                      onChange={(e) => setExpenseDate(e.target.value)}
+                      style={{ width: "100%", padding: "9px 10px", borderRadius: "10px", border: "1.5px solid #cbd5e1", fontSize: "0.82rem", color: "#0f172a", boxSizing: "border-box", fontWeight: "600" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "0.74rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>PROJECT SITE</label>
+                    <select 
+                      value={expenseProjectId} 
+                      onChange={(e) => setExpenseProjectId(e.target.value)}
+                      style={{ width: "100%", padding: "9px 10px", borderRadius: "10px", border: "1.5px solid #cbd5e1", fontSize: "0.82rem", color: "#0f172a", boxSizing: "border-box", fontWeight: "600" }}
+                    >
+                      <option value="">General Store HQ</option>
+                      {displayProjects.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>EXPENSE DATE</label>
-                  <input 
-                    type="date" 
-                    value={expenseDate} 
-                    onChange={(e) => setExpenseDate(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box" }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>ASSIGNED CLIENT PROJECT</label>
-                  <select 
-                    value={expenseProjectId} 
-                    onChange={(e) => setExpenseProjectId(e.target.value)}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
-                  >
-                    <option value="">General Store HQ (Seoni)</option>
-                    {displayProjects.map(p => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>DESCRIPTION / PURPOSE</label>
+                  <label style={{ display: "block", fontSize: "0.74rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>DESCRIPTION / PURPOSE</label>
                   <textarea 
-                    placeholder="Provide details about the expense claim..." 
+                    placeholder="Provide details about hotel, vendor, or travel..." 
                     value={description} 
                     onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                    rows={2}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: "10px", border: "1.5px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", resize: "none", outline: "none" }}
                   />
+                </div>
+
+                {/* Receipt Attachment Zone */}
+                <div>
+                  <label style={{ display: "block", fontSize: "0.74rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                    RECEIPT PHOTO ATTACHMENTS ({receiptPreviews.length})
+                  </label>
+                  <label style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "8px",
+                    padding: "12px",
+                    borderRadius: "10px",
+                    border: "1.5px dashed #93c5fd",
+                    background: "#f8fafc",
+                    color: "#2563eb",
+                    fontSize: "0.82rem",
+                    fontWeight: "800",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}>
+                    <span>📎 Click to Upload Receipts (Multiple Photos)</span>
+                    <input type="file" multiple accept="image/*,.pdf" onChange={handleReceiptFileUpload} style={{ display: "none" }} />
+                  </label>
+
+                  {receiptPreviews.length > 0 && (
+                    <div style={{ display: "flex", gap: "6px", marginTop: "8px", overflowX: "auto", padding: "4px 0" }}>
+                      {receiptPreviews.map((src, idx) => (
+                        <div key={idx} style={{ position: "relative", width: "40px", height: "40px", borderRadius: "6px", overflow: "hidden", border: "1px solid #cbd5e1", flexShrink: 0 }}>
+                          <img src={src} alt={`Receipt ${idx}`} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          <button 
+                            type="button" 
+                            onClick={() => handleRemoveReceipt(idx)} 
+                            style={{ position: "absolute", top: "1px", right: "1px", background: "#ef4444", color: "#ffffff", border: "none", borderRadius: "50%", width: "14px", height: "14px", fontSize: "0.6rem", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                          >✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <button 
                   type="submit" 
-                  style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(37,99,235,0.3)", marginTop: "6px" }}
+                  style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 18px", fontWeight: "800", fontSize: "0.92rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(37,99,235,0.3)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", marginTop: "4px" }}
                 >
-                  Submit Expense Claim ✓
+                  <span>Submit Expense Claim</span>
+                  <span>✓</span>
                 </button>
               </form>
             </div>
 
             {/* Table Column: Expense Claims History */}
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "16px" }}>
-              <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>📋 My Expense Claims History</h3>
+            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "26px", boxShadow: "0 4px 16px rgba(0,0,0,0.04)", display: "flex", flexDirection: "column", gap: "18px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: "14px" }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", letterSpacing: "-0.01em" }}>My Expense Claims Ledger</h3>
+                  <p style={{ margin: "3px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Live record of all claims submitted with verification status</p>
+                </div>
+                <span style={{ padding: "4px 12px", borderRadius: "12px", background: "#f1f5f9", color: "#475569", fontSize: "0.75rem", fontWeight: "700" }}>
+                  {myExpenses.length} Total Claims
+                </span>
+              </div>
 
               {myExpenses.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px", background: "#f8fafc", borderRadius: "12px", color: "#64748b", fontSize: "0.9rem" }}>
-                  No expense claims submitted yet. Use the form on the left to submit a claim.
+                <div style={{ textAlign: "center", padding: "48px 20px", background: "#f8fafc", borderRadius: "12px", color: "#64748b", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+                  <span style={{ fontSize: "2.4rem" }}>📄</span>
+                  <strong style={{ fontSize: "0.95rem", color: "#1e293b" }}>No expense claims submitted yet</strong>
+                  <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>Use the form on the left to submit a claim for food, travel, or stay</span>
                 </div>
               ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
-                  <thead>
-                    <tr style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0", textAlign: "left", color: "#64748b" }}>
-                      <th style={{ padding: "10px 12px" }}>Date</th>
-                      <th style={{ padding: "10px 12px" }}>Category</th>
-                      <th style={{ padding: "10px 12px" }}>Description</th>
-                      <th style={{ padding: "10px 12px" }}>Amount</th>
-                      <th style={{ padding: "10px 12px" }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {myExpenses.slice().reverse().map(exp => (
-                      <tr key={exp.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                        <td style={{ padding: "12px", fontWeight: "600" }}>{exp.date}</td>
-                        <td style={{ padding: "12px" }}>{exp.category}</td>
-                        <td style={{ padding: "12px", color: "#475569" }}>{exp.description}</td>
-                        <td style={{ padding: "12px", fontWeight: "800", color: "#0f172a" }}>₹{exp.amount}</td>
-                        <td style={{ padding: "12px" }}>
-                          <span style={{ 
-                            background: exp.status === "Approved" ? "#dcfce7" : exp.status === "Rejected" ? "#fee2e2" : "#fef3c7", 
-                            color: exp.status === "Approved" ? "#166534" : exp.status === "Rejected" ? "#991b1b" : "#92400e", 
-                            padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" 
-                          }}>
-                            {exp.status || "Pending"}
-                          </span>
-                        </td>
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.85rem" }}>
+                    <thead>
+                      <tr style={{ background: "#f8fafc", borderBottom: "1.5px solid #e2e8f0", textAlign: "left", color: "#475569" }}>
+                        <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>Date</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>Category</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>Description</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>Receipts</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>Amount</th>
+                        <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em" }}>Status</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {myExpenses.slice().reverse().map((exp, idx) => {
+                        const receiptCount = Array.isArray(exp.receipts) && exp.receipts.length > 0 
+                          ? exp.receipts.length 
+                          : (exp.receipt && typeof exp.receipt === "string" && exp.receipt.includes("|||"))
+                            ? exp.receipt.split("|||").length
+                            : (exp.receipt || exp.receiptUrl ? 1 : 0);
+
+                        return (
+                          <tr key={exp.id || idx} style={{ borderBottom: "1px solid #f1f5f9", background: idx % 2 === 0 ? "#ffffff" : "#fafafa", transition: "background 0.15s" }}>
+                            <td style={{ padding: "12px 14px", fontWeight: "700", color: "#334155", whiteSpace: "nowrap" }}>
+                              {exp.expenseDate || exp.date || "Today"}
+                            </td>
+                            <td style={{ padding: "12px 14px" }}>
+                              <span style={{ 
+                                display: "inline-flex", 
+                                alignItems: "center", 
+                                gap: "4px", 
+                                padding: "3px 8px", 
+                                borderRadius: "6px", 
+                                fontSize: "0.74rem", 
+                                fontWeight: "700",
+                                background: exp.category === "Food" ? "#fff7ed" : exp.category === "Travel" ? "#eff6ff" : "#fdf4ff",
+                                color: exp.category === "Food" ? "#c2410c" : exp.category === "Travel" ? "#1d4ed8" : "#86198f",
+                                border: exp.category === "Food" ? "1px solid #fed7aa" : exp.category === "Travel" ? "1px solid #bfdbfe" : "1px solid #f5d0fe"
+                              }}>
+                                <span>{exp.category === "Food" ? "🍴" : exp.category === "Travel" ? "✈️" : "🏨"}</span>
+                                <span>{exp.category}</span>
+                              </span>
+                            </td>
+                            <td style={{ padding: "12px 14px", color: "#475569", maxWidth: "220px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={exp.description || exp.reason}>
+                              {exp.description || exp.reason || "Operational claim"}
+                            </td>
+                            <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                              <span style={{ fontSize: "0.76rem", color: receiptCount > 0 ? "#2563eb" : "#94a3b8", fontWeight: "700", background: receiptCount > 0 ? "#eff6ff" : "#f1f5f9", padding: "2px 8px", borderRadius: "6px" }}>
+                                📸 {receiptCount} {receiptCount === 1 ? "file" : "files"}
+                              </span>
+                            </td>
+                            <td style={{ padding: "12px 14px", fontWeight: "900", color: "#0f172a", fontSize: "0.95rem", whiteSpace: "nowrap" }}>
+                              ₹{Number(exp.amount || 0).toLocaleString("en-IN")}
+                            </td>
+                            <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                              <span style={{ 
+                                background: exp.status === "Approved" ? "#f0fdf4" : exp.status === "Rejected" ? "#fef2f2" : "#fffbeb", 
+                                color: exp.status === "Approved" ? "#166534" : exp.status === "Rejected" ? "#991b1b" : "#92400e", 
+                                border: exp.status === "Approved" ? "1px solid #bbf7d0" : exp.status === "Rejected" ? "1px solid #fecaca" : "1px solid #fde68a",
+                                padding: "4px 10px", 
+                                borderRadius: "12px", 
+                                fontSize: "0.74rem", 
+                                fontWeight: "800" 
+                              }}>
+                                {exp.status === "Approved" ? "✓ Approved" : exp.status === "Rejected" ? "✖ Rejected" : "⏳ Pending"}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
 

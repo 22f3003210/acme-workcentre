@@ -253,32 +253,41 @@ export default function LedgerReports() {
       {activeReportSubTab === "claims" && (
         <div className="report-container">
           <div style={{ overflowX: "auto" }}>
-            <table className="luxury-table">
+            <table className="luxury-table" style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
-                <tr>
-                  <th>Ref No.</th>
-                  <th>Employee</th>
-                  <th>Submitted Date</th>
-                  <th>Category</th>
-                  <th>Amount</th>
-                  <th>Description</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                <tr style={{ background: "#f8fafc", borderBottom: "1.5px solid #e2e8f0", textAlign: "left" }}>
+                  <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Ref No.</th>
+                  <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Employee</th>
+                  <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Submitted Date</th>
+                  <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Category</th>
+                  <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Receipts</th>
+                  <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Amount</th>
+                  <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Description</th>
+                  <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Status</th>
+                  <th style={{ padding: "12px 14px", fontWeight: "800", fontSize: "0.74rem", textTransform: "uppercase", letterSpacing: "0.04em", color: "#475569" }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {expenses.length === 0 ? (
                   <tr>
-                    <td colSpan="8" style={{ textAlign: "center", color: "#94a3b8", padding: "24px" }}>
-                      No expense claims logged.
+                    <td colSpan="9" style={{ textAlign: "center", color: "#94a3b8", padding: "48px 20px" }}>
+                      <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📄</div>
+                      <strong style={{ fontSize: "0.95rem", color: "#1e293b" }}>No expense claims logged</strong>
+                      <div style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "4px" }}>Claims filed by consultants will appear here for verification</div>
                     </td>
                   </tr>
                 ) : (
-                  expenses.map((e) => {
+                  expenses.slice().reverse().map((e, idx) => {
                     const emp = users.find(u => u.id === e.employeeId) || { name: e.employeeName || "Employee", avatar: "" };
+                    const receiptCount = Array.isArray(e.receipts) && e.receipts.length > 0 
+                      ? e.receipts.length 
+                      : (e.receipt && typeof e.receipt === "string" && e.receipt.includes("|||"))
+                        ? e.receipt.split("|||").length
+                        : (e.receipt || e.receiptUrl ? 1 : 0);
+
                     return (
                       <tr 
-                        key={e.id}
+                        key={e.id || idx}
                         onClick={(ev) => {
                           if (ev.target.tagName !== "BUTTON" && ev.target.parentElement?.tagName !== "BUTTON") {
                             setSelectedExpenseGroup({
@@ -291,70 +300,112 @@ export default function LedgerReports() {
                             setActiveItemInGroup(e);
                           }
                         }}
-                        style={{ cursor: "pointer" }}
+                        style={{ cursor: "pointer", borderBottom: "1px solid #f1f5f9", background: idx % 2 === 0 ? "#ffffff" : "#fafafa", transition: "background 0.15s" }}
                       >
-                        <td style={{ fontWeight: "700", color: "#475569", fontSize: "0.78rem" }}>{getUniqueNumber(e.id)}</td>
-                        <td className="user-cell">
-                          <img src={emp.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(emp.name)}`} alt={emp.name} className="avatar-small" />
-                          <div className="user-cell-text">
-                            <strong>{emp.name}</strong>
-                            <span style={{ textTransform: "none", fontSize: "0.7rem", color: "#94a3b8" }}>{e.employeeId}</span>
+                        <td style={{ padding: "12px 14px", fontWeight: "700", color: "#1e40af", fontSize: "0.78rem", whiteSpace: "nowrap" }}>
+                          <span style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "4px" }}>
+                            {getUniqueNumber(e.id)}
+                          </span>
+                        </td>
+                        <td className="user-cell" style={{ padding: "12px 14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <img src={emp.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(emp.name)}`} alt={emp.name} style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }} />
+                            <div>
+                              <div style={{ fontWeight: "700", color: "#0f172a", fontSize: "0.86rem" }}>{emp.name}</div>
+                              <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>{e.employeeId}</span>
+                            </div>
                           </div>
                         </td>
-                        <td>{e.submittedDate || e.date}</td>
-                        <td>
+                        <td style={{ padding: "12px 14px", fontSize: "0.82rem", color: "#475569", whiteSpace: "nowrap" }}>
+                          {e.submittedDate || e.date}
+                        </td>
+                        <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
                           <span style={{
-                            fontSize: "0.72rem",
-                            fontWeight: "600",
-                            textTransform: "uppercase",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "4px",
+                            fontSize: "0.74rem",
+                            fontWeight: "700",
                             padding: "3px 8px",
-                            borderRadius: "4px",
-                            backgroundColor: e.category === "Food" ? "#fef3c7" : e.category === "Accommodation" ? "#e0f2fe" : "#fee2e2",
-                            color: e.category === "Food" ? "#b45309" : e.category === "Accommodation" ? "#0369a1" : "#b91c1c"
+                            borderRadius: "6px",
+                            backgroundColor: e.category === "Food" ? "#fff7ed" : (e.category === "Stay" || e.category === "Accommodation") ? "#fdf4ff" : "#eff6ff",
+                            color: e.category === "Food" ? "#c2410c" : (e.category === "Stay" || e.category === "Accommodation") ? "#86198f" : "#1d4ed8",
+                            border: e.category === "Food" ? "1px solid #fed7aa" : (e.category === "Stay" || e.category === "Accommodation") ? "1px solid #f5d0fe" : "1px solid #bfdbfe"
                           }}>
-                            {e.category}
+                            <span>{e.category === "Food" ? "🍴" : (e.category === "Stay" || e.category === "Accommodation") ? "🏨" : "✈️"}</span>
+                            <span>{e.category}</span>
                           </span>
                         </td>
-                        <td style={{ fontWeight: "700", color: "#0f172a" }}>₹{(e.amount || 0).toLocaleString()}</td>
-                        <td style={{ fontSize: "0.8rem", color: "#475569", maxWidth: "240px", wordBreak: "break-word" }}>{e.description}</td>
-                        <td>
-                          <span className={`role-badge ${e.status.toLowerCase()}`}>
-                            {e.status}
+                        <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                          <span style={{ fontSize: "0.75rem", color: receiptCount > 0 ? "#2563eb" : "#94a3b8", fontWeight: "700", background: receiptCount > 0 ? "#eff6ff" : "#f1f5f9", padding: "2px 8px", borderRadius: "6px" }}>
+                            📸 {receiptCount} {receiptCount === 1 ? "file" : "files"}
                           </span>
                         </td>
-                        <td>
+                        <td style={{ padding: "12px 14px", fontWeight: "800", color: "#0f172a", fontSize: "0.95rem", whiteSpace: "nowrap" }}>
+                          ₹{(e.amount || 0).toLocaleString("en-IN")}
+                        </td>
+                        <td style={{ padding: "12px 14px", fontSize: "0.82rem", color: "#475569", maxWidth: "220px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }} title={e.description || e.reason}>
+                          {e.description || e.reason || "Operational claim"}
+                        </td>
+                        <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
+                          <span style={{
+                            padding: "4px 10px",
+                            borderRadius: "12px",
+                            fontSize: "0.74rem",
+                            fontWeight: "800",
+                            background: e.status === "Approved" ? "#f0fdf4" : e.status === "Rejected" ? "#fef2f2" : "#fffbeb",
+                            color: e.status === "Approved" ? "#166534" : e.status === "Rejected" ? "#991b1b" : "#92400e",
+                            border: e.status === "Approved" ? "1px solid #bbf7d0" : e.status === "Rejected" ? "1px solid #fecaca" : "1px solid #fde68a"
+                          }}>
+                            {e.status === "Approved" ? "✓ Approved" : e.status === "Rejected" ? "✖ Rejected" : "⏳ Pending"}
+                          </span>
+                        </td>
+                        <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
                           {e.status === "Pending" ? (
-                            <div style={{ display: "flex", gap: "8px" }}>
+                            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                               <button
+                                type="button"
                                 onClick={() => {
                                   if (confirm(`Approve expense claim of ₹${e.amount} for ${emp.name}?`)) {
-                                    verifyExpense(e.id, "Approved", "Approved by Admin", currentUser.name);
+                                    verifyExpense(e.id, "Approved", "Approved by Admin", currentUser?.name || "Admin");
                                     setToast({ message: "Expense claim approved successfully!", type: "success" });
                                   }
                                 }}
-                                className="luxury-button small"
-                                style={{ backgroundColor: "#22c55e", color: "#ffffff", padding: "4px 8px", border: "none", borderRadius: "4px" }}
+                                style={{ backgroundColor: "#16a34a", color: "#ffffff", padding: "5px 10px", border: "none", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 2px 6px rgba(22,163,74,0.3)" }}
                               >
-                                Approve
+                                Approve ✓
                               </button>
                               <button
+                                type="button"
                                 onClick={() => {
                                   const notes = prompt("Enter rejection reason:");
                                   if (notes !== null) {
-                                    verifyExpense(e.id, "Rejected", notes || "Rejected by Admin", currentUser.name);
+                                    verifyExpense(e.id, "Rejected", notes || "Rejected by Admin", currentUser?.name || "Admin");
                                     setToast({ message: "Expense claim rejected.", type: "info" });
                                   }
                                 }}
-                                className="delete-btn"
-                                style={{ padding: "4px 8px" }}
+                                style={{ backgroundColor: "#ffffff", color: "#dc2626", border: "1px solid #fecaca", padding: "5px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer" }}
                               >
-                                Reject
+                                Reject ✖
                               </button>
                             </div>
                           ) : (
-                            <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
-                              Reviewed by {e.reviewedBy || "System"}
-                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedExpenseGroup({
+                                  title: `Expense Claim '${e.reason || e.description}'`,
+                                  category: e.category,
+                                  items: [e],
+                                  employeeName: emp.name,
+                                  employeeId: e.employeeId
+                                });
+                                setActiveItemInGroup(e);
+                              }}
+                              style={{ background: "#f8fafc", border: "1px solid #cbd5e1", color: "#475569", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer" }}
+                            >
+                              Inspect 🔍
+                            </button>
                           )}
                         </td>
                       </tr>
@@ -1528,6 +1579,54 @@ export default function LedgerReports() {
                         style={{ width: "100%", boxSizing: "border-box", border: "1px solid #e2e8f0", backgroundColor: "#f8fafc", color: "#334155", padding: "10px 12px", fontSize: "0.85rem", outline: "none", resize: "none" }}
                       />
                     </div>
+                  </div>
+
+                  {/* Inside-Modal Verification Action Controls */}
+                  <div style={{ marginTop: "auto", paddingTop: "16px", borderTop: "1px solid #e2e8f0", display: "flex", gap: "10px" }}>
+                    {activeItemInGroup.status === "Pending" ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`Approve expense claim of ₹${activeItemInGroup.amount} for ${emp.name}?`)) {
+                              verifyExpense(activeItemInGroup.id, "Approved", "Approved by Admin via Audit Viewer", currentUser?.name || "Admin");
+                              setToast({ message: "Expense claim approved successfully!", type: "success" });
+                              setSelectedExpenseGroup(null);
+                              setActiveItemInGroup(null);
+                            }
+                          }}
+                          style={{ flex: 1, backgroundColor: "#16a34a", color: "#ffffff", padding: "10px 16px", border: "none", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.25)" }}
+                        >
+                          Approve Claim ✓
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const notes = prompt("Enter rejection reason:");
+                            if (notes !== null) {
+                              verifyExpense(activeItemInGroup.id, "Rejected", notes || "Rejected by Admin via Audit Viewer", currentUser?.name || "Admin");
+                              setToast({ message: "Expense claim rejected.", type: "info" });
+                              setSelectedExpenseGroup(null);
+                              setActiveItemInGroup(null);
+                            }
+                          }}
+                          style={{ backgroundColor: "#ffffff", color: "#dc2626", border: "1.5px solid #fecaca", padding: "10px 16px", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "800", cursor: "pointer" }}
+                        >
+                          Reject ✖
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedExpenseGroup(null);
+                          setActiveItemInGroup(null);
+                        }}
+                        style={{ width: "100%", backgroundColor: "#f1f5f9", color: "#334155", padding: "10px 16px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", cursor: "pointer" }}
+                      >
+                        Close Viewer ✕
+                      </button>
+                    )}
                   </div>
 
                 </div>

@@ -3686,7 +3686,9 @@ export default function AdminView({ activeTab, setActiveTab }) {
                   const isOutMode = selectedSwipeMode === "OUT";
                   const isOutMissing = isOutMode && !activeRecord.checkOut && !activeRecord.checkOutSelfie;
 
-                  const displaySelfie = isOutMode ? (activeRecord.checkOutSelfie || null) : (activeRecord.checkInSelfie || activeRecord.selfie || activeRecord.avatar);
+                  const displaySelfie = isOutMode 
+                    ? (activeRecord.checkOutSelfie || activeRecord.checkInSelfie || activeRecord.selfie || activeRecord.avatar || null) 
+                    : (activeRecord.checkInSelfie || activeRecord.selfie || activeRecord.avatar);
                   const displayTime = isOutMode ? (activeRecord.checkOut || null) : (activeRecord.checkIn || activeRecord.time);
                   const displayAddress = isOutMode ? (activeRecord.checkOutAddress || null) : (activeRecord.checkInAddress || activeRecord.fullAddress);
                   const displayCoords = isOutMode ? (activeRecord.checkOutCoordinates || null) : (activeRecord.checkInCoordinates || activeRecord.coordinates);

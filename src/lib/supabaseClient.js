@@ -207,15 +207,19 @@ export const supabaseAddAttendanceRecord = async (consultantId, attendanceRecord
 export const supabaseUpdateAttendanceCheckout = async (consultantId, dateStr, checkOutTime, hoursWorked, remarks, checkoutData = {}) => {
   if (!isSupabaseConfigured()) return;
   const id = `att-${consultantId}-${dateStr}`;
+  const selfieVal = checkoutData.checkOutSelfie || checkoutData.selfie || null;
   const updatePayload = {
     check_out: checkOutTime,
-    check_out_selfie: checkoutData.checkOutSelfie || checkoutData.selfie || null,
+    check_out_selfie: selfieVal,
     check_out_address: checkoutData.checkOutAddress || checkoutData.address || null,
     check_out_coordinates: checkoutData.checkOutCoordinates || checkoutData.coordinates || null,
     hours_worked: Number(hoursWorked) || 0,
     remarks: remarks
   };
   const { data, error } = await supabase.from("attendance").update(updatePayload).eq("id", id);
-  if (error) console.error("Supabase update attendance checkout error:", error);
+  if (error) {
+    console.error("Supabase update attendance checkout error by id, retrying with employee_id and date:", error);
+    await supabase.from("attendance").update(updatePayload).match({ employee_id: consultantId, date: dateStr });
+  }
   return { data, error };
 };

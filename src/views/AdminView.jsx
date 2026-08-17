@@ -3343,13 +3343,13 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 let recAddress = a.checkInAddress || a.check_in_address || a.address || (a.remarks && a.remarks.includes("Location: ") ? a.remarks.split("Location: ")[1] : null) || a.locationName || a.projectName || "Recorded Location";
                 let recDoor = recAddress.includes(",") ? recAddress.split(",")[0].trim() : (a.projectName || "Store Site");
 
-                let parsedCoords = { lat: "17.3933", lng: "78.4758" };
+                let parsedCoords = null;
                 const rawCoords = a.checkInCoordinates || a.check_in_coordinates || a.coordinates;
                 if (typeof rawCoords === "string" && rawCoords.includes(",")) {
                   const parts = rawCoords.split(",");
                   parsedCoords = { lat: parts[0].trim(), lng: parts[1].trim() };
-                } else if (rawCoords && typeof rawCoords === "object") {
-                  parsedCoords = { lat: rawCoords.lat || "17.3933", lng: rawCoords.lng || "78.4758" };
+                } else if (rawCoords && typeof rawCoords === "object" && rawCoords.lat && rawCoords.lng) {
+                  parsedCoords = { lat: rawCoords.lat, lng: rawCoords.lng };
                 }
 
                 let parsedCheckOutCoords = parsedCoords;
@@ -3357,8 +3357,8 @@ export default function AdminView({ activeTab, setActiveTab }) {
                 if (typeof rawCheckOutCoords === "string" && rawCheckOutCoords.includes(",")) {
                   const parts = rawCheckOutCoords.split(",");
                   parsedCheckOutCoords = { lat: parts[0].trim(), lng: parts[1].trim() };
-                } else if (rawCheckOutCoords && typeof rawCheckOutCoords === "object") {
-                  parsedCheckOutCoords = { lat: rawCheckOutCoords.lat || "17.3933", lng: rawCheckOutCoords.lng || "78.4758" };
+                } else if (rawCheckOutCoords && typeof rawCheckOutCoords === "object" && rawCheckOutCoords.lat && rawCheckOutCoords.lng) {
+                  parsedCheckOutCoords = { lat: rawCheckOutCoords.lat, lng: rawCheckOutCoords.lng };
                 }
 
                 const checkInSelfie = a.checkInSelfie || a.check_in_selfie || a.selfie || u.avatar || u.selfiePhoto;
@@ -3830,9 +3830,21 @@ export default function AdminView({ activeTab, setActiveTab }) {
 
       {/* MAP VIEW Standalone Full-Screen View Page */}
       {showMapModal && mapModalSwipe && (() => {
-        const lat = (typeof mapModalSwipe.coordinates === "string" ? mapModalSwipe.coordinates.split(",")[0]?.trim() : mapModalSwipe.coordinates?.lat) || "17.3933";
-        const lng = (typeof mapModalSwipe.coordinates === "string" ? mapModalSwipe.coordinates.split(",")[1]?.trim() : mapModalSwipe.coordinates?.lng) || "78.4758";
-        const mapEmbedUrl = `https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+        const rawCoords = (typeof mapModalSwipe.coordinates === "string" ? mapModalSwipe.coordinates : (mapModalSwipe.coordinates?.lat ? `${mapModalSwipe.coordinates.lat},${mapModalSwipe.coordinates.lng}` : null));
+        let mapEmbedQuery = "";
+        let lat = "";
+        let lng = "";
+
+        if (rawCoords && !rawCoords.includes("null") && !rawCoords.includes("undefined")) {
+          const parts = rawCoords.split(",");
+          lat = parts[0]?.trim() || "";
+          lng = parts[1]?.trim() || "";
+          mapEmbedQuery = `${lat},${lng}`;
+        } else {
+          const cleanAddr = (mapModalSwipe.checkInAddress || mapModalSwipe.address || mapModalSwipe.fullAddress || "").replace(/📍|Verified Address:/gi, "").trim();
+          mapEmbedQuery = cleanAddr ? encodeURIComponent(cleanAddr) : "India";
+        }
+        const mapEmbedUrl = `https://maps.google.com/maps?q=${mapEmbedQuery}&z=16&output=embed`;
 
         return (
           <div style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "#ffffff", zIndex: 10000, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -3868,7 +3880,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                     📍 {mapModalSwipe.checkInAddress || mapModalSwipe.fullAddress || "Recorded Check-In Location"}
                   </div>
                   <div style={{ fontSize: "0.7rem", color: "#16a34a", marginTop: "2px" }}>
-                    GPS: {lat}, {lng}
+                    GPS: {lat && lng ? `${lat}, ${lng}` : (mapModalSwipe.checkInCoordinates ? (typeof mapModalSwipe.checkInCoordinates === "object" ? `${mapModalSwipe.checkInCoordinates.lat}, ${mapModalSwipe.checkInCoordinates.lng}` : mapModalSwipe.checkInCoordinates) : "Live Verified")}
                   </div>
                 </div>
 
@@ -3884,7 +3896,7 @@ export default function AdminView({ activeTab, setActiveTab }) {
                         📍 {mapModalSwipe.checkOutAddress || mapModalSwipe.fullAddress || "Recorded Check-Out Location"}
                       </div>
                       <div style={{ fontSize: "0.7rem", color: "#dc2626", marginTop: "2px" }}>
-                        GPS: {mapModalSwipe.checkOutCoordinates ? (typeof mapModalSwipe.checkOutCoordinates === "object" ? `${mapModalSwipe.checkOutCoordinates.lat}, ${mapModalSwipe.checkOutCoordinates.lng}` : mapModalSwipe.checkOutCoordinates) : `${lat}, ${lng}`}
+                        GPS: {mapModalSwipe.checkOutCoordinates ? (typeof mapModalSwipe.checkOutCoordinates === "object" ? `${mapModalSwipe.checkOutCoordinates.lat}, ${mapModalSwipe.checkOutCoordinates.lng}` : mapModalSwipe.checkOutCoordinates) : (lat && lng ? `${lat}, ${lng}` : "Live Verified")}
                       </div>
                     </>
                   ) : (

@@ -294,28 +294,41 @@ export default function ConsultantView({ activeTab }) {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
-          const lat = parseFloat(pos.coords.latitude.toFixed(5));
-          const lng = parseFloat(pos.coords.longitude.toFixed(5));
+          const lat = parseFloat(pos.coords.latitude.toFixed(6));
+          const lng = parseFloat(pos.coords.longitude.toFixed(6));
           let exactAddr = `${lat}° N, ${lng}° E`;
 
           try {
-            // High precision Nominatim Reverse Geocoding
-            const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+            // Tier 1: High precision Nominatim Reverse Geocoding with full details
+            const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+              headers: { "Accept-Language": "en" }
+            });
             const nomData = await nomRes.json();
-            if (nomData && (nomData.display_name || nomData.address)) {
-              const fullLoc = nomData.display_name || Object.values(nomData.address).filter(Boolean).join(", ");
-              exactAddr = `📍 Verified Address: ${fullLoc} (${lat}, ${lng})`;
+            if (nomData && nomData.address) {
+              const a = nomData.address;
+              const place = a.amenity || a.shop || a.building || a.road || a.suburb || a.neighbourhood || a.village || a.town || "";
+              const city = a.city || a.town || a.county || a.district || "";
+              const state = a.state || a.state_district || "";
+              const postcode = a.postcode || "";
+              const country = a.country || "India";
+              
+              const parts = [place, a.suburb, city, state, postcode, country].filter(Boolean);
+              const cleanLoc = parts.length > 0 ? parts.join(", ") : nomData.display_name;
+              exactAddr = `${cleanLoc} (${lat}, ${lng})`;
+            } else if (nomData && nomData.display_name) {
+              exactAddr = `${nomData.display_name} (${lat}, ${lng})`;
             } else {
-              // BigDataCloud Fallback
+              // Tier 2: BigDataCloud High-Accuracy Geocoding Fallback
               const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
               const bdcData = await bdcRes.json();
               if (bdcData && (bdcData.locality || bdcData.city || bdcData.principalSubdivision)) {
                 const parts = [bdcData.locality, bdcData.city, bdcData.principalSubdivision, bdcData.countryName].filter(Boolean);
-                exactAddr = `📍 Verified Address: ${parts.join(", ")} (${lat}, ${lng})`;
+                exactAddr = `${parts.join(", ")} (${lat}, ${lng})`;
               }
             }
           } catch (e) {
-            console.log("Reverse geocode fetch fallback", e);
+            console.log("Reverse geocode fetch error:", e);
+            exactAddr = `Location Pin (${lat}, ${lng})`;
           }
 
           setGpsData({
@@ -326,29 +339,35 @@ export default function ConsultantView({ activeTab }) {
             isDetecting: false,
             errorMsg: ""
           });
-          if (setToast) setToast({ message: `📍 Live Location Captured: ${exactAddr}`, type: "success" });
+          if (setToast) setToast({ message: `📍 Live Location Verified: ${exactAddr.substring(0, 45)}...`, type: "success" });
         },
         (err) => {
           console.warn("GPS Geolocation error:", err);
+          let errorText = "Unable to retrieve device GPS coordinates.";
+          if (err.code === 1) errorText = "Location access was denied. Please allow location permissions in your browser.";
+          else if (err.code === 2) errorText = "GPS position unavailable. Please ensure Device Location / GPS is turned ON.";
+          else if (err.code === 3) errorText = "GPS location request timed out.";
+
           setGpsData({
             lat: null,
             lng: null,
-            address: "Abids, Hyderabad, Telangana, India",
-            isVerified: true,
+            address: "",
+            isVerified: false,
             isDetecting: false,
-            errorMsg: "Device location permission pending."
+            errorMsg: errorText
           });
+          if (setToast) setToast({ message: `⚠️ ${errorText}`, type: "warning" });
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
       );
     } else {
       setGpsData({
         lat: null,
         lng: null,
-        address: "Abids, Hyderabad, Telangana, India",
-        isVerified: true,
+        address: "",
+        isVerified: false,
         isDetecting: false,
-        errorMsg: "Browser geolocation not supported."
+        errorMsg: "Browser geolocation is not supported on this device."
       });
     }
   };
@@ -3035,23 +3054,44 @@ export default function ConsultantView({ activeTab }) {
               {wizardStep === 2 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   
-                  {/* Location Card (Re-Detect Button Removed) */}
+                  {/* Location Card with Live Google Maps Pin */}
                   <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <span style={{ fontSize: "1.3rem" }}>📍</span>
                         <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0369a1" }}>Exact Live Location Capture</h4>
                       </div>
-                      <span style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" }}>
-                        {gpsData.isDetecting ? "⏳ Auto-Detecting..." : "● Auto-Detected Live"}
-                      </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <button
+                          type="button"
+                          onClick={handleDetectGpsLocation}
+                          style={{ background: "#ffffff", border: "1px solid #93c5fd", color: "#0284c7", borderRadius: "8px", padding: "4px 10px", fontSize: "0.74rem", fontWeight: "800", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                        >
+                          <span>🔄 Refresh GPS</span>
+                        </button>
+                        <span style={{ background: gpsData.isDetecting ? "#fef3c7" : "#e0f2fe", color: gpsData.isDetecting ? "#b45309" : "#0369a1", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" }}>
+                          {gpsData.isDetecting ? "⏳ Auto-Detecting..." : gpsData.lat ? "● GPS Verified" : "⚠️ Location Pending"}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Live Google Map Frame when coordinates detected */}
+                    {gpsData.lat && gpsData.lng ? (
+                      <div style={{ width: "100%", height: "130px", borderRadius: "8px", overflow: "hidden", border: "1px solid #cbd5e1", position: "relative", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+                        <iframe
+                          title="Live GPS Google Map Preview"
+                          src={`https://maps.google.com/maps?q=${gpsData.lat},${gpsData.lng}&z=16&output=embed`}
+                          style={{ width: "100%", height: "100%", border: 0 }}
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : null}
 
                     <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748b" }}>
                         <span>GPS COORDINATES</span>
                         <strong style={{ color: "#0f172a", fontSize: "0.88rem" }}>
-                          {gpsData.isDetecting ? "⏳ Fetching Device GPS..." : gpsData.lat ? `${gpsData.lat}° N, ${gpsData.lng}° E` : "Location Active"}
+                          {gpsData.isDetecting ? "⏳ Fetching Device GPS..." : gpsData.lat ? `${gpsData.lat}° N, ${gpsData.lng}° E` : "Turn on Device Location"}
                         </strong>
                       </div>
                       <div>
@@ -3060,7 +3100,7 @@ export default function ConsultantView({ activeTab }) {
                           type="text"
                           value={gpsData.address}
                           onChange={(e) => setGpsData(prev => ({ ...prev, address: e.target.value }))}
-                          placeholder={gpsData.isDetecting ? "Fetching exact area..." : "e.g. Abids, Hyderabad, Telangana, India"}
+                          placeholder={gpsData.isDetecting ? "Fetching exact area..." : "e.g. Store Site / Client Location, City, State"}
                           style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #2563eb", fontSize: "0.88rem", fontWeight: "700", color: "#1e40af", background: "#eff6ff", boxSizing: "border-box" }}
                         />
                       </div>
@@ -3328,23 +3368,44 @@ export default function ConsultantView({ activeTab }) {
               {checkOutWizardStep === 2 && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                   
-                  {/* Location Card */}
+                  {/* Location Card with Live Google Maps Pin */}
                   <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <span style={{ fontSize: "1.3rem" }}>📍</span>
                         <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0369a1" }}>Check-Out Live Location</h4>
                       </div>
-                      <span style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" }}>
-                        {gpsData.isDetecting ? "⏳ Auto-Detecting..." : "● Auto-Detected Live"}
-                      </span>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <button
+                          type="button"
+                          onClick={handleDetectGpsLocation}
+                          style={{ background: "#ffffff", border: "1px solid #93c5fd", color: "#0284c7", borderRadius: "8px", padding: "4px 10px", fontSize: "0.74rem", fontWeight: "800", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                        >
+                          <span>🔄 Refresh GPS</span>
+                        </button>
+                        <span style={{ background: gpsData.isDetecting ? "#fef3c7" : "#e0f2fe", color: gpsData.isDetecting ? "#b45309" : "#0369a1", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" }}>
+                          {gpsData.isDetecting ? "⏳ Auto-Detecting..." : gpsData.lat ? "● GPS Verified" : "⚠️ Location Pending"}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Live Google Map Frame when coordinates detected */}
+                    {gpsData.lat && gpsData.lng ? (
+                      <div style={{ width: "100%", height: "130px", borderRadius: "8px", overflow: "hidden", border: "1px solid #cbd5e1", position: "relative", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+                        <iframe
+                          title="Live GPS Google Map Preview"
+                          src={`https://maps.google.com/maps?q=${gpsData.lat},${gpsData.lng}&z=16&output=embed`}
+                          style={{ width: "100%", height: "100%", border: 0 }}
+                          loading="lazy"
+                        />
+                      </div>
+                    ) : null}
 
                     <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748b" }}>
                         <span>GPS COORDINATES</span>
                         <strong style={{ color: "#0f172a", fontSize: "0.88rem" }}>
-                          {gpsData.isDetecting ? "⏳ Fetching Device GPS..." : gpsData.lat ? `${gpsData.lat}° N, ${gpsData.lng}° E` : "Location Active"}
+                          {gpsData.isDetecting ? "⏳ Fetching Device GPS..." : gpsData.lat ? `${gpsData.lat}° N, ${gpsData.lng}° E` : "Turn on Device Location"}
                         </strong>
                       </div>
                       <div>
@@ -3353,7 +3414,7 @@ export default function ConsultantView({ activeTab }) {
                           type="text"
                           value={gpsData.address}
                           onChange={(e) => setGpsData(prev => ({ ...prev, address: e.target.value }))}
-                          placeholder="e.g. Abids, Hyderabad, Telangana, India"
+                          placeholder={gpsData.isDetecting ? "Fetching exact area..." : "e.g. Store Site / Client Location, City, State"}
                           style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #dc2626", fontSize: "0.88rem", fontWeight: "700", color: "#991b1b", background: "#fef2f2", boxSizing: "border-box" }}
                         />
                       </div>

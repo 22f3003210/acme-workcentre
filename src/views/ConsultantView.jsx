@@ -613,9 +613,19 @@ export default function ConsultantView({ activeTab }) {
     return `${year}-${month}-${day}`;
   };
 
-  // Attendance & Punch calculations
+  // Attendance & Punch calculations - retrieve live user from users state or currentUser
   const todayStr = getTodayLocalStr();
-  const myAttendance = currentUser?.attendance || [];
+  const synchronizedUser = (users || []).find(u => 
+    (currentUser?.id && u.id === currentUser.id) ||
+    (currentUser?.empCode && (u.empCode === currentUser.empCode || u.emp_code === currentUser.empCode)) ||
+    (currentUser?.email && u.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
+    (currentUser?.name && u.name?.toLowerCase() === currentUser.name.toLowerCase())
+  ) || currentUser;
+
+  const myAttendance = (synchronizedUser?.attendance && synchronizedUser.attendance.length > 0)
+    ? synchronizedUser.attendance
+    : (currentUser?.attendance || []);
+
   const unclosedPunch = (myAttendance || []).slice().reverse().find(a => !a.checkOut);
   const todayPunch = unclosedPunch || (myAttendance || []).slice().reverse().find(a => a.date === todayStr || (a.date && new Date(a.date).toDateString() === new Date().toDateString()));
 

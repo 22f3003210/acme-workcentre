@@ -580,9 +580,8 @@ export const AppProvider = ({ children }) => {
             const attMap = new Map();
             data.forEach(a => {
               const empId = a.employee_id ? String(a.employee_id).toLowerCase().trim() : "";
-              if (!empId) return;
-              if (!attMap.has(empId)) attMap.set(empId, []);
-              attMap.get(empId).push({
+              const empName = a.employee_name ? String(a.employee_name).toLowerCase().trim() : "";
+              const item = {
                 date: a.date,
                 checkIn: a.check_in,
                 checkOut: a.check_out,
@@ -603,13 +602,30 @@ export const AppProvider = ({ children }) => {
                 tasks: a.tasks || [],
                 acknowledgedChecklist: a.acknowledged_checklist || false,
                 remarks: a.remarks || ""
-              });
+              };
+              if (empId) {
+                if (!attMap.has(empId)) attMap.set(empId, []);
+                attMap.get(empId).push(item);
+              }
+              if (empName) {
+                if (!attMap.has(empName)) attMap.set(empName, []);
+                attMap.get(empName).push(item);
+              }
             });
 
-            return prevUsers.map(u => {
+            const updatedUsers = prevUsers.map(u => {
               const normId = String(u.id).toLowerCase().trim();
               const normCode = u.empCode ? String(u.empCode).toLowerCase().trim() : "";
-              const dbAtt = attMap.get(normId) || attMap.get(normCode) || attMap.get(String(u.id)) || [];
+              const normEmail = u.email ? String(u.email).toLowerCase().trim() : "";
+              const normName = u.name ? String(u.name).toLowerCase().trim() : "";
+
+              const dbAtt = [
+                ...(attMap.get(normId) || []),
+                ...(normCode ? (attMap.get(normCode) || []) : []),
+                ...(normEmail ? (attMap.get(normEmail) || []) : []),
+                ...(normName ? (attMap.get(normName) || []) : [])
+              ];
+
               const existingAtt = u.attendance || [];
               const merged = [...existingAtt];
               dbAtt.forEach(da => {
@@ -625,6 +641,20 @@ export const AppProvider = ({ children }) => {
                 attendance: merged
               };
             });
+
+            // ALSO SYNC DIRECTLY TO CURRENT USER SO ACTIVE PUNCH STATUS IS PERMANENT ACROSS REFRESHES
+            setCurrentUser(prevUser => {
+              if (!prevUser) return prevUser;
+              const matched = updatedUsers.find(u => 
+                u.id === prevUser.id || 
+                (prevUser.empCode && (u.empCode === prevUser.empCode || u.emp_code === prevUser.empCode)) ||
+                (prevUser.email && u.email?.toLowerCase() === prevUser.email.toLowerCase()) ||
+                (prevUser.name && u.name?.toLowerCase() === prevUser.name.toLowerCase())
+              );
+              return matched ? { ...prevUser, ...matched } : prevUser;
+            });
+
+            return updatedUsers;
           });
         }
       }).catch(err => console.error("Supabase fetch attendance error:", err));

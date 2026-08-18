@@ -131,17 +131,17 @@ export default function Layout({ children, activeTab, setActiveTab }) {
 
   return (
     <div className={`app-container ${currentUser?.role === "Admin" ? "theme-admin" : ""}`} style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <div className="sea-top-navbar" style={{ position: "sticky", top: 0, zIndex: 900 }}>
-        <div className="sea-nav-left" style={{ display: "flex", alignItems: "center", gap: "14px", position: "relative" }}>
+      <div className="sea-top-navbar" style={{ position: "sticky", top: 0, zIndex: 900, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 20px", background: "#fff", borderBottom: "1px solid #e2e8f0" }}>
+        <div className="sea-nav-left" style={{ display: "flex", alignItems: "center", gap: "12px", position: "relative" }}>
           
           {/* 9-Dots Button (Linked to Side Navigation Bar Toggle) */}
           <button
             type="button"
             onClick={() => setIsSidebarExpanded(!isSidebarExpanded)}
             style={{
-              width: "42px",
-              height: "42px",
-              borderRadius: "12px",
+              width: "36px",
+              height: "36px",
+              borderRadius: "8px",
               background: isSidebarExpanded ? "#dbeafe" : "#eff6ff",
               border: "1px solid #bfdbfe",
               display: "flex",
@@ -150,12 +150,12 @@ export default function Layout({ children, activeTab, setActiveTab }) {
               cursor: "pointer",
               color: "#2563eb",
               transition: "all 0.15s ease",
-              boxShadow: isSidebarExpanded ? "0 0 0 3px rgba(37,99,235,0.2)" : "0 2px 5px rgba(37,99,235,0.08)",
+              boxShadow: isSidebarExpanded ? "0 0 0 2px rgba(37,99,235,0.2)" : "0 1px 3px rgba(37,99,235,0.08)",
               flexShrink: 0
             }}
             title={isSidebarExpanded ? "Collapse Sidebar Menu" : "Expand Sidebar Menu"}
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <circle cx="5" cy="5" r="2.2" />
               <circle cx="12" cy="5" r="2.2" />
               <circle cx="19" cy="5" r="2.2" />
@@ -172,151 +172,138 @@ export default function Layout({ children, activeTab, setActiveTab }) {
           <img
             src={logoImg}
             alt="Acme Consulting"
-            style={{ height: "48px", objectFit: "contain", display: "block" }}
+            style={{ height: "36px", objectFit: "contain", display: "block" }}
           />
 
           {/* Brand Text Header */}
           <div className="brand-text-header" style={{ display: "flex", flexDirection: "column" }}>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: "900", color: "#0f172a", margin: 0, letterSpacing: "-0.02em", lineHeight: "1.05" }}>Acme Consulting</h2>
-            <p style={{ fontSize: "0.68rem", color: "#2563eb", fontWeight: "900", letterSpacing: "0.1em", textTransform: "uppercase", margin: "3px 0 0 0" }}>Internal Portal</p>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: "900", color: "#0f172a", margin: 0, letterSpacing: "-0.02em", lineHeight: "1.05" }}>Acme Consulting</h2>
+            <p style={{ fontSize: "0.65rem", color: "#2563eb", fontWeight: "900", letterSpacing: "0.1em", textTransform: "uppercase", margin: "2px 0 0 0" }}>Internal Portal</p>
           </div>
 
         </div>
-        {/* Top Search Bar with Interactive Dropdown (Matching Keka HR Screenshot) */}
-        <div className="sea-search-wrapper" style={{ position: "relative" }}>
-          <span className="sea-search-icon">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-            </svg>
-          </span>
-          <input 
-            type="text" 
-            className="sea-search-input" 
-            placeholder="Search employees or actions (Ex: Apply Leave)" 
-            value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setIsSearchOpen(true); }}
-            onFocus={() => setIsSearchOpen(true)}
-            style={{ width: "380px", borderRadius: isSearchOpen && searchQuery ? "10px 10px 0 0" : "20px" }}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => { setSearchQuery(""); setIsSearchOpen(false); }}
-              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.9rem" }}
-            >
-              ⊗
-            </button>
-          )}
 
-          {/* Autocomplete Dropdown Panel matching Keka HR screenshot */}
-          {isSearchOpen && searchQuery.trim() && (
-            <>
-              <div 
-                onClick={() => setIsSearchOpen(false)} 
-                style={{ position: "fixed", inset: 0, zIndex: 998 }} 
-              />
-              <div style={{
-                position: "absolute",
-                top: "100%",
-                left: 0,
-                width: "480px",
-                background: "#ffffff",
-                borderRadius: "0 0 16px 16px",
-                border: "1px solid #e2e8f0",
-                borderTop: "none",
-                boxShadow: "0 20px 40px -10px rgba(0, 0, 0, 0.2)",
-                zIndex: 999,
-                padding: "16px",
-                maxHeight: "520px",
-                overflowY: "auto",
-                animation: "fadeIn 0.15s ease-out"
-              }}>
-                
-                {/* Section 1: Employees */}
-                <div style={{ fontSize: "0.82rem", fontWeight: "600", color: "#64748b", marginBottom: "10px" }}>
-                  Employees
-                </div>
+        {/* Right Nav: Rounded Rectangle Search Bar + User Profile */}
+        <div className="sea-nav-right" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          
+          {/* Top Search Bar with Interactive Dropdown */}
+          <div className="sea-search-wrapper" style={{ position: "relative" }}>
+            <span className="sea-search-icon" style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
+              </svg>
+            </span>
+            <input 
+              type="text" 
+              className="sea-search-input" 
+              placeholder="Search employees or actions (Ex: Apply Leave)" 
+              value={searchQuery}
+              onChange={(e) => { setSearchQuery(e.target.value); setIsSearchOpen(true); }}
+              onFocus={() => setIsSearchOpen(true)}
+              style={{ width: "340px", height: "36px", paddingLeft: "32px", paddingRight: "30px", borderRadius: isSearchOpen && searchQuery ? "8px 8px 0 0" : "8px", border: "1px solid #e2e8f0" }}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(""); setIsSearchOpen(false); }}
+                style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.85rem" }}
+              >
+                ⊗
+              </button>
+            )}
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                  {filteredEmployees.length > 0 ? (
-                    (showMoreEmployees ? filteredEmployees : filteredEmployees.slice(0, 3)).map(emp => (
-                      <div
-                        key={emp.id}
-                        onClick={() => {
-                          setViewingProfileUser(emp);
-                          setIsSearchOpen(false);
-                          setSearchQuery("");
-                        }}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "12px",
-                          padding: "10px 12px",
-                          borderRadius: "8px",
-                          background: "#f8fafc",
-                          border: "1px solid #f1f5f9",
-                          cursor: "pointer",
-                          transition: "all 0.15s ease"
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
-                        onMouseLeave={e => e.currentTarget.style.background = "#f8fafc"}
-                      >
-                        <img 
-                          src={emp.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120"} 
-                          alt={emp.name} 
-                          style={{ width: "42px", height: "42px", borderRadius: "50%", objectFit: "cover" }} 
-                        />
-                        <div style={{ flex: 1, overflow: "hidden" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span style={{ fontSize: "0.88rem", fontWeight: "700", color: "#0f172a" }}>{emp.name}</span>
-                            <span style={{ fontSize: "0.78rem", color: "#64748b" }}>{emp.title || "Employee"} |</span>
-                            <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#2563eb" }}>#{emp.empCode || "-"}</span>
-                          </div>
-                          <div style={{ fontSize: "0.74rem", color: "#64748b", marginTop: "2px", display: "flex", gap: "10px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            <span>👤 {emp.department || "IT & SYSTEMS SUPPORT"}</span>
-                            <span>✉ {emp.email}</span>
-                            <span>📍 {emp.location || "Mehdipatnam"}</span>
+            {/* Autocomplete Dropdown Panel */}
+            {isSearchOpen && searchQuery.trim() && (
+              <>
+                <div 
+                  onClick={() => setIsSearchOpen(false)} 
+                  style={{ position: "fixed", inset: 0, zIndex: 998 }} 
+                />
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  right: 0,
+                  width: "440px",
+                  background: "#ffffff",
+                  borderRadius: "0 0 12px 12px",
+                  border: "1px solid #e2e8f0",
+                  borderTop: "none",
+                  boxShadow: "0 20px 40px -10px rgba(0, 0, 0, 0.2)",
+                  zIndex: 999,
+                  padding: "16px",
+                  maxHeight: "520px",
+                  overflowY: "auto",
+                  animation: "fadeIn 0.15s ease-out"
+                }}>
+                  
+                  {/* Section 1: Employees */}
+                  <div style={{ fontSize: "0.82rem", fontWeight: "600", color: "#64748b", marginBottom: "10px" }}>
+                    Employees
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                    {filteredUsers.length === 0 ? (
+                      <div style={{ fontSize: "0.8rem", color: "#94a3b8", padding: "6px" }}>No employee found matching "{searchQuery}"</div>
+                    ) : (
+                      filteredUsers.map(user => (
+                        <div
+                          key={user.id}
+                          onClick={() => {
+                            setSelectedEmployee(user);
+                            setIsSearchOpen(false);
+                          }}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "8px 10px",
+                            borderRadius: "8px",
+                            cursor: "pointer",
+                            transition: "background 0.15s ease"
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          <img
+                            src={user.avatar}
+                            alt={user.name}
+                            style={{ width: "32px", height: "32px", borderRadius: "50%", objectFit: "cover" }}
+                          />
+                          <div>
+                            <div style={{ fontSize: "0.85rem", fontWeight: "600", color: "#0f172a" }}>
+                              {user.name}
+                            </div>
+                            <div style={{ fontSize: "0.72rem", color: "#64748b" }}>
+                              {user.empCode || "EMP-00"} • {user.role}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div style={{ fontSize: "0.82rem", color: "#94a3b8", padding: "8px" }}>No employees match '{searchQuery}'</div>
-                  )}
-
-                  {filteredEmployees.length > 3 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowMoreEmployees(!showMoreEmployees)}
-                      style={{
-                        margin: "4px auto 0 auto",
-                        background: "#ffffff",
-                        border: "1px solid #cbd5e1",
-                        borderRadius: "20px",
-                        padding: "4px 14px",
-                        fontSize: "0.75rem",
-                        fontWeight: "600",
-                        color: "#475569",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px"
-                      }}
-                    >
-                      {showMoreEmployees ? "View Less ∧" : `View ${filteredEmployees.length - 3} More ∨`}
-                    </button>
-                  )}
-                </div>
-
-                {/* Section 2: Quick Actions */}
-                <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "14px", paddingTop: "12px" }}>
-                  <div style={{ fontSize: "0.82rem", fontWeight: "600", color: "#64748b", marginBottom: "8px" }}>
-                    Quick Actions
+                      ))
+                    )}
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+
+                  {/* Section 2: Shortcuts & Actions */}
+                  <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "12px", paddingTop: "12px" }}>
+                    <div style={{ fontSize: "0.82rem", fontWeight: "600", color: "#64748b", marginBottom: "10px" }}>
+                      Pages & Shortcuts
+                    </div>
+
                     <div
-                      onClick={() => { if (setActiveTab) setActiveTab("directory"); navigate(getRoutePath("directory")); setIsSearchOpen(false); }}
-                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "6px", cursor: "pointer" }}
+                      onClick={() => { if (setActiveTab) setActiveTab("leaves"); navigate(getRoutePath("leaves", currentUser?.role)); setIsSearchOpen(false); }}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", cursor: "pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <span style={{ fontSize: "1rem" }}>📅</span>
+                      <div>
+                        <div style={{ fontSize: "0.84rem", fontWeight: "600", color: "#0f172a" }}>Apply Leave</div>
+                        <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Request time off or view balance.</div>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => { if (setActiveTab) setActiveTab("directory"); navigate(getRoutePath("directory", currentUser?.role)); setIsSearchOpen(false); }}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", cursor: "pointer" }}
                       onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     >
@@ -328,8 +315,8 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                     </div>
 
                     <div
-                      onClick={() => { if (setActiveTab) setActiveTab("reports"); navigate(getRoutePath("reports")); setIsSearchOpen(false); }}
-                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "6px", cursor: "pointer" }}
+                      onClick={() => { if (setActiveTab) setActiveTab("reports"); navigate(getRoutePath("reports", currentUser?.role)); setIsSearchOpen(false); }}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", cursor: "pointer" }}
                       onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
                     >
@@ -340,25 +327,25 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Footer Controls */}
-                <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "12px", paddingTop: "8px", display: "flex", justifyContent: "flex-end", gap: "16px", fontSize: "0.7rem", color: "#94a3b8" }}>
-                  <span>Navigate ↑ ↓</span>
-                  <span>To select ↵</span>
-                </div>
+                  {/* Footer Controls */}
+                  <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "12px", paddingTop: "8px", display: "flex", justifyContent: "flex-end", gap: "16px", fontSize: "0.7rem", color: "#94a3b8" }}>
+                    <span>Navigate ↑ ↓</span>
+                    <span>To select ↵</span>
+                  </div>
 
-              </div>
-            </>
-          )}
-        </div>
-        <div className="sea-nav-right">
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* User Profile Avatar */}
           <img
             src={currentUser?.avatar}
             className="sea-user-avatar"
             alt={`${currentUser?.name} avatar`}
             onClick={openModal}
-            style={{ cursor: "pointer" }}
+            style={{ cursor: "pointer", width: "36px", height: "36px", borderRadius: "50%", objectFit: "cover", border: "2px solid #e2e8f0" }}
           />
         </div>
       </div>

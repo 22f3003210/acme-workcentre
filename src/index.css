@@ -2240,17 +2240,17 @@ button, input, select, textarea {
 
 /* --- SEA Style Dashboard Theme --- */
 .sea-top-navbar {
-  background-color: #ffffff !important; /* Back to clean premium white */
-  height: 80px !important; /* Increased height to fit larger logo */
+  background-color: #ffffff !important;
+  height: 56px !important; /* Decreased height for sleek modern look */
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
-  border-bottom: 1px solid #e2e8f0 !important; /* Soft gray border divider */
+  padding: 0 20px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
   position: sticky;
   top: 0;
   z-index: 850;
-  margin: 0 !important; /* Cleared margin to merge directly into content */
+  margin: 0 !important;
 }
 
 .sea-nav-left {
@@ -2270,14 +2270,16 @@ button, input, select, textarea {
 }
 
 .sea-search-input {
-  background-color: #f1f5f9 !important;
+  background-color: #f8fafc !important;
   border: 1px solid #e2e8f0 !important;
-  border-radius: 8px;
-  padding: 10px 16px 10px 42px;
-  font-size: 0.95rem;
-  width: 280px;
+  border-radius: 8px !important; /* Rounded rectangle */
+  padding: 8px 12px 8px 34px !important;
+  font-size: 0.84rem !important;
+  width: 320px;
+  height: 36px !important;
   color: #0f172a !important;
   outline: none;
+  box-sizing: border-box;
   transition: all 0.2s ease;
 }
 
@@ -2286,30 +2288,46 @@ button, input, select, textarea {
 }
 
 .sea-search-input:hover {
-  background-color: #e2e8f0 !important;
+  background-color: #ffffff !important;
   border-color: #cbd5e1 !important;
 }
 
 .sea-search-input:focus {
   width: 360px;
   background-color: #ffffff !important;
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
 }
 
 .sea-search-icon {
   position: absolute;
-  left: 13px;
-  color: #94a3b8 !important;
-  font-size: 1rem;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b !important;
   display: flex;
   align-items: center;
+  pointer-events: none;
 }
 
 .sea-nav-right {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+}
+
+.sea-user-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 2px solid #e2e8f0 !important;
+  transition: all 0.15s ease;
+}
+
+.sea-user-avatar:hover {
+  border-color: #2563eb !important;
+  transform: scale(1.05);
 }
 
 .sea-btn-tagging {

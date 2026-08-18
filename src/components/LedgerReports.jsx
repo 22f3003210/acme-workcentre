@@ -102,6 +102,10 @@ export default function LedgerReports() {
   const formattedQueryDate = getFormattedDateQuery(selectedDate);
 
   const getDaywiseAccountsHead = () => {
+    const targetYearMonth = selectedDate ? selectedDate.substring(0, 7) : "2026-08";
+    const [tYear, tMonth] = targetYearMonth.split("-").map(Number);
+    const targetDay = selectedDate ? parseInt(selectedDate.split("-")[2], 10) : new Date().getDate();
+
     let grandOpening = 0;
     let grandReceived = 0;
     let grandFood = 0;
@@ -110,39 +114,102 @@ export default function LedgerReports() {
     let grandSpent = 0;
     let grandClosing = 0;
 
-    const targetYearMonth = selectedDate ? selectedDate.substring(0, 7) : "2026-08";
     const rows = consultants.map((c, idx) => {
-      const ledger = getEmployeeLedger(c.id, targetYearMonth);
-      const dayRow = ledger.ledgerRows.find(r => isSameDateStr(r.date, selectedDate) || isSameDateStr(r.isoDate, selectedDate)) || {
-        opening: c.openingBalance || 0,
-        received: 0,
-        food: 0,
-        stay: 0,
-        travel: 0,
-        spent: 0,
-        balance: c.openingBalance || 0,
-        particulars: ""
-      };
+      // Direct accumulation from day 1 up to targetDay to ensure exact opening & closing balances
+      let currentBal = Number(c.openingBalance) || 0;
+      let dayOpening = currentBal;
+      let dayReceived = 0;
+      let dayFood = 0;
+      let dayStay = 0;
+      let dayTravel = 0;
+      let daySpent = 0;
+      let dayClosing = currentBal;
+      let dayFoodCount = 0;
+      let dayStayCount = 0;
+      let dayTravelCount = 0;
+      let assignedProj = c.assignedProjectName || "";
 
-      grandOpening += dayRow.opening;
-      grandReceived += dayRow.received;
-      grandFood += dayRow.food;
-      grandStay += dayRow.stay;
-      grandTravel += dayRow.travel;
-      grandSpent += dayRow.spent;
-      grandClosing += dayRow.balance;
+      const empExpenses = expenses.filter(e => 
+        (e.employeeId === c.id || e.employeeName === c.name) && 
+        e.status !== "Rejected"
+      );
+      const empRefills = advanceRequests.filter(r => 
+        r.employeeId === c.id && 
+        r.status === "Approved"
+      );
+
+      for (let d = 1; d <= targetDay; d++) {
+        const dStr = `${tYear}-${String(tMonth).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+        const dExps = empExpenses.filter(e => {
+          const pDate = e.expenseDate || e.date || e.submittedDate;
+          return isSameDateStr(pDate, dStr);
+        });
+        const dRefs = empRefills.filter(r => {
+          const rDate = r.date || r.allocatedDate || r.approvedDate || r.submittedDate;
+          return isSameDateStr(rDate, dStr);
+        });
+
+        const foodExps = dExps.filter(e => e.category === "Food");
+        const stayExps = dExps.filter(e => e.category === "Accommodation" || e.category === "Stay");
+        const travelExps = dExps.filter(e => e.category === "Travel" || e.category === "Conveyance");
+        const miscExps = dExps.filter(e => !["Food", "Accommodation", "Stay", "Travel", "Conveyance"].includes(e.category));
+
+        const f = foodExps.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+        const s = stayExps.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+        const t = travelExps.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+        const m = miscExps.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+        const sp = f + s + t + m;
+        const rec = dRefs.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
+
+        if (d === targetDay) {
+          dayOpening = currentBal;
+          dayReceived = rec;
+          dayFood = f;
+          dayStay = s;
+          dayTravel = t;
+          daySpent = sp;
+          dayClosing = dayOpening + dayReceived - daySpent;
+          dayFoodCount = foodExps.length;
+          dayStayCount = stayExps.length;
+          dayTravelCount = travelExps.length;
+
+          // Find project name for day
+          if (dExps.length > 0) {
+            const expWithProj = dExps.find(e => e.projectName || e.projectId);
+            if (expWithProj) assignedProj = getProjectDisplayName(expWithProj.projectName || expWithProj.projectId, c);
+          } else {
+            const consultantAtt = c.attendance || [];
+            const dayPunch = consultantAtt.find(a => isSameDateStr(a.date, dStr));
+            if (dayPunch) assignedProj = getProjectDisplayName(dayPunch.projectName || dayPunch.projectId, c);
+          }
+        }
+
+        currentBal = currentBal + rec - sp;
+      }
+
+      grandOpening += dayOpening;
+      grandReceived += dayReceived;
+      grandFood += dayFood;
+      grandStay += dayStay;
+      grandTravel += dayTravel;
+      grandSpent += daySpent;
+      grandClosing += dayClosing;
 
       return {
         srNo: idx + 1,
         consultant: c,
-        particulars: dayRow.particulars,
-        opening: dayRow.opening,
-        received: dayRow.received,
-        food: dayRow.food,
-        stay: dayRow.stay,
-        travel: dayRow.travel,
-        spent: dayRow.spent,
-        closing: dayRow.balance
+        projectName: assignedProj,
+        opening: dayOpening,
+        received: dayReceived,
+        food: dayFood,
+        foodCount: dayFoodCount,
+        stay: dayStay,
+        stayCount: dayStayCount,
+        travel: dayTravel,
+        travelCount: dayTravelCount,
+        spent: daySpent,
+        closing: dayClosing
       };
     });
 
@@ -171,20 +238,292 @@ export default function LedgerReports() {
     setToast({ message: `Exporting ${reportName}.xlsx successfully...`, type: "success" });
   };
 
+  // Direct high-res Canvas Generator to ensure 100% accuracy of numbers and layout
+  const createDaywiseReportBlob = async () => {
+    const scale = 2;
+    const width = 1180;
+    const rowHeight = 44;
+    const headerHeight = 85;
+    const tableHeaderHeight = 40;
+    const footerHeight = 50;
+    const padding = 24;
+    const totalHeight = padding * 2 + headerHeight + tableHeaderHeight + (daywiseData.rows.length * rowHeight) + footerHeight;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width * scale;
+    canvas.height = totalHeight * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+
+    // 1. Background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, totalHeight);
+
+    // Outer border & Card background
+    ctx.strokeStyle = "#e2e8f0";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(10, 10, width - 20, totalHeight - 20);
+
+    // 2. Branded Header
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "bold 18px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("ACME CONSULTING WORKCENTRE", padding + 10, padding + 22);
+
+    ctx.fillStyle = "#475569";
+    ctx.font = "600 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.fillText("DAILY ACCOUNTS HEAD & SOURCING EXPENSE REGISTER", padding + 10, padding + 40);
+
+    // Date badge (top right)
+    const dateBadgeText = `DATE: ${formattedQueryDate || selectedDate}`;
+    ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    const badgeW = ctx.measureText(dateBadgeText).width + 18;
+    const badgeX = width - padding - 10 - badgeW;
+    const badgeY = padding + 10;
+    ctx.fillStyle = "#eff6ff";
+    ctx.fillRect(badgeX, badgeY, badgeW, 22);
+    ctx.strokeStyle = "#bfdbfe";
+    ctx.strokeRect(badgeX, badgeY, badgeW, 22);
+    ctx.fillStyle = "#1d4ed8";
+    ctx.fillText(dateBadgeText, badgeX + 9, badgeY + 15);
+
+    // Total Closing on header
+    ctx.fillStyle = "#166534";
+    ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText(`Total Closing: ₹${daywiseData.totals.closing.toFixed(2)}`, width - padding - 10, padding + 48);
+
+    // Divider
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padding + 10, padding + 58);
+    ctx.lineTo(width - padding - 10, padding + 58);
+    ctx.stroke();
+
+    // 3. Table Header
+    const tableTop = padding + 68;
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(padding + 10, tableTop, width - 2 * (padding + 10), tableHeaderHeight);
+
+    const cols = [
+      { label: "SR. NO", x: padding + 20, align: "left", width: 50 },
+      { label: "NAME", x: padding + 80, align: "left", width: 180 },
+      { label: "DATE", x: padding + 270, align: "left", width: 80 },
+      { label: "PROJECT", x: padding + 360, align: "left", width: 140 },
+      { label: "OPENING BAL", x: padding + 580, align: "right", width: 90 },
+      { label: "PAYMENT", x: padding + 680, align: "right", width: 90 },
+      { label: "FOOD", x: padding + 770, align: "center", width: 90 },
+      { label: "STAY", x: padding + 860, align: "center", width: 70 },
+      { label: "TRAVEL", x: padding + 940, align: "center", width: 90 },
+      { label: "TOTAL", x: padding + 1020, align: "right", width: 70 },
+      { label: "CLOSING BAL", x: width - padding - 20, align: "right", width: 100 }
+    ];
+
+    ctx.fillStyle = "#475569";
+    ctx.font = "bold 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    cols.forEach(col => {
+      ctx.textAlign = col.align;
+      ctx.fillText(col.label, col.x, tableTop + 24);
+    });
+
+    // 4. Table Rows
+    let currentY = tableTop + tableHeaderHeight;
+    daywiseData.rows.forEach((row, i) => {
+      // Row background
+      if (i % 2 === 1) {
+        ctx.fillStyle = "#fcfdfd";
+        ctx.fillRect(padding + 10, currentY, width - 2 * (padding + 10), rowHeight);
+      }
+      ctx.strokeStyle = "#f1f5f9";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(padding + 10, currentY, width - 2 * (padding + 10), rowHeight);
+
+      // Sr No
+      ctx.fillStyle = "#64748b";
+      ctx.font = "11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(String(row.srNo), cols[0].x, currentY + 26);
+
+      // Initials Avatar + Name
+      const initials = (row.consultant.name || "ST").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+      const circleX = cols[1].x + 10;
+      const circleY = currentY + 22;
+      ctx.fillStyle = i % 2 === 0 ? "#2563eb" : "#dc2626";
+      ctx.beginPath();
+      ctx.arc(circleX, circleY, 11, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(initials, circleX, circleY + 3.5);
+
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(row.consultant.name, cols[1].x + 28, currentY + 26);
+
+      // Date
+      ctx.fillStyle = "#64748b";
+      ctx.font = "11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText(formattedQueryDate || selectedDate, cols[2].x, currentY + 26);
+
+      // Project Badge
+      if (row.projectName) {
+        ctx.font = "bold 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        const projW = Math.min(130, ctx.measureText(row.projectName).width + 12);
+        ctx.fillStyle = "#eff6ff";
+        ctx.fillRect(cols[3].x, currentY + 12, projW, 20);
+        ctx.strokeStyle = "#bfdbfe";
+        ctx.strokeRect(cols[3].x, currentY + 12, projW, 20);
+        ctx.fillStyle = "#2563eb";
+        ctx.fillText(row.projectName, cols[3].x + 6, currentY + 26);
+      } else {
+        ctx.fillStyle = "#cbd5e1";
+        ctx.fillText("—", cols[3].x, currentY + 26);
+      }
+
+      // Opening Bal
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.fillText(`₹${row.opening.toFixed(2)}`, cols[4].x, currentY + 26);
+
+      // Payment (Green badge if received > 0)
+      if (row.received > 0) {
+        const payStr = `₹${row.received.toFixed(2)}`;
+        ctx.font = "bold 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+        const pW = ctx.measureText(payStr).width + 12;
+        ctx.fillStyle = "#f0fdf4";
+        ctx.fillRect(cols[5].x - pW, currentY + 12, pW, 20);
+        ctx.strokeStyle = "#bbf7d0";
+        ctx.strokeRect(cols[5].x - pW, currentY + 12, pW, 20);
+        ctx.fillStyle = "#15803d";
+        ctx.fillText(payStr, cols[5].x - 6, currentY + 26);
+      } else {
+        ctx.fillStyle = "#cbd5e1";
+        ctx.fillText("—", cols[5].x, currentY + 26);
+      }
+
+      // Food (Pill if > 0)
+      ctx.textAlign = "center";
+      if (row.food > 0) {
+        const fStr = `₹${row.food.toFixed(2)}`;
+        const pillW = 74;
+        ctx.fillStyle = "#eff6ff";
+        ctx.fillRect(cols[6].x - pillW / 2, currentY + 8, pillW, 28);
+        ctx.strokeStyle = "#bfdbfe";
+        ctx.strokeRect(cols[6].x - pillW / 2, currentY + 8, pillW, 28);
+        ctx.fillStyle = "#2563eb";
+        ctx.font = "bold 10px sans-serif";
+        ctx.fillText(fStr, cols[6].x, currentY + 20);
+        ctx.fillStyle = "#60a5fa";
+        ctx.font = "9px sans-serif";
+        ctx.fillText(`${row.foodCount || 1} bill`, cols[6].x, currentY + 31);
+      } else {
+        ctx.fillStyle = "#cbd5e1";
+        ctx.font = "11px sans-serif";
+        ctx.fillText("—", cols[6].x, currentY + 26);
+      }
+
+      // Stay
+      if (row.stay > 0) {
+        const sStr = `₹${row.stay.toFixed(2)}`;
+        const pillW = 74;
+        ctx.fillStyle = "#eff6ff";
+        ctx.fillRect(cols[7].x - pillW / 2, currentY + 8, pillW, 28);
+        ctx.strokeStyle = "#bfdbfe";
+        ctx.strokeRect(cols[7].x - pillW / 2, currentY + 8, pillW, 28);
+        ctx.fillStyle = "#2563eb";
+        ctx.font = "bold 10px sans-serif";
+        ctx.fillText(sStr, cols[7].x, currentY + 20);
+        ctx.fillStyle = "#60a5fa";
+        ctx.font = "9px sans-serif";
+        ctx.fillText(`${row.stayCount || 1} bill`, cols[7].x, currentY + 31);
+      } else {
+        ctx.fillStyle = "#cbd5e1";
+        ctx.font = "11px sans-serif";
+        ctx.fillText("—", cols[7].x, currentY + 26);
+      }
+
+      // Travel
+      if (row.travel > 0) {
+        const tStr = `₹${row.travel.toFixed(2)}`;
+        const pillW = 74;
+        ctx.fillStyle = "#eff6ff";
+        ctx.fillRect(cols[8].x - pillW / 2, currentY + 8, pillW, 28);
+        ctx.strokeStyle = "#bfdbfe";
+        ctx.strokeRect(cols[8].x - pillW / 2, currentY + 8, pillW, 28);
+        ctx.fillStyle = "#2563eb";
+        ctx.font = "bold 10px sans-serif";
+        ctx.fillText(tStr, cols[8].x, currentY + 20);
+        ctx.fillStyle = "#60a5fa";
+        ctx.font = "9px sans-serif";
+        ctx.fillText(`${row.travelCount || 1} bill`, cols[8].x, currentY + 31);
+      } else {
+        ctx.fillStyle = "#cbd5e1";
+        ctx.font = "11px sans-serif";
+        ctx.fillText("—", cols[8].x, currentY + 26);
+      }
+
+      // Total spent
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#0f172a";
+      ctx.font = "600 11px sans-serif";
+      ctx.fillText(row.spent > 0 ? `₹${row.spent.toFixed(2)}` : "—", cols[9].x, currentY + 26);
+
+      // Closing Bal (Green bold)
+      ctx.fillStyle = "#16a34a";
+      ctx.font = "bold 11px sans-serif";
+      ctx.fillText(`₹${row.closing.toFixed(2)}`, cols[10].x, currentY + 26);
+
+      currentY += rowHeight;
+    });
+
+    // 5. Total Footer Row
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(padding + 10, currentY, width - 2 * (padding + 10), footerHeight);
+    ctx.strokeStyle = "#cbd5e1";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(padding + 10, currentY, width - 2 * (padding + 10), footerHeight);
+
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "bold 11px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("TOTAL", padding + 200, currentY + 30);
+
+    ctx.textAlign = "right";
+    ctx.fillText(`₹${daywiseData.totals.opening.toFixed(2)}`, cols[4].x, currentY + 30);
+
+    ctx.fillStyle = "#16a34a";
+    ctx.fillText(`₹${daywiseData.totals.received.toFixed(2)}`, cols[5].x, currentY + 30);
+
+    ctx.fillStyle = "#0f172a";
+    ctx.textAlign = "center";
+    ctx.fillText(`₹${daywiseData.totals.food.toFixed(2)}`, cols[6].x, currentY + 30);
+    ctx.fillText(`₹${daywiseData.totals.stay.toFixed(2)}`, cols[7].x, currentY + 30);
+    ctx.fillText(`₹${daywiseData.totals.travel.toFixed(2)}`, cols[8].x, currentY + 30);
+
+    ctx.textAlign = "right";
+    ctx.fillText(`₹${daywiseData.totals.spent.toFixed(2)}`, cols[9].x, currentY + 30);
+
+    ctx.fillStyle = "#16a34a";
+    ctx.font = "bold 12px sans-serif";
+    ctx.fillText(`₹${daywiseData.totals.closing.toFixed(2)}`, cols[10].x, currentY + 30);
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), "image/png");
+    });
+  };
+
   // Share Day-wise Accounts Head Table as Image on WhatsApp
   const handleShareOnWhatsApp = async (actionType = "share") => {
-    if (!daywiseCaptureRef.current) return;
     setIsSharingWhatsApp(true);
     setToast({ message: "📸 Generating crystal-clear image of Daily Accounts Head...", type: "info" });
 
     try {
-      // 1. Capture high-res canvas (2.5x scale for retina clarity on WhatsApp)
-      const canvas = await html2canvas(daywiseCaptureRef.current, {
-        scale: 2.5,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff"
-      });
+      // 1. Generate direct Canvas Blob with exact computed figures
+      const blob = await createDaywiseReportBlob();
 
       const formattedDateForFile = selectedDate ? selectedDate.replace(/-/g, "_") : "today";
       const filename = `ACME_Daily_Accounts_Head_${formattedDateForFile}.png`;
@@ -207,72 +546,14 @@ export default function LedgerReports() {
         `─────────────────────\n` +
         `🏢 *ACME Consulting WorkCentre*`;
 
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          setIsSharingWhatsApp(false);
-          setToast({ message: "Failed to generate image blob.", type: "error" });
-          return;
-        }
+      if (!blob) {
+        setIsSharingWhatsApp(false);
+        setToast({ message: "Failed to generate image blob.", type: "error" });
+        return;
+      }
 
-        // Action 1: Just download image
-        if (actionType === "download") {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = filename;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          setIsSharingWhatsApp(false);
-          setToast({ message: `✓ Downloaded ${filename}!`, type: "success" });
-          return;
-        }
-
-        // Action 2: Copy image to clipboard
-        if (actionType === "copy") {
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({ 'image/png': blob })
-            ]);
-            setIsSharingWhatsApp(false);
-            setToast({ message: "✓ Report image copied to clipboard! Ready to paste (Ctrl+V).", type: "success" });
-          } catch (err) {
-            setIsSharingWhatsApp(false);
-            setToast({ message: "Could not copy image directly. Image is available for Download.", type: "info" });
-          }
-          return;
-        }
-
-        // Action 3: Native Web Share with File (Android / iOS / macOS / Windows)
-        const file = new File([blob], filename, { type: "image/png" });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              title: `ACME Daily Accounts Head - ${displayDateStr}`,
-              text: whatsappText,
-              files: [file]
-            });
-            setIsSharingWhatsApp(false);
-            setToast({ message: "✓ Opened share sheet! Select WhatsApp to send.", type: "success" });
-            return;
-          } catch (err) {
-            if (err.name !== "AbortError") {
-              console.error("Web share error:", err);
-            }
-          }
-        }
-
-        // Desktop Fallback:
-        // 1. Copy image to clipboard so user can directly Ctrl+V into WhatsApp Web
-        try {
-          await navigator.clipboard.write([
-            new ClipboardItem({ 'image/png': blob })
-          ]);
-        } catch (e) {}
-
-        // 2. Download the PNG file
+      // Action 1: Just download image
+      if (actionType === "download") {
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
@@ -281,17 +562,73 @@ export default function LedgerReports() {
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-
-        // 3. Open WhatsApp Web / App
-        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
-        window.open(waUrl, "_blank");
-
         setIsSharingWhatsApp(false);
-        setToast({ 
-          message: "✓ Report image copied & downloaded! WhatsApp opened — simply paste (Ctrl+V) the image.", 
-          type: "success" 
-        });
-      }, "image/png");
+        setToast({ message: `✓ Downloaded ${filename}!`, type: "success" });
+        return;
+      }
+
+      // Action 2: Copy image to clipboard
+      if (actionType === "copy") {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          setIsSharingWhatsApp(false);
+          setToast({ message: "✓ Report image copied to clipboard! Ready to paste (Ctrl+V).", type: "success" });
+        } catch (err) {
+          setIsSharingWhatsApp(false);
+          setToast({ message: "Could not copy image directly. Image is available for Download.", type: "info" });
+        }
+        return;
+      }
+
+      // Action 3: Native Web Share with File (Android / iOS / macOS / Windows)
+      const file = new File([blob], filename, { type: "image/png" });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: `ACME Daily Accounts Head - ${displayDateStr}`,
+            text: whatsappText,
+            files: [file]
+          });
+          setIsSharingWhatsApp(false);
+          setToast({ message: "✓ Opened share sheet! Select WhatsApp to send.", type: "success" });
+          return;
+        } catch (err) {
+          if (err.name !== "AbortError") {
+            console.error("Web share error:", err);
+          }
+        }
+      }
+
+      // Desktop Fallback:
+      // 1. Copy image to clipboard so user can directly Ctrl+V into WhatsApp Web
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+      } catch (e) {}
+
+      // 2. Download the PNG file
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // 3. Open WhatsApp Web / App
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
+      window.open(waUrl, "_blank");
+
+      setIsSharingWhatsApp(false);
+      setToast({ 
+        message: "✓ Report image copied & downloaded! WhatsApp opened — simply paste (Ctrl+V) the image.", 
+        type: "success" 
+      });
 
     } catch (error) {
       console.error("Error capturing daywise table:", error);

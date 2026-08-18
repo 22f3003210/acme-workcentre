@@ -115,8 +115,11 @@ function MainWorkspace({ initialTab }) {
     }
     switch (currentUser.role) {
       case "Admin":
-      case "Accounts Manager":
         return <AdminView activeTab={activeTab} setActiveTab={(tab) => navigate(getRoutePath(tab))} />;
+      case "Accountant":
+      case "Accounts Manager":
+      case "Finance":
+        return <AccountsView activeTab={activeTab} />;
       case "Consultant":
       case "Employee":
       case "Staff":

@@ -770,6 +770,21 @@ export const AppProvider = ({ children }) => {
     let user;
     if ((cleanInput === "acmeadmin" || cleanInput === "admin" || cleanInput === "acmeadmin@acmeworkcentre.com") && (cleanPassword === "123" || cleanPassword === "")) {
       user = users.find(u => u.role === "Admin" || u.id === "admin-acme" || u.email === "acmeadmin") || users[0];
+    } else if ((cleanInput === "accountant" || cleanInput === "accounts" || cleanInput === "accountant@acme.com" || cleanInput === "accountant@acmeworkcentre.com") && (cleanPassword === "123" || cleanPassword === "")) {
+      user = users.find(u => u.role === "Accountant" || u.role === "Accounts Manager" || u.id === "accountant-acme" || u.email === "accountant") || {
+        id: "accountant-acme",
+        empCode: "ACC-01",
+        name: "Finance Accountant",
+        email: "accountant@acme.com",
+        phone: "9876543212",
+        role: "Accountant",
+        title: "Chief Accountant & Payroll Officer",
+        department: "Finance & Accounts",
+        location: "HQ",
+        status: "Active",
+        avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+        advanceAmount: 0
+      };
     } else {
       user = users.find(u => 
         (u.email && u.email.toLowerCase() === cleanInput) ||
@@ -1484,7 +1499,7 @@ export const AppProvider = ({ children }) => {
     }));
   };
 
-  // Expense Verification (Accounts Manager Only)
+  // Expense Verification (Accounts Manager / Accountant Only)
   const verifyExpense = (expenseId, status, notes, reviewerName) => {
     setExpenses(prev => prev.map(e => 
       e.id === expenseId 
@@ -1500,6 +1515,27 @@ export const AppProvider = ({ children }) => {
 
     if (isSupabaseConfigured()) {
       supabaseVerifyExpense(expenseId, status, notes, reviewerName).catch(err => console.error("Supabase write-back verifyExpense error:", err));
+    }
+  };
+
+  // Mark Expense Reimbursed / Paid
+  const reimburseExpense = (expenseId, paymentMode = "Bank Transfer", paymentRef = "", reviewerName = "") => {
+    const today = new Date().toISOString().split("T")[0];
+    setExpenses(prev => prev.map(e => 
+      e.id === expenseId 
+        ? { 
+            ...e, 
+            status: "Reimbursed", 
+            reimbursedDate: today,
+            paymentMode,
+            paymentRef,
+            reimbursedBy: reviewerName || "Finance Accountant"
+          } 
+        : e
+    ));
+
+    if (isSupabaseConfigured()) {
+      supabaseVerifyExpense(expenseId, "Reimbursed", `Paid via ${paymentMode} (Ref: ${paymentRef || 'N/A'})`, reviewerName).catch(err => console.error("Supabase reimburseExpense error:", err));
     }
   };
 
@@ -2001,6 +2037,7 @@ export const AppProvider = ({ children }) => {
         removeClientPendingTask,
         addExpense,
         verifyExpense,
+        reimburseExpense,
         advanceRequests,
         requestAdvance,
         verifyAdvanceRequest,

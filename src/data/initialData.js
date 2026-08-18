@@ -13,6 +13,20 @@ export const initialUsers = [
     status: "Active",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
     advanceAmount: 0
+  },
+  {
+    id: "accountant-acme",
+    empCode: "ACC-01",
+    name: "Finance Accountant",
+    email: "accountant",
+    phone: "9876543212",
+    role: "Accountant",
+    title: "Chief Accountant & Payroll Officer",
+    department: "Finance & Accounts",
+    location: "HQ",
+    status: "Active",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+    advanceAmount: 0
   }
 ];
 

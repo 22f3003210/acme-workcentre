@@ -137,8 +137,27 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
             borderBottom: "1px solid #334155"
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "1.4rem" }}>🖨️</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                width: "38px",
+                height: "38px",
+                borderRadius: "10px",
+                background: "rgba(59, 130, 246, 0.15)",
+                border: "1px solid rgba(59, 130, 246, 0.3)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#60a5fa",
+                flexShrink: 0
+              }}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect width="12" height="8" x="6" y="14" />
+              </svg>
+            </div>
             <div>
               <h3 style={{ margin: 0, color: "#ffffff", fontSize: "1.1rem", fontWeight: "800", letterSpacing: "0.3px" }}>
                 Expense Voucher Print Desk
@@ -151,21 +170,27 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
           
           <button 
             onClick={onClose}
+            aria-label="Close"
             style={{
-              background: "rgba(255,255,255,0.1)",
-              border: "none",
-              color: "#ffffff",
-              fontSize: "1.1rem",
-              borderRadius: "50%",
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              color: "#94a3b8",
+              borderRadius: "8px",
               width: "32px",
               height: "32px",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              cursor: "pointer"
+              cursor: "pointer",
+              transition: "all 0.15s ease"
             }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; e.currentTarget.style.color = "#ffffff"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#94a3b8"; }}
           >
-            ✕
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
           </button>
         </div>
 
@@ -297,19 +322,25 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: "6px",
+                gap: "8px",
                 background: "#2563eb",
                 color: "#ffffff",
                 border: "none",
                 borderRadius: "8px",
                 padding: "8px 18px",
                 fontSize: "0.82rem",
-                fontWeight: "800",
+                fontWeight: "700",
                 cursor: activeVouchers.length === 0 ? "not-allowed" : "pointer",
-                boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)"
+                boxShadow: "0 4px 12px rgba(37, 99, 235, 0.3)",
+                transition: "all 0.15s ease"
               }}
             >
-              <span>🖨️</span> Print / Save PDF
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect width="12" height="8" x="6" y="14" />
+              </svg>
+              Print / Save PDF
             </button>
           </div>
         </div>
@@ -337,7 +368,7 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
               marginBottom: "12px"
             }}
           >
-            <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#475569", textTransform: "uppercase" }}>
+            <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#475569", textTransform: "uppercase", letterSpacing: "0.03em" }}>
               Live Print Preview (Page {currentPageIdx + 1} of {totalPages})
             </span>
 
@@ -346,16 +377,23 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
                 onClick={() => setCurrentPageIdx(p => Math.max(0, p - 1))}
                 disabled={currentPageIdx === 0}
                 style={{
-                  padding: "4px 10px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "5px 10px",
                   borderRadius: "6px",
                   border: "1px solid #cbd5e1",
-                  background: currentPageIdx === 0 ? "#e2e8f0" : "#ffffff",
+                  background: currentPageIdx === 0 ? "#f1f5f9" : "#ffffff",
+                  color: currentPageIdx === 0 ? "#94a3b8" : "#334155",
                   fontSize: "0.75rem",
                   fontWeight: "700",
                   cursor: currentPageIdx === 0 ? "not-allowed" : "pointer"
                 }}
               >
-                ‹ Previous Page
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Previous Page
               </button>
 
               <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "#0f172a" }}>
@@ -366,16 +404,23 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
                 onClick={() => setCurrentPageIdx(p => Math.min(totalPages - 1, p + 1))}
                 disabled={currentPageIdx >= totalPages - 1}
                 style={{
-                  padding: "4px 10px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "5px 10px",
                   borderRadius: "6px",
                   border: "1px solid #cbd5e1",
-                  background: currentPageIdx >= totalPages - 1 ? "#e2e8f0" : "#ffffff",
+                  background: currentPageIdx >= totalPages - 1 ? "#f1f5f9" : "#ffffff",
+                  color: currentPageIdx >= totalPages - 1 ? "#94a3b8" : "#334155",
                   fontSize: "0.75rem",
                   fontWeight: "700",
                   cursor: currentPageIdx >= totalPages - 1 ? "not-allowed" : "pointer"
                 }}
               >
-                Next Page ›
+                Next Page
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
               </button>
             </div>
           </div>
@@ -383,7 +428,15 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
           {/* 2x2 Grid A4 Landscape Sheet Preview */}
           {activeVouchers.length === 0 ? (
             <div style={{ padding: "48px 20px", textAlign: "center", background: "#ffffff", borderRadius: "12px", width: "100%", maxWidth: "960px", border: "1px solid #cbd5e1" }}>
-              <div style={{ fontSize: "2.5rem", marginBottom: "8px" }}>📋</div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", color: "#64748b" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+              </div>
               <h4 style={{ margin: 0, color: "#1e293b", fontSize: "1rem" }}>No matching expense claims found</h4>
               <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "4px" }}>
                 Try adjusting the consultant, category, or date range filters above.
@@ -566,8 +619,13 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
             alignItems: "center"
           }}
         >
-          <div style={{ fontSize: "0.75rem", color: "#64748b" }}>
-            💡 Tip: In the browser print dialog, ensure Orientation is set to <strong>Landscape</strong> and Margins to <strong>Default / Minimum</strong>.
+          <div style={{ fontSize: "0.75rem", color: "#64748b", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <line x1="9" y1="18" x2="15" y2="18" />
+              <line x1="10" y1="22" x2="14" y2="22" />
+              <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
+            </svg>
+            <span>Tip: In the browser print dialog, ensure Orientation is set to <strong>Landscape</strong> and Margins to <strong>Default / Minimum</strong>.</span>
           </div>
 
           <div style={{ display: "flex", gap: "10px" }}>
@@ -590,18 +648,26 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
               onClick={handlePrint}
               disabled={activeVouchers.length === 0}
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
                 padding: "8px 22px",
                 borderRadius: "6px",
                 border: "none",
                 background: "#16a34a",
                 color: "#ffffff",
                 fontSize: "0.82rem",
-                fontWeight: "800",
+                fontWeight: "700",
                 cursor: activeVouchers.length === 0 ? "not-allowed" : "pointer",
                 boxShadow: "0 2px 6px rgba(22, 163, 74, 0.3)"
               }}
             >
-              🖨️ Print {activeVouchers.length} Vouchers (A4 Landscape)
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 6 2 18 2 18 9" />
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                <rect width="12" height="8" x="6" y="14" />
+              </svg>
+              Print {activeVouchers.length} Vouchers (A4 Landscape)
             </button>
           </div>
         </div>

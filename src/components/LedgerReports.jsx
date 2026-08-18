@@ -1181,19 +1181,24 @@ export default function LedgerReports() {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: "6px",
+              gap: "8px",
               background: "#0f172a",
               color: "#ffffff",
               border: "none",
               borderRadius: "8px",
               padding: "7px 14px",
               fontSize: "0.78rem",
-              fontWeight: "800",
+              fontWeight: "700",
               cursor: "pointer",
               boxShadow: "0 2px 6px rgba(15, 23, 42, 0.25)"
             }}
           >
-            <span>🖨️</span> Print Expense Vouchers (4/A4)
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9" />
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+              <rect width="12" height="8" x="6" y="14" />
+            </svg>
+            Print Expense Vouchers (4/A4)
           </button>
         </div>
       </div>
@@ -1341,19 +1346,17 @@ export default function LedgerReports() {
                             <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
                               <button
                                 type="button"
-                                onClick={() => {
-                                  setSelectedExpenseGroup({
-                                    title: `Expense Claim '${e.reason || e.description}'`,
-                                    category: e.category,
-                                    items: [e],
-                                    employeeName: emp.name,
-                                    employeeId: e.employeeId
-                                  });
-                                  setActiveItemInGroup(e);
+                                onClick={(ev) => {
+                                  ev.stopPropagation();
+                                  inspectReceipt(e);
                                 }}
-                                style={{ background: "#f8fafc", border: "1px solid #cbd5e1", color: "#475569", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer" }}
+                                style={{ background: "#f8fafc", border: "1px solid #cbd5e1", color: "#334155", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
                               >
-                                Inspect 🔍
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <circle cx="11" cy="11" r="8" />
+                                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                                </svg>
+                                Inspect
                               </button>
                               <button
                                 type="button"
@@ -1362,9 +1365,14 @@ export default function LedgerReports() {
                                   printVouchers([e]);
                                 }}
                                 title="Print this voucher in 4/A4 landscape format"
-                                style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2563eb", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer" }}
+                                style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2563eb", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
                               >
-                                🖨️ Voucher
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <polyline points="6 9 6 2 18 2 18 9" />
+                                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                                  <rect width="12" height="8" x="6" y="14" />
+                                </svg>
+                                Voucher
                               </button>
                             </div>
                           )}
@@ -3312,14 +3320,19 @@ export default function LedgerReports() {
                           }}
                           style={{ flex: 1, backgroundColor: "#f1f5f9", color: "#334155", padding: "10px 16px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", cursor: "pointer" }}
                         >
-                          Close Viewer ✕
+                          Close Viewer
                         </button>
                         <button
                           type="button"
                           onClick={() => printVouchers([activeItemInGroup])}
-                          style={{ flex: 1, backgroundColor: "#2563eb", color: "#ffffff", padding: "10px 16px", border: "none", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)" }}
+                          style={{ flex: 1, backgroundColor: "#2563eb", color: "#ffffff", padding: "10px 16px", border: "none", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px", boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)" }}
                         >
-                          <span>🖨️</span> Print Voucher (4/A4)
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="6 9 6 2 18 2 18 9" />
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                            <rect width="12" height="8" x="6" y="14" />
+                          </svg>
+                          Print Voucher (4/A4)
                         </button>
                       </div>
                     )}

@@ -729,14 +729,9 @@ export default function ConsultantView({ activeTab }) {
                   style={{ width: "80px", height: "80px", borderRadius: "50%", border: "3px solid rgba(255,255,255,0.4)", objectFit: "cover", boxShadow: "0 8px 20px rgba(0,0,0,0.3)" }}
                 />
                 <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <h1 style={{ margin: 0, fontSize: "1.8rem", fontWeight: "900", color: "#ffffff", letterSpacing: "-0.02em" }}>
-                      👋 Welcome back, {currentUser.name}!
-                    </h1>
-                    <span style={{ background: "rgba(34,197,94,0.2)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.4)", padding: "4px 10px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "800" }}>
-                      ACTIVE CONSULTANT
-                    </span>
-                  </div>
+                  <h1 style={{ margin: 0, fontSize: "1.8rem", fontWeight: "900", color: "#ffffff", letterSpacing: "-0.02em" }}>
+                    Welcome back, {currentUser.name}!
+                  </h1>
                   <p style={{ margin: "6px 0 0 0", fontSize: "0.92rem", color: "#c7d2fe" }}>
                     {currentUser.title || "Senior Systems Operator"} • {currentUser.department || "Consulting & Operations"}
                   </p>
@@ -744,76 +739,109 @@ export default function ConsultantView({ activeTab }) {
               </div>
 
               {/* Quick Action Buttons in Hero Banner */}
-              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                {(!todayPunch || todayPunch.checkOut) ? (
-                  <button 
-                    type="button"
-                    onClick={handleOpenCheckInWizard}
-                    style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 6px 18px rgba(22,163,74,0.4)", display: "flex", alignItems: "center", gap: "8px" }}
-                  >
-                    ✔ Check In Shift (Site Visit)
-                  </button>
-                ) : (
-                  <button 
-                    type="button"
-                    onClick={handleOpenCheckOutWizard}
-                    style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 6px 18px rgba(220,38,38,0.4)", display: "flex", alignItems: "center", gap: "8px" }}
-                  >
-                    ✖ Check Out Shift
-                  </button>
-                )}
+              <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center" }}>
                 <button 
                   type="button"
                   onClick={() => { setShowExpenseModal(true); setMainNavTab("EXPENSES"); }}
-                  style={{ background: "rgba(255,255,255,0.15)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(6px)", borderRadius: "10px", padding: "12px 20px", fontWeight: "700", fontSize: "0.88rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+                  style={{
+                    background: "rgba(255,255,255,0.14)",
+                    color: "#ffffff",
+                    border: "1px solid rgba(255,255,255,0.25)",
+                    backdropFilter: "blur(8px)",
+                    borderRadius: "10px",
+                    padding: "11px 18px",
+                    fontWeight: "700",
+                    fontSize: "0.88rem",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    transition: "all 0.15s ease"
+                  }}
                 >
-                  ➕ Add Expense Claim
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                  Add Expense Claim
                 </button>
                 <button 
                   type="button"
                   onClick={() => setMainNavTab("PROFILE")}
-                  style={{ background: "rgba(255,255,255,0.1)", color: "#ffffff", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "10px", padding: "12px 18px", fontWeight: "700", fontSize: "0.88rem", cursor: "pointer" }}
+                  style={{
+                    background: "rgba(255,255,255,0.08)",
+                    color: "#ffffff",
+                    border: "1px solid rgba(255,255,255,0.18)",
+                    borderRadius: "10px",
+                    padding: "11px 18px",
+                    fontWeight: "700",
+                    fontSize: "0.88rem",
+                    cursor: "pointer",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    transition: "all 0.15s ease"
+                  }}
                 >
-                  👤 View Full Profile →
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  View Full Profile →
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Metric Overview Stat Pills */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px" }}>
+          {/* Metric Overview Stat Cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "16px" }}>
+            {/* 1. Today's Shift Status */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "16px" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>📁</div>
-              <div>
-                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Assigned Projects</div>
-                <div style={{ fontSize: "1.4rem", fontWeight: "900", color: "#0f172a" }}>{displayProjects.length} Client Sites</div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: todayPunch ? "#f0fdf4" : "#fef2f2", border: todayPunch ? "1px solid #bbf7d0" : "1px solid #fecaca", color: todayPunch ? "#16a34a" : "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
               </div>
-            </div>
-
-            <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "16px" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#f0fdf4", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>🕒</div>
               <div>
-                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Today's Shift Status</div>
-                <div style={{ fontSize: "1.1rem", fontWeight: "800", color: todayPunch ? "#16a34a" : "#dc2626" }}>
+                <div style={{ fontSize: "0.74rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>Today's Shift Status</div>
+                <div style={{ fontSize: "1.15rem", fontWeight: "900", color: todayPunch ? "#16a34a" : "#dc2626", marginTop: "2px", display: "flex", alignItems: "center", gap: "6px" }}>
+                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: todayPunch ? "#16a34a" : "#dc2626", display: "inline-block" }}></span>
                   {todayPunch ? (todayPunch.checkOut ? "Shift Completed" : "Currently In") : "Not Checked In"}
                 </div>
               </div>
             </div>
 
+            {/* 2. Petty Cash Balance */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "16px" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#faf5ff", color: "#9333ea", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>💰</div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#faf5ff", border: "1px solid #e9d5ff", color: "#9333ea", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+                  <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+                  <path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
+                </svg>
+              </div>
               <div>
-                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Petty Cash Balance</div>
-                <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "#0f172a" }}>₹{balanceDetails.availableBalance.toLocaleString("en-IN")}</div>
+                <div style={{ fontSize: "0.74rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>Petty Cash Balance</div>
+                <div style={{ fontSize: "1.35rem", fontWeight: "900", color: "#0f172a", marginTop: "2px" }}>₹{balanceDetails.availableBalance.toLocaleString("en-IN")}</div>
               </div>
             </div>
 
+            {/* 3. Total Approved Claims */}
             <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.03)", display: "flex", alignItems: "center", gap: "16px" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#fff7ed", color: "#ea580c", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.4rem", fontWeight: "800" }}>🌴</div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <polyline points="9 15 11 17 15 13" />
+                </svg>
+              </div>
               <div>
-                <div style={{ fontSize: "0.78rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase" }}>Annual Leave Balance</div>
-                <div style={{ fontSize: "1.3rem", fontWeight: "900", color: "#0f172a" }}>
-                  {((getLeaveBalance(currentUser?.id)?.casual?.available || 0) + (getLeaveBalance(currentUser?.id)?.sick?.available || 0) + (getLeaveBalance(currentUser?.id)?.earned?.available || 0))} Days
+                <div style={{ fontSize: "0.74rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>Approved Claims Total</div>
+                <div style={{ fontSize: "1.35rem", fontWeight: "900", color: "#16a34a", marginTop: "2px" }}>
+                  ₹{approvedExpenseTotal.toLocaleString("en-IN")}
+                  <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#64748b", marginLeft: "6px" }}>({myApprovedExpenses.length} Approved)</span>
                 </div>
               </div>
             </div>
@@ -826,42 +854,67 @@ export default function ConsultantView({ activeTab }) {
             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>📁 My Assigned Client Projects</h3>
-                    <p style={{ margin: "2px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>Active store locations and client assignments</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>My Assigned Client Projects</h3>
+                      <p style={{ margin: "2px 0 0 0", fontSize: "0.8rem", color: "#64748b" }}>Active store locations and client assignments</p>
+                    </div>
                   </div>
                   <button type="button" onClick={() => setMainNavTab("PROJECTS")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}>View All Projects →</button>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   {displayProjects.length === 0 ? (
-                    <div style={{ background: "#f8fafc", border: "1px dashed #cbd5e1", borderRadius: "14px", padding: "28px", textAlign: "center", color: "#64748b" }}>
-                      <div style={{ fontSize: "2rem", marginBottom: "8px" }}>🔒</div>
+                    <div style={{ background: "#f8fafc", border: "1px dashed #cbd5e1", borderRadius: "14px", padding: "32px", textAlign: "center", color: "#64748b" }}>
+                      <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px", color: "#64748b" }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                      </div>
                       <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>No Client Projects Assigned Yet</h4>
                       <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "#64748b" }}>An Admin must assign you to a project in the Admin Panel before project details will be visible here.</p>
                     </div>
                   ) : displayProjects.map(proj => (
                     <div key={proj.id} style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
                         <div>
                           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                             <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>{proj.name}</h4>
                             <span style={{ background: "#dcfce7", color: "#166534", border: "1px solid #86efac", padding: "2px 8px", borderRadius: "4px", fontSize: "0.72rem", fontWeight: "800" }}>ACTIVE SITE</span>
                           </div>
-                          <div style={{ fontSize: "0.84rem", color: "#64748b", marginTop: "4px" }}>
-                            📍 {proj.location || "Seoni, Madhya Pradesh"} • {proj.businessModel || "Retail Advisory"}
+                          <div style={{ fontSize: "0.84rem", color: "#64748b", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                              <circle cx="12" cy="10" r="3" />
+                            </svg>
+                            <span>{proj.location || "Seoni, Madhya Pradesh"} • {proj.businessModel || "Retail Advisory"}</span>
                           </div>
                         </div>
 
-                        <div style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #86efac", borderRadius: "8px", padding: "6px 12px", fontWeight: "800", fontSize: "0.78rem" }}>
-                          📍 Store Site Assigned
+                        <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f0fdf4", color: "#166534", border: "1px solid #86efac", borderRadius: "8px", padding: "5px 10px", fontWeight: "700", fontSize: "0.78rem" }}>
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6L9 17l-5-5" />
+                          </svg>
+                          Store Site Assigned
                         </div>
                       </div>
 
                       {/* Scope Deliverables Progress Bar */}
-                      <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                         <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "#334155" }}>Daily Scope Deliverables:</span>
-                        <span style={{ fontSize: "0.82rem", fontWeight: "800", color: "#16a34a" }}>3 / 3 Tasks Verified ✓</span>
+                        <span style={{ fontSize: "0.82rem", fontWeight: "800", color: "#16a34a", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                          </svg>
+                          3 / 3 Tasks Verified
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -889,29 +942,46 @@ export default function ConsultantView({ activeTab }) {
                     <button 
                       type="button" 
                       onClick={handleOpenCheckInWizard}
-                      style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 14px rgba(22,163,74,0.3)" }}
+                      style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 14px rgba(22,163,74,0.3)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                     >
-                      ✔ Check In Shift (Site Visit)
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                        <polyline points="10 17 15 12 10 7" />
+                        <line x1="15" y1="12" x2="3" y2="12" />
+                      </svg>
+                      Check In Shift (Site Visit)
                     </button>
                   ) : !todayPunch.checkOut ? (
                     <button 
                       type="button" 
                       onClick={handleOpenCheckOutWizard}
-                      style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 14px rgba(220,38,38,0.3)" }}
+                      style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 14px rgba(220,38,38,0.3)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                     >
-                      ✖ Check Out Shift
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                      </svg>
+                      Check Out Shift
                     </button>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                      <div style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "800", textAlign: "center", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px", borderRadius: "8px" }}>
-                        ✓ Shift Completed Today ({todayPunch.checkIn} - {todayPunch.checkOut})
+                      <div style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "800", textAlign: "center", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px", borderRadius: "8px", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        Shift Completed Today ({todayPunch.checkIn} - {todayPunch.checkOut})
                       </div>
                       <button 
                         type="button" 
                         onClick={handleOpenCheckInWizard}
-                        style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 14px rgba(37,99,235,0.3)" }}
+                        style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", width: "100%", boxShadow: "0 4px 14px rgba(37,99,235,0.3)", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
                       >
-                        + Check In New Shift (Site Visit)
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <line x1="12" y1="5" x2="12" y2="19" />
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Check In New Shift (Site Visit)
                       </button>
                     </div>
                   )}
@@ -920,12 +990,27 @@ export default function ConsultantView({ activeTab }) {
 
               {/* Quick Shortcuts Card */}
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
-                <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: "800", color: "#0f172a" }}>⚡ Quick Workspace Actions</h4>
-                <button type="button" onClick={() => setShowApplyLeaveModal(true)} style={{ textAlign: "left", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", color: "#334155", cursor: "pointer" }}>
-                  🌴 Apply for Leave
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                  <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: "800", color: "#0f172a" }}>Quick Workspace Actions</h4>
+                </div>
+                <button type="button" onClick={() => setShowApplyLeaveModal(true)} style={{ textAlign: "left", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", color: "#334155", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  Apply for Leave
                 </button>
-                <button type="button" onClick={() => { setShowExpenseModal(true); setMainNavTab("EXPENSES"); }} style={{ textAlign: "left", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", color: "#334155", cursor: "pointer" }}>
-                  💸 Request Petty Cash Advance
+                <button type="button" onClick={() => { setShowExpenseModal(true); setMainNavTab("EXPENSES"); }} style={{ textAlign: "left", padding: "10px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", color: "#334155", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="12" y1="1" x2="12" y2="23" />
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                  </svg>
+                  Request Petty Cash Advance
                 </button>
               </div>
 
@@ -946,7 +1031,11 @@ export default function ConsultantView({ activeTab }) {
           <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "16px", boxShadow: "0 12px 30px rgba(15,23,42,0.2)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "18px" }}>
             <div>
               <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.1)", padding: "4px 12px", borderRadius: "20px", fontSize: "0.74rem", fontWeight: "700", letterSpacing: "0.04em", textTransform: "uppercase", color: "#93c5fd", marginBottom: "8px" }}>
-                <span>💰 Finance & Reimbursement</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="1" x2="12" y2="23" />
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+                <span>Finance & Reimbursement</span>
               </div>
               <h2 style={{ margin: 0, fontSize: "1.65rem", fontWeight: "900", color: "#ffffff", letterSpacing: "-0.02em" }}>Expenses & Petty Cash Desk</h2>
               <p style={{ margin: "4px 0 0 0", fontSize: "0.86rem", color: "#cbd5e1" }}>Submit travel, food & client site visit expense claims for management approval</p>
@@ -975,9 +1064,12 @@ export default function ConsultantView({ activeTab }) {
                   <button 
                     type="button" 
                     onClick={() => setShowExpenseModal(true)}
-                    style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2563eb", borderRadius: "6px", padding: "4px 10px", fontSize: "0.72rem", fontWeight: "800", cursor: "pointer" }}
+                    style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2563eb", borderRadius: "6px", padding: "5px 10px", fontSize: "0.72rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}
                   >
-                    ⚡ Full Wizard
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg>
+                    Full Wizard
                   </button>
                 </div>
                 <p style={{ margin: "3px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Enter expense claim details & attach receipt photos</p>
@@ -992,9 +1084,43 @@ export default function ConsultantView({ activeTab }) {
                   </label>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
                     {[
-                      { id: "Food", label: "Food", icon: "🍴" },
-                      { id: "Travel", label: "Travel", icon: "✈️" },
-                      { id: "Stay", label: "Stay", icon: "🏨" }
+                      { 
+                        id: "Food", 
+                        label: "Food", 
+                        icon: (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 8v6a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8" />
+                            <line x1="6" y1="2" x2="6" y2="8" />
+                            <line x1="10" y1="2" x2="10" y2="8" />
+                            <line x1="14" y1="2" x2="14" y2="8" />
+                            <line x1="18" y1="2" x2="18" y2="8" />
+                            <line x1="12" y1="16" x2="12" y2="22" />
+                          </svg>
+                        )
+                      },
+                      { 
+                        id: "Travel", 
+                        label: "Travel", 
+                        icon: (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+                          </svg>
+                        )
+                      },
+                      { 
+                        id: "Stay", 
+                        label: "Stay", 
+                        icon: (
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z" />
+                            <line x1="9" y1="6" x2="9" y2="6.01" />
+                            <line x1="15" y1="6" x2="15" y2="6.01" />
+                            <line x1="9" y1="10" x2="9" y2="10.01" />
+                            <line x1="15" y1="10" x2="15" y2="10.01" />
+                            <path d="M10 22v-4h4v4" />
+                          </svg>
+                        )
+                      }
                     ].map(cat => {
                       const isSelected = category === cat.id;
                       return (
@@ -1006,7 +1132,7 @@ export default function ConsultantView({ activeTab }) {
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
-                            gap: "4px",
+                            gap: "6px",
                             padding: "10px 6px",
                             borderRadius: "10px",
                             border: isSelected ? "2px solid #2563eb" : "1px solid #e2e8f0",
@@ -1018,7 +1144,7 @@ export default function ConsultantView({ activeTab }) {
                             transition: "all 0.15s ease"
                           }}
                         >
-                          <span style={{ fontSize: "1.15rem" }}>{cat.icon}</span>
+                          <span style={{ color: isSelected ? "#2563eb" : "#64748b" }}>{cat.icon}</span>
                           <span>{cat.label}</span>
                         </button>
                       );
@@ -1143,7 +1269,15 @@ export default function ConsultantView({ activeTab }) {
 
               {myExpenses.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "48px 20px", background: "#f8fafc", borderRadius: "12px", color: "#64748b", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
-                  <span style={{ fontSize: "2.4rem" }}>📄</span>
+                  <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                      <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                  </div>
                   <strong style={{ fontSize: "0.95rem", color: "#1e293b" }}>No expense claims submitted yet</strong>
                   <span style={{ fontSize: "0.82rem", color: "#94a3b8" }}>Use the form on the left to submit a claim for food, travel, or stay</span>
                 </div>
@@ -1177,8 +1311,8 @@ export default function ConsultantView({ activeTab }) {
                               <span style={{ 
                                 display: "inline-flex", 
                                 alignItems: "center", 
-                                gap: "4px", 
-                                padding: "3px 8px", 
+                                gap: "6px", 
+                                padding: "4px 9px", 
                                 borderRadius: "6px", 
                                 fontSize: "0.74rem", 
                                 fontWeight: "700",
@@ -1186,7 +1320,29 @@ export default function ConsultantView({ activeTab }) {
                                 color: exp.category === "Food" ? "#c2410c" : exp.category === "Travel" ? "#1d4ed8" : "#86198f",
                                 border: exp.category === "Food" ? "1px solid #fed7aa" : exp.category === "Travel" ? "1px solid #bfdbfe" : "1px solid #f5d0fe"
                               }}>
-                                <span>{exp.category === "Food" ? "🍴" : exp.category === "Travel" ? "✈️" : "🏨"}</span>
+                                {exp.category === "Food" ? (
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M18 8v6a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V8" />
+                                    <line x1="6" y1="2" x2="6" y2="8" />
+                                    <line x1="10" y1="2" x2="10" y2="8" />
+                                    <line x1="14" y1="2" x2="14" y2="8" />
+                                    <line x1="18" y1="2" x2="18" y2="8" />
+                                    <line x1="12" y1="16" x2="12" y2="22" />
+                                  </svg>
+                                ) : exp.category === "Travel" ? (
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
+                                  </svg>
+                                ) : (
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M18 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2Z" />
+                                    <line x1="9" y1="6" x2="9" y2="6.01" />
+                                    <line x1="15" y1="6" x2="15" y2="6.01" />
+                                    <line x1="9" y1="10" x2="9" y2="10.01" />
+                                    <line x1="15" y1="10" x2="15" y2="10.01" />
+                                    <path d="M10 22v-4h4v4" />
+                                  </svg>
+                                )}
                                 <span>{exp.category}</span>
                               </span>
                             </td>
@@ -1194,8 +1350,12 @@ export default function ConsultantView({ activeTab }) {
                               {exp.description || exp.reason || "Operational claim"}
                             </td>
                             <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
-                              <span style={{ fontSize: "0.76rem", color: receiptCount > 0 ? "#2563eb" : "#94a3b8", fontWeight: "700", background: receiptCount > 0 ? "#eff6ff" : "#f1f5f9", padding: "2px 8px", borderRadius: "6px" }}>
-                                📸 {receiptCount} {receiptCount === 1 ? "file" : "files"}
+                              <span style={{ fontSize: "0.76rem", color: receiptCount > 0 ? "#2563eb" : "#94a3b8", fontWeight: "700", background: receiptCount > 0 ? "#eff6ff" : "#f1f5f9", padding: "3px 8px", borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                                  <circle cx="12" cy="13" r="4" />
+                                </svg>
+                                {receiptCount} {receiptCount === 1 ? "file" : "files"}
                               </span>
                             </td>
                             <td style={{ padding: "12px 14px", fontWeight: "900", color: "#0f172a", fontSize: "0.95rem", whiteSpace: "nowrap" }}>
@@ -1203,6 +1363,9 @@ export default function ConsultantView({ activeTab }) {
                             </td>
                             <td style={{ padding: "12px 14px", whiteSpace: "nowrap" }}>
                               <span style={{ 
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "5px",
                                 background: exp.status === "Approved" ? "#f0fdf4" : exp.status === "Rejected" ? "#fef2f2" : "#fffbeb", 
                                 color: exp.status === "Approved" ? "#166534" : exp.status === "Rejected" ? "#991b1b" : "#92400e", 
                                 border: exp.status === "Approved" ? "1px solid #bbf7d0" : exp.status === "Rejected" ? "1px solid #fecaca" : "1px solid #fde68a",
@@ -1211,7 +1374,30 @@ export default function ConsultantView({ activeTab }) {
                                 fontSize: "0.74rem", 
                                 fontWeight: "800" 
                               }}>
-                                {exp.status === "Approved" ? "✓ Approved" : exp.status === "Rejected" ? "✖ Rejected" : "⏳ Pending"}
+                                {exp.status === "Approved" ? (
+                                  <>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <polyline points="20 6 9 17 4 12" />
+                                    </svg>
+                                    Approved
+                                  </>
+                                ) : exp.status === "Rejected" ? (
+                                  <>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                      <line x1="18" y1="6" x2="6" y2="18" />
+                                      <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg>
+                                    Rejected
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <circle cx="12" cy="12" r="10" />
+                                      <polyline points="12 6 12 12 16 14" />
+                                    </svg>
+                                    Pending
+                                  </>
+                                )}
                               </span>
                             </td>
                           </tr>
@@ -1230,14 +1416,26 @@ export default function ConsultantView({ activeTab }) {
       {/* 4. DEDICATED ASSIGNED CLIENT PROJECTS VIEW */}
       {mainNavTab === "PROJECTS" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "18px", boxShadow: "0 12px 30px rgba(15,23,42,0.25)" }}>
-            <h2 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "900", color: "#ffffff" }}>📁 My Assigned Client Projects</h2>
-            <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#94a3b8" }}>Store sites & consulting advisory projects assigned to you</p>
+          <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "18px", boxShadow: "0 12px 30px rgba(15,23,42,0.25)", display: "flex", alignItems: "center", gap: "16px" }}>
+            <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#60a5fa", flexShrink: 0 }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+            <div>
+              <h2 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "900", color: "#ffffff" }}>My Assigned Client Projects</h2>
+              <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#94a3b8" }}>Store sites & consulting advisory projects assigned to you</p>
+            </div>
           </div>
 
           {displayProjects.length === 0 ? (
             <div style={{ background: "#ffffff", border: "1px dashed #cbd5e1", borderRadius: "16px", padding: "40px", textAlign: "center", color: "#64748b", boxShadow: "0 4px 14px rgba(0,0,0,0.03)" }}>
-              <div style={{ fontSize: "2.5rem", marginBottom: "10px" }}>🔒</div>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px", color: "#64748b" }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </div>
               <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>No Client Projects Assigned Yet</h3>
               <p style={{ margin: "6px 0 0 0", fontSize: "0.88rem", color: "#64748b" }}>You currently have zero assigned client projects. Please contact your Admin to assign you to a store site project.</p>
             </div>
@@ -1248,7 +1446,13 @@ export default function ConsultantView({ activeTab }) {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                   <div>
                     <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>{proj.name}</h3>
-                    <div style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "4px" }}>📍 {proj.location || "Seoni, MP"} • {proj.code || "STORE-HQ"}</div>
+                    <div style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                        <circle cx="12" cy="10" r="3" />
+                      </svg>
+                      <span>{proj.location || "Seoni, MP"} • {proj.code || "STORE-HQ"}</span>
+                    </div>
                   </div>
                   <span style={{ background: "#dcfce7", color: "#166534", border: "1px solid #86efac", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800" }}>ACTIVE</span>
                 </div>
@@ -1257,8 +1461,11 @@ export default function ConsultantView({ activeTab }) {
                   <div><strong>Business Model:</strong> {proj.businessModel || "Retail & Client Advisory Store"}</div>
                 </div>
 
-                <div style={{ background: "#f0fdf4", color: "#166534", border: "1px solid #86efac", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.85rem", textAlign: "center" }}>
-                  📍 Active Store Assignment (Assigned Consultant)
+                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "#f0fdf4", color: "#166534", border: "1px solid #86efac", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.85rem" }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                  Active Store Assignment (Assigned Consultant)
                 </div>
               </div>
             ))}
@@ -1270,26 +1477,43 @@ export default function ConsultantView({ activeTab }) {
       {/* 5. DEDICATED SHIFT ATTENDANCE REGISTER VIEW */}
       {mainNavTab === "ATTENDANCE" && (
         <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          <div style={{ background: "linear-gradient(135deg, #15803d 0%, #166534 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "18px", boxShadow: "0 12px 30px rgba(21,128,61,0.25)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <h2 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "900", color: "#ffffff" }}>🕒 Shift Attendance & Clock Register</h2>
-              <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#bbf7d0" }}>View check-in logs, total working hours & monthly stats</p>
+          <div style={{ background: "linear-gradient(135deg, #15803d 0%, #166534 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "18px", boxShadow: "0 12px 30px rgba(21,128,61,0.25)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff", flexShrink: 0 }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+              </div>
+              <div>
+                <h2 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "900", color: "#ffffff" }}>Shift Attendance & Clock Register</h2>
+                <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#bbf7d0" }}>View check-in logs, total working hours & monthly stats</p>
+              </div>
             </div>
             {(!todayPunch || todayPunch.checkOut) ? (
               <button 
                 type="button"
                 onClick={handleOpenCheckInWizard}
-                style={{ background: "#ffffff", color: "#166534", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.2)" }}
+                style={{ background: "#ffffff", color: "#166534", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.2)", display: "inline-flex", alignItems: "center", gap: "8px" }}
               >
-                + Check In Shift (Site Visit)
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Check In Shift (Site Visit)
               </button>
             ) : (
               <button 
                 type="button"
                 onClick={handleOpenCheckOutWizard}
-                style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.2)" }}
+                style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", padding: "12px 22px", fontWeight: "800", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(0,0,0,0.2)", display: "inline-flex", alignItems: "center", gap: "8px" }}
               >
-                ✖ Check Out Shift
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                Check Out Shift
               </button>
             )}
           </div>
@@ -1326,7 +1550,6 @@ export default function ConsultantView({ activeTab }) {
         </div>
       )}
 
-
       {mainNavTab === "PROFILE" && (
         <div>
 
@@ -1361,7 +1584,11 @@ export default function ConsultantView({ activeTab }) {
               </div>
 
               <div style={{ fontSize: "0.88rem", color: "#e2e8f0", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
-                <span>🧰</span> <span>{currentUser.title || "Systems Operator"}</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="14" x="2" y="7" rx="2" ry="2" />
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                </svg>
+                <span>{currentUser.title || "Systems Operator"}</span>
               </div>
             </div>
           </div>
@@ -1370,16 +1597,32 @@ export default function ConsultantView({ activeTab }) {
         {/* Contact Info Strip */}
         <div style={{ padding: "12px 20px", background: "#ffffff", borderBottom: "1px solid #f1f5f9", display: "flex", alignItems: "center", gap: "24px", fontSize: "0.82rem", color: "#475569", flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ color: "#64748b" }}>✉</span> <span>{currentUser.email || "consultant@acme.com"}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="20" height="16" x="2" y="4" rx="2" />
+              <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+            </svg>
+            <span>{currentUser.email || "consultant@acme.com"}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ color: "#64748b" }}>📞</span> <span>{currentUser.phone || "+91-9876543210"}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+            </svg>
+            <span>{currentUser.phone || "+91-9876543210"}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ color: "#64748b" }}>📍</span> <span>{currentUser.location || "Mumbai / HQ"}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span>{currentUser.location || "Mumbai / HQ"}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ color: "#64748b" }}>🪪</span> <span>{currentUser.empCode || "EMP-101"}</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="18" height="18" x="3" y="3" rx="2" />
+              <circle cx="9" cy="9" r="2" />
+              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+            </svg>
+            <span>{currentUser.empCode || "EMP-101"}</span>
           </div>
         </div>
 
@@ -1407,9 +1650,13 @@ export default function ConsultantView({ activeTab }) {
             <button
               type="button"
               onClick={() => setShowSelfOnboardingModal(true)}
-              style={{ background: "#5b50a1", color: "#ffffff", border: "none", borderRadius: "4px", padding: "6px 14px", fontSize: "0.78rem", fontWeight: "600", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+              style={{ background: "#5b50a1", color: "#ffffff", border: "none", borderRadius: "6px", padding: "6px 14px", fontSize: "0.78rem", fontWeight: "600", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              <span>✏️</span> Edit Profile Details
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+              Edit Profile Details
             </button>
           </div>
         </div>
@@ -1483,9 +1730,13 @@ export default function ConsultantView({ activeTab }) {
               <button
                 type="button"
                 onClick={() => setShowSelfOnboardingModal(true)}
-                style={{ background: "#5b50a1", color: "#ffffff", border: "none", borderRadius: "6px", padding: "8px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+                style={{ background: "#5b50a1", color: "#ffffff", border: "none", borderRadius: "6px", padding: "8px 18px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
               >
-                ✏️ Edit Profile Details
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                </svg>
+                Edit Profile Details
               </button>
             </div>
 
@@ -2468,9 +2719,14 @@ export default function ConsultantView({ activeTab }) {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "6px", padding: "10px 18px", fontWeight: "600", fontSize: "0.88rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}
+                  style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "6px", padding: "10px 18px", fontWeight: "600", fontSize: "0.88rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}
                 >
-                  🖨 Print / Download PDF
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect width="12" height="8" x="6" y="14" />
+                  </svg>
+                  Print / Download PDF
                 </button>
               </div>
             </div>
@@ -3344,12 +3600,21 @@ export default function ConsultantView({ activeTab }) {
                               setSelfiePhoto("");
                               startCamera();
                             }} 
-                            style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155" }}
+                            style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "6px" }}
                           >
-                            📷 Retake Selfie Photo
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                              <circle cx="12" cy="13" r="4" />
+                            </svg>
+                            Retake Selfie Photo
                           </button>
-                          <label style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            📁 Upload Different Photo
+                          <label style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="17 8 12 3 7 8" />
+                              <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            Upload Different Photo
                             <input 
                               type="file" 
                               accept="image/*" 
@@ -3695,12 +3960,21 @@ export default function ConsultantView({ activeTab }) {
                               setCheckOutSelfiePhoto("");
                               startCamera();
                             }} 
-                            style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155" }}
+                            style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "6px" }}
                           >
-                            📷 Retake Selfie Photo
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                              <circle cx="12" cy="13" r="4" />
+                            </svg>
+                            Retake Selfie Photo
                           </button>
-                          <label style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            📁 Upload Different Photo
+                          <label style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                              <polyline points="17 8 12 3 7 8" />
+                              <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            Upload Different Photo
                             <input 
                               type="file" 
                               accept="image/*" 

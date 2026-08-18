@@ -1022,9 +1022,14 @@ export default function AccountsView({ activeTab: parentActiveTab }) {
               <div style={{ display: "flex", gap: "10px" }}>
                 <button
                   onClick={() => window.print()}
-                  style={{ background: "#0f172a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer" }}
+                  style={{ background: "#0f172a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "8px" }}
                 >
-                  🖨️ Print Payslip
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 6 2 18 2 18 9" />
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect width="12" height="8" x="6" y="14" />
+                  </svg>
+                  Print Payslip
                 </button>
                 <button
                   onClick={() => setSelectedPayslipConsultant(null)}

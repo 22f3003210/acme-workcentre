@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
+import html2canvas from "html2canvas";
 import { useApp } from "../context/AppContext";
 
 export default function LedgerReports() {
@@ -18,6 +19,10 @@ export default function LedgerReports() {
   const [expandedConsultantId, setExpandedConsultantId] = useState(null);
   const [activeReceiptIdx, setActiveReceiptIdx] = useState(0);
   const [zoomScale, setZoomScale] = useState(1);
+
+  // WhatsApp Image Sharing Ref & State
+  const daywiseCaptureRef = useRef(null);
+  const [isSharingWhatsApp, setIsSharingWhatsApp] = useState(false);
 
   const consultants = users.filter(u => u.role === "Consultant");
   const activeEmployeeId = selectedEmployeeId || (consultants[0]?.id || "");
@@ -164,6 +169,135 @@ export default function LedgerReports() {
       ? `Daywise_Accounts_Head_${selectedDate}` 
       : `${selectedEmployeeName}_Sourcing_Ledger_July_2026`;
     setToast({ message: `Exporting ${reportName}.xlsx successfully...`, type: "success" });
+  };
+
+  // Share Day-wise Accounts Head Table as Image on WhatsApp
+  const handleShareOnWhatsApp = async (actionType = "share") => {
+    if (!daywiseCaptureRef.current) return;
+    setIsSharingWhatsApp(true);
+    setToast({ message: "📸 Generating crystal-clear image of Daily Accounts Head...", type: "info" });
+
+    try {
+      // 1. Capture high-res canvas (2.5x scale for retina clarity on WhatsApp)
+      const canvas = await html2canvas(daywiseCaptureRef.current, {
+        scale: 2.5,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff"
+      });
+
+      const formattedDateForFile = selectedDate ? selectedDate.replace(/-/g, "_") : "today";
+      const filename = `ACME_Daily_Accounts_Head_${formattedDateForFile}.png`;
+
+      // Text summary for WhatsApp caption
+      const dParts = selectedDate.split("-");
+      const displayDateStr = dParts.length === 3 ? `${dParts[2]}/${dParts[1]}/${dParts[0]}` : selectedDate;
+      
+      const whatsappText = `📊 *ACME DAILY ACCOUNTS HEAD REPORT*\n` +
+        `📅 *Date:* ${displayDateStr}\n` +
+        `👥 *Active Consultants:* ${daywiseData.rows.length}\n` +
+        `─────────────────────\n` +
+        `💰 *Total Opening Bal:* ₹${daywiseData.totals.opening.toFixed(2)}\n` +
+        `💵 *Payments / Advances:* ₹${daywiseData.totals.received.toFixed(2)}\n` +
+        `🍽️ *Food Expense:* ₹${daywiseData.totals.food.toFixed(2)}\n` +
+        `🏨 *Stay Expense:* ₹${daywiseData.totals.stay.toFixed(2)}\n` +
+        `🚗 *Travel Expense:* ₹${daywiseData.totals.travel.toFixed(2)}\n` +
+        `💳 *Total Spent Today:* ₹${daywiseData.totals.spent.toFixed(2)}\n` +
+        `📈 *Total Closing Bal:* ₹${daywiseData.totals.closing.toFixed(2)}\n` +
+        `─────────────────────\n` +
+        `🏢 *ACME Consulting WorkCentre*`;
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          setIsSharingWhatsApp(false);
+          setToast({ message: "Failed to generate image blob.", type: "error" });
+          return;
+        }
+
+        // Action 1: Just download image
+        if (actionType === "download") {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          setIsSharingWhatsApp(false);
+          setToast({ message: `✓ Downloaded ${filename}!`, type: "success" });
+          return;
+        }
+
+        // Action 2: Copy image to clipboard
+        if (actionType === "copy") {
+          try {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            setIsSharingWhatsApp(false);
+            setToast({ message: "✓ Report image copied to clipboard! Ready to paste (Ctrl+V).", type: "success" });
+          } catch (err) {
+            setIsSharingWhatsApp(false);
+            setToast({ message: "Could not copy image directly. Image is available for Download.", type: "info" });
+          }
+          return;
+        }
+
+        // Action 3: Native Web Share with File (Android / iOS / macOS / Windows)
+        const file = new File([blob], filename, { type: "image/png" });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              title: `ACME Daily Accounts Head - ${displayDateStr}`,
+              text: whatsappText,
+              files: [file]
+            });
+            setIsSharingWhatsApp(false);
+            setToast({ message: "✓ Opened share sheet! Select WhatsApp to send.", type: "success" });
+            return;
+          } catch (err) {
+            if (err.name !== "AbortError") {
+              console.error("Web share error:", err);
+            }
+          }
+        }
+
+        // Desktop Fallback:
+        // 1. Copy image to clipboard so user can directly Ctrl+V into WhatsApp Web
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+        } catch (e) {}
+
+        // 2. Download the PNG file
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        // 3. Open WhatsApp Web / App
+        const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
+        window.open(waUrl, "_blank");
+
+        setIsSharingWhatsApp(false);
+        setToast({ 
+          message: "✓ Report image copied & downloaded! WhatsApp opened — simply paste (Ctrl+V) the image.", 
+          type: "success" 
+        });
+      }, "image/png");
+
+    } catch (error) {
+      console.error("Error capturing daywise table:", error);
+      setIsSharingWhatsApp(false);
+      setToast({ message: "Failed to generate image. Please try again.", type: "error" });
+    }
   };
 
   // July 2026 Calendar Cells (Mon/Tue are padding)
@@ -520,10 +654,80 @@ export default function LedgerReports() {
                     )}
                   </div>
 
-                  {/* Full week range text */}
-                  <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginLeft: "auto" }}>
-                    {weekLabel}
-                  </span>
+                  {/* Action Buttons: WhatsApp Share, Download PNG, Copy Image */}
+                  <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    {/* Share on WhatsApp Button */}
+                    <button
+                      onClick={() => handleShareOnWhatsApp("share")}
+                      disabled={isSharingWhatsApp}
+                      title="Generate image and share daily report on WhatsApp"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        background: "#25D366",
+                        color: "#ffffff",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "6px 14px",
+                        fontSize: "0.78rem",
+                        fontWeight: "800",
+                        cursor: isSharingWhatsApp ? "wait" : "pointer",
+                        boxShadow: "0 2px 5px rgba(37, 211, 102, 0.3)",
+                        transition: "all 0.15s"
+                      }}
+                    >
+                      {/* WhatsApp Official SVG */}
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.41a8.17 8.17 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24zm4.52 11.53c-.19.53-1.09 1.04-1.52 1.1-.41.06-.94.09-1.52-.1-.36-.12-.82-.27-1.41-.53-2.48-1.08-4.1-3.6-4.22-3.77-.13-.17-1.02-1.36-1.02-2.59 0-1.23.64-1.84.87-2.09.23-.25.5-.31.67-.31.17 0 .34 0 .49.01.15.01.36-.06.56.43.21.49.71 1.74.78 1.87.06.13.1.28.02.45-.09.17-.13.28-.26.43-.13.15-.27.34-.39.46-.13.13-.26.27-.11.53.15.26.67 1.1 1.44 1.78.99.88 1.83 1.15 2.09 1.28.26.13.41.11.56-.06.15-.17.64-.75.81-1 .17-.26.34-.21.57-.13.23.09 1.46.69 1.71.81.26.13.43.19.49.3.06.11.06.64-.13 1.17z"/>
+                      </svg>
+                      {isSharingWhatsApp ? "Generating..." : "Share on WhatsApp"}
+                    </button>
+
+                    {/* Download Image Button */}
+                    <button
+                      onClick={() => handleShareOnWhatsApp("download")}
+                      disabled={isSharingWhatsApp}
+                      title="Download as high-res PNG image"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        background: "#eff6ff",
+                        color: "#2563eb",
+                        border: "1px solid #bfdbfe",
+                        borderRadius: "8px",
+                        padding: "6px 10px",
+                        fontSize: "0.74rem",
+                        fontWeight: "700",
+                        cursor: isSharingWhatsApp ? "wait" : "pointer"
+                      }}
+                    >
+                      📥 Save PNG
+                    </button>
+
+                    {/* Copy Image Button */}
+                    <button
+                      onClick={() => handleShareOnWhatsApp("copy")}
+                      disabled={isSharingWhatsApp}
+                      title="Copy image to clipboard to paste (Ctrl+V) anywhere"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "4px",
+                        background: "#f8fafc",
+                        color: "#475569",
+                        border: "1px solid #cbd5e1",
+                        borderRadius: "8px",
+                        padding: "6px 10px",
+                        fontSize: "0.74rem",
+                        fontWeight: "700",
+                        cursor: isSharingWhatsApp ? "wait" : "pointer"
+                      }}
+                    >
+                      📋 Copy Image
+                    </button>
+                  </div>
                 </div>
 
                 {/* Day pills */}
@@ -562,156 +766,184 @@ export default function LedgerReports() {
             );
           })()}
 
-          <div style={{ overflowX: "auto" }}>
-            <table className="luxury-table" style={{ fontSize: "0.78rem" }}>
-              <thead>
-                <tr style={{ background: "var(--bg-tertiary)" }}>
-                  <th style={{ padding: "8px" }}>SR. NO</th>
-                  <th style={{ padding: "8px" }}>NAME</th>
-                  <th style={{ padding: "8px" }}>DATE</th>
-                  <th style={{ padding: "8px" }}>PROJECT</th>
-                  <th style={{ padding: "8px", textAlign: "right" }}>OPENING BAL</th>
-                  <th style={{ padding: "8px", textAlign: "right" }}>PAYMENT</th>
-                  <th style={{ padding: "8px", textAlign: "center" }}>FOOD</th>
-                  <th style={{ padding: "8px", textAlign: "center" }}>STAY</th>
-                  <th style={{ padding: "8px", textAlign: "center" }}>TRAVEL</th>
-                  <th style={{ padding: "8px", textAlign: "right" }}>TOTAL</th>
-                  <th style={{ padding: "8px", textAlign: "right" }}>CLOSING BAL</th>
-                </tr>
-              </thead>
-              <tbody>
-                {daywiseData.rows.map((row) => {
-                  const dayExpenses = expenses.filter(e => {
-                    if (e.employeeId !== row.consultant.id || e.status === "Rejected") return false;
-                    const primaryDate = e.expenseDate || e.date || e.submittedDate;
-                    return isSameDateStr(primaryDate, selectedDate);
-                  });
-                  const foodExps   = dayExpenses.filter(e => e.category === "Food");
-                  const stayExps   = dayExpenses.filter(e => e.category === "Accommodation" || e.category === "Stay");
-                  const travelExps = dayExpenses.filter(e => e.category === "Travel" || e.category === "Conveyance");
+          {/* Captured Container (Rendered to PNG for WhatsApp) */}
+          <div 
+            ref={daywiseCaptureRef} 
+            style={{ 
+              background: "#ffffff", 
+              padding: "16px 20px", 
+              borderRadius: "14px", 
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.03)"
+            }}
+          >
+            {/* Embedded Branded Header inside the image */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #0f172a", paddingBottom: "12px", marginBottom: "14px", flexWrap: "wrap", gap: "12px" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "900", color: "#0f172a", letterSpacing: "0.5px" }}>ACME CONSULTING WORKCENTRE</h3>
+                <span style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "600" }}>DAILY ACCOUNTS HEAD & SOURCING EXPENSE REGISTER</span>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: "0.75rem", background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", padding: "3px 10px", borderRadius: "6px", fontWeight: "800" }}>
+                  DATE: {formattedQueryDate}
+                </span>
+                <div style={{ fontSize: "0.72rem", color: "#166534", fontWeight: "700", marginTop: "4px" }}>
+                  Total Closing: ₹{daywiseData.totals.closing.toFixed(2)}
+                </div>
+              </div>
+            </div>
 
-                  const consultantAtt = row.consultant.attendance || [];
-                  const dayPunch = consultantAtt.find(a => isSameDateStr(a.date, selectedDate));
+            <div style={{ overflowX: "auto" }}>
+              <table className="luxury-table" style={{ fontSize: "0.78rem", width: "100%" }}>
+                <thead>
+                  <tr style={{ background: "var(--bg-tertiary)" }}>
+                    <th style={{ padding: "8px" }}>SR. NO</th>
+                    <th style={{ padding: "8px" }}>NAME</th>
+                    <th style={{ padding: "8px" }}>DATE</th>
+                    <th style={{ padding: "8px" }}>PROJECT</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>OPENING BAL</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>PAYMENT</th>
+                    <th style={{ padding: "8px", textAlign: "center" }}>FOOD</th>
+                    <th style={{ padding: "8px", textAlign: "center" }}>STAY</th>
+                    <th style={{ padding: "8px", textAlign: "center" }}>TRAVEL</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>TOTAL</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>CLOSING BAL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {daywiseData.rows.map((row) => {
+                    const dayExpenses = expenses.filter(e => {
+                      if (e.employeeId !== row.consultant.id || e.status === "Rejected") return false;
+                      const primaryDate = e.expenseDate || e.date || e.submittedDate;
+                      return isSameDateStr(primaryDate, selectedDate);
+                    });
+                    const foodExps   = dayExpenses.filter(e => e.category === "Food");
+                    const stayExps   = dayExpenses.filter(e => e.category === "Accommodation" || e.category === "Stay");
+                    const travelExps = dayExpenses.filter(e => e.category === "Travel" || e.category === "Conveyance");
 
-                  let displayProjName = "";
-                  if (dayExpenses.length > 0) {
-                    const expWithProj = dayExpenses.find(e => e.projectName || e.projectId);
-                    if (expWithProj) {
-                      displayProjName = getProjectDisplayName(expWithProj.projectName || expWithProj.projectId, row.consultant);
+                    const consultantAtt = row.consultant.attendance || [];
+                    const dayPunch = consultantAtt.find(a => isSameDateStr(a.date, selectedDate));
+
+                    let displayProjName = "";
+                    if (dayExpenses.length > 0) {
+                      const expWithProj = dayExpenses.find(e => e.projectName || e.projectId);
+                      if (expWithProj) {
+                        displayProjName = getProjectDisplayName(expWithProj.projectName || expWithProj.projectId, row.consultant);
+                      }
+                    } else if (dayPunch) {
+                      displayProjName = getProjectDisplayName(dayPunch.projectName || dayPunch.projectId, row.consultant);
                     }
-                  } else if (dayPunch) {
-                    displayProjName = getProjectDisplayName(dayPunch.projectName || dayPunch.projectId, row.consultant);
-                  }
 
-                  const makeCategoryBtn = (exps, label, category) => {
-                    if (exps.length === 0) return <span style={{ color: "#cbd5e1" }}>—</span>;
-                    const total = exps.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+                    const makeCategoryBtn = (exps, label, category) => {
+                      if (exps.length === 0) return <span style={{ color: "#cbd5e1" }}>—</span>;
+                      const total = exps.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+                      return (
+                        <button
+                          onClick={(ev) => {
+                            ev.stopPropagation();
+                            setSelectedExpenseGroup({
+                              title: `${row.consultant.name} — ${label}`,
+                              category,
+                              items: exps,
+                              employeeName: row.consultant.name,
+                              employeeId: row.consultant.id
+                            });
+                            setActiveItemInGroup(exps[0]);
+                          }}
+                          style={{
+                            display: "inline-flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "1px",
+                            background: "#eff6ff",
+                            color: "#2563eb",
+                            border: "1px solid #bfdbfe",
+                            borderRadius: "4px",
+                            padding: "3px 10px",
+                            cursor: "pointer",
+                            fontSize: "0.72rem",
+                            fontWeight: "700",
+                            lineHeight: 1.3,
+                            whiteSpace: "nowrap"
+                          }}
+                        >
+                          <span>₹{total.toFixed(2)}</span>
+                          <span style={{ fontSize: "0.62rem", fontWeight: "500", color: "#60a5fa" }}>
+                            {exps.length} {exps.length === 1 ? "bill" : "bills"}
+                          </span>
+                        </button>
+                      );
+                    };
+
                     return (
-                      <button
-                        onClick={(ev) => {
-                          ev.stopPropagation();
-                          setSelectedExpenseGroup({
-                            title: `${row.consultant.name} — ${label}`,
-                            category,
-                            items: exps,
-                            employeeName: row.consultant.name,
-                            employeeId: row.consultant.id
-                          });
-                          setActiveItemInGroup(exps[0]);
-                        }}
-                        style={{
-                          display: "inline-flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          gap: "1px",
-                          background: "#eff6ff",
-                          color: "#2563eb",
-                          border: "1px solid #bfdbfe",
-                          borderRadius: "4px",
-                          padding: "3px 10px",
-                          cursor: "pointer",
-                          fontSize: "0.72rem",
-                          fontWeight: "700",
-                          lineHeight: 1.3,
-                          whiteSpace: "nowrap"
-                        }}
-                      >
-                        <span>₹{total.toFixed(2)}</span>
-                        <span style={{ fontSize: "0.62rem", fontWeight: "500", color: "#60a5fa" }}>
-                          {exps.length} {exps.length === 1 ? "bill" : "bills"}
-                        </span>
-                      </button>
+                      <tr key={row.consultant.id} style={{ height: "44px" }}>
+                        <td style={{ padding: "4px 8px", textAlign: "center" }}>{row.srNo}</td>
+                        <td style={{ padding: "4px 8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <img src={row.consultant.avatar} alt={row.consultant.name} style={{ width: "24px", height: "24px", borderRadius: "50%" }} />
+                            <strong>{row.consultant.name}</strong>
+                          </div>
+                        </td>
+                        <td style={{ padding: "4px 8px" }}>{formattedQueryDate}</td>
+                        <td style={{ padding: "4px 8px", maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={displayProjName}>
+                          {displayProjName ? (
+                            <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "4px" }}>
+                              {displayProjName}
+                            </span>
+                          ) : (
+                            <span style={{ color: "#cbd5e1" }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ padding: "4px 8px", textAlign: "right", color: row.opening < 0 ? "var(--color-error)" : "inherit" }}>
+                          ₹{row.opening.toFixed(2)}
+                        </td>
+                        <td style={{ padding: "4px 8px", textAlign: "right" }}>
+                          {row.received > 0 ? (
+                            <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "4px", display: "inline-block" }}>
+                              ₹{row.received.toFixed(2)}
+                            </span>
+                          ) : (
+                            <span style={{ color: "#cbd5e1" }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ padding: "4px 8px", textAlign: "center" }}>
+                          {makeCategoryBtn(foodExps, "Food Claims", "Food")}
+                        </td>
+                        <td style={{ padding: "4px 8px", textAlign: "center" }}>
+                          {makeCategoryBtn(stayExps, "Stay Claims", "Accommodation")}
+                        </td>
+                        <td style={{ padding: "4px 8px", textAlign: "center" }}>
+                          {makeCategoryBtn(travelExps, "Travel Claims", "Travel")}
+                        </td>
+                        <td style={{ padding: "4px 8px", textAlign: "right", fontWeight: "600" }}>
+                          {row.spent > 0 ? `₹${row.spent.toFixed(2)}` : "—"}
+                        </td>
+                        <td style={{ padding: "4px 8px", textAlign: "right", fontWeight: "700", color: row.closing < 0 ? "var(--color-error)" : "var(--color-success)" }}>
+                          ₹{row.closing.toFixed(2)}
+                        </td>
+                      </tr>
                     );
-                  };
-
-                  return (
-                    <tr key={row.consultant.id} style={{ height: "44px" }}>
-                      <td style={{ padding: "4px 8px", textAlign: "center" }}>{row.srNo}</td>
-                      <td style={{ padding: "4px 8px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <img src={row.consultant.avatar} alt={row.consultant.name} style={{ width: "24px", height: "24px", borderRadius: "50%" }} />
-                          <strong>{row.consultant.name}</strong>
-                        </div>
-                      </td>
-                      <td style={{ padding: "4px 8px" }}>{formattedQueryDate}</td>
-                      <td style={{ padding: "4px 8px", maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={displayProjName}>
-                        {displayProjName ? (
-                          <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#2563eb", background: "#eff6ff", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "4px" }}>
-                            {displayProjName}
-                          </span>
-                        ) : (
-                          <span style={{ color: "#cbd5e1" }}>—</span>
-                        )}
-                      </td>
-                      <td style={{ padding: "4px 8px", textAlign: "right", color: row.opening < 0 ? "var(--color-error)" : "inherit" }}>
-                        ₹{row.opening.toFixed(2)}
-                      </td>
-                      <td style={{ padding: "4px 8px", textAlign: "right" }}>
-                        {row.received > 0 ? (
-                          <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "4px", display: "inline-block" }}>
-                            ₹{row.received.toFixed(2)}
-                          </span>
-                        ) : (
-                          <span style={{ color: "#cbd5e1" }}>—</span>
-                        )}
-                      </td>
-                      <td style={{ padding: "4px 8px", textAlign: "center" }}>
-                        {makeCategoryBtn(foodExps, "Food Claims", "Food")}
-                      </td>
-                      <td style={{ padding: "4px 8px", textAlign: "center" }}>
-                        {makeCategoryBtn(stayExps, "Stay Claims", "Accommodation")}
-                      </td>
-                      <td style={{ padding: "4px 8px", textAlign: "center" }}>
-                        {makeCategoryBtn(travelExps, "Travel Claims", "Travel")}
-                      </td>
-                      <td style={{ padding: "4px 8px", textAlign: "right", fontWeight: "600" }}>
-                        {row.spent > 0 ? `₹${row.spent.toFixed(2)}` : "—"}
-                      </td>
-                      <td style={{ padding: "4px 8px", textAlign: "right", fontWeight: "700", color: row.closing < 0 ? "var(--color-error)" : "var(--color-success)" }}>
-                        ₹{row.closing.toFixed(2)}
-                      </td>
-                    </tr>
-                  );
-                })}
-                
-                <tr style={{ background: "var(--bg-tertiary)", fontWeight: "700", borderTop: "2px double var(--border-color)" }}>
-                  <td colSpan="4" style={{ padding: "10px", textAlign: "center" }}>TOTAL</td>
-                  <td style={{ padding: "10px", textAlign: "right", color: daywiseData.totals.opening < 0 ? "var(--color-error)" : "inherit" }}>
-                    ₹{daywiseData.totals.opening.toFixed(2)}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "right", color: "var(--color-success)" }}>
-                    ₹{daywiseData.totals.received.toFixed(2)}
-                  </td>
-                  <td style={{ padding: "10px", textAlign: "right" }}>₹{daywiseData.totals.food.toFixed(2)}</td>
-                  <td style={{ padding: "10px", textAlign: "right" }}>₹{daywiseData.totals.stay.toFixed(2)}</td>
-                  <td style={{ padding: "10px", textAlign: "right" }}>₹{daywiseData.totals.travel.toFixed(2)}</td>
-                  <td style={{ padding: "10px", textAlign: "right" }}>₹{daywiseData.totals.spent.toFixed(2)}</td>
-                  <td style={{ padding: "10px", textAlign: "right", color: daywiseData.totals.closing < 0 ? "var(--color-error)" : "var(--color-success)" }}>
-                    ₹{daywiseData.totals.closing.toFixed(2)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                  })}
+                  
+                  <tr style={{ background: "var(--bg-tertiary)", fontWeight: "700", borderTop: "2px double var(--border-color)" }}>
+                    <td colSpan="4" style={{ padding: "10px", textAlign: "center" }}>TOTAL</td>
+                    <td style={{ padding: "10px", textAlign: "right", color: daywiseData.totals.opening < 0 ? "var(--color-error)" : "inherit" }}>
+                      ₹{daywiseData.totals.opening.toFixed(2)}
+                    </td>
+                    <td style={{ padding: "10px", textAlign: "right", color: "var(--color-success)" }}>
+                      ₹{daywiseData.totals.received.toFixed(2)}
+                    </td>
+                    <td style={{ padding: "10px", textAlign: "right" }}>₹{daywiseData.totals.food.toFixed(2)}</td>
+                    <td style={{ padding: "10px", textAlign: "right" }}>₹{daywiseData.totals.stay.toFixed(2)}</td>
+                    <td style={{ padding: "10px", textAlign: "right" }}>₹{daywiseData.totals.travel.toFixed(2)}</td>
+                    <td style={{ padding: "10px", textAlign: "right" }}>₹{daywiseData.totals.spent.toFixed(2)}</td>
+                    <td style={{ padding: "10px", textAlign: "right", color: daywiseData.totals.closing < 0 ? "var(--color-error)" : "var(--color-success)" }}>
+                      ₹{daywiseData.totals.closing.toFixed(2)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

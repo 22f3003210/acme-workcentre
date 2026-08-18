@@ -141,22 +141,61 @@ export default function ConsultantView({ activeTab }) {
     businessModel: "Retail & Client Advisory Store"
   };
 
-  // Filter projects assigned STRICTLY to the logged in consultant
+  // Filter projects assigned STRICTLY to the logged in consultant across all devices
   const consultantAssignedProjects = (projects || []).filter(p => {
     if (!p || !currentUser) return false;
 
-    // Check direct assignment match by ID or Employee Code
-    if (p.assignedConsultantId && (p.assignedConsultantId === currentUser.id || p.assignedConsultantId === currentUser.empCode)) return true;
-    
-    // Check assignedConsultants array match by ID, Employee Code, or Email
-    if (p.assignedConsultants && Array.isArray(p.assignedConsultants)) {
-      if (p.assignedConsultants.includes(currentUser.id) || p.assignedConsultants.includes(currentUser.empCode) || p.assignedConsultants.includes(currentUser.email)) return true;
-    }
-    
-    // Check assignedConsultant string match by ID, Employee Code, Email, or Name
-    if (p.assignedConsultant && (p.assignedConsultant === currentUser.id || p.assignedConsultant === currentUser.empCode || p.assignedConsultant === currentUser.email || p.assignedConsultant === currentUser.name)) return true;
+    const userKeys = [
+      currentUser.id,
+      currentUser.empCode,
+      currentUser.emp_code,
+      currentUser.email?.toLowerCase(),
+      currentUser.name?.toLowerCase()
+    ].filter(Boolean);
 
-    // DO NOT show unassigned projects unless explicitly assigned by Admin
+    // 1. Check direct assignedConsultantId
+    if (p.assignedConsultantId) {
+      const target = String(p.assignedConsultantId).toLowerCase().trim();
+      if (userKeys.some(k => String(k).toLowerCase().trim() === target)) return true;
+    }
+
+    // 2. Check direct assignedConsultant string or assignedConsultantName
+    if (p.assignedConsultant) {
+      const target = String(p.assignedConsultant).toLowerCase().trim();
+      if (userKeys.some(k => String(k).toLowerCase().trim() === target)) return true;
+    }
+    if (p.assignedConsultantName) {
+      const target = String(p.assignedConsultantName).toLowerCase().trim();
+      if (userKeys.some(k => String(k).toLowerCase().trim() === target)) return true;
+    }
+
+    // 3. Check assignedConsultants array
+    if (p.assignedConsultants && Array.isArray(p.assignedConsultants)) {
+      const assignedList = p.assignedConsultants.map(a => String(a).toLowerCase().trim());
+      // Direct key match
+      if (userKeys.some(k => assignedList.includes(String(k).toLowerCase().trim()))) return true;
+
+      // Cross-referencing user directory match across devices
+      const matchedViaDirectory = p.assignedConsultants.some(assignedId => {
+        const found = (users || []).find(u => 
+          u.id === assignedId || 
+          u.empCode === assignedId || 
+          u.emp_code === assignedId || 
+          (u.email && u.email.toLowerCase() === String(assignedId).toLowerCase()) ||
+          (u.name && u.name.toLowerCase() === String(assignedId).toLowerCase())
+        );
+        if (!found) return false;
+        return (
+          found.id === currentUser.id ||
+          (found.email && found.email.toLowerCase() === (currentUser.email || "").toLowerCase()) ||
+          (found.empCode && found.empCode === currentUser.empCode) ||
+          (found.emp_code && found.emp_code === currentUser.empCode) ||
+          (found.name && found.name.toLowerCase() === (currentUser.name || "").toLowerCase())
+        );
+      });
+      if (matchedViaDirectory) return true;
+    }
+
     return false;
   });
 

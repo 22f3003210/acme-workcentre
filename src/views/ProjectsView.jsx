@@ -795,14 +795,17 @@ export default function ProjectsView() {
                   value={effectiveProject.assignedConsultantId || (effectiveProject.assignedConsultants && effectiveProject.assignedConsultants[0]) || ""}
                   onChange={(e) => {
                     const selectedId = e.target.value;
-                    const selectedUser = (users || []).find(u => u.id === selectedId || u.empCode === selectedId);
+                    const selectedUser = (users || []).find(u => u.id === selectedId || u.empCode === selectedId || u.emp_code === selectedId);
                     const consultantName = selectedUser ? selectedUser.name : "";
+                    const assignedList = selectedUser 
+                      ? Array.from(new Set([selectedUser.id, selectedUser.empCode, selectedUser.emp_code, selectedUser.email, selectedUser.name].filter(Boolean)))
+                      : [];
                     
                     updateProject(effectiveProject.id, {
                       assignedConsultantId: selectedId,
                       assignedConsultantName: consultantName,
                       assignedConsultant: consultantName,
-                      assignedConsultants: selectedId ? [selectedId] : []
+                      assignedConsultants: assignedList
                     });
 
                     const updated = projects.find(p => p.id === selectedProject.id);
@@ -812,13 +815,13 @@ export default function ProjectsView() {
                         assignedConsultantId: selectedId, 
                         assignedConsultantName: consultantName,
                         assignedConsultant: consultantName,
-                        assignedConsultants: selectedId ? [selectedId] : []
+                        assignedConsultants: assignedList
                       });
                     }
 
                     if (setToast) {
                       setToast({ 
-                        message: selectedId ? `✓ Project assigned to ${consultantName}! It will now appear in their login portal.` : "Consultant assignment removed.", 
+                        message: selectedId ? `✓ Project assigned to ${consultantName}! It will now appear on all devices.` : "Consultant assignment removed.", 
                         type: "success" 
                       });
                     }
@@ -1906,7 +1909,13 @@ export default function ProjectsView() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px", maxHeight: "320px", overflowY: "auto", paddingRight: "4px" }}>
                     {users.filter(u => u.role === "Consultant" || u.role === "Employee" || u.role === "Admin").map(u => {
                       const currentAssigned = effectiveProject.assignedConsultants || (effectiveProject.assignedConsultantId ? [effectiveProject.assignedConsultantId] : []);
-                      const isChecked = currentAssigned.includes(u.id) || currentAssigned.includes(u.empCode);
+                      const isChecked = currentAssigned.some(a => 
+                        a === u.id || 
+                        a === u.empCode || 
+                        a === u.emp_code || 
+                        (u.email && String(a).toLowerCase() === u.email.toLowerCase()) ||
+                        (u.name && String(a).toLowerCase() === u.name.toLowerCase())
+                      );
 
                       return (
                         <label key={u.id} style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", border: isChecked ? "2px solid #2563eb" : "1px solid #cbd5e1", borderRadius: "10px", background: isChecked ? "#eff6ff" : "#ffffff", cursor: "pointer", transition: "all 0.15s" }}>
@@ -1915,12 +1924,16 @@ export default function ProjectsView() {
                             checked={isChecked}
                             onChange={(e) => {
                               let updatedList = [...currentAssigned];
+                              const userKeys = [u.id, u.empCode, u.emp_code, u.email, u.name].filter(Boolean);
                               if (e.target.checked) {
-                                if (!updatedList.includes(u.id)) updatedList.push(u.id);
+                                userKeys.forEach(k => {
+                                  if (!updatedList.includes(k)) updatedList.push(k);
+                                });
                               } else {
-                                updatedList = updatedList.filter(id => id !== u.id && id !== u.empCode);
+                                const removeTargets = userKeys.map(k => String(k).toLowerCase());
+                                updatedList = updatedList.filter(id => !removeTargets.includes(String(id).toLowerCase()));
                               }
-                              const names = updatedList.map(id => (users.find(usr => usr.id === id || usr.empCode === id) || {}).name).filter(Boolean).join(", ");
+                              const names = (users || []).filter(usr => updatedList.some(id => id === usr.id || id === usr.empCode || id === usr.email)).map(usr => usr.name).join(", ");
                               updateProject(effectiveProject.id, {
                                 assignedConsultants: updatedList,
                                 assignedConsultantId: updatedList[0] || "",

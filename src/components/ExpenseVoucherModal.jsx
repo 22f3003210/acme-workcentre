@@ -434,7 +434,8 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
                 const comments = v.comments || v.notes || v.description || "Official Consultant Expense";
                 const amountNum = Number(v.amount || 0);
                 const amountWords = numberToWords(amountNum);
-                const paymentMode = v.paymentMode || "UPI / CASH";
+                const rawMode = v.paymentMode || v.paidThrough || v.mode || "UPI";
+                const paymentMode = rawMode.toUpperCase().includes("CASH") ? "CASH" : "UPI";
                 const paidBy = v.paidBy || consultantName;
 
                 return (

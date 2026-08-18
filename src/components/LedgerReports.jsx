@@ -3232,12 +3232,12 @@ export default function LedgerReports() {
                         />
                       </div>
                       <div className="form-group">
-                        <label style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "700" }}>Currency</label>
+                        <label style={{ fontSize: "0.7rem", color: "#64748b", fontWeight: "700" }}>Paid Through / Payment Mode</label>
                         <input 
                           type="text" 
-                          value="India Rupee" 
+                          value={activeItemInGroup.paymentMode || activeItemInGroup.paidThrough || "UPI"} 
                           readOnly 
-                          style={{ width: "100%", boxSizing: "border-box", border: "1px solid #e2e8f0", backgroundColor: "#f8fafc", color: "#334155", padding: "10px 12px", fontSize: "0.85rem", outline: "none" }}
+                          style={{ width: "100%", boxSizing: "border-box", border: "1px solid #cbd5e1", backgroundColor: "#eff6ff", color: "#1e40af", padding: "10px 12px", fontSize: "0.85rem", fontWeight: "700", outline: "none" }}
                         />
                       </div>
                     </div>

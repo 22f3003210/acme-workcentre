@@ -76,7 +76,8 @@ export function formatVoucherHtml(vouchers = []) {
     const comments = v.comments || v.notes || v.description || "Official Consultant Expense";
     const amountNum = Number(v.amount || 0);
     const amountWords = numberToWords(amountNum);
-    const paymentMode = v.paymentMode || (v.category === "Travel" || v.category === "Food" ? "UPI / CASH" : "UPI / CASH");
+    const rawMode = v.paymentMode || v.paidThrough || v.mode || "UPI";
+    const paymentMode = rawMode.toUpperCase().includes("CASH") ? "CASH" : "UPI";
     const paidBy = v.paidBy || consultantName;
 
     return `

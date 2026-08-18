@@ -34,7 +34,7 @@ export default function ConsultantView({ activeTab }) {
   const [category, setCategory] = useState("Food");
   const [description, setDescription] = useState("");
   const [expenseTitle, setExpenseTitle] = useState("");
-  const [currency, setCurrency] = useState("INR");
+  const [paymentMode, setPaymentMode] = useState("UPI");
   const [receiptPreviews, setReceiptPreviews] = useState([]);
   const [activeReceiptIdx, setActiveReceiptIdx] = useState(0);
   const [expenseDate, setExpenseDate] = useState("");
@@ -580,7 +580,9 @@ export default function ConsultantView({ activeTab }) {
       description: description || expenseTitle || `${category} Expense`,
       date: expenseDate || getTodayLocalStr(),
       projectId: expenseProjectId || null,
-      currency: currency || "INR",
+      paymentMode: paymentMode || "UPI",
+      paidThrough: paymentMode || "UPI",
+      currency: "INR",
       receipt: receiptPreviews.length > 0 ? receiptPreviews.join("|||") : null,
       receipts: receiptPreviews
     });
@@ -2950,30 +2952,33 @@ export default function ConsultantView({ activeTab }) {
                   </div>
                 </div>
 
-                {/* Currency & Amount Row */}
+                {/* Paid Through / Payment Mode & Amount Row */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                   <div>
-                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>Currency</label>
+                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>
+                      Paid Through / Payment Mode *
+                    </label>
                     <select 
-                      value={currency} 
-                      onChange={(e) => setCurrency(e.target.value)}
-                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", background: "#ffffff" }}
+                      value={paymentMode} 
+                      onChange={(e) => setPaymentMode(e.target.value)}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", background: "#ffffff", fontWeight: "700" }}
                     >
-                      <option value="INR">Select a currency</option>
-                      <option value="INR">INR (₹)</option>
-                      <option value="USD">USD ($)</option>
+                      <option value="UPI">UPI (GPay / PhonePe / Paytm / NetBanking)</option>
+                      <option value="Cash">Cash</option>
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>Amount ⓘ</label>
+                    <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "600", color: "#64748b", marginBottom: "4px" }}>Amount (₹) *</label>
                     <input 
                       type="number" 
                       placeholder="0.00" 
+                      required
+                      min="1"
                       value={amount} 
                       onChange={(e) => setAmount(e.target.value)}
-                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", fontWeight: "700" }}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", fontWeight: "700", color: "#16a34a" }}
                     />
-                    <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>Payable Amount – INR</div>
+                    <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>Amount in Indian Rupees (INR)</div>
                   </div>
                 </div>
 

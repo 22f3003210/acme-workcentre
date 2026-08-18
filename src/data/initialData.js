@@ -17,16 +17,17 @@ export const initialUsers = [
   {
     id: "accountant-acme",
     empCode: "ACC-01",
-    name: "Finance Accountant",
+    name: "Amin (Accounts Head)",
     email: "accountant",
     phone: "9876543212",
     role: "Accountant",
-    title: "Chief Accountant & Payroll Officer",
+    title: "Accounts Head & Central Cashier",
     department: "Finance & Accounts",
     location: "HQ",
     status: "Active",
     avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
-    advanceAmount: 0
+    advanceAmount: 0,
+    openingBalance: 50000
   }
 ];
 

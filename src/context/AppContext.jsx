@@ -201,6 +201,21 @@ export const AppProvider = ({ children }) => {
     }
   });
 
+  const [companyInflows, setCompanyInflows] = useState(() => {
+    try {
+      const saved = localStorage.getItem("workcentre_company_inflows");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("workcentre_company_inflows", JSON.stringify(companyInflows));
+    } catch (e) {}
+  }, [companyInflows]);
+
   const [clientPendingTasks, setClientPendingTasks] = useState(() => {
     try {
       const saved = localStorage.getItem("workcentre_client_pending_tasks");
@@ -658,6 +673,25 @@ export const AppProvider = ({ children }) => {
           });
         }
       }).catch(err => console.error("Supabase fetch attendance error:", err));
+
+      // 13. Company Inflows (Central Float from Management)
+      supabase.from("company_inflows").select("*").then(({ data, error }) => {
+        if (!error && data && data.length > 0) {
+          setCompanyInflows(data.map(i => ({
+            id: i.id,
+            date: i.date,
+            amount: Number(i.amount) || 0,
+            receivedFrom: i.received_from || "Company Management / Director",
+            sourceAccount: i.source_account || "Company Bank Account",
+            mode: i.mode || "Bank Transfer (NEFT/RTGS)",
+            referenceNo: i.reference_no || "",
+            purpose: i.purpose || "Operating & Sourcing Float Refill",
+            recordedBy: i.recorded_by || "Amin (Accounts Head)",
+            receiptUrl: i.receipt_url || "",
+            createdAt: i.created_at
+          })));
+        }
+      }).catch(err => console.error("Supabase fetch company_inflows error:", err));
     }
   }, []);
 
@@ -1182,6 +1216,164 @@ export const AppProvider = ({ children }) => {
         spent: totalSpent,
         received: totalReceived
       }
+    };
+  };
+
+  // Central Float & Management Inflows
+  const addCompanyInflow = async (inflowData) => {
+    const rawDate = inflowData.date || getTodayDateString();
+    const dateFormatted = rawDate.replace(/-/g, "").replace(/\//g, "");
+    const uniqueId = `INF-MGMT-${dateFormatted}-${Math.floor(100 + Math.random() * 900)}`;
+
+    const newInflow = {
+      id: inflowData.id || uniqueId,
+      date: rawDate,
+      amount: Number(inflowData.amount) || 0,
+      receivedFrom: inflowData.receivedFrom || "Company Management / Director",
+      sourceAccount: inflowData.sourceAccount || "Company Primary Current A/c",
+      mode: inflowData.mode || "Bank Transfer (NEFT/RTGS)",
+      referenceNo: inflowData.referenceNo || "",
+      purpose: inflowData.purpose || "Operating & Sourcing Float Refill",
+      recordedBy: currentUser?.name || "Amin (Accounts Head)",
+      receiptUrl: inflowData.receiptUrl || "",
+      createdAt: new Date().toISOString(),
+      ...inflowData
+    };
+
+    setCompanyInflows(prev => [newInflow, ...prev]);
+
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from("company_inflows").insert([
+          {
+            id: newInflow.id,
+            date: newInflow.date,
+            amount: newInflow.amount,
+            received_from: newInflow.receivedFrom,
+            source_account: newInflow.sourceAccount,
+            mode: newInflow.mode,
+            reference_no: newInflow.referenceNo,
+            purpose: newInflow.purpose,
+            recorded_by: newInflow.recordedBy,
+            receipt_url: newInflow.receiptUrl
+          }
+        ]);
+      } catch (err) {
+        console.error("Supabase addCompanyInflow error:", err);
+      }
+    }
+    return newInflow;
+  };
+
+  const deleteCompanyInflow = async (inflowId) => {
+    setCompanyInflows(prev => prev.filter(i => i.id !== inflowId));
+    if (isSupabaseConfigured()) {
+      try {
+        await supabase.from("company_inflows").delete().eq("id", inflowId);
+      } catch (err) {
+        console.error("Supabase deleteCompanyInflow error:", err);
+      }
+    }
+  };
+
+  // Compile Central Company Cash Flow Ledger for Accounts Head (Amin)
+  const getCentralCashFlowLedger = (yearMonth = getTodayDateString().substring(0, 7)) => {
+    const [year, month] = yearMonth.split("-").map(Number);
+    const totalDays = new Date(year, month, 0).getDate();
+    const aminUser = users.find(u => u.role === "Accountant" || u.id === "accountant-acme");
+    let currentFloat = Number(aminUser?.openingBalance) || 50000;
+
+    const ledgerRows = [];
+    let totalInflow = 0;
+    let totalOfficeSpent = 0;
+    let totalPettyDisbursed = 0;
+
+    const weekdaysNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+    const isDateMatch = (d1, targetStr) => {
+      if (!d1 || !targetStr) return false;
+      const s1 = String(d1).trim().split("T")[0];
+      const s2 = String(targetStr).trim().split("T")[0];
+      if (s1 === s2) return true;
+      const norm = (s) => {
+        if (s.includes("-")) {
+          const p = s.split("-");
+          if (p.length === 3 && p[0].length === 4) return `${p[0]}-${p[1].padStart(2, "0")}-${p[2].padStart(2, "0")}`;
+        }
+        if (s.includes("/")) {
+          const p = s.split("/");
+          if (p.length === 3) {
+            if (p[2].length === 4) return `${p[2]}-${p[1].padStart(2, "0")}-${p[0].padStart(2, "0")}`;
+            if (p[0].length === 4) return `${p[0]}-${p[1].padStart(2, "0")}-${p[2].padStart(2, "0")}`;
+          }
+        }
+        return s;
+      };
+      return norm(s1) === norm(s2);
+    };
+
+    for (let day = 1; day <= totalDays; day++) {
+      const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const queryDateFormatted = `${day}/${month}/${year}`;
+      const dayOfWeek = weekdaysNames[new Date(year, month - 1, day).getDay()];
+
+      // 1. Inflows from Management
+      const dayInflows = companyInflows.filter(i => isDateMatch(i.date, dateStr));
+      const inflowAmount = dayInflows.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+
+      // 2. Office & Corporate Expenses
+      const dayOfficeExpenses = expenses.filter(e => {
+        if (e.status === "Rejected") return false;
+        const isOfficeType = e.expenseType === "Office" || e.employeeId === "accountant-acme" || e.employeeName?.toLowerCase().includes("amin") || ["Office Rent", "Pantry", "Electricity", "Office Utilities", "Stationery", "Hardware & IT", "Courier & Postage", "Legal & Professional", "Office Maintenance"].includes(e.category);
+        if (!isOfficeType) return false;
+        const pDate = e.expenseDate || e.date || e.submittedDate;
+        return isDateMatch(pDate, dateStr);
+      });
+      const officeSpent = dayOfficeExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+
+      // 3. Disbursed Petty Cash to Field Consultants
+      const dayPettyDisbursals = advanceRequests.filter(r => {
+        if (r.status !== "Approved") return false;
+        const pDate = r.allocatedDate || r.approvedDate || r.date || r.submittedDate;
+        return isDateMatch(pDate, dateStr);
+      });
+      const pettyDisbursed = dayPettyDisbursals.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+
+      const openingFloat = currentFloat;
+      const closingFloat = openingFloat + inflowAmount - officeSpent - pettyDisbursed;
+      currentFloat = closingFloat;
+
+      totalInflow += inflowAmount;
+      totalOfficeSpent += officeSpent;
+      totalPettyDisbursed += pettyDisbursed;
+
+      ledgerRows.push({
+        srNo: day,
+        date: queryDateFormatted,
+        isoDate: dateStr,
+        day: dayOfWeek,
+        openingFloat,
+        inflowAmount,
+        inflows: dayInflows,
+        officeSpent,
+        officeExpenses: dayOfficeExpenses,
+        pettyDisbursed,
+        pettyDisbursals: dayPettyDisbursals,
+        closingFloat
+      });
+    }
+
+    return {
+      yearMonth,
+      openingMonthFloat: Number(aminUser?.openingBalance) || 50000,
+      currentFloatInHand: currentFloat,
+      totals: {
+        totalInflow,
+        totalOfficeSpent,
+        totalPettyDisbursed,
+        netChange: totalInflow - totalOfficeSpent - totalPettyDisbursed
+      },
+      rows: ledgerRows
     };
   };
 
@@ -2041,6 +2233,10 @@ export const AppProvider = ({ children }) => {
         advanceRequests,
         requestAdvance,
         verifyAdvanceRequest,
+        companyInflows,
+        addCompanyInflow,
+        deleteCompanyInflow,
+        getCentralCashFlowLedger,
         updateSettings,
         addProject,
         updateProject,

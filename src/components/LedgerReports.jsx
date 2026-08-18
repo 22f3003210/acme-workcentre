@@ -3,10 +3,25 @@ import html2canvas from "html2canvas";
 import { useApp } from "../context/AppContext";
 
 export default function LedgerReports() {
-  const { users, expenses, projects, advanceRequests = [], verifyExpense, currentUser, getEmployeeLedger, setToast } = useApp();
+  const { 
+    users, 
+    expenses, 
+    projects, 
+    advanceRequests = [], 
+    verifyExpense, 
+    currentUser, 
+    getEmployeeLedger, 
+    companyInflows = [],
+    addCompanyInflow,
+    deleteCompanyInflow,
+    getCentralCashFlowLedger,
+    addExpense,
+    setToast 
+  } = useApp();
 
-  const [activeReportSubTab, setActiveReportSubTab] = useState("daywise"); // 'claims', 'daywise', 'individual', or 'projectwise'
+  const [activeReportSubTab, setActiveReportSubTab] = useState("daywise"); // 'claims', 'daywise', 'individual', 'projectwise', or 'cashflow'
   const [projLedgerMonth, setProjLedgerMonth] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; });
+  const [cashFlowMonth, setCashFlowMonth] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; });
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   // Default to today in YYYY-MM-DD
   const todayISO = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })();
@@ -20,9 +35,36 @@ export default function LedgerReports() {
   const [activeReceiptIdx, setActiveReceiptIdx] = useState(0);
   const [zoomScale, setZoomScale] = useState(1);
 
-  // WhatsApp Image Sharing Ref & State
+  // WhatsApp Image Sharing Ref & State for Day-wise Head
   const daywiseCaptureRef = useRef(null);
   const [isSharingWhatsApp, setIsSharingWhatsApp] = useState(false);
+
+  // Central Cash Flow (Amin) States & Modals
+  const cashFlowCaptureRef = useRef(null);
+  const [isSharingCashFlowWA, setIsSharingCashFlowWA] = useState(false);
+  const [showAddInflowModal, setShowAddInflowModal] = useState(false);
+  const [inflowForm, setInflowForm] = useState({
+    date: todayISO,
+    amount: "",
+    receivedFrom: "Company Management / Director",
+    sourceAccount: "Company Primary Current A/c",
+    mode: "Bank Transfer (NEFT/RTGS)",
+    referenceNo: "",
+    purpose: "Operating Capital & Sourcing Float Refill",
+    receiptUrl: ""
+  });
+
+  const [showAddOfficeExpModal, setShowAddOfficeExpModal] = useState(false);
+  const [officeExpForm, setOfficeExpForm] = useState({
+    date: todayISO,
+    amount: "",
+    category: "Pantry",
+    vendorName: "",
+    invoiceNo: "",
+    description: "",
+    paymentMode: "Central Company Float / Cash",
+    receipt: ""
+  });
 
   const consultants = users.filter(u => u.role === "Consultant");
   const activeEmployeeId = selectedEmployeeId || (consultants[0]?.id || "");
@@ -637,6 +679,395 @@ export default function LedgerReports() {
     }
   };
 
+  // Central Cash Flow Calculation for Amin
+  const cashFlowData = getCentralCashFlowLedger ? getCentralCashFlowLedger(cashFlowMonth) : { 
+    yearMonth: cashFlowMonth,
+    openingMonthFloat: 50000,
+    currentFloatInHand: 50000,
+    totals: { totalInflow: 0, totalOfficeSpent: 0, totalPettyDisbursed: 0, netChange: 0 },
+    rows: [] 
+  };
+
+  // Handle Add Management Fund Inflow
+  const handleSubmitInflow = async (e) => {
+    e.preventDefault();
+    if (!inflowForm.amount || Number(inflowForm.amount) <= 0) {
+      setToast({ message: "Please enter a valid inflow amount.", type: "error" });
+      return;
+    }
+
+    try {
+      await addCompanyInflow({
+        date: inflowForm.date || todayISO,
+        amount: Number(inflowForm.amount),
+        receivedFrom: inflowForm.receivedFrom || "Company Management / Director",
+        sourceAccount: inflowForm.sourceAccount || "Company Primary Current A/c",
+        mode: inflowForm.mode || "Bank Transfer (NEFT/RTGS)",
+        referenceNo: inflowForm.referenceNo || "",
+        purpose: inflowForm.purpose || "Operating Capital & Sourcing Float Refill",
+        receiptUrl: inflowForm.receiptUrl || ""
+      });
+
+      setShowAddInflowModal(false);
+      setInflowForm({
+        date: todayISO,
+        amount: "",
+        receivedFrom: "Company Management / Director",
+        sourceAccount: "Company Primary Current A/c",
+        mode: "Bank Transfer (NEFT/RTGS)",
+        referenceNo: "",
+        purpose: "Operating Capital & Sourcing Float Refill",
+        receiptUrl: ""
+      });
+      setToast({ message: "✓ Management fund inflow recorded successfully!", type: "success" });
+    } catch (err) {
+      console.error("Submit inflow error:", err);
+      setToast({ message: "Failed to record fund inflow.", type: "error" });
+    }
+  };
+
+  // Handle Add Office Expense
+  const handleSubmitOfficeExpense = async (e) => {
+    e.preventDefault();
+    if (!officeExpForm.amount || Number(officeExpForm.amount) <= 0) {
+      setToast({ message: "Please enter a valid expense amount.", type: "error" });
+      return;
+    }
+
+    try {
+      const rawDate = officeExpForm.date || todayISO;
+      const dateFormatted = rawDate.replace(/-/g, "").replace(/\//g, "");
+      const uniqueId = `EXP-OFFICE-${dateFormatted}-${Math.floor(100 + Math.random() * 900)}`;
+
+      await addExpense({
+        id: uniqueId,
+        date: rawDate,
+        expenseDate: rawDate,
+        amount: Number(officeExpForm.amount),
+        category: officeExpForm.category || "Pantry",
+        expenseType: "Office",
+        employeeId: "accountant-acme",
+        employeeName: "Amin (Accounts Head)",
+        reason: officeExpForm.description || `Office ${officeExpForm.category} Expense`,
+        description: officeExpForm.description || `Office ${officeExpForm.category} Expense`,
+        vendorName: officeExpForm.vendorName || "Office Vendor",
+        invoiceNo: officeExpForm.invoiceNo || "",
+        paymentMode: officeExpForm.paymentMode || "Central Company Float / Cash",
+        status: "Approved", // Pre-approved by Accounts Head
+        reviewedBy: currentUser?.name || "Amin (Accounts Head)",
+        approvedDate: rawDate,
+        receipt: officeExpForm.receipt || "",
+        receipts: officeExpForm.receipt ? [officeExpForm.receipt] : []
+      });
+
+      setShowAddOfficeExpModal(false);
+      setOfficeExpForm({
+        date: todayISO,
+        amount: "",
+        category: "Pantry",
+        vendorName: "",
+        invoiceNo: "",
+        description: "",
+        paymentMode: "Central Company Float / Cash",
+        receipt: ""
+      });
+      setToast({ message: "✓ Office expense logged successfully!", type: "success" });
+    } catch (err) {
+      console.error("Submit office expense error:", err);
+      setToast({ message: "Failed to log office expense.", type: "error" });
+    }
+  };
+
+  // Direct high-res Canvas Generator for Central Cash Flow (Amin)
+  const createCentralCashFlowBlob = async () => {
+    const scale = 2;
+    const width = 1200;
+    const rowHeight = 44;
+    const headerHeight = 90;
+    const tableHeaderHeight = 40;
+    const footerHeight = 50;
+    const padding = 24;
+    const totalHeight = padding * 2 + headerHeight + tableHeaderHeight + (cashFlowData.rows.length * rowHeight) + footerHeight;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width * scale;
+    canvas.height = totalHeight * scale;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(scale, scale);
+
+    // 1. Background
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, totalHeight);
+
+    // Outer border
+    ctx.strokeStyle = "#e2e8f0";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(10, 10, width - 20, totalHeight - 20);
+
+    // 2. Branded Header
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "bold 18px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("ACME CONSULTING WORKCENTRE", padding + 10, padding + 22);
+
+    ctx.fillStyle = "#475569";
+    ctx.font = "600 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.fillText("ACCOUNTS HEAD CENTRAL CASH FLOW & FLOAT REGISTER (AMIN)", padding + 10, padding + 40);
+
+    // Month badge (top right)
+    const monthBadgeText = `MONTH: ${cashFlowMonth}`;
+    ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    const badgeW = ctx.measureText(monthBadgeText).width + 18;
+    const badgeX = width - padding - 10 - badgeW;
+    const badgeY = padding + 10;
+    ctx.fillStyle = "#eff6ff";
+    ctx.fillRect(badgeX, badgeY, badgeW, 22);
+    ctx.strokeStyle = "#bfdbfe";
+    ctx.strokeRect(badgeX, badgeY, badgeW, 22);
+    ctx.fillStyle = "#1d4ed8";
+    ctx.fillText(monthBadgeText, badgeX + 9, badgeY + 15);
+
+    // Current Float in hand
+    ctx.fillStyle = "#166534";
+    ctx.font = "bold 11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    ctx.textAlign = "right";
+    ctx.fillText(`Closing Float: ₹${cashFlowData.currentFloatInHand.toFixed(2)}`, width - padding - 10, padding + 48);
+
+    // Divider
+    ctx.strokeStyle = "#0f172a";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(padding + 10, padding + 58);
+    ctx.lineTo(width - padding - 10, padding + 58);
+    ctx.stroke();
+
+    // 3. Table Header
+    const tableTop = padding + 68;
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(padding + 10, tableTop, width - 2 * (padding + 10), tableHeaderHeight);
+
+    const cols = [
+      { label: "SR. NO", x: padding + 20, align: "left" },
+      { label: "DATE", x: padding + 80, align: "left" },
+      { label: "DAY", x: padding + 180, align: "left" },
+      { label: "OPENING FLOAT", x: padding + 360, align: "right" },
+      { label: "INFLOW (FROM MGMT)", x: padding + 560, align: "right" },
+      { label: "OFFICE EXPENSES", x: padding + 740, align: "right" },
+      { label: "PETTY CASH (CONSULTANTS)", x: padding + 960, align: "right" },
+      { label: "NET CLOSING FLOAT", x: width - padding - 20, align: "right" }
+    ];
+
+    ctx.fillStyle = "#475569";
+    ctx.font = "bold 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+    cols.forEach(col => {
+      ctx.textAlign = col.align;
+      ctx.fillText(col.label, col.x, tableTop + 24);
+    });
+
+    // 4. Table Rows
+    let currentY = tableTop + tableHeaderHeight;
+    cashFlowData.rows.forEach((row, i) => {
+      if (i % 2 === 1) {
+        ctx.fillStyle = "#fcfdfd";
+        ctx.fillRect(padding + 10, currentY, width - 2 * (padding + 10), rowHeight);
+      }
+      ctx.strokeStyle = "#f1f5f9";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(padding + 10, currentY, width - 2 * (padding + 10), rowHeight);
+
+      // Sr No
+      ctx.fillStyle = "#64748b";
+      ctx.font = "11px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(String(row.srNo), cols[0].x, currentY + 26);
+
+      // Date & Day
+      ctx.fillStyle = "#0f172a";
+      ctx.fillText(row.date, cols[1].x, currentY + 26);
+      ctx.fillStyle = "#64748b";
+      ctx.fillText(row.day, cols[2].x, currentY + 26);
+
+      // Opening Float
+      ctx.textAlign = "right";
+      ctx.fillStyle = "#0f172a";
+      ctx.fillText(`₹${row.openingFloat.toFixed(2)}`, cols[3].x, currentY + 26);
+
+      // Inflow
+      if (row.inflowAmount > 0) {
+        ctx.fillStyle = "#15803d";
+        ctx.font = "bold 11px sans-serif";
+        ctx.fillText(`+₹${row.inflowAmount.toFixed(2)}`, cols[4].x, currentY + 26);
+      } else {
+        ctx.fillStyle = "#cbd5e1";
+        ctx.font = "11px sans-serif";
+        ctx.fillText("—", cols[4].x, currentY + 26);
+      }
+
+      // Office Spent
+      if (row.officeSpent > 0) {
+        ctx.fillStyle = "#b91c1c";
+        ctx.font = "600 11px sans-serif";
+        ctx.fillText(`-₹${row.officeSpent.toFixed(2)}`, cols[5].x, currentY + 26);
+      } else {
+        ctx.fillStyle = "#cbd5e1";
+        ctx.font = "11px sans-serif";
+        ctx.fillText("—", cols[5].x, currentY + 26);
+      }
+
+      // Petty Disbursed
+      if (row.pettyDisbursed > 0) {
+        ctx.fillStyle = "#2563eb";
+        ctx.font = "600 11px sans-serif";
+        ctx.fillText(`-₹${row.pettyDisbursed.toFixed(2)}`, cols[6].x, currentY + 26);
+      } else {
+        ctx.fillStyle = "#cbd5e1";
+        ctx.font = "11px sans-serif";
+        ctx.fillText("—", cols[6].x, currentY + 26);
+      }
+
+      // Closing Float
+      ctx.fillStyle = "#16a34a";
+      ctx.font = "bold 11px sans-serif";
+      ctx.fillText(`₹${row.closingFloat.toFixed(2)}`, cols[7].x, currentY + 26);
+
+      currentY += rowHeight;
+    });
+
+    // 5. Total Footer
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillRect(padding + 10, currentY, width - 2 * (padding + 10), footerHeight);
+    ctx.strokeStyle = "#cbd5e1";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(padding + 10, currentY, width - 2 * (padding + 10), footerHeight);
+
+    ctx.fillStyle = "#0f172a";
+    ctx.font = "bold 11px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("MONTH TOTAL", padding + 120, currentY + 30);
+
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#15803d";
+    ctx.fillText(`+₹${cashFlowData.totals.totalInflow.toFixed(2)}`, cols[4].x, currentY + 30);
+
+    ctx.fillStyle = "#b91c1c";
+    ctx.fillText(`-₹${cashFlowData.totals.totalOfficeSpent.toFixed(2)}`, cols[5].x, currentY + 30);
+
+    ctx.fillStyle = "#2563eb";
+    ctx.fillText(`-₹${cashFlowData.totals.totalPettyDisbursed.toFixed(2)}`, cols[6].x, currentY + 30);
+
+    ctx.fillStyle = "#16a34a";
+    ctx.font = "bold 12px sans-serif";
+    ctx.fillText(`₹${cashFlowData.currentFloatInHand.toFixed(2)}`, cols[7].x, currentY + 30);
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), "image/png");
+    });
+  };
+
+  // Share Central Cash Flow (Amin) on WhatsApp
+  const handleShareCashFlowOnWhatsApp = async (actionType = "share") => {
+    setIsSharingCashFlowWA(true);
+    setToast({ message: "📸 Generating crystal-clear image of Central Cash Flow...", type: "info" });
+
+    try {
+      const blob = await createCentralCashFlowBlob();
+      const filename = `ACME_Central_Cash_Flow_Amin_${cashFlowMonth}.png`;
+
+      const whatsappText = `📊 *ACME ACCOUNTS HEAD CENTRAL CASH FLOW REPORT (AMIN)*\n` +
+        `📅 *Month:* ${cashFlowMonth}\n` +
+        `🏢 *Operating Unit:* Central Office & Sourcing Float\n` +
+        `─────────────────────\n` +
+        `💰 *Opening Month Float:* ₹${cashFlowData.openingMonthFloat.toFixed(2)}\n` +
+        `📥 *Total Inflow from Management:* ₹${cashFlowData.totals.totalInflow.toFixed(2)}\n` +
+        `🏢 *Total Office Expenses:* ₹${cashFlowData.totals.totalOfficeSpent.toFixed(2)}\n` +
+        `👥 *Petty Cash Disbursed (Consultants):* ₹${cashFlowData.totals.totalPettyDisbursed.toFixed(2)}\n` +
+        `📈 *Current Float in Hand:* ₹${cashFlowData.currentFloatInHand.toFixed(2)}\n` +
+        `─────────────────────\n` +
+        `🏢 *ACME Consulting WorkCentre*`;
+
+      if (!blob) {
+        setIsSharingCashFlowWA(false);
+        setToast({ message: "Failed to generate image blob.", type: "error" });
+        return;
+      }
+
+      if (actionType === "download") {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        setIsSharingCashFlowWA(false);
+        setToast({ message: `✓ Downloaded ${filename}!`, type: "success" });
+        return;
+      }
+
+      if (actionType === "copy") {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          setIsSharingCashFlowWA(false);
+          setToast({ message: "✓ Cash flow image copied to clipboard!", type: "success" });
+        } catch (err) {
+          setIsSharingCashFlowWA(false);
+          setToast({ message: "Could not copy image directly. Image is available for Download.", type: "info" });
+        }
+        return;
+      }
+
+      // Native Web Share
+      const file = new File([blob], filename, { type: "image/png" });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: `ACME Central Cash Flow (Amin) - ${cashFlowMonth}`,
+            text: whatsappText,
+            files: [file]
+          });
+          setIsSharingCashFlowWA(false);
+          setToast({ message: "✓ Opened share sheet! Select WhatsApp to send.", type: "success" });
+          return;
+        } catch (err) {
+          if (err.name !== "AbortError") console.error("Web share error:", err);
+        }
+      }
+
+      // Desktop Fallback
+      try {
+        await navigator.clipboard.write([
+          new ClipboardItem({ 'image/png': blob })
+        ]);
+      } catch (e) {}
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappText)}`;
+      window.open(waUrl, "_blank");
+
+      setIsSharingCashFlowWA(false);
+      setToast({ 
+        message: "✓ Cash flow report copied & downloaded! WhatsApp opened — simply paste (Ctrl+V) the image.", 
+        type: "success" 
+      });
+
+    } catch (error) {
+      console.error("Error capturing cash flow:", error);
+      setIsSharingCashFlowWA(false);
+      setToast({ message: "Failed to generate image.", type: "error" });
+    }
+  };
+
   // July 2026 Calendar Cells (Mon/Tue are padding)
   const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   
@@ -717,6 +1148,23 @@ export default function LedgerReports() {
               <line x1="9" y1="14" x2="15" y2="14"/>
             </svg>
             Project Ledger
+          </button>
+          <button
+            onClick={() => setActiveReportSubTab("cashflow")}
+            className={`segmented-button ${activeReportSubTab === "cashflow" ? "active" : ""}`}
+            style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "6px",
+              background: activeReportSubTab === "cashflow" ? "#16a34a" : "transparent",
+              color: activeReportSubTab === "cashflow" ? "#ffffff" : "inherit"
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"></line>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            🏢 Central Cash Flow (Amin)
           </button>
         </div>
       </div>
@@ -1876,6 +2324,634 @@ export default function LedgerReports() {
         );
       })()}
 
+      {/* ── CENTRAL CASH FLOW (AMIN - ACCOUNTS HEAD) ── */}
+      {activeReportSubTab === "cashflow" && (
+        <div className="report-container">
+          {/* Controls & Action Toolbar */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "18px", flexWrap: "wrap", gap: "12px", borderBottom: "1px solid var(--border-color)", paddingBottom: "14px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "var(--text-secondary)" }}>Select Month:</span>
+                <input
+                  type="month"
+                  value={cashFlowMonth}
+                  onChange={e => setCashFlowMonth(e.target.value)}
+                  style={{ 
+                    padding: "6px 12px", 
+                    borderRadius: "6px", 
+                    border: "1px solid var(--border-color)", 
+                    fontSize: "0.82rem", 
+                    background: "var(--bg-card)", 
+                    color: "var(--text-primary)", 
+                    cursor: "pointer",
+                    fontWeight: "600"
+                  }}
+                />
+              </div>
+
+              {/* Inflow from Management Button */}
+              <button
+                onClick={() => setShowAddInflowModal(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#16a34a",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "6px 14px",
+                  fontSize: "0.78rem",
+                  fontWeight: "800",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 5px rgba(22, 163, 74, 0.25)"
+                }}
+              >
+                <span>➕</span> Record Inflow from Management
+              </button>
+
+              {/* Office Expense Button */}
+              <button
+                onClick={() => setShowAddOfficeExpModal(true)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "6px 14px",
+                  fontSize: "0.78rem",
+                  fontWeight: "800",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 5px rgba(37, 99, 235, 0.25)"
+                }}
+              >
+                <span>📝</span> Log Office / Company Expense
+              </button>
+            </div>
+
+            {/* Action Buttons: WhatsApp Share & Export */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <button
+                onClick={() => handleShareCashFlowOnWhatsApp("share")}
+                disabled={isSharingCashFlowWA}
+                title="Share Central Cash Flow statement on WhatsApp as high-res image"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "#25D366",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "8px",
+                  padding: "6px 14px",
+                  fontSize: "0.78rem",
+                  fontWeight: "800",
+                  cursor: isSharingCashFlowWA ? "wait" : "pointer",
+                  boxShadow: "0 2px 5px rgba(37, 211, 102, 0.3)"
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.41a8.17 8.17 0 0 1 2.41 5.83c0 4.54-3.7 8.24-8.24 8.24-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.196 8.196 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24zm4.52 11.53c-.19.53-1.09 1.04-1.52 1.1-.41.06-.94.09-1.52-.1-.36-.12-.82-.27-1.41-.53-2.48-1.08-4.1-3.6-4.22-3.77-.13-.17-1.02-1.36-1.02-2.59 0-1.23.64-1.84.87-2.09.23-.25.5-.31.67-.31.17 0 .34 0 .49.01.15.01.36-.06.56.43.21.49.71 1.74.78 1.87.06.13.1.28.02.45-.09.17-.13.28-.26.43-.13.15-.27.34-.39.46-.13.13-.26.27-.11.53.15.26.67 1.1 1.44 1.78.99.88 1.83 1.15 2.09 1.28.26.13.41.11.56-.06.15-.17.64-.75.81-1 .17-.26.34-.21.57-.13.23.09 1.46.69 1.71.81.26.13.43.19.49.3.06.11.06.64-.13 1.17z"/>
+                </svg>
+                {isSharingCashFlowWA ? "Generating..." : "Share on WhatsApp"}
+              </button>
+
+              <button
+                onClick={() => handleShareCashFlowOnWhatsApp("download")}
+                disabled={isSharingCashFlowWA}
+                title="Download Central Cash Flow as high-res PNG image"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  background: "#eff6ff",
+                  color: "#2563eb",
+                  border: "1px solid #bfdbfe",
+                  borderRadius: "8px",
+                  padding: "6px 10px",
+                  fontSize: "0.74rem",
+                  fontWeight: "700",
+                  cursor: "pointer"
+                }}
+              >
+                📥 Save PNG
+              </button>
+
+              <button
+                onClick={() => {
+                  setToast({ message: `Exporting Central_Cash_Flow_${cashFlowMonth}.xlsx successfully...`, type: "success" });
+                }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  background: "#f8fafc",
+                  color: "#475569",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "8px",
+                  padding: "6px 10px",
+                  fontSize: "0.74rem",
+                  fontWeight: "700",
+                  cursor: "pointer"
+                }}
+              >
+                📊 Export XLSX
+              </button>
+            </div>
+          </div>
+
+          {/* Top KPI Cards Grid */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: "14px", marginBottom: "20px" }}>
+            {/* Card 1: Float in Hand */}
+            <div style={{ background: "#f0fdf4", border: "1.5px solid #bbf7d0", borderRadius: "10px", padding: "14px 18px", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+              <div style={{ fontSize: "0.72rem", fontWeight: "800", color: "#166534", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                💰 CURRENT FLOAT IN HAND (AMIN)
+              </div>
+              <div style={{ fontSize: "1.45rem", fontWeight: "900", color: "#15803d", marginTop: "4px" }}>
+                ₹{cashFlowData.currentFloatInHand.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#166534", marginTop: "4px", fontWeight: "600" }}>
+                Opening Float: ₹{cashFlowData.openingMonthFloat.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+            </div>
+
+            {/* Card 2: Inflow from Management */}
+            <div style={{ background: "#eff6ff", border: "1.5px solid #bfdbfe", borderRadius: "10px", padding: "14px 18px", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+              <div style={{ fontSize: "0.72rem", fontWeight: "800", color: "#1e40af", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                📥 INFLOWS FROM MANAGEMENT
+              </div>
+              <div style={{ fontSize: "1.45rem", fontWeight: "900", color: "#1d4ed8", marginTop: "4px" }}>
+                +₹{cashFlowData.totals.totalInflow.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#3b82f6", marginTop: "4px", fontWeight: "600" }}>
+                {companyInflows.filter(i => (i.date || "").startsWith(cashFlowMonth)).length} Capital Refills / Transfers
+              </div>
+            </div>
+
+            {/* Card 3: Office Expenses */}
+            <div style={{ background: "#fef2f2", border: "1.5px solid #fecaca", borderRadius: "10px", padding: "14px 18px", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+              <div style={{ fontSize: "0.72rem", fontWeight: "800", color: "#991b1b", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                🏢 OFFICE / COMPANY EXPENSES
+              </div>
+              <div style={{ fontSize: "1.45rem", fontWeight: "900", color: "#b91c1c", marginTop: "4px" }}>
+                -₹{cashFlowData.totals.totalOfficeSpent.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#ef4444", marginTop: "4px", fontWeight: "600" }}>
+                Rent, Pantry, Electricity & Supplies
+              </div>
+            </div>
+
+            {/* Card 4: Petty Cash to Consultants */}
+            <div style={{ background: "#faf5ff", border: "1.5px solid #e9d5ff", borderRadius: "10px", padding: "14px 18px", boxShadow: "0 2px 6px rgba(0,0,0,0.02)" }}>
+              <div style={{ fontSize: "0.72rem", fontWeight: "800", color: "#6b21a8", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                👥 PETTY CASH TO CONSULTANTS
+              </div>
+              <div style={{ fontSize: "1.45rem", fontWeight: "900", color: "#7e22ce", marginTop: "4px" }}>
+                -₹{cashFlowData.totals.totalPettyDisbursed.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+              </div>
+              <div style={{ fontSize: "0.72rem", color: "#a855f7", marginTop: "4px", fontWeight: "600" }}>
+                Field Sourcing Advances Disbursed
+              </div>
+            </div>
+          </div>
+
+          {/* Captured Container (Rendered to PNG for WhatsApp) */}
+          <div 
+            ref={cashFlowCaptureRef} 
+            style={{ 
+              background: "#ffffff", 
+              padding: "16px 20px", 
+              borderRadius: "14px", 
+              border: "1px solid #e2e8f0",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+              marginBottom: "24px"
+            }}
+          >
+            {/* Embedded Branded Header */}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "2px solid #0f172a", paddingBottom: "12px", marginBottom: "14px", flexWrap: "wrap", gap: "12px" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "900", color: "#0f172a", letterSpacing: "0.5px" }}>ACME CONSULTING WORKCENTRE</h3>
+                <span style={{ fontSize: "0.78rem", color: "#475569", fontWeight: "600" }}>ACCOUNTS HEAD CENTRAL CASH FLOW &amp; FLOAT REGISTER (AMIN)</span>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <span style={{ fontSize: "0.75rem", background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", padding: "3px 10px", borderRadius: "6px", fontWeight: "800" }}>
+                  MONTH: {cashFlowMonth}
+                </span>
+                <div style={{ fontSize: "0.74rem", color: "#166534", fontWeight: "700", marginTop: "4px" }}>
+                  Closing Float: ₹{cashFlowData.currentFloatInHand.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                </div>
+              </div>
+            </div>
+
+            {/* Daily Cash Flow Table */}
+            <div style={{ overflowX: "auto" }}>
+              <table className="luxury-table" style={{ fontSize: "0.78rem", width: "100%" }}>
+                <thead>
+                  <tr style={{ background: "var(--bg-tertiary)" }}>
+                    <th style={{ padding: "8px", width: "36px" }}>#</th>
+                    <th style={{ padding: "8px", width: "85px" }}>DATE</th>
+                    <th style={{ padding: "8px", width: "80px" }}>DAY</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>OPENING FLOAT</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>INFLOW (FROM MGMT)</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>OFFICE EXPENSES</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>PETTY CASH (CONSULTANTS)</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>NET CLOSING FLOAT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cashFlowData.rows.map((row) => (
+                    <tr key={row.isoDate} style={{ height: "42px" }}>
+                      <td style={{ padding: "4px 8px", textAlign: "center", color: "#64748b" }}>{row.srNo}</td>
+                      <td style={{ padding: "4px 8px", fontWeight: "600" }}>{row.date}</td>
+                      <td style={{ padding: "4px 8px", color: "#64748b" }}>{row.day}</td>
+                      <td style={{ padding: "4px 8px", textAlign: "right", fontWeight: "600" }}>
+                        ₹{row.openingFloat.toFixed(2)}
+                      </td>
+                      <td style={{ padding: "4px 8px", textAlign: "right" }}>
+                        {row.inflowAmount > 0 ? (
+                          <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end" }}>
+                            <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#15803d", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "2px 8px", borderRadius: "4px" }}>
+                              +₹{row.inflowAmount.toFixed(2)}
+                            </span>
+                            {row.inflows.map((inf, idx) => (
+                              <span key={idx} style={{ fontSize: "0.62rem", color: "#166534", marginTop: "2px" }}>
+                                {inf.mode} ({inf.sourceAccount || "Bank"})
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ color: "#cbd5e1" }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "4px 8px", textAlign: "right" }}>
+                        {row.officeSpent > 0 ? (
+                          <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end" }}>
+                            <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#b91c1c", background: "#fef2f2", border: "1px solid #fecaca", padding: "2px 8px", borderRadius: "4px" }}>
+                              -₹{row.officeSpent.toFixed(2)}
+                            </span>
+                            {row.officeExpenses.map((oe, idx) => (
+                              <span key={idx} style={{ fontSize: "0.62rem", color: "#991b1b", marginTop: "2px" }}>
+                                {oe.category} {oe.vendorName ? `(${oe.vendorName})` : ""}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ color: "#cbd5e1" }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "4px 8px", textAlign: "right" }}>
+                        {row.pettyDisbursed > 0 ? (
+                          <div style={{ display: "inline-flex", flexDirection: "column", alignItems: "flex-end" }}>
+                            <span style={{ fontSize: "0.74rem", fontWeight: "700", color: "#6b21a8", background: "#faf5ff", border: "1px solid #e9d5ff", padding: "2px 8px", borderRadius: "4px" }}>
+                              -₹{row.pettyDisbursed.toFixed(2)}
+                            </span>
+                            {row.pettyDisbursals.map((pd, idx) => (
+                              <span key={idx} style={{ fontSize: "0.62rem", color: "#7e22ce", marginTop: "2px" }}>
+                                {pd.employeeName || "Consultant"}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span style={{ color: "#cbd5e1" }}>—</span>
+                        )}
+                      </td>
+                      <td style={{ padding: "4px 8px", textAlign: "right", fontWeight: "800", color: "#16a34a" }}>
+                        ₹{row.closingFloat.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                  
+                  {/* Total Month Row */}
+                  <tr style={{ background: "var(--bg-tertiary)", fontWeight: "800", borderTop: "2.5px double var(--border-color)" }}>
+                    <td colSpan="3" style={{ padding: "10px", textAlign: "center" }}>MONTH TOTAL</td>
+                    <td style={{ padding: "10px", textAlign: "right" }}>
+                      ₹{cashFlowData.openingMonthFloat.toFixed(2)}
+                    </td>
+                    <td style={{ padding: "10px", textAlign: "right", color: "#15803d" }}>
+                      +₹{cashFlowData.totals.totalInflow.toFixed(2)}
+                    </td>
+                    <td style={{ padding: "10px", textAlign: "right", color: "#b91c1c" }}>
+                      -₹{cashFlowData.totals.totalOfficeSpent.toFixed(2)}
+                    </td>
+                    <td style={{ padding: "10px", textAlign: "right", color: "#7e22ce" }}>
+                      -₹{cashFlowData.totals.totalPettyDisbursed.toFixed(2)}
+                    </td>
+                    <td style={{ padding: "10px", textAlign: "right", color: "#16a34a", fontSize: "0.95rem" }}>
+                      ₹{cashFlowData.currentFloatInHand.toFixed(2)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Section: Management Inflows Audit Desk */}
+          <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border-color)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", flexWrap: "wrap", gap: "10px" }}>
+              <div>
+                <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
+                  📥 Management Fund Inflows Register
+                </h4>
+                <span style={{ fontSize: "0.72rem", color: "#64748b" }}>
+                  Detailed audit trail of company capital infusions, bank transfers, and refills received by Amin
+                </span>
+              </div>
+              <button
+                onClick={() => setShowAddInflowModal(true)}
+                style={{
+                  background: "#16a34a",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "5px 12px",
+                  fontSize: "0.74rem",
+                  fontWeight: "700",
+                  cursor: "pointer"
+                }}
+              >
+                + New Inflow
+              </button>
+            </div>
+
+            <div style={{ overflowX: "auto" }}>
+              <table className="luxury-table" style={{ fontSize: "0.78rem", width: "100%" }}>
+                <thead>
+                  <tr style={{ background: "#f8fafc" }}>
+                    <th style={{ padding: "8px" }}>DATE</th>
+                    <th style={{ padding: "8px" }}>RECEIVED FROM</th>
+                    <th style={{ padding: "8px" }}>SOURCE ACCOUNT</th>
+                    <th style={{ padding: "8px" }}>PAYMENT MODE</th>
+                    <th style={{ padding: "8px" }}>TXN / UTR #</th>
+                    <th style={{ padding: "8px", textAlign: "right" }}>AMOUNT</th>
+                    <th style={{ padding: "8px" }}>PURPOSE</th>
+                    <th style={{ padding: "8px", textAlign: "center" }}>ACTION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {companyInflows.length === 0 ? (
+                    <tr>
+                      <td colSpan="8" style={{ padding: "20px", textAlign: "center", color: "#94a3b8" }}>
+                        No management fund inflows recorded yet. Click "+ Record Inflow from Management" to add.
+                      </td>
+                    </tr>
+                  ) : (
+                    companyInflows.map((inf) => (
+                      <tr key={inf.id}>
+                        <td style={{ padding: "8px", fontWeight: "600" }}>{inf.date}</td>
+                        <td style={{ padding: "8px" }}>{inf.receivedFrom || "Company Management"}</td>
+                        <td style={{ padding: "8px", color: "#2563eb", fontWeight: "600" }}>{inf.sourceAccount || "Company Bank"}</td>
+                        <td style={{ padding: "8px" }}>
+                          <span style={{ background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "4px", fontSize: "0.72rem", fontWeight: "700" }}>
+                            {inf.mode}
+                          </span>
+                        </td>
+                        <td style={{ padding: "8px", fontFamily: "monospace", fontSize: "0.75rem" }}>
+                          {inf.referenceNo || "—"}
+                        </td>
+                        <td style={{ padding: "8px", textAlign: "right", fontWeight: "800", color: "#15803d" }}>
+                          +₹{Number(inf.amount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        </td>
+                        <td style={{ padding: "8px", color: "#64748b" }}>{inf.purpose}</td>
+                        <td style={{ padding: "8px", textAlign: "center" }}>
+                          <button
+                            onClick={() => {
+                              if (window.confirm("Are you sure you want to delete this inflow record?")) {
+                                deleteCompanyInflow(inf.id);
+                                setToast({ message: "Inflow record removed.", type: "info" });
+                              }
+                            }}
+                            style={{
+                              background: "#fee2e2",
+                              color: "#ef4444",
+                              border: "1px solid #fca5a5",
+                              borderRadius: "4px",
+                              padding: "2px 8px",
+                              fontSize: "0.7rem",
+                              fontWeight: "700",
+                              cursor: "pointer"
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Modal 1: Record Inflow from Management */}
+          {showAddInflowModal && (
+            <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "16px" }}>
+              <div style={{ background: "#ffffff", borderRadius: "14px", width: "100%", maxWidth: "520px", boxShadow: "0 20px 40px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+                <div style={{ background: "#0f172a", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <h3 style={{ margin: 0, color: "#ffffff", fontSize: "1rem", fontWeight: "800" }}>
+                    📥 Record Inflow from Management / Company
+                  </h3>
+                  <button onClick={() => setShowAddInflowModal(false)} style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
+                </div>
+
+                <form onSubmit={handleSubmitInflow} style={{ padding: "20px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Date *</label>
+                      <input 
+                        type="date" 
+                        required
+                        value={inflowForm.date} 
+                        onChange={e => setInflowForm({ ...inflowForm, date: e.target.value })} 
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem" }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Amount (₹) *</label>
+                      <input 
+                        type="number" 
+                        required
+                        min="1"
+                        placeholder="e.g. 50000"
+                        value={inflowForm.amount} 
+                        onChange={e => setInflowForm({ ...inflowForm, amount: e.target.value })} 
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem", fontWeight: "700", color: "#15803d" }} 
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: "12px" }}>
+                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Received From / Management Authority *</label>
+                    <input 
+                      type="text" 
+                      required
+                      placeholder="e.g. Director / Managing Partner / Company Board"
+                      value={inflowForm.receivedFrom} 
+                      onChange={e => setInflowForm({ ...inflowForm, receivedFrom: e.target.value })} 
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem" }} 
+                    />
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Source Account / Bank</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. HDFC Current A/c, Cash Vault"
+                        value={inflowForm.sourceAccount} 
+                        onChange={e => setInflowForm({ ...inflowForm, sourceAccount: e.target.value })} 
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem" }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Payment Mode</label>
+                      <select 
+                        value={inflowForm.mode} 
+                        onChange={e => setInflowForm({ ...inflowForm, mode: e.target.value })} 
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem", background: "#fff" }}
+                      >
+                        <option value="Bank Transfer (NEFT/RTGS)">Bank Transfer (NEFT/RTGS)</option>
+                        <option value="IMPS / Immediate Transfer">IMPS / Immediate Transfer</option>
+                        <option value="UPI / Online Payment">UPI / Online Payment</option>
+                        <option value="Company Cheque">Company Cheque</option>
+                        <option value="Cash from Company Vault">Cash from Company Vault</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: "12px" }}>
+                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Txn / UTR / Cheque Reference #</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. UTR1234567890 / CHQ-9901"
+                      value={inflowForm.referenceNo} 
+                      onChange={e => setInflowForm({ ...inflowForm, referenceNo: e.target.value })} 
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem" }} 
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: "16px" }}>
+                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Purpose / Remarks</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Operating Capital & Sourcing Float Refill for August"
+                      value={inflowForm.purpose} 
+                      onChange={e => setInflowForm({ ...inflowForm, purpose: e.target.value })} 
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem" }} 
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", borderTop: "1px solid #e2e8f0", paddingTop: "14px" }}>
+                    <button type="button" onClick={() => setShowAddInflowModal(false)} style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "#f8fafc", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer" }}>Cancel</button>
+                    <button type="submit" style={{ padding: "8px 20px", borderRadius: "6px", border: "none", background: "#16a34a", color: "#fff", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}>Save Inflow Record</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Modal 2: Log Office / Company Expense */}
+          {showAddOfficeExpModal && (
+            <div style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "16px" }}>
+              <div style={{ background: "#ffffff", borderRadius: "14px", width: "100%", maxWidth: "520px", boxShadow: "0 20px 40px rgba(0,0,0,0.25)", overflow: "hidden" }}>
+                <div style={{ background: "#0f172a", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <h3 style={{ margin: 0, color: "#ffffff", fontSize: "1rem", fontWeight: "800" }}>
+                    📝 Log Office / Company Expense (Amin)
+                  </h3>
+                  <button onClick={() => setShowAddOfficeExpModal(false)} style={{ background: "transparent", border: "none", color: "#94a3b8", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
+                </div>
+
+                <form onSubmit={handleSubmitOfficeExpense} style={{ padding: "20px" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Date *</label>
+                      <input 
+                        type="date" 
+                        required
+                        value={officeExpForm.date} 
+                        onChange={e => setOfficeExpForm({ ...officeExpForm, date: e.target.value })} 
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem" }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Amount (₹) *</label>
+                      <input 
+                        type="number" 
+                        required
+                        min="1"
+                        placeholder="e.g. 1500"
+                        value={officeExpForm.amount} 
+                        onChange={e => setOfficeExpForm({ ...officeExpForm, amount: e.target.value })} 
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem", fontWeight: "700", color: "#b91c1c" }} 
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "12px" }}>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Expense Category *</label>
+                      <select 
+                        value={officeExpForm.category} 
+                        onChange={e => setOfficeExpForm({ ...officeExpForm, category: e.target.value })} 
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem", background: "#fff" }}
+                      >
+                        <option value="Pantry">Pantry &amp; Refreshments</option>
+                        <option value="Office Rent">Office Rent</option>
+                        <option value="Electricity">Electricity &amp; Utilities</option>
+                        <option value="Stationery">Stationery &amp; Printing</option>
+                        <option value="Hardware & IT">Hardware &amp; IT Maintenance</option>
+                        <option value="Courier & Postage">Courier &amp; Postage</option>
+                        <option value="Legal & Professional">Legal &amp; Professional</option>
+                        <option value="Office Maintenance">Office Maintenance / Cleaning</option>
+                        <option value="Miscellaneous">Miscellaneous</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Vendor / Merchant Name</label>
+                      <input 
+                        type="text" 
+                        placeholder="e.g. D-Mart, BESCOM, Local Stationery"
+                        value={officeExpForm.vendorName} 
+                        onChange={e => setOfficeExpForm({ ...officeExpForm, vendorName: e.target.value })} 
+                        style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem" }} 
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: "12px" }}>
+                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Invoice / Bill Number</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. INV-2026-990"
+                      value={officeExpForm.invoiceNo} 
+                      onChange={e => setOfficeExpForm({ ...officeExpForm, invoiceNo: e.target.value })} 
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem" }} 
+                    />
+                  </div>
+
+                  <div style={{ marginBottom: "16px" }}>
+                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", marginBottom: "4px", color: "#334155" }}>Description / Purpose</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Monthly tea/coffee supplies and pantry stock"
+                      value={officeExpForm.description} 
+                      onChange={e => setOfficeExpForm({ ...officeExpForm, description: e.target.value })} 
+                      style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem" }} 
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", borderTop: "1px solid #e2e8f0", paddingTop: "14px" }}>
+                    <button type="button" onClick={() => setShowAddOfficeExpModal(false)} style={{ padding: "8px 16px", borderRadius: "6px", border: "1px solid #cbd5e1", background: "#f8fafc", fontSize: "0.82rem", fontWeight: "600", cursor: "pointer" }}>Cancel</button>
+                    <button type="submit" style={{ padding: "8px 20px", borderRadius: "6px", border: "none", background: "#2563eb", color: "#fff", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}>Log Office Expense</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {selectedExpenseGroup && activeItemInGroup && (() => {
         const emp = users.find(u => u.id === selectedExpenseGroup.employeeId) || { name: selectedExpenseGroup.employeeName || "Employee", title: "Consultant", avatar: "" };

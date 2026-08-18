@@ -3303,7 +3303,6 @@ export default function ConsultantView({ activeTab }) {
                 <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(34,197,94,0.25)", color: "#4ade80", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.2rem" }}>✓</div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "800", color: "#ffffff" }}>Consultant Shift Check-In Form</h3>
-                  <p style={{ margin: "3px 0 0 0", fontSize: "0.82rem", color: "#a5b4fc" }}>Exact Location & Selfie Attendance Verification Protocol</p>
                 </div>
               </div>
               <button type="button" onClick={() => setShowCheckInWizard(false)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#cbd5e1", borderRadius: "50%", width: "32px", height: "32px", fontSize: "1.2rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
@@ -3720,7 +3719,6 @@ export default function ConsultantView({ activeTab }) {
                 <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(255,255,255,0.2)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.2rem" }}>✖</div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "800", color: "#ffffff" }}>End Shift Check-Out Form</h3>
-                  <p style={{ margin: "3px 0 0 0", fontSize: "0.82rem", color: "#fca5a5" }}>Exact Location & Selfie Attendance Verification for Shift Close</p>
                 </div>
               </div>
               <button type="button" onClick={() => { stopCamera(); setShowCheckOutWizard(false); }} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fca5a5", borderRadius: "50%", width: "32px", height: "32px", fontSize: "1.2rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>

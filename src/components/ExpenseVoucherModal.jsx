@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { numberToWords, printVouchers } from "../lib/voucherPrinter";
+import { acmeLogoBase64 } from "../lib/logoBase64";
 
 export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], users = [] }) {
   if (!isOpen) return null;
@@ -451,18 +452,32 @@ export default function ExpenseVoucherModal({ isOpen, onClose, expenses = [], us
                       overflow: "hidden"
                     }}
                   >
-                    {/* Row 1: Header */}
+                    {/* Row 1: Header with ACME Logo */}
                     <div 
                       style={{
-                        textAlign: "center",
-                        fontSize: "0.85rem",
-                        fontWeight: "bold",
-                        padding: "5px 8px",
+                        padding: "4px 8px",
                         borderBottom: "1.5px solid #000000",
-                        letterSpacing: "0.5px"
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "8px",
+                        background: "#ffffff"
                       }}
                     >
-                      Expense Voucher - {dateStr}
+                      <img 
+                        src={acmeLogoBase64} 
+                        alt="ACME Logo" 
+                        style={{ width: "22px", height: "22px", borderRadius: "50%", objectFit: "cover", border: "1px solid #e2e8f0" }} 
+                      />
+                      <span 
+                        style={{
+                          fontSize: "0.84rem",
+                          fontWeight: "bold",
+                          letterSpacing: "0.5px"
+                        }}
+                      >
+                        Expense Voucher - {dateStr}
+                      </span>
                     </div>
 
                     {/* Row 2: Details */}

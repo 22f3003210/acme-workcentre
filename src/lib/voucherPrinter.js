@@ -1,3 +1,5 @@
+import { acmeLogoBase64 } from "./logoBase64";
+
 // Utility for printing Expense Vouchers (4 per A4 sheet in Landscape)
 
 export function numberToWords(amount) {
@@ -80,7 +82,10 @@ export function formatVoucherHtml(vouchers = []) {
     return `
       <div class="voucher-box">
         <div class="voucher-header">
-          Expense Voucher - ${dateStr}
+          <div class="header-content">
+            <img src="${acmeLogoBase64}" alt="ACME Logo" class="voucher-logo" />
+            <span class="voucher-title">Expense Voucher - ${dateStr}</span>
+          </div>
         </div>
         <div class="voucher-details">
           ${consultantName} - ${category} - ${title} - ${comments}
@@ -185,11 +190,27 @@ export function formatVoucherHtml(vouchers = []) {
       visibility: hidden;
     }
     .voucher-header {
-      text-align: center;
-      font-size: 13pt;
-      font-weight: bold;
-      padding: 6px 8px;
+      padding: 4px 8px;
       border-bottom: 1.5px solid #000000;
+      background: #ffffff;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .voucher-logo {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #e2e8f0;
+    }
+    .voucher-title {
+      font-size: 12.5pt;
+      font-weight: bold;
       letter-spacing: 0.5px;
       line-height: 1.2;
     }

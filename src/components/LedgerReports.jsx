@@ -1,6 +1,8 @@
 import React, { useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import { useApp } from "../context/AppContext";
+import ExpenseVoucherModal from "./ExpenseVoucherModal";
+import { printVouchers } from "../lib/voucherPrinter";
 
 export default function LedgerReports() {
   const { 
@@ -65,6 +67,9 @@ export default function LedgerReports() {
     paymentMode: "Central Company Float / Cash",
     receipt: ""
   });
+
+  // Expense Voucher Print Modal State
+  const [showVoucherModal, setShowVoucherModal] = useState(false);
 
   const consultants = users.filter(u => u.role === "Consultant");
   const activeEmployeeId = selectedEmployeeId || (consultants[0]?.id || "");
@@ -1167,6 +1172,30 @@ export default function LedgerReports() {
             🏢 Central Cash Flow (Amin)
           </button>
         </div>
+
+        {/* Right side global Action: Expense Voucher Print Desk */}
+        <div style={{ display: "inline-flex", float: "right", marginTop: "-38px" }}>
+          <button
+            onClick={() => setShowVoucherModal(true)}
+            title="Open Expense Voucher Print Desk (4 Vouchers per A4 Landscape)"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              background: "#0f172a",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "8px",
+              padding: "7px 14px",
+              fontSize: "0.78rem",
+              fontWeight: "800",
+              cursor: "pointer",
+              boxShadow: "0 2px 6px rgba(15, 23, 42, 0.25)"
+            }}
+          >
+            <span>🖨️</span> Print Expense Vouchers (4/A4)
+          </button>
+        </div>
       </div>
 
       {activeReportSubTab === "claims" && (
@@ -1309,22 +1338,35 @@ export default function LedgerReports() {
                               </button>
                             </div>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedExpenseGroup({
-                                  title: `Expense Claim '${e.reason || e.description}'`,
-                                  category: e.category,
-                                  items: [e],
-                                  employeeName: emp.name,
-                                  employeeId: e.employeeId
-                                });
-                                setActiveItemInGroup(e);
-                              }}
-                              style={{ background: "#f8fafc", border: "1px solid #cbd5e1", color: "#475569", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer" }}
-                            >
-                              Inspect 🔍
-                            </button>
+                            <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedExpenseGroup({
+                                    title: `Expense Claim '${e.reason || e.description}'`,
+                                    category: e.category,
+                                    items: [e],
+                                    employeeName: emp.name,
+                                    employeeId: e.employeeId
+                                  });
+                                  setActiveItemInGroup(e);
+                                }}
+                                style={{ background: "#f8fafc", border: "1px solid #cbd5e1", color: "#475569", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer" }}
+                              >
+                                Inspect 🔍
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(ev) => {
+                                  ev.stopPropagation();
+                                  printVouchers([e]);
+                                }}
+                                title="Print this voucher in 4/A4 landscape format"
+                                style={{ background: "#eff6ff", border: "1px solid #bfdbfe", color: "#2563eb", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer" }}
+                              >
+                                🖨️ Voucher
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -3261,16 +3303,25 @@ export default function LedgerReports() {
                         </button>
                       </>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedExpenseGroup(null);
-                          setActiveItemInGroup(null);
-                        }}
-                        style={{ width: "100%", backgroundColor: "#f1f5f9", color: "#334155", padding: "10px 16px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", cursor: "pointer" }}
-                      >
-                        Close Viewer ✕
-                      </button>
+                      <div style={{ display: "flex", gap: "10px", width: "100%" }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedExpenseGroup(null);
+                            setActiveItemInGroup(null);
+                          }}
+                          style={{ flex: 1, backgroundColor: "#f1f5f9", color: "#334155", padding: "10px 16px", border: "1px solid #cbd5e1", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "700", cursor: "pointer" }}
+                        >
+                          Close Viewer ✕
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => printVouchers([activeItemInGroup])}
+                          style={{ flex: 1, backgroundColor: "#2563eb", color: "#ffffff", padding: "10px 16px", border: "none", borderRadius: "8px", fontSize: "0.85rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)" }}
+                        >
+                          <span>🖨️</span> Print Voucher (4/A4)
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -3282,6 +3333,14 @@ export default function LedgerReports() {
           </div>
         );
       })()}
+
+      {/* ── EXPENSE VOUCHER PRINT MODAL (4 / A4 LANDSCAPE) ── */}
+      <ExpenseVoucherModal
+        isOpen={showVoucherModal}
+        onClose={() => setShowVoucherModal(false)}
+        expenses={expenses}
+        users={users}
+      />
     </div>
   );
 }

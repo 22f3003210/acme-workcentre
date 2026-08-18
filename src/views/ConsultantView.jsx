@@ -98,7 +98,7 @@ export default function ConsultantView({ activeTab }) {
   const [scopeTasks, setScopeTasks] = useState([]);
   const [newScopeInput, setNewScopeInput] = useState("");
 
-  // Step 2: Location Detection (GPS)
+  // Step 2: Location Detection (GPS) & Search
   const [gpsData, setGpsData] = useState({
     lat: null,
     lng: null,
@@ -107,6 +107,9 @@ export default function ConsultantView({ activeTab }) {
     isDetecting: false,
     errorMsg: ""
   });
+  const [locationSearchQuery, setLocationSearchQuery] = useState("");
+  const [locationSearchResults, setLocationSearchResults] = useState([]);
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
 
   // Real Camera & Selfie Capture States
   const [selfiePhoto, setSelfiePhoto] = useState("");
@@ -300,20 +303,25 @@ export default function ConsultantView({ activeTab }) {
 
           try {
             // Tier 1: High precision Nominatim Reverse Geocoding with full details
-            const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`, {
+            const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&extratags=1`, {
               headers: { "Accept-Language": "en" }
             });
             const nomData = await nomRes.json();
             if (nomData && nomData.address) {
               const a = nomData.address;
-              const place = a.amenity || a.shop || a.building || a.road || a.suburb || a.neighbourhood || a.village || a.town || "";
-              const city = a.city || a.town || a.county || a.district || "";
-              const state = a.state || a.state_district || "";
+              const place = nomData.name || a.amenity || a.shop || a.building || a.office || "";
+              const houseAndRoad = [a.house_number, a.road].filter(Boolean).join(" ");
+              const colony = a.neighbourhood || a.suburb || a.residential || "";
+              const area = a.city_district || a.county || "";
+              const city = a.city || a.town || a.village || "";
+              const state = a.state || "";
               const postcode = a.postcode || "";
               const country = a.country || "India";
               
-              const parts = [place, a.suburb, city, state, postcode, country].filter(Boolean);
-              const cleanLoc = parts.length > 0 ? parts.join(", ") : nomData.display_name;
+              const parts = [place, houseAndRoad, colony, area, city, state, postcode, country].filter(Boolean);
+              // Deduplicate consecutive identical components
+              const cleanParts = parts.filter((item, index, self) => self.indexOf(item) === index);
+              const cleanLoc = cleanParts.length > 0 ? cleanParts.join(", ") : nomData.display_name;
               exactAddr = `${cleanLoc} (${lat}, ${lng})`;
             } else if (nomData && nomData.display_name) {
               exactAddr = `${nomData.display_name} (${lat}, ${lng})`;
@@ -370,6 +378,43 @@ export default function ConsultantView({ activeTab }) {
         errorMsg: "Browser geolocation is not supported on this device."
       });
     }
+  };
+
+  const handleSearchLocation = async (query) => {
+    setLocationSearchQuery(query);
+    if (!query || query.trim().length < 3) {
+      setLocationSearchResults([]);
+      return;
+    }
+    setIsSearchingLocation(true);
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=in&addressdetails=1`, {
+        headers: { "Accept-Language": "en" }
+      });
+      const data = await res.json();
+      setLocationSearchResults(data || []);
+    } catch (e) {
+      console.error("Location search error:", e);
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  };
+
+  const handleSelectLocationSearchResult = (item) => {
+    const lat = parseFloat(parseFloat(item.lat).toFixed(6));
+    const lng = parseFloat(parseFloat(item.lon).toFixed(6));
+    const formatted = `${item.display_name} (${lat}, ${lng})`;
+    setGpsData({
+      lat,
+      lng,
+      address: formatted,
+      isVerified: true,
+      isDetecting: false,
+      errorMsg: ""
+    });
+    setLocationSearchResults([]);
+    setLocationSearchQuery("");
+    if (setToast) setToast({ message: `📍 Selected Location: ${item.display_name.substring(0, 45)}...`, type: "success" });
   };
 
   const handleAddScopeTask = () => {
@@ -3075,6 +3120,37 @@ export default function ConsultantView({ activeTab }) {
                       </div>
                     </div>
 
+                    {/* Search / Refine Exact Location Search Input */}
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        value={locationSearchQuery}
+                        onChange={(e) => handleSearchLocation(e.target.value)}
+                        placeholder="🔍 Search exact colony, building, or area (e.g. Venkatadri Colony, Serene Heights, Masab Tank)..."
+                        style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #93c5fd", fontSize: "0.8rem", outline: "none", background: "#ffffff", boxSizing: "border-box" }}
+                      />
+                      {isSearchingLocation && (
+                        <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: "#0284c7" }}>⏳ Searching...</span>
+                      )}
+
+                      {/* Search Results Dropdown */}
+                      {locationSearchResults.length > 0 && (
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100, background: "#ffffff", border: "1.5px solid #3b82f6", borderRadius: "8px", boxShadow: "0 10px 25px rgba(0,0,0,0.18)", marginTop: "4px", maxHeight: "180px", overflowY: "auto" }}>
+                          {locationSearchResults.map((res, i) => (
+                            <div
+                              key={i}
+                              onClick={() => handleSelectLocationSearchResult(res)}
+                              style={{ padding: "9px 12px", borderBottom: "1px solid #f1f5f9", cursor: "pointer", fontSize: "0.78rem", color: "#1e293b", transition: "background 0.15s" }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = "#eff6ff"}
+                              onMouseLeave={(e) => e.currentTarget.style.background = "#ffffff"}
+                            >
+                              📍 <strong style={{ color: "#2563eb" }}>{res.display_name.split(",")[0]}</strong> — {res.display_name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     {/* Live Google Map Frame when coordinates detected */}
                     {gpsData.lat && gpsData.lng ? (
                       <div style={{ width: "100%", height: "130px", borderRadius: "8px", overflow: "hidden", border: "1px solid #cbd5e1", position: "relative", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
@@ -3387,6 +3463,37 @@ export default function ConsultantView({ activeTab }) {
                           {gpsData.isDetecting ? "⏳ Auto-Detecting..." : gpsData.lat ? "● GPS Verified" : "⚠️ Location Pending"}
                         </span>
                       </div>
+                    </div>
+
+                    {/* Search / Refine Exact Location Search Input */}
+                    <div style={{ position: "relative" }}>
+                      <input
+                        type="text"
+                        value={locationSearchQuery}
+                        onChange={(e) => handleSearchLocation(e.target.value)}
+                        placeholder="🔍 Search exact colony, building, or area (e.g. Venkatadri Colony, Serene Heights, Masab Tank)..."
+                        style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #93c5fd", fontSize: "0.8rem", outline: "none", background: "#ffffff", boxSizing: "border-box" }}
+                      />
+                      {isSearchingLocation && (
+                        <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: "#0284c7" }}>⏳ Searching...</span>
+                      )}
+
+                      {/* Search Results Dropdown */}
+                      {locationSearchResults.length > 0 && (
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100, background: "#ffffff", border: "1.5px solid #3b82f6", borderRadius: "8px", boxShadow: "0 10px 25px rgba(0,0,0,0.18)", marginTop: "4px", maxHeight: "180px", overflowY: "auto" }}>
+                          {locationSearchResults.map((res, i) => (
+                            <div
+                              key={i}
+                              onClick={() => handleSelectLocationSearchResult(res)}
+                              style={{ padding: "9px 12px", borderBottom: "1px solid #f1f5f9", cursor: "pointer", fontSize: "0.78rem", color: "#1e293b", transition: "background 0.15s" }}
+                              onMouseEnter={(e) => e.currentTarget.style.background = "#eff6ff"}
+                              onMouseLeave={(e) => e.currentTarget.style.background = "#ffffff"}
+                            >
+                              📍 <strong style={{ color: "#2563eb" }}>{res.display_name.split(",")[0]}</strong> — {res.display_name}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Live Google Map Frame when coordinates detected */}

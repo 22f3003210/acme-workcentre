@@ -79,7 +79,13 @@ class ErrorBoundary extends React.Component {
             <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
               <button
                 type="button"
-                onClick={this.handleReset}
+                onClick={() => {
+                  if (this.state.error?.toString().includes("dynamically imported module") || this.state.error?.toString().includes("Failed to fetch")) {
+                    window.location.reload();
+                  } else {
+                    this.handleReset();
+                  }
+                }}
                 style={{
                   backgroundColor: "#2563eb",
                   color: "#ffffff",

@@ -6,7 +6,7 @@ import Toast from "./components/Toast";
 import ErrorBoundary from "./components/ErrorBoundary";
 import LoadingSpinner from "./components/LoadingSpinner";
 
-// Dynamic view loader helper: in test mode, eager-preloads dynamic import for synchronous test compliance; in build/prod creates true Rollup code-split chunks.
+// Dynamic view loader helper: handles automatic reloads on chunk hash deployment changes.
 const lazyView = (importFn) => {
   if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
     let Comp = null;
@@ -16,7 +16,19 @@ const lazyView = (importFn) => {
       throw promise;
     };
   }
-  return lazy(importFn);
+
+  return lazy(() =>
+    importFn().catch((err) => {
+      const hasReloaded = typeof window !== "undefined" ? window.sessionStorage.getItem("acme_chunk_reloaded") : null;
+      if (!hasReloaded && (err?.message?.includes("dynamically imported module") || err?.message?.includes("Failed to fetch"))) {
+        window.sessionStorage.setItem("acme_chunk_reloaded", "true");
+        window.location.reload();
+        return new Promise(() => {}); // pause render while browser reloads fresh assets
+      }
+      if (typeof window !== "undefined") window.sessionStorage.removeItem("acme_chunk_reloaded");
+      throw err;
+    })
+  );
 };
 
 // Route View Components Lazy Loaded

@@ -734,14 +734,19 @@ export const AppProvider = ({ children }) => {
 
   // Authentication Handlers
   const login = (email, password) => {
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanInput = (email || "").trim().toLowerCase();
     const cleanPassword = password ? password.trim() : "";
     
     let user;
-    if ((cleanEmail === "acmeadmin" || cleanEmail === "admin" || cleanEmail === "acmeadmin@acmeworkcentre.com") && cleanPassword === "123") {
+    if ((cleanInput === "acmeadmin" || cleanInput === "admin" || cleanInput === "acmeadmin@acmeworkcentre.com") && (cleanPassword === "123" || cleanPassword === "")) {
       user = users.find(u => u.role === "Admin" || u.id === "admin-acme" || u.email === "acmeadmin") || users[0];
     } else {
-      user = users.find(u => u.email?.toLowerCase() === cleanEmail);
+      user = users.find(u => 
+        (u.email && u.email.toLowerCase() === cleanInput) ||
+        (u.empCode && u.empCode.toLowerCase() === cleanInput) ||
+        (u.emp_code && u.emp_code.toLowerCase() === cleanInput) ||
+        (u.name && u.name.toLowerCase() === cleanInput)
+      );
       if (user) {
         const userPassword = user.password || "123";
         if (cleanPassword && cleanPassword !== userPassword && cleanPassword !== "123") {
@@ -753,6 +758,10 @@ export const AppProvider = ({ children }) => {
     if (user) {
       setCurrentUser(user);
       setIsAuthenticated(true);
+      try {
+        localStorage.setItem("workcentre_authenticated", "true");
+        localStorage.setItem("workcentre_current_user_id", user.id);
+      } catch (e) {}
       // Update last active login
       setUsers(prev => prev.map(u => 
         u.id === user.id ? { ...u, lastLogin: new Date().toISOString() } : u

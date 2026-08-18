@@ -6,6 +6,7 @@ import RecruiterView from "./RecruiterView";
 export default function ConsultantView({ activeTab }) {
   const { 
     currentUser, 
+    users,
     expenses, 
     projects,
     addExpense, 

@@ -318,55 +318,6 @@ export default function AccountsView({ activeTab: parentActiveTab }) {
 
           </div>
 
-          {/* Sourcing & Costing Breakdown by Category & Project */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))", gap: "20px" }}>
-            
-            {/* Category Expenses Card */}
-            <div style={{ background: "#ffffff", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 2px 4px rgba(0,0,0,0.03)" }}>
-              <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: "0 0 4px 0" }}>
-                💳 Expense Claims Breakdown by Category
-              </h3>
-              <p style={{ fontSize: "0.75rem", color: "#64748b", margin: "0 0 16px 0" }}>Operational disbursements vs approved totals</p>
-              
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "12px" }}>
-                {["Food", "Accommodation", "Travel"].map((cat) => {
-                  const catExpenses = expenses.filter(e => e.category === cat);
-                  const approvedSum = catExpenses
-                    .filter(e => e.status === "Approved" || e.status === "Reimbursed")
-                    .reduce((s, e) => s + (Number(e.amount) || 0), 0);
-                  return (
-                    <div key={cat} style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                      <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "700", display: "block" }}>{cat}</span>
-                      <strong style={{ fontSize: "1.15rem", color: "#0f172a", display: "block", margin: "4px 0" }}>₹{approvedSum.toLocaleString()}</strong>
-                      <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>{catExpenses.length} claims</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Per-Day Consultant Costing Model Explanation */}
-            <div style={{ background: "#ffffff", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0", boxShadow: "0 2px 4px rgba(0,0,0,0.03)" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                <h3 style={{ fontSize: "1.05rem", fontWeight: "800", color: "#0f172a", margin: 0 }}>
-                  ⚖️ Costing Architecture (Labor vs Expenses)
-                </h3>
-                <span style={{ fontSize: "0.72rem", background: "#f3e8ff", color: "#7e22ce", padding: "3px 8px", borderRadius: "6px", fontWeight: "700" }}>
-                  Active Model
-                </span>
-              </div>
-              <p style={{ fontSize: "0.82rem", color: "#475569", lineHeight: "1.5", margin: "0 0 12px 0" }}>
-                Per user accounting directives, <strong>Consultant Per-Day Salary Rate (₹{defaultDailyRate}/day)</strong> is tracked separately as <strong>Engagement Labor Costing</strong>, rather than an operational expense claim.
-              </p>
-              <div style={{ background: "#f8fafc", padding: "12px 16px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.8rem", color: "#334155" }}>
-                <div>• <strong>Consultant Labor Costing:</strong> Days Worked × Daily Salary Rate</div>
-                <div>• <strong>Operational Expenses:</strong> Travel, Food, Stay receipts reimbursed</div>
-                <div style={{ marginTop: "4px", color: "#166534", fontWeight: "700" }}>• <strong>Total Project Cost:</strong> Labor Costing + Operational Expenses</div>
-              </div>
-            </div>
-
-          </div>
-
           {/* Quick Action Tables: Pending Claims & Advance Requests */}
           <div style={{ background: "#ffffff", padding: "24px", borderRadius: "16px", border: "1px solid #e2e8f0" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>

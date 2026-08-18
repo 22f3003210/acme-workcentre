@@ -302,36 +302,45 @@ export default function ConsultantView({ activeTab }) {
           let exactAddr = `${lat}° N, ${lng}° E`;
 
           try {
-            // Tier 1: High precision Nominatim Reverse Geocoding with full details
-            const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&extratags=1`, {
-              headers: { "Accept-Language": "en" }
-            });
-            const nomData = await nomRes.json();
-            if (nomData && nomData.address) {
-              const a = nomData.address;
-              const place = nomData.name || a.amenity || a.shop || a.building || a.office || "";
-              const houseAndRoad = [a.house_number, a.road].filter(Boolean).join(" ");
-              const colony = a.neighbourhood || a.suburb || a.residential || "";
-              const area = a.city_district || a.county || "";
-              const city = a.city || a.town || a.village || "";
-              const state = a.state || "";
-              const postcode = a.postcode || "";
-              const country = a.country || "India";
-              
-              const parts = [place, houseAndRoad, colony, area, city, state, postcode, country].filter(Boolean);
-              // Deduplicate consecutive identical components
+            // Tier 1: Photon Hyper-Local Geocoding (100% Free, No Credit Card, Zero Billing Mandate)
+            const photonRes = await fetch(`https://photon.komoot.io/reverse?lat=${lat}&lon=${lng}`);
+            const photonData = await photonRes.json();
+            if (photonData && photonData.features && photonData.features.length > 0) {
+              const p = photonData.features[0].properties;
+              const place = p.name || "";
+              const street = [p.housenumber, p.street].filter(Boolean).join(" ");
+              const colony = p.locality || p.district || "";
+              const city = p.city || "";
+              const state = p.state || "";
+              const postcode = p.postcode || "";
+              const country = p.country || "India";
+
+              const parts = [place, street, colony, city, state, postcode, country].filter(Boolean);
               const cleanParts = parts.filter((item, index, self) => self.indexOf(item) === index);
-              const cleanLoc = cleanParts.length > 0 ? cleanParts.join(", ") : nomData.display_name;
-              exactAddr = `${cleanLoc} (${lat}, ${lng})`;
-            } else if (nomData && nomData.display_name) {
-              exactAddr = `${nomData.display_name} (${lat}, ${lng})`;
-            } else {
-              // Tier 2: BigDataCloud High-Accuracy Geocoding Fallback
-              const bdcRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
-              const bdcData = await bdcRes.json();
-              if (bdcData && (bdcData.locality || bdcData.city || bdcData.principalSubdivision)) {
-                const parts = [bdcData.locality, bdcData.city, bdcData.principalSubdivision, bdcData.countryName].filter(Boolean);
-                exactAddr = `${parts.join(", ")} (${lat}, ${lng})`;
+              if (cleanParts.length > 0) {
+                exactAddr = `${cleanParts.join(", ")} (${lat}, ${lng})`;
+              }
+            }
+
+            // Fallback to Nominatim if needed
+            if (exactAddr === `${lat}° N, ${lng}° E` || exactAddr.length < 15) {
+              const nomRes = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&extratags=1`, {
+                headers: { "Accept-Language": "en" }
+              });
+              const nomData = await nomRes.json();
+              if (nomData && nomData.address) {
+                const a = nomData.address;
+                const place = nomData.name || a.amenity || a.shop || a.building || a.office || "";
+                const houseAndRoad = [a.house_number, a.road].filter(Boolean).join(" ");
+                const colony = a.neighbourhood || a.suburb || a.residential || "";
+                const city = a.city || a.town || a.village || "";
+                const state = a.state || "";
+                const postcode = a.postcode || "";
+                const country = a.country || "India";
+                
+                const parts = [place, houseAndRoad, colony, city, state, postcode, country].filter(Boolean);
+                const cleanParts = parts.filter((item, index, self) => self.indexOf(item) === index);
+                exactAddr = `${cleanParts.join(", ")} (${lat}, ${lng})`;
               }
             }
           } catch (e) {
@@ -388,11 +397,22 @@ export default function ConsultantView({ activeTab }) {
     }
     setIsSearchingLocation(true);
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&countrycodes=in&addressdetails=1`, {
-        headers: { "Accept-Language": "en" }
-      });
+      // 100% Free Photon search with colony/building autocomplete
+      const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=6&bbox=68.1,6.5,97.4,35.5`);
       const data = await res.json();
-      setLocationSearchResults(data || []);
+      if (data && data.features) {
+        const formattedResults = data.features.map(f => {
+          const p = f.properties;
+          const coords = f.geometry.coordinates;
+          const label = [p.name, p.housenumber, p.street, p.locality || p.district, p.city, p.state, p.postcode].filter(Boolean).join(", ");
+          return {
+            lat: coords[1],
+            lon: coords[0],
+            display_name: label || p.name || query
+          };
+        });
+        setLocationSearchResults(formattedResults);
+      }
     } catch (e) {
       console.error("Location search error:", e);
     } finally {

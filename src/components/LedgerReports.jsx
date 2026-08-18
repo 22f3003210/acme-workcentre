@@ -3,7 +3,7 @@ import html2canvas from "html2canvas";
 import { useApp } from "../context/AppContext";
 
 export default function LedgerReports() {
-  const { users, expenses, projects, verifyExpense, currentUser, getEmployeeLedger, setToast } = useApp();
+  const { users, expenses, projects, advanceRequests = [], verifyExpense, currentUser, getEmployeeLedger, setToast } = useApp();
 
   const [activeReportSubTab, setActiveReportSubTab] = useState("daywise"); // 'claims', 'daywise', 'individual', or 'projectwise'
   const [projLedgerMonth, setProjLedgerMonth] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; });

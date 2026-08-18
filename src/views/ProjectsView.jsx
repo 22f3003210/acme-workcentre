@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useNavigate, Navigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { initialProjects } from "../data/initialData";
 import logoImg from "../assets/logo.png";
@@ -105,28 +105,24 @@ const DocxViewer = ({ doc }) => {
 
     convertDocx();
     return () => { isMounted = false; };
-  }, [doc?.url]);
+  }, [doc]);
 
   if (loading) {
     return (
-      <div style={{ background: "#ffffff", padding: "40px", borderRadius: "12px", width: "100%", maxWidth: "700px", textAlign: "center", boxShadow: "0 4px 12px rgba(0,0,0,0.06)" }}>
-        <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>📄</div>
-        <h4 style={{ margin: "0 0 8px 0", color: "#2563eb", fontWeight: "800" }}>Parsing & Rendering Word Document ({doc?.fileName})...</h4>
-        <p style={{ fontSize: "0.85rem", color: "#64748b" }}>Converting Word document formatting directly onto canvas</p>
+      <div style={{ background: "#ffffff", padding: "40px", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)", width: "100%", maxWidth: "800px", textAlign: "center", color: "#64748b" }}>
+        <div style={{ fontSize: "1.8rem", marginBottom: "12px" }}>📄</div>
+        <div style={{ fontWeight: "700", color: "#0f172a" }}>Parsing & Rendering Word Document...</div>
+        <div style={{ fontSize: "0.85rem", marginTop: "4px" }}>Formatting client audit report directly in view</div>
       </div>
     );
   }
 
-  if (error || !htmlContent) {
+  if (error) {
     return (
-      <div style={{ background: "#ffffff", padding: "40px", borderRadius: "12px", width: "100%", maxWidth: "800px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-        <div style={{ borderBottom: "2px solid #0f172a", paddingBottom: "16px", marginBottom: "20px" }}>
-          <h2 style={{ margin: "0 0 4px 0", fontSize: "1.4rem", fontWeight: "900", color: "#0f172a" }}>{doc?.title || doc?.fileName}</h2>
-          <p style={{ margin: 0, fontSize: "0.82rem", color: "#64748b" }}>File: {doc?.fileName} • Uploaded: {doc?.uploadedAt} • By: {doc?.uploadedBy}</p>
-        </div>
-        <div style={{ fontSize: "0.95rem", lineHeight: "1.7", color: "#1e293b" }}>
-          <p>This Word document file (<strong>{doc?.fileName}</strong>) has been uploaded and linked to the project database.</p>
-        </div>
+      <div style={{ background: "#ffffff", padding: "40px", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.08)", width: "100%", maxWidth: "800px", textAlign: "center", color: "#64748b" }}>
+        <div style={{ fontSize: "2rem", marginBottom: "12px" }}>📝</div>
+        <h3 style={{ margin: 0, color: "#0f172a" }}>{doc?.title || doc?.fileName}</h3>
+        <p style={{ margin: "8px 0 0 0", fontSize: "0.88rem" }}>Binary Word document uploaded by {doc?.uploadedBy} ({doc?.fileSize})</p>
         <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid #cbd5e1" }}>
           <a href={doc?.url} download={doc?.fileName} style={{ background: "#2563eb", color: "#ffffff", padding: "8px 20px", borderRadius: "8px", textDecoration: "none", fontWeight: "800", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "8px" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -159,6 +155,7 @@ const DocxViewer = ({ doc }) => {
 export default function ProjectsView() {
   const params = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const { 
     projects, 
@@ -176,7 +173,14 @@ export default function ProjectsView() {
   } = useApp();
 
   const [statusFilter, setStatusFilter] = useState("All"); // 'All', 'Active', 'Completed', 'On Hold'
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
+
+  useEffect(() => {
+    const q = searchParams.get("search");
+    if (q !== null && q !== undefined) {
+      setSearchQuery(q);
+    }
+  }, [searchParams]);
 
   const [selectedProject, setSelectedProject] = useState(null);
 
@@ -525,23 +529,92 @@ export default function ProjectsView() {
     reader.readAsDataURL(file);
   };
 
+  const isConsultant = currentUser?.role === "Consultant";
+
+  // Filter projects based on user role: Consultants see their assigned clients/projects
+  const roleScopedProjects = useMemo(() => {
+    if (!isConsultant) return projects || [];
+
+    const userKeys = [
+      currentUser?.id,
+      currentUser?.empCode,
+      currentUser?.emp_code,
+      currentUser?.email?.toLowerCase(),
+      currentUser?.name?.toLowerCase()
+    ].filter(Boolean);
+
+    const assigned = (projects || []).filter(p => {
+      if (!p) return false;
+
+      // 1. Direct ID match
+      if (p.assignedConsultantId && userKeys.some(k => String(k).toLowerCase().trim() === String(p.assignedConsultantId).toLowerCase().trim())) {
+        return true;
+      }
+
+      // 2. Direct Name string match
+      if (p.assignedConsultant && userKeys.some(k => String(k).toLowerCase().trim() === String(p.assignedConsultant).toLowerCase().trim() || String(p.assignedConsultant).toLowerCase().includes(String(k).toLowerCase().trim()))) {
+        return true;
+      }
+      if (p.assignedConsultantName && userKeys.some(k => String(k).toLowerCase().trim() === String(p.assignedConsultantName).toLowerCase().trim() || String(p.assignedConsultantName).toLowerCase().includes(String(k).toLowerCase().trim()))) {
+        return true;
+      }
+
+      // 3. Array match
+      if (p.assignedConsultants && Array.isArray(p.assignedConsultants)) {
+        const assignedList = p.assignedConsultants.map(a => String(a).toLowerCase().trim());
+        if (userKeys.some(k => assignedList.some(item => item === String(k).toLowerCase().trim() || item.includes(String(k).toLowerCase().trim())))) return true;
+
+        const matchedViaDir = p.assignedConsultants.some(assignedId => {
+          const found = (users || []).find(u => 
+            u.id === assignedId || 
+            u.empCode === assignedId || 
+            u.emp_code === assignedId || 
+            (u.email && u.email.toLowerCase() === String(assignedId).toLowerCase()) ||
+            (u.name && u.name.toLowerCase() === String(assignedId).toLowerCase())
+          );
+          if (!found) return false;
+          return (
+            found.id === currentUser?.id ||
+            (found.email && found.email.toLowerCase() === (currentUser?.email || "").toLowerCase()) ||
+            (found.empCode && found.empCode === currentUser?.empCode) ||
+            (found.emp_code && found.emp_code === currentUser?.empCode) ||
+            (found.name && found.name.toLowerCase() === (currentUser?.name || "").toLowerCase())
+          );
+        });
+        if (matchedViaDir) return true;
+      }
+
+      // 4. Consultant / Team field
+      if (p.consultant && userKeys.some(k => String(k).toLowerCase().trim() === String(p.consultant).toLowerCase().trim())) {
+        return true;
+      }
+
+      return false;
+    });
+
+    if (assigned.length > 0) return assigned;
+
+    // Fallback if no specific project is linked yet so consultant can access hub
+    return (projects || []).slice(0, 2);
+  }, [projects, currentUser, isConsultant, users]);
+
   // Filtered projects
-  const filteredProjects = projects.filter(p => {
+  const filteredProjects = roleScopedProjects.filter(p => {
     const matchesStatus = statusFilter === "All" || p.status === statusFilter || (statusFilter === "Active" && p.status === "In Progress");
     const q = searchQuery.toLowerCase();
     const matchesSearch = 
       !q || 
-      p.name.toLowerCase().includes(q) || 
-      p.code.toLowerCase().includes(q) || 
+      p.name?.toLowerCase().includes(q) || 
+      p.code?.toLowerCase().includes(q) || 
       (p.pocName && p.pocName.toLowerCase().includes(q)) ||
-      p.client.toLowerCase().includes(q);
+      (p.client && p.client.toLowerCase().includes(q));
     return matchesStatus && matchesSearch;
   });
 
   // Calculate high-level stats
-  const activeCount = projects.filter(p => p.status === "Active" || p.status === "In Progress").length;
-  const totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
-  const totalDiscussions = projects.reduce((sum, p) => sum + (p.discussions?.length || 0), 0);
+  const activeCount = roleScopedProjects.filter(p => p.status === "Active" || p.status === "In Progress").length;
+  const totalBudget = roleScopedProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
+  const totalDiscussions = roleScopedProjects.reduce((sum, p) => sum + (p.discussions?.length || 0), 0);
 
   // Handlers
   const handleCreateProjectSubmit = (e) => {
@@ -2123,42 +2196,46 @@ export default function ProjectsView() {
       {/* Top Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <h2 style={{ fontSize: "1.4rem", fontWeight: "600", color: "#0f172a", margin: 0 }}>
-            Projects & Client Hub
+          <h2 style={{ fontSize: "1.4rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>
+            {isConsultant ? "My Assigned Client Projects Hub" : "Projects & Client Hub"}
           </h2>
           <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>
-            Track client engagements, project discussions, assigned teams, and linked expense claims
+            {isConsultant 
+              ? "Track your assigned clients, store locations, site visits, deliverables, and linked expense claims"
+              : "Track client engagements, project discussions, assigned teams, and linked expense claims"}
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{
-            background: "#4c478a",
-            color: "#ffffff",
-            border: "none",
-            borderRadius: "4px",
-            padding: "9px 18px",
-            fontWeight: "600",
-            fontSize: "0.84rem",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            boxShadow: "0 2px 4px rgba(76, 71, 138, 0.15)"
-          }}
-        >
-          <span>＋</span> Register New Project
-        </button>
+        {!isConsultant && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              background: "#4c478a",
+              color: "#ffffff",
+              border: "none",
+              borderRadius: "4px",
+              padding: "9px 18px",
+              fontWeight: "600",
+              fontSize: "0.84rem",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              boxShadow: "0 2px 4px rgba(76, 71, 138, 0.15)"
+            }}
+          >
+            <span>＋</span> Register New Project
+          </button>
+        )}
       </div>
 
-      {/* Summary KPI Grid (3 Columns - Sourcing Allocation Removed) */}
+      {/* Summary KPI Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
         <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "4px", border: "1px solid #e2e8f0", borderLeft: "4px solid #4c478a" }}>
           <div style={{ fontSize: "0.72rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            TOTAL PROJECTS
+            {isConsultant ? "MY ASSIGNED CLIENTS / PROJECTS" : "TOTAL PROJECTS"}
           </div>
           <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
-            {projects.length} <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "500" }}>({activeCount} Active)</span>
+            {roleScopedProjects.length} <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "500" }}>({activeCount} Active)</span>
           </div>
         </div>
 
@@ -2173,10 +2250,10 @@ export default function ProjectsView() {
 
         <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "4px", border: "1px solid #e2e8f0", borderLeft: "4px solid #d97706" }}>
           <div style={{ fontSize: "0.72rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            ASSIGNED CONSULTANTS
+            {isConsultant ? "ACTIVE STORE LOCATIONS" : "ASSIGNED CONSULTANTS"}
           </div>
           <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
-            {consultants.length} <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "400" }}>active leads</span>
+            {isConsultant ? roleScopedProjects.length : consultants.length} <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "400" }}>{isConsultant ? "active sites" : "active leads"}</span>
           </div>
         </div>
       </div>

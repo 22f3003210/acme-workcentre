@@ -186,31 +186,64 @@ export default function Layout({ children, activeTab, setActiveTab }) {
         {/* Right Nav: Rounded Rectangle Search Bar + User Profile */}
         <div className="sea-nav-right" style={{ display: "flex", alignItems: "center", gap: "14px" }}>
           
-          {/* Top Search Bar with Interactive Dropdown */}
-          <div className="sea-search-wrapper" style={{ position: "relative" }}>
+          {/* Top Search Bar with Interactive Dropdown & Search Action Button */}
+          <div className="sea-search-wrapper" style={{ position: "relative", display: "flex", alignItems: "center" }}>
             <span className="sea-search-icon" style={{ position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
               </svg>
             </span>
             <input 
               type="text" 
               className="sea-search-input" 
-              placeholder="Search employees or actions (Ex: Apply Leave)" 
+              placeholder="Search employees, clients, actions..." 
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setIsSearchOpen(true); }}
               onFocus={() => setIsSearchOpen(true)}
-              style={{ width: "340px", height: "36px", paddingLeft: "32px", paddingRight: "30px", borderRadius: isSearchOpen && searchQuery ? "8px 8px 0 0" : "8px", border: "1px solid #e2e8f0" }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSearchSubmit();
+                }
+              }}
+              style={{ width: "320px", height: "36px", paddingLeft: "32px", paddingRight: searchQuery ? "70px" : "46px", borderRadius: isSearchOpen && searchQuery ? "8px 8px 0 0" : "8px", border: "1px solid #e2e8f0" }}
             />
-            {searchQuery && (
+            
+            <div style={{ position: "absolute", right: "6px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "4px" }}>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(""); setIsSearchOpen(false); }}
+                  style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.85rem", padding: "2px 4px" }}
+                  title="Clear"
+                >
+                  ⊗
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={() => { setSearchQuery(""); setIsSearchOpen(false); }}
-                style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "0.85rem" }}
+                onClick={() => handleSearchSubmit()}
+                style={{
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  border: "none",
+                  borderRadius: "6px",
+                  height: "26px",
+                  padding: "0 8px",
+                  fontSize: "0.74rem",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "3px",
+                  boxShadow: "0 1px 3px rgba(37,99,235,0.2)"
+                }}
+                title="Search and Go"
               >
-                ⊗
+                <span>Go</span>
               </button>
-            )}
+            </div>
 
             {/* Autocomplete Dropdown Panel */}
             {isSearchOpen && searchQuery.trim() && (
@@ -242,14 +275,16 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                   </div>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                    {filteredUsers.length === 0 ? (
+                    {filteredEmployees.length === 0 ? (
                       <div style={{ fontSize: "0.8rem", color: "#94a3b8", padding: "6px" }}>No employee found matching "{searchQuery}"</div>
                     ) : (
-                      filteredUsers.map(user => (
+                      filteredEmployees.map(user => (
                         <div
                           key={user.id}
                           onClick={() => {
-                            setSelectedEmployee(user);
+                            if (setActiveTab) setActiveTab("directory");
+                            navigate(getRoutePath("directory", currentUser?.role) + `?search=${encodeURIComponent(user.name)}`);
+                            setViewingProfileUser(user);
                             setIsSearchOpen(false);
                           }}
                           style={{
@@ -289,7 +324,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                     </div>
 
                     <div
-                      onClick={() => { if (setActiveTab) setActiveTab("leaves"); navigate(getRoutePath("leaves", currentUser?.role)); setIsSearchOpen(false); }}
+                      onClick={() => handleSearchSubmit("leaves")}
                       style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", cursor: "pointer" }}
                       onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -302,7 +337,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                     </div>
 
                     <div
-                      onClick={() => { if (setActiveTab) setActiveTab("directory"); navigate(getRoutePath("directory", currentUser?.role)); setIsSearchOpen(false); }}
+                      onClick={() => handleSearchSubmit("directory")}
                       style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", cursor: "pointer" }}
                       onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -315,7 +350,20 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                     </div>
 
                     <div
-                      onClick={() => { if (setActiveTab) setActiveTab("reports"); navigate(getRoutePath("reports", currentUser?.role)); setIsSearchOpen(false); }}
+                      onClick={() => handleSearchSubmit("projects")}
+                      style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", cursor: "pointer" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                    >
+                      <span style={{ fontSize: "1rem" }}>📁</span>
+                      <div>
+                        <div style={{ fontSize: "0.84rem", fontWeight: "600", color: "#0f172a" }}>{currentUser?.role === "Consultant" ? "My Assigned Projects Hub" : "Projects & Client Hub"}</div>
+                        <div style={{ fontSize: "0.72rem", color: "#64748b" }}>Track client deliverables & store sites.</div>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => handleSearchSubmit("expenses")}
                       style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 10px", borderRadius: "8px", cursor: "pointer" }}
                       onMouseEnter={e => e.currentTarget.style.background = "#f8fafc"}
                       onMouseLeave={e => e.currentTarget.style.background = "transparent"}
@@ -330,8 +378,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
 
                   {/* Footer Controls */}
                   <div style={{ borderTop: "1px solid #f1f5f9", marginTop: "12px", paddingTop: "8px", display: "flex", justifyContent: "flex-end", gap: "16px", fontSize: "0.7rem", color: "#94a3b8" }}>
-                    <span>Navigate ↑ ↓</span>
-                    <span>To select ↵</span>
+                    <span>Press Enter ↵ to Go</span>
                   </div>
 
                 </div>

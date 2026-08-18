@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
+import ProjectsView from "./ProjectsView";
 
 export default function ConsultantView({ activeTab }) {
   const { 
@@ -1442,65 +1443,9 @@ export default function ConsultantView({ activeTab }) {
         </div>
       )}
 
-      {/* 4. DEDICATED ASSIGNED CLIENT PROJECTS VIEW */}
+      {/* 4. DEDICATED ASSIGNED CLIENT PROJECTS VIEW (ENTIRE PROJECT HUB) */}
       {mainNavTab === "PROJECTS" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", color: "#ffffff", padding: "26px 32px", borderRadius: "18px", boxShadow: "0 12px 30px rgba(15,23,42,0.25)", display: "flex", alignItems: "center", gap: "16px" }}>
-            <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", color: "#60a5fa", flexShrink: 0 }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-              </svg>
-            </div>
-            <div>
-              <h2 style={{ margin: 0, fontSize: "1.6rem", fontWeight: "900", color: "#ffffff" }}>My Assigned Client Projects</h2>
-              <p style={{ margin: "4px 0 0 0", fontSize: "0.88rem", color: "#94a3b8" }}>Store sites & consulting advisory projects assigned to you</p>
-            </div>
-          </div>
-
-          {displayProjects.length === 0 ? (
-            <div style={{ background: "#ffffff", border: "1px dashed #cbd5e1", borderRadius: "16px", padding: "40px", textAlign: "center", color: "#64748b", boxShadow: "0 4px 14px rgba(0,0,0,0.03)" }}>
-              <div style={{ width: "48px", height: "48px", borderRadius: "12px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 10px", color: "#64748b" }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-              </div>
-              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>No Client Projects Assigned Yet</h3>
-              <p style={{ margin: "6px 0 0 0", fontSize: "0.88rem", color: "#64748b" }}>You currently have zero assigned client projects. Please contact your Admin to assign you to a store site project.</p>
-            </div>
-          ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "20px" }}>
-            {displayProjects.map(proj => (
-              <div key={proj.id} style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)", display: "flex", flexDirection: "column", gap: "16px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <div>
-                    <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>{proj.name}</h3>
-                    <div style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
-                      <span>{proj.location || "Seoni, MP"} • {proj.code || "STORE-HQ"}</span>
-                    </div>
-                  </div>
-                  <span style={{ background: "#dcfce7", color: "#166534", border: "1px solid #86efac", padding: "4px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800" }}>ACTIVE</span>
-                </div>
-
-                <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px", fontSize: "0.84rem", color: "#334155" }}>
-                  <div><strong>Business Model:</strong> {proj.businessModel || "Retail & Client Advisory Store"}</div>
-                </div>
-
-                <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: "6px", background: "#f0fdf4", color: "#166534", border: "1px solid #86efac", borderRadius: "10px", padding: "12px", fontWeight: "800", fontSize: "0.85rem" }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                  Active Store Assignment (Assigned Consultant)
-                </div>
-              </div>
-            ))}
-          </div>
-          )}
-        </div>
+        <ProjectsView />
       )}
 
       {/* 5. DEDICATED SHIFT ATTENDANCE REGISTER VIEW */}

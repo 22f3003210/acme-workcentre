@@ -618,7 +618,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                     className={`youtube-nav-item ${isActive ? "active" : ""}`}
                     onClick={() => {
                       if (setActiveTab) setActiveTab(item.id);
-                      navigate(getRoutePath(item.id));
+                      navigate(getRoutePath(item.id, currentUser?.role));
                     }}
                     title={item.label}
                   >
@@ -684,7 +684,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                 className={`mobile-nav-item ${activeTab === item.id ? "active" : ""}`}
                 onClick={() => {
                   if (setActiveTab) setActiveTab(item.id);
-                  navigate(getRoutePath(item.id));
+                  navigate(getRoutePath(item.id, currentUser?.role));
                 }}
               >
                 <span className="mobile-nav-icon">{item.icon}</span>
@@ -756,7 +756,7 @@ export default function Layout({ children, activeTab, setActiveTab }) {
                   onClick={() => {
                     setShowMobileDrawer(false);
                     if (setActiveTab) setActiveTab(item.id);
-                    navigate(getRoutePath(item.id));
+                    navigate(getRoutePath(item.id, currentUser?.role));
                   }}
                   style={{
                     display: "flex",

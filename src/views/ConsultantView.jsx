@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useApp } from "../context/AppContext";
-import ProjectsView from "./ProjectsView";
-import RecruiterView from "./RecruiterView";
 
 export default function ConsultantView({ activeTab }) {
   const { 
@@ -87,12 +86,33 @@ export default function ConsultantView({ activeTab }) {
   const [wizardStep, setWizardStep] = useState(1);
   const [selectedWizardProjectId, setSelectedWizardProjectId] = useState("");
   
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // Profile & Sub-tab States
   const [ledgerViewMode, setLedgerViewMode] = useState("grid");
   const [mainNavTab, setMainNavTab] = useState("HOME");
   const [profileTab, setProfileTab] = useState("TIME");
   const [timeSubTab, setTimeSubTab] = useState("Attendance");
   const [statsRange, setStatsRange] = useState("Last Week");
+
+  // Sync mainNavTab with activeTab prop or current URL route
+  useEffect(() => {
+    const path = (location.pathname || window.location.pathname || "").toLowerCase();
+    if (activeTab === "projects" || path.includes("projects")) {
+      setMainNavTab("PROJECTS");
+    } else if (activeTab === "attendance" || activeTab === "punch" || path.includes("attendance")) {
+      setMainNavTab("ATTENDANCE");
+    } else if (activeTab === "expenses" || activeTab === "reports" || path.includes("expenses")) {
+      setMainNavTab("EXPENSES");
+    } else if (activeTab === "dashboard" || path.includes("dashboard")) {
+      setMainNavTab("HOME");
+    } else if (activeTab === "leaves" || path.includes("leaves")) {
+      setMainNavTab("LEAVES");
+    } else if (activeTab === "payslips" || path.includes("payslips")) {
+      setMainNavTab("PAYSLIPS");
+    }
+  }, [activeTab, location.pathname]);
 
   // Step 1: Purpose & Scope of Work
   const [visitPurpose, setVisitPurpose] = useState("Client Site Advisory & Store Operations Audit");
@@ -865,7 +885,16 @@ export default function ConsultantView({ activeTab }) {
                       <p style={{ margin: "2px 0 0 0", fontSize: "0.8rem", color: "#64748b" }}>Active store locations and client assignments</p>
                     </div>
                   </div>
-                  <button type="button" onClick={() => setMainNavTab("PROJECTS")} style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}>View All Projects →</button>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setMainNavTab("PROJECTS");
+                      navigate("/my-projects");
+                    }} 
+                    style={{ background: "none", border: "none", color: "#2563eb", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                  >
+                    View All Projects →
+                  </button>
                 </div>
 
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
@@ -2526,13 +2555,7 @@ export default function ConsultantView({ activeTab }) {
         </div>
       )}
 
-      {activeTab === "projects" && (
-        <ProjectsView />
-      )}
 
-      {activeTab === "recruitment" && (
-        <RecruiterView />
-      )}
 
       {activeTab === "leaves" && (() => {
         const leaveBal = getLeaveBalance(currentUser.id);

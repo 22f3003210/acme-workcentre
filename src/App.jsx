@@ -46,7 +46,7 @@ const ClaimsDesk = lazyView(() => import("./components/ClaimsDesk"));
 const ScheduleCalendarView = lazyView(() => import("./views/ScheduleCalendarView"));
 
 // Clean Production Route Path Mapping
-export const getRoutePath = (tabId) => {
+export const getRoutePath = (tabId, role = "") => {
   switch (tabId) {
     case "dashboard": return "/dashboard";
     case "directory": return "/employee/directory";
@@ -59,12 +59,12 @@ export const getRoutePath = (tabId) => {
     case "profile-changes": return "/employee/profile-changes";
     case "probation": return "/employee/probation";
     case "reports":
-    case "expenses": return "/expenses";
+    case "expenses": return role === "Consultant" ? "/my-expenses" : "/expenses";
     case "attendance":
-    case "punch": return "/time/attendance";
+    case "punch": return role === "Consultant" ? "/consultant/attendance" : "/time/attendance";
     case "leaves": return "/leaves";
     case "payslips": return "/payslips";
-    case "projects": return "/projects";
+    case "projects": return role === "Consultant" ? "/my-projects" : "/projects";
     case "calendar": return "/calendar";
     case "recruitment": return "/recruiting";
     case "settings": return "/settings";
@@ -86,9 +86,9 @@ const getTabFromPath = (pathname, role) => {
   if (p.includes("probation")) return "probation";
   if (p.includes("leaves")) return "leaves";
   if (p.includes("payslips")) return "payslips";
-  if (p.includes("projects")) return "projects";
+  if (p.includes("my-projects") || p.includes("projects")) return "projects";
   if (p.includes("calendar")) return "calendar";
-  if (p.includes("expenses") || p.includes("payroll") || p.includes("reports")) return role === "Consultant" ? "expenses" : "reports";
+  if (p.includes("my-expenses") || p.includes("expenses") || p.includes("payroll") || p.includes("reports")) return role === "Consultant" ? "expenses" : "reports";
   if (p.includes("employee") || p.includes("directory")) return "directory";
   if (p.includes("attendance") || p.includes("punch")) return "attendance";
   if (p.includes("recruiting") || p.includes("recruitment")) return "recruitment";
@@ -115,7 +115,7 @@ function MainWorkspace({ initialTab }) {
     }
     switch (currentUser.role) {
       case "Admin":
-        return <AdminView activeTab={activeTab} setActiveTab={(tab) => navigate(getRoutePath(tab))} />;
+        return <AdminView activeTab={activeTab} setActiveTab={(tab) => navigate(getRoutePath(tab, currentUser?.role))} />;
       case "Accountant":
       case "Accounts Manager":
       case "Finance":
@@ -175,12 +175,16 @@ export function AppRoutes() {
         <Route path="/employee/probation" element={<MainWorkspace initialTab="probation" />} />
         <Route path="/payroll" element={<MainWorkspace initialTab="reports" />} />
         <Route path="/expenses" element={<MainWorkspace initialTab="reports" />} />
+        <Route path="/my-expenses" element={<MainWorkspace initialTab="expenses" />} />
         <Route path="/time/attendance" element={<MainWorkspace initialTab="attendance" />} />
         <Route path="/attendance" element={<MainWorkspace initialTab="attendance" />} />
+        <Route path="/consultant/attendance" element={<MainWorkspace initialTab="attendance" />} />
         <Route path="/leaves" element={<MainWorkspace initialTab="leaves" />} />
         <Route path="/payslips" element={<MainWorkspace initialTab="payslips" />} />
         <Route path="/projects" element={<MainWorkspace initialTab="projects" />} />
         <Route path="/projects/:projectId" element={<MainWorkspace initialTab="projects" />} />
+        <Route path="/my-projects" element={<MainWorkspace initialTab="projects" />} />
+        <Route path="/consultant/projects" element={<MainWorkspace initialTab="projects" />} />
         <Route path="/calendar" element={<MainWorkspace initialTab="calendar" />} />
         <Route path="/recruiting" element={<MainWorkspace initialTab="recruitment" />} />
         <Route path="/recruitment" element={<MainWorkspace initialTab="recruitment" />} />

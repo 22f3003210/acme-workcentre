@@ -516,7 +516,8 @@ export const AppProvider = ({ children }) => {
             checklists: p.checklists,
             clientVisits: p.client_visits || p.clientVisits,
             scheduledEvents: p.scheduled_events || p.scheduledEvents,
-            phaseTasks: p.phase_tasks || p.phaseTasks || p.scheduled_events || p.scheduledEvents || []
+            phaseTasks: p.phase_tasks || p.phaseTasks || p.scheduled_events || p.scheduledEvents || [],
+            phases: p.phases || p.business_details?.phases || p.businessDetails?.phases || []
           }));
           setProjects(mapped);
           try { localStorage.setItem("workcentre_projects", JSON.stringify(mapped)); } catch (e) {}
@@ -550,7 +551,8 @@ export const AppProvider = ({ children }) => {
               checklists: p.checklists,
               clientVisits: p.client_visits || p.clientVisits,
               scheduledEvents: p.scheduled_events || p.scheduledEvents,
-              phaseTasks: p.phase_tasks || p.phaseTasks || p.scheduled_events || p.scheduledEvents || []
+              phaseTasks: p.phase_tasks || p.phaseTasks || p.scheduled_events || p.scheduledEvents || [],
+              phases: p.phases || p.business_details?.phases || p.businessDetails?.phases || []
             };
             setProjects(prev => {
               const exists = prev.some(x => x.id === updated.id);

@@ -773,6 +773,14 @@ export default function ProjectsView() {
   const [taskProgress, setTaskProgress] = useState(0);
   const [taskNotes, setTaskNotes] = useState("");
 
+  // Dynamic Phase Management Form State
+  const [showPhaseModal, setShowPhaseModal] = useState(false);
+  const [editingPhaseId, setEditingPhaseId] = useState(null);
+  const [phaseNumInput, setPhaseNumInput] = useState(1);
+  const [phaseNameInput, setPhaseNameInput] = useState("");
+  const [phaseFullNameInput, setPhaseFullNameInput] = useState("");
+  const [phaseColorInput, setPhaseColorInput] = useState("#2563eb");
+
   // Record Client Visit Form State (supports multi-consultant visiting team!)
   const [showVisitModal, setShowVisitModal] = useState(false);
   const [vTitle, setVTitle] = useState("");
@@ -1146,32 +1154,98 @@ export default function ProjectsView() {
     });
   };
 
-  const handleLoadStandardTemplate = () => {
-    if (!selectedProject) return;
-    const defaultOwner = selectedProject.owner || (selectedProject.assignedConsultants && selectedProject.assignedConsultants[0]) || currentUser?.name || "Darla Manikanta";
-    const templateTasks = [
-      { id: `task-${Date.now()}-1`, phaseNum: 1, title: "Client Vision & Goal Mapping", consultant: defaultOwner, startDate: "2026-07-01", endDate: "2026-07-10", dates: "01 Jul - 10 Jul", status: "Completed", progress: 100, notes: "Founder alignment and deliverables scope mapping." },
-      { id: `task-${Date.now()}-2`, phaseNum: 1, title: "Business Model & Intake Review", consultant: defaultOwner, startDate: "2026-07-05", endDate: "2026-07-15", dates: "05 Jul - 15 Jul", status: "Completed", progress: 100, notes: "Analysis of showroom retail format and inventory turns." },
-      { id: `task-${Date.now()}-3`, phaseNum: 1, title: "Executive Alignment Meeting", consultant: defaultOwner, startDate: "2026-07-12", endDate: "2026-07-20", dates: "12 Jul - 20 Jul", status: "Completed", progress: 100, notes: "Steering committee sign-off on 5-phase advisory roadmap." },
-      { id: `task-${Date.now()}-4`, phaseNum: 2, title: "Showroom Physical Tag Audit", consultant: defaultOwner, startDate: "2026-07-20", endDate: "2026-08-05", dates: "20 Jul - 05 Aug", status: "Completed", progress: 100, notes: "100% barcode count of gold and diamond trays." },
-      { id: `task-${Date.now()}-5`, phaseNum: 2, title: "Metal Weight Variance Reconciliation", consultant: defaultOwner, startDate: "2026-07-25", endDate: "2026-08-10", dates: "25 Jul - 10 Aug", status: "Completed", progress: 100, notes: "Vault weight balance vs ledger variance analysis." },
-      { id: `task-${Date.now()}-6`, phaseNum: 2, title: "POS Sales Ledger Vs Vault Discrepancy Sheet", consultant: defaultOwner, startDate: "2026-08-01", endDate: "2026-08-15", dates: "01 Aug - 15 Aug", status: "In Progress", progress: 80, notes: "Software transaction logs reconciliation." },
-      { id: `task-${Date.now()}-7`, phaseNum: 3, title: "Atelier Job Card Workflow Standardization", consultant: defaultOwner, startDate: "2026-08-10", endDate: "2026-08-25", dates: "10 Aug - 25 Aug", status: "In Progress", progress: 65, notes: "Karigar gold issue and wastage tracking standard." },
-      { id: `task-${Date.now()}-8`, phaseNum: 3, title: "RFID Vault Tagging & Inventory Control SOP", consultant: defaultOwner, startDate: "2026-08-15", endDate: "2026-08-30", dates: "15 Aug - 30 Aug", status: "In Progress", progress: 50, notes: "Daily opening & closing vault handover protocol." },
-      { id: `task-${Date.now()}-9`, phaseNum: 3, title: "Sales Counter ABV Upselling Script Coaching", consultant: defaultOwner, startDate: "2026-08-20", endDate: "2026-09-05", dates: "20 Aug - 05 Sep", status: "Scheduled", progress: 20, notes: "Staff roleplay on diamond conversion." },
-      { id: `task-${Date.now()}-10`, phaseNum: 4, title: "RFID Vault Scanner Hardware Setup", consultant: defaultOwner, startDate: "2026-09-01", endDate: "2026-09-18", dates: "01 Sep - 18 Sep", status: "Scheduled", progress: 0, notes: "Handheld RFID terminal pairing and testing." },
-      { id: `task-${Date.now()}-11`, phaseNum: 4, title: "Digital Barcode Tag Sync & Integration", consultant: defaultOwner, startDate: "2026-09-10", endDate: "2026-09-25", dates: "10 Sep - 25 Sep", status: "Scheduled", progress: 0, notes: "ERP integration and live stock sync." },
-      { id: `task-${Date.now()}-12`, phaseNum: 5, title: "Boutique Sales Counter Staff Workshops", consultant: defaultOwner, startDate: "2026-10-01", endDate: "2026-10-20", dates: "01 Oct - 20 Oct", status: "Scheduled", progress: 0, notes: "Full retail team incentive and performance evaluation." }
-    ];
+  const handleOpenAddPhase = () => {
+    const currentGroups = getProjectPhaseGroups(selectedProject);
+    const nextNum = currentGroups.length + 1;
+    setEditingPhaseId(null);
+    setPhaseNumInput(nextNum);
+    setPhaseNameInput(`Phase ${nextNum}`);
+    setPhaseFullNameInput(`Phase ${nextNum}: Strategic Implementation`);
+    setPhaseColorInput("#2563eb");
+    setShowPhaseModal(true);
+  };
+
+  const handleOpenEditPhase = (phase, e) => {
+    if (e) e.stopPropagation();
+    setEditingPhaseId(phase.id || `ph-${phase.num}`);
+    setPhaseNumInput(phase.num);
+    setPhaseNameInput(phase.name || `Phase ${phase.num}`);
+    setPhaseFullNameInput(phase.fullName || `Phase ${phase.num}: ${phase.name}`);
+    setPhaseColorInput(phase.color || "#2563eb");
+    setShowPhaseModal(true);
+  };
+
+  const handleSavePhase = (e) => {
+    e.preventDefault();
+    if (!phaseNameInput.trim() || !selectedProject) return;
+
+    const currentGroups = getProjectPhaseGroups(selectedProject);
+    const existingPhases = selectedProject.phases && selectedProject.phases.length > 0 
+      ? selectedProject.phases 
+      : currentGroups.map(g => ({ id: g.id || `ph-${g.num}`, num: g.num, name: g.name, fullName: g.fullName, color: g.color, bg: `${g.color}15` }));
+
+    let updatedPhases = [];
+    if (editingPhaseId) {
+      updatedPhases = existingPhases.map(ph => {
+        if (ph.id === editingPhaseId || ph.num === phaseNumInput) {
+          return {
+            ...ph,
+            num: Number(phaseNumInput),
+            name: phaseNameInput,
+            fullName: phaseFullNameInput || `Phase ${phaseNumInput}: ${phaseNameInput}`,
+            color: phaseColorInput,
+            bg: `${phaseColorInput}15`
+          };
+        }
+        return ph;
+      });
+    } else {
+      const newPhase = {
+        id: `ph-${Date.now()}`,
+        num: Number(phaseNumInput),
+        name: phaseNameInput,
+        fullName: phaseFullNameInput || `Phase ${phaseNumInput}: ${phaseNameInput}`,
+        color: phaseColorInput,
+        bg: `${phaseColorInput}15`
+      };
+      updatedPhases = [...existingPhases, newPhase];
+    }
 
     updateProject(selectedProject.id, {
-      phaseTasks: templateTasks
+      phases: updatedPhases
     });
 
     const updated = projects.find(p => p.id === selectedProject.id);
-    if (updated) setSelectedProject({ ...updated, phaseTasks: templateTasks });
+    if (updated) setSelectedProject({ ...updated, phases: updatedPhases });
 
-    setToast({ message: "Standard advisory roadmap loaded successfully!", type: "success" });
+    setToast({ message: editingPhaseId ? "Phase updated successfully!" : "New phase created successfully!", type: "success" });
+    setShowPhaseModal(false);
+  };
+
+  const handleDeletePhase = (phaseId, phaseNum, e) => {
+    if (e) e.stopPropagation();
+    if (!selectedProject) return;
+    if (!window.confirm("Are you sure you want to delete this phase and all tasks inside it?")) return;
+
+    const currentGroups = getProjectPhaseGroups(selectedProject);
+    const existingPhases = selectedProject.phases && selectedProject.phases.length > 0 
+      ? selectedProject.phases 
+      : currentGroups.map(g => ({ id: g.id || `ph-${g.num}`, num: g.num, name: g.name, fullName: g.fullName, color: g.color, bg: `${g.color}15` }));
+
+    const updatedPhases = existingPhases.filter(ph => ph.id !== phaseId && ph.num !== phaseNum);
+    const existingTasks = selectedProject.phaseTasks || selectedProject.scheduledEvents || [];
+    const updatedTasks = existingTasks.filter(t => t.phaseId !== phaseId && Number(t.phaseNum) !== phaseNum);
+
+    updateProject(selectedProject.id, {
+      phases: updatedPhases,
+      phaseTasks: updatedTasks
+    });
+
+    const updated = projects.find(p => p.id === selectedProject.id);
+    if (updated) setSelectedProject({ ...updated, phases: updatedPhases, phaseTasks: updatedTasks });
+
+    setToast({ message: "Phase removed from project roadmap.", type: "info" });
+    setShowPhaseModal(false);
   };
 
   const handleClearAllTasks = () => {
@@ -2277,32 +2351,32 @@ export default function ProjectsView() {
                         Phase-Wise Task Allocation & Interactive Gantt Timeline
                       </h3>
                       <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "#64748b" }}>
-                        Visualize {totalTasksCount} scheduled tasks grouped across 5 implementation consulting phases
+                        Visualize {totalTasksCount} scheduled tasks across {projectPhaseGroups.length} consulting phases
                       </p>
                     </div>
 
                     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                      {totalTasksCount === 0 && (
-                        <button
-                          onClick={handleLoadStandardTemplate}
-                          style={{
-                            background: "#f0fdf4",
-                            color: "#16a34a",
-                            border: "1px solid #bbf7d0",
-                            padding: "9px 16px",
-                            borderRadius: "8px",
-                            fontWeight: "800",
-                            fontSize: "0.83rem",
-                            cursor: "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px"
-                          }}
-                        >
-                          <span>⚡</span>
-                          <span>Load Standard Roadmap Template</span>
-                        </button>
-                      )}
+                      <button
+                        onClick={handleOpenAddPhase}
+                        style={{
+                          background: "#ffffff",
+                          color: "#475569",
+                          border: "1px solid #cbd5e1",
+                          padding: "9px 14px",
+                          borderRadius: "8px",
+                          fontWeight: "700",
+                          fontSize: "0.83rem",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px"
+                        }}
+                        title="Add a custom phase to this project"
+                      >
+                        <span>📁</span>
+                        <span>+ Add New Phase</span>
+                      </button>
+
                       {totalTasksCount > 0 && (
                         <button
                           onClick={handleClearAllTasks}
@@ -2318,11 +2392,12 @@ export default function ProjectsView() {
                           }}
                           title="Clear all tasks from this plan"
                         >
-                          <span>🗑️ Reset Plan</span>
+                          <span>🗑️ Clear Tasks</span>
                         </button>
                       )}
+
                       <button
-                        onClick={() => handleOpenCreateTask(1)}
+                        onClick={() => handleOpenCreateTask(projectPhaseGroups[0]?.num || 1)}
                         style={{
                           background: "#2563eb",
                           color: "#ffffff",
@@ -2339,7 +2414,7 @@ export default function ProjectsView() {
                         }}
                       >
                         <span>+</span>
-                        <span>Schedule New Task / Phase Event</span>
+                        <span>Schedule New Task</span>
                       </button>
                     </div>
                   </div>
@@ -2348,21 +2423,22 @@ export default function ProjectsView() {
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "24px" }}>
                     {projectPhaseGroups.map(ph => (
                       <div
-                        key={ph.num}
+                        key={ph.id || ph.num}
                         onClick={() => handleOpenCreateTask(ph.num)}
                         style={{
-                          background: ph.bg,
+                          background: ph.bg || `${ph.color}15`,
                           border: `1px solid ${ph.color}30`,
                           borderRadius: "10px",
                           padding: "12px 14px",
                           cursor: "pointer",
-                          transition: "all 0.15s ease"
+                          transition: "all 0.15s ease",
+                          position: "relative"
                         }}
-                        title={`Click to add new task in Phase ${ph.num}`}
+                        title={`Click to add task in ${ph.name}`}
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div style={{ fontSize: "0.72rem", fontWeight: "800", color: ph.color, textTransform: "uppercase" }}>PHASE {ph.num}</div>
-                          <span style={{ fontSize: "0.75rem", color: ph.color, fontWeight: "800" }}>+ Add</span>
+                          <span style={{ fontSize: "0.75rem", color: ph.color, fontWeight: "800" }}>+ Add Task</span>
                         </div>
                         <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#0f172a", margin: "4px 0" }}>{ph.name}</div>
                         <div style={{ fontSize: "0.78rem", color: ph.color, fontWeight: "700" }}>{ph.count} Tasks Allocated</div>
@@ -2391,13 +2467,29 @@ export default function ProjectsView() {
 
                     {/* Gantt Rows Grouped by Phase */}
                     {projectPhaseGroups.map(phaseGroup => (
-                      <div key={phaseGroup.num}>
+                      <div key={phaseGroup.id || phaseGroup.num}>
                         
                         {/* Phase Group Header Bar */}
-                        <div style={{ background: phaseGroup.bg, padding: "8px 16px", fontWeight: "800", fontSize: "0.82rem", color: phaseGroup.color, borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div style={{ background: phaseGroup.bg || `${phaseGroup.color}15`, padding: "8px 16px", fontWeight: "800", fontSize: "0.82rem", color: phaseGroup.color, borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseGroup.color }} />
-                            <span>{phaseGroup.fullName} ({phaseGroup.count} Tasks)</span>
+                            <span>{phaseGroup.fullName || `Phase ${phaseGroup.num}: ${phaseGroup.name}`} ({phaseGroup.count} Tasks)</span>
+                            <button
+                              onClick={(e) => handleOpenEditPhase(phaseGroup, e)}
+                              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.75rem", opacity: 0.7 }}
+                              title="Edit Phase Details"
+                            >
+                              ✏️
+                            </button>
+                            {projectPhaseGroups.length > 1 && (
+                              <button
+                                onClick={(e) => handleDeletePhase(phaseGroup.id, phaseGroup.num, e)}
+                                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.75rem", opacity: 0.7 }}
+                                title="Delete Phase"
+                              >
+                                🗑️
+                              </button>
+                            )}
                           </div>
                           <button
                             onClick={() => handleOpenCreateTask(phaseGroup.num)}
@@ -2405,7 +2497,7 @@ export default function ProjectsView() {
                               background: "#ffffff",
                               border: `1px solid ${phaseGroup.color}50`,
                               color: phaseGroup.color,
-                              padding: "2px 8px",
+                              padding: "3px 10px",
                               borderRadius: "6px",
                               fontSize: "0.72rem",
                               fontWeight: "800",
@@ -3357,6 +3449,129 @@ export default function ProjectsView() {
         </div>
       )}
 
+      {/* ── MODAL: CREATE / EDIT CUSTOM PHASE ── */}
+      {showPhaseModal && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "500px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>
+                  {editingPhaseId ? "✏️ Edit Phase Details" : "➕ Create New Implementation Phase"}
+                </h3>
+                <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                  {effectiveProject.name} Roadmap Configuration
+                </p>
+              </div>
+              <button onClick={() => setShowPhaseModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
+            </div>
+
+            <form onSubmit={handleSavePhase} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "100px 1fr", gap: "12px" }}>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                    Phase # *
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={phaseNumInput}
+                    onChange={e => setPhaseNumInput(Number(e.target.value))}
+                    required
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", fontWeight: "700" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                    Short Name (Badge) *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Discovery & Audit"
+                    value={phaseNameInput}
+                    onChange={e => setPhaseNameInput(e.target.value)}
+                    required
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Full Phase Title / Header Banner
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Phase 1: Store Operations & Inventory Control Audit"
+                  value={phaseFullNameInput}
+                  onChange={e => setPhaseFullNameInput(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Theme Accent Color
+                </label>
+                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                  {["#2563eb", "#16a34a", "#7c3aed", "#ea580c", "#0284c7", "#db2777", "#d97706", "#0d9488"].map(c => (
+                    <button
+                      type="button"
+                      key={c}
+                      onClick={() => setPhaseColorInput(c)}
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        borderRadius: "50%",
+                        background: c,
+                        border: phaseColorInput === c ? "3px solid #0f172a" : "2px solid #ffffff",
+                        cursor: "pointer",
+                        boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                      }}
+                    />
+                  ))}
+                  <input
+                    type="color"
+                    value={phaseColorInput}
+                    onChange={e => setPhaseColorInput(e.target.value)}
+                    style={{ width: "36px", height: "36px", border: "none", background: "none", cursor: "pointer" }}
+                    title="Custom color"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: editingPhaseId ? "space-between" : "flex-end", alignItems: "center", marginTop: "12px" }}>
+                {editingPhaseId && (
+                  <button
+                    type="button"
+                    onClick={(e) => handleDeletePhase(editingPhaseId, phaseNumInput, e)}
+                    style={{ padding: "10px 16px", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
+                  >
+                    🗑️ Delete Phase
+                  </button>
+                )}
+                <div style={{ display: "flex", gap: "10px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowPhaseModal(false)}
+                    style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    style={{ padding: "10px 22px", background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
+                  >
+                    {editingPhaseId ? "Save Phase" : "Add Phase"}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* ── MODAL: SCHEDULE / EDIT PHASE TASK DELIVERABLE ── */}
       {showTaskModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
@@ -3383,11 +3598,11 @@ export default function ProjectsView() {
                   onChange={e => setTaskPhaseNum(Number(e.target.value))}
                   style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", fontWeight: "600" }}
                 >
-                  <option value={1}>Phase 1: Discovery & Vision Alignment</option>
-                  <option value={2}>Phase 2: Operations & Vault Stock Audit</option>
-                  <option value={3}>Phase 3: Process Design & SOP Guidelines</option>
-                  <option value={4}>Phase 4: POS & Inventory System Rollout</option>
-                  <option value={5}>Phase 5: Staff Coaching & Performance Audit</option>
+                  {projectPhaseGroups.map(ph => (
+                    <option key={ph.id || ph.num} value={ph.num}>
+                      {ph.fullName || `Phase ${ph.num}: ${ph.name}`}
+                    </option>
+                  ))}
                 </select>
               </div>
 

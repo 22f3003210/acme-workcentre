@@ -108,6 +108,12 @@ export const supabaseUpdateProject = async (projectId, updatedFields) => {
   if (updatedFields.phaseTasks !== undefined) {
     dbPayload.scheduled_events = updatedFields.phaseTasks;
   }
+  if (updatedFields.phases !== undefined) {
+    dbPayload.business_details = {
+      ...(updatedFields.businessDetails || {}),
+      phases: updatedFields.phases
+    };
+  }
 
   const { data, error } = await supabase.from("projects").update(dbPayload).eq("id", projectId);
   if (error) console.error("Supabase update project error:", error);

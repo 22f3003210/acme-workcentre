@@ -2461,31 +2461,54 @@ export default function ProjectsView() {
                   ) : (
                     <>
                       {/* Dynamic Phase Allocation Summary Badges */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "24px" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px", marginBottom: "24px" }}>
                         {projectPhaseGroups.map(ph => (
                           <div
                             key={ph.id || ph.num}
                             onClick={() => handleOpenCreateTask(ph.num)}
                             style={{
-                              background: ph.bg || `${ph.color}15`,
-                              border: `1px solid ${ph.color}30`,
-                              borderRadius: "10px",
-                              padding: "12px 14px",
+                              background: "#ffffff",
+                              border: "1px solid #e2e8f0",
+                              borderLeft: `5px solid ${ph.color}`,
+                              borderRadius: "12px",
+                              padding: "14px 16px",
                               cursor: "pointer",
-                              transition: "all 0.15s ease",
-                              position: "relative"
+                              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                              display: "flex",
+                              flexDirection: "column",
+                              justifyContent: "space-between"
+                            }}
+                            onMouseEnter={e => {
+                              e.currentTarget.style.transform = "translateY(-2px)";
+                              e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.07)";
+                            }}
+                            onMouseLeave={e => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.03)";
                             }}
                             title={`Click to add task in ${ph.name}`}
                           >
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                              <div style={{ fontSize: "0.72rem", fontWeight: "800", color: ph.color, textTransform: "uppercase" }}>PHASE {ph.num}</div>
-                              <span style={{ fontSize: "0.75rem", color: ph.color, fontWeight: "800" }}>+ Add Task</span>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                              <span style={{ fontSize: "0.72rem", fontWeight: "800", color: ph.color, background: `${ph.color}15`, padding: "2px 8px", borderRadius: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                PHASE {ph.num}
+                              </span>
+                              <span style={{ fontSize: "0.75rem", color: ph.color, fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Add Task
+                              </span>
                             </div>
-                            <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#0f172a", margin: "4px 0" }}>{ph.name}</div>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem" }}>
-                              <span style={{ color: ph.color, fontWeight: "700" }}>{ph.count} Tasks</span>
+                            <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: "2px 0 10px 0", lineHeight: "1.3" }}>
+                              {ph.name}
+                            </div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", borderTop: "1px solid #f1f5f9", paddingTop: "8px" }}>
+                              <span style={{ color: ph.color, fontWeight: "700" }}>
+                                {ph.count} {ph.count === 1 ? "Task" : "Tasks"} Allocated
+                              </span>
                               {ph.durationDays && (
-                                <span style={{ color: "#64748b", fontWeight: "600" }}>{ph.durationDays} Days</span>
+                                <span style={{ color: "#64748b", fontWeight: "600", background: "#f8fafc", padding: "2px 6px", borderRadius: "4px" }}>
+                                  {ph.durationDays} Days ({ph.durationWeeks})
+                                </span>
                               )}
                             </div>
                           </div>
@@ -2493,19 +2516,19 @@ export default function ProjectsView() {
                       </div>
 
                       {/* DYNAMIC WEEK-WISE GANTT CHART CONTAINER */}
-                      <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", overflowX: "auto", background: "#ffffff", marginBottom: "20px" }}>
+                      <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", overflowX: "auto", background: "#ffffff", marginBottom: "20px", boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}>
                         
                         {/* Gantt Header Axis (Week-wise with Dates & Days) */}
-                        <div style={{ display: "grid", gridTemplateColumns: "260px 135px 130px 105px 95px 1fr 65px", background: "#f8fafc", borderBottom: "2px solid #e2e8f0", padding: "10px 14px", fontWeight: "800", fontSize: "0.74rem", color: "#475569", alignItems: "center" }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "240px 140px 130px 110px 105px 1fr 70px", background: "#f8fafc", borderBottom: "2px solid #e2e8f0", padding: "12px 16px", fontWeight: "800", fontSize: "0.74rem", color: "#475569", alignItems: "center" }}>
                           <div>TASK OBJECTIVE & SPEC</div>
                           <div>ASSIGNED LEAD</div>
                           <div>TIMELINE / DATES</div>
                           <div>DAYS / DURATION</div>
                           <div>STATUS</div>
                           <div style={{ borderLeft: "1px solid #cbd5e1", paddingLeft: "8px" }}>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", textAlign: "center", fontSize: "0.68rem", fontWeight: "800", color: "#64748b" }}>
-                              {["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12"].map(w => (
-                                <span key={w} style={{ borderRight: "1px dashed #e2e8f0" }}>{w}</span>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", textAlign: "center", fontSize: "0.7rem", fontWeight: "800", color: "#64748b" }}>
+                              {["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12"].map((w, wi) => (
+                                <span key={w} style={{ borderRight: wi < 11 ? "1px dashed #e2e8f0" : "none", color: "#64748b" }}>{w}</span>
                               ))}
                             </div>
                           </div>
@@ -2517,29 +2540,35 @@ export default function ProjectsView() {
                           <div key={phaseGroup.id || phaseGroup.num}>
                             
                             {/* Phase Group Header Bar */}
-                            <div style={{ background: phaseGroup.bg || `${phaseGroup.color}15`, padding: "9px 16px", fontWeight: "800", fontSize: "0.82rem", color: phaseGroup.color, borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div style={{ background: phaseGroup.bg || `${phaseGroup.color}15`, padding: "10px 16px", fontWeight: "800", fontSize: "0.84rem", color: phaseGroup.color, borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseGroup.color }} />
-                                <span>{phaseGroup.fullName || `Phase ${phaseGroup.num}: ${phaseGroup.name}`} ({phaseGroup.count} Tasks)</span>
+                                <span style={{ width: "9px", height: "9px", borderRadius: "50%", background: phaseGroup.color, boxShadow: `0 0 0 3px ${phaseGroup.color}30` }} />
+                                <span style={{ color: "#0f172a", fontWeight: "800" }}>{phaseGroup.fullName || `Phase ${phaseGroup.num}: ${phaseGroup.name}`}</span>
+                                <span style={{ fontSize: "0.72rem", background: `${phaseGroup.color}20`, color: phaseGroup.color, padding: "2px 8px", borderRadius: "10px", fontWeight: "800" }}>
+                                  {phaseGroup.count} Tasks
+                                </span>
                                 {phaseGroup.startDate && (
-                                  <span style={{ fontSize: "0.75rem", background: "#ffffff", padding: "2px 8px", borderRadius: "12px", border: `1px solid ${phaseGroup.color}40`, color: phaseGroup.color, fontWeight: "700" }}>
-                                    📅 {phaseGroup.startDate} to {phaseGroup.endDate || ""} ({phaseGroup.durationDays || 0} Days / {phaseGroup.durationWeeks || ""})
+                                  <span style={{ fontSize: "0.75rem", background: "#ffffff", padding: "3px 10px", borderRadius: "12px", border: `1px solid ${phaseGroup.color}40`, color: phaseGroup.color, fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "5px" }}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    {phaseGroup.startDate} to {phaseGroup.endDate || ""} • {phaseGroup.durationDays || 0} Days ({phaseGroup.durationWeeks || ""})
                                   </span>
                                 )}
-                                <button
-                                  onClick={(e) => handleOpenEditPhase(phaseGroup, e)}
-                                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem", opacity: 0.7 }}
-                                  title="Edit Phase Details"
-                                >
-                                  ✏️
-                                </button>
-                                <button
-                                  onClick={(e) => handleDeletePhase(phaseGroup.id, phaseGroup.num, e)}
-                                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem", opacity: 0.7 }}
-                                  title="Delete Phase"
-                                >
-                                  🗑️
-                                </button>
+                                <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                  <button
+                                    onClick={(e) => handleOpenEditPhase(phaseGroup, e)}
+                                    style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b", transition: "all 0.15s" }}
+                                    title="Edit Phase Details"
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                  </button>
+                                  <button
+                                    onClick={(e) => handleDeletePhase(phaseGroup.id, phaseGroup.num, e)}
+                                    style={{ background: "#ffffff", border: "1px solid #fecaca", borderRadius: "6px", width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#dc2626", transition: "all 0.15s" }}
+                                    title="Delete Phase"
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                  </button>
+                                </div>
                               </div>
                               <button
                                 onClick={() => handleOpenCreateTask(phaseGroup.num)}
@@ -2547,21 +2576,26 @@ export default function ProjectsView() {
                                   background: "#ffffff",
                                   border: `1px solid ${phaseGroup.color}50`,
                                   color: phaseGroup.color,
-                                  padding: "3px 10px",
-                                  borderRadius: "6px",
-                                  fontSize: "0.72rem",
+                                  padding: "4px 12px",
+                                  borderRadius: "8px",
+                                  fontSize: "0.74rem",
                                   fontWeight: "800",
-                                  cursor: "pointer"
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "4px",
+                                  boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
                                 }}
                               >
-                                + Add Task
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                Add Task
                               </button>
                             </div>
 
                             {/* Phase Tasks Rows */}
                             {phaseGroup.tasks.length === 0 ? (
-                              <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
-                                No tasks scheduled yet in {phaseGroup.name}. Click "+ Add Task" to allocate.
+                              <div style={{ padding: "16px", fontSize: "0.82rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9", background: "#ffffff", display: "flex", alignItems: "center", gap: "8px" }}>
+                                <span>ℹ️</span> No tasks scheduled yet in {phaseGroup.name}. Click <strong>+ Add Task</strong> above to allocate deliverables.
                               </div>
                             ) : (
                               phaseGroup.tasks.map((tk, tIndex) => (
@@ -2569,13 +2603,16 @@ export default function ProjectsView() {
                                   key={tk.id || tIndex}
                                   style={{
                                     display: "grid",
-                                    gridTemplateColumns: "260px 135px 130px 105px 95px 1fr 65px",
+                                    gridTemplateColumns: "240px 140px 130px 110px 105px 1fr 70px",
                                     alignItems: "center",
-                                    padding: "10px 14px",
+                                    padding: "10px 16px",
                                     borderBottom: "1px solid #f1f5f9",
                                     fontSize: "0.82rem",
-                                    background: "#ffffff"
+                                    background: "#ffffff",
+                                    transition: "background 0.15s"
                                   }}
+                                  onMouseEnter={e => e.currentTarget.style.background = "#fafafa"}
+                                  onMouseLeave={e => e.currentTarget.style.background = "#ffffff"}
                                 >
                                   <div
                                     onClick={() => handleOpenEditTask(tk)}
@@ -2585,17 +2622,20 @@ export default function ProjectsView() {
                                     {tk.title}
                                   </div>
                                   <div style={{ color: "#2563eb", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
-                                    <span style={{ width: "22px", height: "22px", minWidth: "22px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: "800" }}>
+                                    <span style={{ width: "24px", height: "24px", minWidth: "24px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: "800", border: "1px solid #bfdbfe" }}>
                                       {tk.consultant ? tk.consultant[0] : "C"}
                                     </span>
-                                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tk.consultant || "Unassigned"}</span>
+                                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: "0.8rem" }}>{tk.consultant || "Unassigned"}</span>
                                   </div>
-                                  <div style={{ color: "#475569", fontSize: "0.78rem" }}>
+                                  <div style={{ color: "#475569", fontSize: "0.78rem", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
                                     {tk.dates || (tk.startDate ? `${tk.startDate} - ${tk.endDate || ""}` : "Scheduled")}
                                   </div>
                                   <div style={{ color: "#0f172a", fontSize: "0.78rem", fontWeight: "700" }}>
-                                    {tk.durationDays ? `${tk.durationDays} Days` : "—"}
-                                    <span style={{ fontSize: "0.7rem", color: "#64748b", display: "block", fontWeight: "500" }}>{tk.durationWeeks || ""}</span>
+                                    <span style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                                      {tk.durationDays ? `${tk.durationDays} Days` : "—"}
+                                    </span>
+                                    <span style={{ fontSize: "0.68rem", color: "#64748b", display: "block", fontWeight: "500", marginTop: "2px" }}>{tk.durationWeeks || ""}</span>
                                   </div>
                                   <div>
                                     <span
@@ -2603,17 +2643,25 @@ export default function ProjectsView() {
                                       style={{
                                         background: tk.status === "Completed" ? "#dcfce7" : tk.status === "In Progress" ? "#eff6ff" : "#fff7ed",
                                         color: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706",
-                                        padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: "800", cursor: "pointer",
-                                        display: "inline-block"
+                                        border: `1px solid ${tk.status === "Completed" ? "#bbf7d0" : tk.status === "In Progress" ? "#bfdbfe" : "#fed7aa"}`,
+                                        padding: "3px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: "800", cursor: "pointer",
+                                        display: "inline-flex", alignItems: "center", gap: "4px"
                                       }}
                                       title="Click to toggle status"
                                     >
+                                      <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706" }} />
                                       {tk.status || "Scheduled"}
                                     </span>
                                   </div>
                                   
-                                  {/* Gantt Timeline Bar Canvas Column */}
-                                  <div style={{ position: "relative", height: "24px", background: "#f8fafc", borderRadius: "6px", borderLeft: "1px solid #cbd5e1" }}>
+                                  {/* Gantt Timeline Bar Canvas Column with Vertical Grid Lines */}
+                                  <div style={{ position: "relative", height: "26px", background: "#f8fafc", borderRadius: "6px", borderLeft: "1px solid #cbd5e1", overflow: "hidden" }}>
+                                    {/* 12 Vertical Week Guidelines */}
+                                    <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: "repeat(12, 1fr)", pointerEvents: "none" }}>
+                                      {Array.from({ length: 12 }).map((_, gi) => (
+                                        <div key={gi} style={{ borderRight: gi < 11 ? "1px dashed #e2e8f0" : "none" }} />
+                                      ))}
+                                    </div>
                                     <div
                                       style={{
                                         position: "absolute",
@@ -2621,8 +2669,8 @@ export default function ProjectsView() {
                                         width: tk.barWidth || "18%",
                                         top: "3px",
                                         bottom: "3px",
-                                        background: phaseGroup.color,
-                                        borderRadius: "4px",
+                                        background: `linear-gradient(135deg, ${phaseGroup.color}, ${phaseGroup.color}dd)`,
+                                        borderRadius: "6px",
                                         boxShadow: `0 2px 6px ${phaseGroup.color}40`,
                                         display: "flex",
                                         alignItems: "center",
@@ -2631,7 +2679,9 @@ export default function ProjectsView() {
                                         fontSize: "0.68rem",
                                         fontWeight: "800",
                                         whiteSpace: "nowrap",
-                                        overflow: "hidden"
+                                        overflow: "hidden",
+                                        zIndex: 1,
+                                        transition: "all 0.2s"
                                       }}
                                       title={`${tk.title}: ${tk.dates} (${tk.progress || 0}% Completed)`}
                                     >
@@ -2643,17 +2693,17 @@ export default function ProjectsView() {
                                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
                                     <button
                                       onClick={() => handleOpenEditTask(tk)}
-                                      style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "2px", fontSize: "0.9rem" }}
+                                      style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b", transition: "all 0.15s" }}
                                       title="Edit Task"
                                     >
-                                      ✏️
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     </button>
                                     <button
                                       onClick={(e) => handleDeletePhaseTask(tk.id, e)}
-                                      style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", padding: "2px", fontSize: "0.9rem" }}
+                                      style={{ background: "#ffffff", border: "1px solid #fecaca", borderRadius: "6px", width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#ef4444", transition: "all 0.15s" }}
                                       title="Delete Task"
                                     >
-                                      🗑️
+                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                     </button>
                                   </div>
                                 </div>
@@ -2670,23 +2720,36 @@ export default function ProjectsView() {
                         onClick={handleOpenAddPhase}
                         style={{
                           width: "100%",
-                          padding: "14px 20px",
-                          background: "#f8fafc",
-                          border: "2px dashed #cbd5e1",
-                          borderRadius: "10px",
+                          padding: "16px 20px",
+                          background: "#ffffff",
+                          border: "2px dashed #93c5fd",
+                          borderRadius: "12px",
                           color: "#2563eb",
                           fontWeight: "800",
-                          fontSize: "0.88rem",
+                          fontSize: "0.9rem",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          gap: "8px",
-                          transition: "all 0.15s ease"
+                          gap: "10px",
+                          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                          boxShadow: "0 2px 8px rgba(37,99,235,0.04)"
+                        }}
+                        onMouseEnter={e => {
+                          e.currentTarget.style.background = "#eff6ff";
+                          e.currentTarget.style.borderColor = "#2563eb";
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                        }}
+                        onMouseLeave={e => {
+                          e.currentTarget.style.background = "#ffffff";
+                          e.currentTarget.style.borderColor = "#93c5fd";
+                          e.currentTarget.style.transform = "translateY(0)";
                         }}
                       >
-                        <span>➕</span>
-                        <span>+ Add New Implementation Phase</span>
+                        <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "inline-flex", alignItems: "center", justifyContent: "center", border: "1px solid #bfdbfe" }}>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        </span>
+                        <span>+ Add New Implementation Phase (Phase {projectPhaseGroups.length + 1})</span>
                       </button>
                     </>
                   )}

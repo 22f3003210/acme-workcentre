@@ -1107,6 +1107,8 @@ export default function ProjectsView() {
     setShowVisitModal(false);
   };
 
+  const consultants = (users || []).filter(u => u.role === "Consultant");
+
   const LEGACY_DUMMY_TITLES = [
     "Client Vision & Goal Mapping",
     "Business Model & Intake Review",

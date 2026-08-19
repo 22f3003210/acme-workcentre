@@ -779,6 +779,10 @@ export default function ProjectsView() {
   const [phaseNumInput, setPhaseNumInput] = useState(1);
   const [phaseNameInput, setPhaseNameInput] = useState("");
   const [phaseFullNameInput, setPhaseFullNameInput] = useState("");
+  const [phaseObjectiveInput, setPhaseObjectiveInput] = useState("");
+  const [phaseLeadInput, setPhaseLeadInput] = useState("");
+  const [phaseStartDateInput, setPhaseStartDateInput] = useState("");
+  const [phaseEndDateInput, setPhaseEndDateInput] = useState("");
   const [phaseColorInput, setPhaseColorInput] = useState("#2563eb");
 
   // Record Client Visit Form State (supports multi-consultant visiting team!)
@@ -1124,20 +1128,21 @@ export default function ProjectsView() {
     "Boutique Sales Counter Staff Workshops"
   ];
 
+  const getDurationInDays = (startDate, endDate) => {
+    if (!startDate) return null;
+    const s = new Date(startDate).getTime();
+    const e = endDate ? new Date(endDate).getTime() : s;
+    const diffDays = Math.max(1, Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1);
+    const weeks = (diffDays / 7).toFixed(1).replace(".0", "");
+    return { days: diffDays, weeks: `${weeks} ${weeks === "1" ? "Wk" : "Wks"}` };
+  };
+
   // Dynamic Phase Groups & Gantt Metrics Helper
   const getProjectPhaseGroups = (proj) => {
     if (!proj) return [];
+    const customPhases = proj.phases || [];
     const rawTasks = proj.phaseTasks || proj.scheduledEvents || [];
     const customTasks = rawTasks.filter(t => t && t.title && !LEGACY_DUMMY_TITLES.includes(t.title.trim()));
-    const defaultOwner = proj.owner || (proj.assignedConsultants && proj.assignedConsultants[0]) || currentUser?.name || "Darla Manikanta";
-
-    const basePhases = [
-      { num: 1, name: "Discovery & Goal", fullName: "Phase 1: Discovery & Vision Alignment", color: "#2563eb", bg: "#eff6ff" },
-      { num: 2, name: "Vault & Stock Audit", fullName: "Phase 2: Operations & Vault Stock Audit", color: "#16a34a", bg: "#f0fdf4" },
-      { num: 3, name: "Process & SOP Design", fullName: "Phase 3: Process Design & SOP Guidelines", color: "#7c3aed", bg: "#f5f3ff" },
-      { num: 4, name: "POS System Rollout", fullName: "Phase 4: POS & Inventory System Rollout", color: "#ea580c", bg: "#fff7ed" },
-      { num: 5, name: "Staff Coaching", fullName: "Phase 5: Staff Coaching & Performance Audit", color: "#0284c7", bg: "#f0f9ff" }
-    ];
 
     const calculateBar = (sDate, eDate) => {
       const baseStart = new Date("2026-07-01").getTime();
@@ -1151,19 +1156,26 @@ export default function ProjectsView() {
       return { barLeft: `${left.toFixed(1)}%`, barWidth: `${width.toFixed(1)}%` };
     };
 
-    return basePhases.map(ph => {
+    return customPhases.map(ph => {
       const phTasks = customTasks
-        .filter(t => (t.phaseId && t.phaseId === ph.id) || Number(t.phaseNum || 1) === ph.num)
+        .filter(t => (t.phaseId && t.phaseId === ph.id) || Number(t.phaseNum || 1) === Number(ph.num))
         .map(t => {
           const bar = calculateBar(t.startDate, t.endDate);
+          const dur = getDurationInDays(t.startDate, t.endDate);
           return {
             ...t,
+            durationDays: dur ? dur.days : (t.durationDays || 10),
+            durationWeeks: dur ? dur.weeks : (t.durationWeeks || "1.5 Wks"),
             barLeft: t.barLeft || bar.barLeft,
             barWidth: t.barWidth || bar.barWidth
           };
         });
+      
+      const phaseDur = getDurationInDays(ph.startDate, ph.endDate);
       return {
         ...ph,
+        durationDays: phaseDur ? phaseDur.days : null,
+        durationWeeks: phaseDur ? phaseDur.weeks : null,
         tasks: phTasks,
         count: phTasks.length
       };
@@ -1177,6 +1189,10 @@ export default function ProjectsView() {
     setPhaseNumInput(nextNum);
     setPhaseNameInput(`Phase ${nextNum}`);
     setPhaseFullNameInput(`Phase ${nextNum}: Strategic Implementation`);
+    setPhaseObjectiveInput("");
+    setPhaseLeadInput(selectedProject?.owner || (selectedProject?.assignedConsultants && selectedProject?.assignedConsultants[0]) || currentUser?.name || "Darla Manikanta");
+    setPhaseStartDateInput(new Date().toISOString().split("T")[0]);
+    setPhaseEndDateInput(new Date(Date.now() + 21 * 86400000).toISOString().split("T")[0]);
     setPhaseColorInput("#2563eb");
     setShowPhaseModal(true);
   };
@@ -1187,6 +1203,10 @@ export default function ProjectsView() {
     setPhaseNumInput(phase.num);
     setPhaseNameInput(phase.name || `Phase ${phase.num}`);
     setPhaseFullNameInput(phase.fullName || `Phase ${phase.num}: ${phase.name}`);
+    setPhaseObjectiveInput(phase.objective || "");
+    setPhaseLeadInput(phase.leadConsultant || "");
+    setPhaseStartDateInput(phase.startDate || "");
+    setPhaseEndDateInput(phase.endDate || "");
     setPhaseColorInput(phase.color || "#2563eb");
     setShowPhaseModal(true);
   };
@@ -1195,10 +1215,8 @@ export default function ProjectsView() {
     e.preventDefault();
     if (!phaseNameInput.trim() || !selectedProject) return;
 
-    const currentGroups = getProjectPhaseGroups(selectedProject);
-    const existingPhases = selectedProject.phases && selectedProject.phases.length > 0 
-      ? selectedProject.phases 
-      : currentGroups.map(g => ({ id: g.id || `ph-${g.num}`, num: g.num, name: g.name, fullName: g.fullName, color: g.color, bg: `${g.color}15` }));
+    const existingPhases = selectedProject.phases || [];
+    const dur = getDurationInDays(phaseStartDateInput, phaseEndDateInput);
 
     let updatedPhases = [];
     if (editingPhaseId) {
@@ -1209,6 +1227,12 @@ export default function ProjectsView() {
             num: Number(phaseNumInput),
             name: phaseNameInput,
             fullName: phaseFullNameInput || `Phase ${phaseNumInput}: ${phaseNameInput}`,
+            objective: phaseObjectiveInput,
+            leadConsultant: phaseLeadInput,
+            startDate: phaseStartDateInput,
+            endDate: phaseEndDateInput,
+            durationDays: dur ? dur.days : null,
+            durationWeeks: dur ? dur.weeks : null,
             color: phaseColorInput,
             bg: `${phaseColorInput}15`
           };
@@ -1221,6 +1245,12 @@ export default function ProjectsView() {
         num: Number(phaseNumInput),
         name: phaseNameInput,
         fullName: phaseFullNameInput || `Phase ${phaseNumInput}: ${phaseNameInput}`,
+        objective: phaseObjectiveInput,
+        leadConsultant: phaseLeadInput,
+        startDate: phaseStartDateInput,
+        endDate: phaseEndDateInput,
+        durationDays: dur ? dur.days : null,
+        durationWeeks: dur ? dur.weeks : null,
         color: phaseColorInput,
         bg: `${phaseColorInput}15`
       };
@@ -1243,11 +1273,7 @@ export default function ProjectsView() {
     if (!selectedProject) return;
     if (!window.confirm("Are you sure you want to delete this phase and all tasks inside it?")) return;
 
-    const currentGroups = getProjectPhaseGroups(selectedProject);
-    const existingPhases = selectedProject.phases && selectedProject.phases.length > 0 
-      ? selectedProject.phases 
-      : currentGroups.map(g => ({ id: g.id || `ph-${g.num}`, num: g.num, name: g.name, fullName: g.fullName, color: g.color, bg: `${g.color}15` }));
-
+    const existingPhases = selectedProject.phases || [];
     const updatedPhases = existingPhases.filter(ph => ph.id !== phaseId && ph.num !== phaseNum);
     const existingTasks = selectedProject.phaseTasks || selectedProject.scheduledEvents || [];
     const updatedTasks = existingTasks.filter(t => t.phaseId !== phaseId && Number(t.phaseNum) !== phaseNum);
@@ -2367,265 +2393,303 @@ export default function ProjectsView() {
                         Phase-Wise Task Allocation & Interactive Gantt Timeline
                       </h3>
                       <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "#64748b" }}>
-                        Visualize {totalTasksCount} scheduled tasks across {projectPhaseGroups.length} consulting phases
+                        {projectPhaseGroups.length === 0 
+                          ? "No phases created yet. Click '+ Add New Phase' below to start building your implementation roadmap."
+                          : `Visualize ${totalTasksCount} scheduled tasks across ${projectPhaseGroups.length} custom consulting phases`}
                       </p>
                     </div>
 
                     <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                      <button
-                        onClick={handleOpenAddPhase}
-                        style={{
-                          background: "#ffffff",
-                          color: "#475569",
-                          border: "1px solid #cbd5e1",
-                          padding: "9px 14px",
-                          borderRadius: "8px",
-                          fontWeight: "700",
-                          fontSize: "0.83rem",
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "6px"
-                        }}
-                        title="Add a custom phase to this project"
-                      >
-                        <span>📁</span>
-                        <span>+ Add New Phase</span>
-                      </button>
-
-                      {totalTasksCount > 0 && (
+                      {projectPhaseGroups.length > 0 && (
                         <button
-                          onClick={handleClearAllTasks}
+                          onClick={() => handleOpenCreateTask(projectPhaseGroups[0]?.num || 1)}
                           style={{
-                            background: "#ffffff",
-                            color: "#dc2626",
-                            border: "1px solid #fecaca",
-                            padding: "9px 14px",
+                            background: "#2563eb",
+                            color: "#ffffff",
+                            border: "none",
+                            padding: "10px 20px",
                             borderRadius: "8px",
-                            fontWeight: "700",
-                            fontSize: "0.83rem",
-                            cursor: "pointer"
+                            fontWeight: "800",
+                            fontSize: "0.85rem",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)"
                           }}
-                          title="Clear all tasks from this plan"
                         >
-                          <span>🗑️ Clear Tasks</span>
+                          <span>+</span>
+                          <span>Schedule New Task</span>
                         </button>
                       )}
+                    </div>
+                  </div>
 
+                  {/* Empty State when 0 phases exist */}
+                  {projectPhaseGroups.length === 0 ? (
+                    <div style={{ padding: "48px 24px", textAlign: "center", background: "#f8fafc", borderRadius: "14px", border: "2px dashed #cbd5e1" }}>
+                      <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "1.6rem", marginBottom: "16px" }}>
+                        📁
+                      </div>
+                      <h3 style={{ margin: "0 0 8px 0", fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>
+                        No Implementation Phases Created Yet
+                      </h3>
+                      <p style={{ margin: "0 auto 20px auto", maxWidth: "480px", fontSize: "0.85rem", color: "#64748b", lineHeight: "1.5" }}>
+                        Start structuring this client engagement by adding Phase 1 with custom objectives, timeline dates, and week-wise deliverables.
+                      </p>
                       <button
-                        onClick={() => handleOpenCreateTask(projectPhaseGroups[0]?.num || 1)}
+                        onClick={handleOpenAddPhase}
                         style={{
                           background: "#2563eb",
                           color: "#ffffff",
                           border: "none",
-                          padding: "10px 20px",
+                          padding: "12px 24px",
                           borderRadius: "8px",
                           fontWeight: "800",
-                          fontSize: "0.85rem",
+                          fontSize: "0.9rem",
                           cursor: "pointer",
                           display: "inline-flex",
                           alignItems: "center",
-                          gap: "6px",
-                          boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)"
+                          gap: "8px",
+                          boxShadow: "0 4px 14px rgba(37, 99, 235, 0.25)"
                         }}
                       >
-                        <span>+</span>
-                        <span>Schedule New Task</span>
+                        <span>➕</span>
+                        <span>Create Phase 1</span>
                       </button>
                     </div>
-                  </div>
-
-                  {/* Dynamic Phase Allocation Summary Badges */}
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "24px" }}>
-                    {projectPhaseGroups.map(ph => (
-                      <div
-                        key={ph.id || ph.num}
-                        onClick={() => handleOpenCreateTask(ph.num)}
-                        style={{
-                          background: ph.bg || `${ph.color}15`,
-                          border: `1px solid ${ph.color}30`,
-                          borderRadius: "10px",
-                          padding: "12px 14px",
-                          cursor: "pointer",
-                          transition: "all 0.15s ease",
-                          position: "relative"
-                        }}
-                        title={`Click to add task in ${ph.name}`}
-                      >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div style={{ fontSize: "0.72rem", fontWeight: "800", color: ph.color, textTransform: "uppercase" }}>PHASE {ph.num}</div>
-                          <span style={{ fontSize: "0.75rem", color: ph.color, fontWeight: "800" }}>+ Add Task</span>
-                        </div>
-                        <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#0f172a", margin: "4px 0" }}>{ph.name}</div>
-                        <div style={{ fontSize: "0.78rem", color: ph.color, fontWeight: "700" }}>{ph.count} Tasks Allocated</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* DYNAMIC GANTT CHART CONTAINER */}
-                  <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", overflowX: "auto", background: "#ffffff" }}>
-                    
-                    {/* Gantt Header Axis */}
-                    <div style={{ display: "grid", gridTemplateColumns: "280px 140px 120px 105px 1fr 70px", background: "#f8fafc", borderBottom: "2px solid #e2e8f0", padding: "12px 16px", fontWeight: "800", fontSize: "0.76rem", color: "#475569" }}>
-                      <div>TASK OBJECTIVE & SPECIFICATION</div>
-                      <div>ASSIGNED CONSULTANT</div>
-                      <div>TIMELINE / DATES</div>
-                      <div>STATUS</div>
-                      <div style={{ display: "flex", justifyContent: "space-between", paddingLeft: "10px", borderLeft: "1px solid #cbd5e1" }}>
-                        <span>JUL 2026</span>
-                        <span>AUG 2026</span>
-                        <span>SEP 2026</span>
-                        <span>OCT 2026</span>
-                        <span>NOV 2026</span>
-                      </div>
-                      <div style={{ textAlign: "center" }}>ACTIONS</div>
-                    </div>
-
-                    {/* Gantt Rows Grouped by Phase */}
-                    {projectPhaseGroups.map(phaseGroup => (
-                      <div key={phaseGroup.id || phaseGroup.num}>
-                        
-                        {/* Phase Group Header Bar */}
-                        <div style={{ background: phaseGroup.bg || `${phaseGroup.color}15`, padding: "8px 16px", fontWeight: "800", fontSize: "0.82rem", color: phaseGroup.color, borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseGroup.color }} />
-                            <span>{phaseGroup.fullName || `Phase ${phaseGroup.num}: ${phaseGroup.name}`} ({phaseGroup.count} Tasks)</span>
-                            <button
-                              onClick={(e) => handleOpenEditPhase(phaseGroup, e)}
-                              style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.75rem", opacity: 0.7 }}
-                              title="Edit Phase Details"
-                            >
-                              ✏️
-                            </button>
-                            {projectPhaseGroups.length > 1 && (
-                              <button
-                                onClick={(e) => handleDeletePhase(phaseGroup.id, phaseGroup.num, e)}
-                                style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.75rem", opacity: 0.7 }}
-                                title="Delete Phase"
-                              >
-                                🗑️
-                              </button>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => handleOpenCreateTask(phaseGroup.num)}
+                  ) : (
+                    <>
+                      {/* Dynamic Phase Allocation Summary Badges */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "12px", marginBottom: "24px" }}>
+                        {projectPhaseGroups.map(ph => (
+                          <div
+                            key={ph.id || ph.num}
+                            onClick={() => handleOpenCreateTask(ph.num)}
                             style={{
-                              background: "#ffffff",
-                              border: `1px solid ${phaseGroup.color}50`,
-                              color: phaseGroup.color,
-                              padding: "3px 10px",
-                              borderRadius: "6px",
-                              fontSize: "0.72rem",
-                              fontWeight: "800",
-                              cursor: "pointer"
+                              background: ph.bg || `${ph.color}15`,
+                              border: `1px solid ${ph.color}30`,
+                              borderRadius: "10px",
+                              padding: "12px 14px",
+                              cursor: "pointer",
+                              transition: "all 0.15s ease",
+                              position: "relative"
                             }}
+                            title={`Click to add task in ${ph.name}`}
                           >
-                            + Add Task
-                          </button>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div style={{ fontSize: "0.72rem", fontWeight: "800", color: ph.color, textTransform: "uppercase" }}>PHASE {ph.num}</div>
+                              <span style={{ fontSize: "0.75rem", color: ph.color, fontWeight: "800" }}>+ Add Task</span>
+                            </div>
+                            <div style={{ fontSize: "0.9rem", fontWeight: "800", color: "#0f172a", margin: "4px 0" }}>{ph.name}</div>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem" }}>
+                              <span style={{ color: ph.color, fontWeight: "700" }}>{ph.count} Tasks</span>
+                              {ph.durationDays && (
+                                <span style={{ color: "#64748b", fontWeight: "600" }}>{ph.durationDays} Days</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* DYNAMIC WEEK-WISE GANTT CHART CONTAINER */}
+                      <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", overflowX: "auto", background: "#ffffff", marginBottom: "20px" }}>
+                        
+                        {/* Gantt Header Axis (Week-wise with Dates & Days) */}
+                        <div style={{ display: "grid", gridTemplateColumns: "260px 135px 130px 105px 95px 1fr 65px", background: "#f8fafc", borderBottom: "2px solid #e2e8f0", padding: "10px 14px", fontWeight: "800", fontSize: "0.74rem", color: "#475569", alignItems: "center" }}>
+                          <div>TASK OBJECTIVE & SPEC</div>
+                          <div>ASSIGNED LEAD</div>
+                          <div>TIMELINE / DATES</div>
+                          <div>DAYS / DURATION</div>
+                          <div>STATUS</div>
+                          <div style={{ borderLeft: "1px solid #cbd5e1", paddingLeft: "8px" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", textAlign: "center", fontSize: "0.68rem", fontWeight: "800", color: "#64748b" }}>
+                              {["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12"].map(w => (
+                                <span key={w} style={{ borderRight: "1px dashed #e2e8f0" }}>{w}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: "center" }}>ACTIONS</div>
                         </div>
 
-                        {/* Phase Tasks Rows */}
-                        {phaseGroup.tasks.length === 0 ? (
-                          <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
-                            No tasks scheduled yet in {phaseGroup.name}. Click "+ Add Task" to allocate.
-                          </div>
-                        ) : (
-                          phaseGroup.tasks.map((tk, tIndex) => (
-                            <div
-                              key={tk.id || tIndex}
-                              style={{
-                                display: "grid",
-                                gridTemplateColumns: "280px 140px 120px 105px 1fr 70px",
-                                alignItems: "center",
-                                padding: "10px 16px",
-                                borderBottom: "1px solid #f1f5f9",
-                                fontSize: "0.83rem",
-                                background: "#ffffff"
-                              }}
-                            >
-                              <div
-                                onClick={() => handleOpenEditTask(tk)}
-                                style={{ fontWeight: "700", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingRight: "10px", cursor: "pointer" }}
-                                title={`${tk.title} (Click to edit)`}
-                              >
-                                {tk.title}
-                              </div>
-                              <div style={{ color: "#2563eb", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px" }}>
-                                <span style={{ width: "22px", height: "22px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: "800" }}>
-                                  {tk.consultant ? tk.consultant[0] : "C"}
-                                </span>
-                                <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tk.consultant || "Unassigned"}</span>
-                              </div>
-                              <div style={{ color: "#64748b", fontSize: "0.78rem" }}>
-                                {tk.dates || (tk.startDate ? `${tk.startDate} - ${tk.endDate || ""}` : "Scheduled")}
-                              </div>
-                              <div>
-                                <span
-                                  onClick={(e) => handleQuickToggleTaskStatus(tk, e)}
-                                  style={{
-                                    background: tk.status === "Completed" ? "#dcfce7" : tk.status === "In Progress" ? "#eff6ff" : "#fff7ed",
-                                    color: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706",
-                                    padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: "800", cursor: "pointer",
-                                    display: "inline-block"
-                                  }}
-                                  title="Click to toggle status"
-                                >
-                                  {tk.status || "Scheduled"}
-                                </span>
-                              </div>
-                              
-                              {/* Gantt Timeline Bar Canvas Column */}
-                              <div style={{ position: "relative", height: "24px", background: "#f8fafc", borderRadius: "6px", borderLeft: "1px solid #cbd5e1" }}>
-                                <div
-                                  style={{
-                                    position: "absolute",
-                                    left: tk.barLeft || "5%",
-                                    width: tk.barWidth || "18%",
-                                    top: "3px",
-                                    bottom: "3px",
-                                    background: phaseGroup.color,
-                                    borderRadius: "4px",
-                                    boxShadow: `0 2px 6px ${phaseGroup.color}40`,
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: "#ffffff",
-                                    fontSize: "0.68rem",
-                                    fontWeight: "800",
-                                    whiteSpace: "nowrap",
-                                    overflow: "hidden"
-                                  }}
-                                  title={`${tk.title}: ${tk.dates} (${tk.progress || 0}% Completed)`}
-                                >
-                                  {(tk.progress || 0) > 0 ? `${tk.progress}%` : ""}
-                                </div>
-                              </div>
-
-                              {/* Actions Column */}
-                              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                        {/* Gantt Rows Grouped by Phase */}
+                        {projectPhaseGroups.map(phaseGroup => (
+                          <div key={phaseGroup.id || phaseGroup.num}>
+                            
+                            {/* Phase Group Header Bar */}
+                            <div style={{ background: phaseGroup.bg || `${phaseGroup.color}15`, padding: "9px 16px", fontWeight: "800", fontSize: "0.82rem", color: phaseGroup.color, borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                                <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseGroup.color }} />
+                                <span>{phaseGroup.fullName || `Phase ${phaseGroup.num}: ${phaseGroup.name}`} ({phaseGroup.count} Tasks)</span>
+                                {phaseGroup.startDate && (
+                                  <span style={{ fontSize: "0.75rem", background: "#ffffff", padding: "2px 8px", borderRadius: "12px", border: `1px solid ${phaseGroup.color}40`, color: phaseGroup.color, fontWeight: "700" }}>
+                                    📅 {phaseGroup.startDate} to {phaseGroup.endDate || ""} ({phaseGroup.durationDays || 0} Days / {phaseGroup.durationWeeks || ""})
+                                  </span>
+                                )}
                                 <button
-                                  onClick={() => handleOpenEditTask(tk)}
-                                  style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "2px", fontSize: "0.9rem" }}
-                                  title="Edit Task"
+                                  onClick={(e) => handleOpenEditPhase(phaseGroup, e)}
+                                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem", opacity: 0.7 }}
+                                  title="Edit Phase Details"
                                 >
                                   ✏️
                                 </button>
                                 <button
-                                  onClick={(e) => handleDeletePhaseTask(tk.id, e)}
-                                  style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", padding: "2px", fontSize: "0.9rem" }}
-                                  title="Delete Task"
+                                  onClick={(e) => handleDeletePhase(phaseGroup.id, phaseGroup.num, e)}
+                                  style={{ background: "none", border: "none", cursor: "pointer", fontSize: "0.8rem", opacity: 0.7 }}
+                                  title="Delete Phase"
                                 >
                                   🗑️
                                 </button>
                               </div>
+                              <button
+                                onClick={() => handleOpenCreateTask(phaseGroup.num)}
+                                style={{
+                                  background: "#ffffff",
+                                  border: `1px solid ${phaseGroup.color}50`,
+                                  color: phaseGroup.color,
+                                  padding: "3px 10px",
+                                  borderRadius: "6px",
+                                  fontSize: "0.72rem",
+                                  fontWeight: "800",
+                                  cursor: "pointer"
+                                }}
+                              >
+                                + Add Task
+                              </button>
                             </div>
-                          ))
-                        )}
+
+                            {/* Phase Tasks Rows */}
+                            {phaseGroup.tasks.length === 0 ? (
+                              <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
+                                No tasks scheduled yet in {phaseGroup.name}. Click "+ Add Task" to allocate.
+                              </div>
+                            ) : (
+                              phaseGroup.tasks.map((tk, tIndex) => (
+                                <div
+                                  key={tk.id || tIndex}
+                                  style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "260px 135px 130px 105px 95px 1fr 65px",
+                                    alignItems: "center",
+                                    padding: "10px 14px",
+                                    borderBottom: "1px solid #f1f5f9",
+                                    fontSize: "0.82rem",
+                                    background: "#ffffff"
+                                  }}
+                                >
+                                  <div
+                                    onClick={() => handleOpenEditTask(tk)}
+                                    style={{ fontWeight: "700", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingRight: "8px", cursor: "pointer" }}
+                                    title={`${tk.title} (Click to edit)`}
+                                  >
+                                    {tk.title}
+                                  </div>
+                                  <div style={{ color: "#2563eb", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
+                                    <span style={{ width: "22px", height: "22px", minWidth: "22px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: "800" }}>
+                                      {tk.consultant ? tk.consultant[0] : "C"}
+                                    </span>
+                                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tk.consultant || "Unassigned"}</span>
+                                  </div>
+                                  <div style={{ color: "#475569", fontSize: "0.78rem" }}>
+                                    {tk.dates || (tk.startDate ? `${tk.startDate} - ${tk.endDate || ""}` : "Scheduled")}
+                                  </div>
+                                  <div style={{ color: "#0f172a", fontSize: "0.78rem", fontWeight: "700" }}>
+                                    {tk.durationDays ? `${tk.durationDays} Days` : "—"}
+                                    <span style={{ fontSize: "0.7rem", color: "#64748b", display: "block", fontWeight: "500" }}>{tk.durationWeeks || ""}</span>
+                                  </div>
+                                  <div>
+                                    <span
+                                      onClick={(e) => handleQuickToggleTaskStatus(tk, e)}
+                                      style={{
+                                        background: tk.status === "Completed" ? "#dcfce7" : tk.status === "In Progress" ? "#eff6ff" : "#fff7ed",
+                                        color: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706",
+                                        padding: "2px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: "800", cursor: "pointer",
+                                        display: "inline-block"
+                                      }}
+                                      title="Click to toggle status"
+                                    >
+                                      {tk.status || "Scheduled"}
+                                    </span>
+                                  </div>
+                                  
+                                  {/* Gantt Timeline Bar Canvas Column */}
+                                  <div style={{ position: "relative", height: "24px", background: "#f8fafc", borderRadius: "6px", borderLeft: "1px solid #cbd5e1" }}>
+                                    <div
+                                      style={{
+                                        position: "absolute",
+                                        left: tk.barLeft || "5%",
+                                        width: tk.barWidth || "18%",
+                                        top: "3px",
+                                        bottom: "3px",
+                                        background: phaseGroup.color,
+                                        borderRadius: "4px",
+                                        boxShadow: `0 2px 6px ${phaseGroup.color}40`,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "#ffffff",
+                                        fontSize: "0.68rem",
+                                        fontWeight: "800",
+                                        whiteSpace: "nowrap",
+                                        overflow: "hidden"
+                                      }}
+                                      title={`${tk.title}: ${tk.dates} (${tk.progress || 0}% Completed)`}
+                                    >
+                                      {(tk.progress || 0) > 0 ? `${tk.progress}%` : ""}
+                                    </div>
+                                  </div>
+
+                                  {/* Actions Column */}
+                                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                                    <button
+                                      onClick={() => handleOpenEditTask(tk)}
+                                      style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", padding: "2px", fontSize: "0.9rem" }}
+                                      title="Edit Task"
+                                    >
+                                      ✏️
+                                    </button>
+                                    <button
+                                      onClick={(e) => handleDeletePhaseTask(tk.id, e)}
+                                      style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", padding: "2px", fontSize: "0.9rem" }}
+                                      title="Delete Task"
+                                    >
+                                      🗑️
+                                    </button>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+
+                          </div>
+                        ))}
 
                       </div>
-                    ))}
 
-                  </div>
+                      {/* BOTTOM ADD NEW PHASE ACTION CARD */}
+                      <button
+                        onClick={handleOpenAddPhase}
+                        style={{
+                          width: "100%",
+                          padding: "14px 20px",
+                          background: "#f8fafc",
+                          border: "2px dashed #cbd5e1",
+                          borderRadius: "10px",
+                          color: "#2563eb",
+                          fontWeight: "800",
+                          fontSize: "0.88rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "8px",
+                          transition: "all 0.15s ease"
+                        }}
+                      >
+                        <span>➕</span>
+                        <span>+ Add New Implementation Phase</span>
+                      </button>
+                    </>
+                  )}
                 </div>
 
               </div>
@@ -3523,6 +3587,69 @@ export default function ProjectsView() {
                   value={phaseFullNameInput}
                   onChange={e => setPhaseFullNameInput(e.target.value)}
                   style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Lead Consultant / Project Lead
+                </label>
+                <select
+                  value={phaseLeadInput}
+                  onChange={e => setPhaseLeadInput(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                >
+                  <option value="">Select Lead Consultant...</option>
+                  {(users || []).map(u => (
+                    <option key={u.id} value={u.name}>
+                      {u.name} ({u.role || u.title || "Consultant"})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={phaseStartDateInput}
+                    onChange={e => setPhaseStartDateInput(e.target.value)}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={phaseEndDateInput}
+                    onChange={e => setPhaseEndDateInput(e.target.value)}
+                    style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                  />
+                </div>
+              </div>
+
+              {phaseStartDateInput && phaseEndDateInput && (
+                <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px 12px", borderRadius: "8px", fontSize: "0.82rem", color: "#166534", fontWeight: "700" }}>
+                  ⏱️ Calculated Duration: {getDurationInDays(phaseStartDateInput, phaseEndDateInput)?.days || 0} Days ({getDurationInDays(phaseStartDateInput, phaseEndDateInput)?.weeks || "0 Wks"})
+                </div>
+              )}
+
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                  Phase Objectives & Deliverables Scope
+                </label>
+                <textarea
+                  rows="2"
+                  placeholder="Primary milestones, audit outcomes, and deliverables for this phase..."
+                  value={phaseObjectiveInput}
+                  onChange={e => setPhaseObjectiveInput(e.target.value)}
+                  style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none" }}
                 />
               </div>
 

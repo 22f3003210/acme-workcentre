@@ -1107,12 +1107,26 @@ export default function ProjectsView() {
     setShowVisitModal(false);
   };
 
-  const consultants = users.filter(u => u.role === "Consultant");
+  const LEGACY_DUMMY_TITLES = [
+    "Client Vision & Goal Mapping",
+    "Business Model & Intake Review",
+    "Executive Alignment Meeting",
+    "Showroom Physical Tag Audit",
+    "Metal Weight Variance Reconciliation",
+    "POS Sales Ledger Vs Vault Discrepancy Sheet",
+    "Atelier Job Card Workflow Standardization",
+    "RFID Vault Tagging & Inventory Control SOP",
+    "Sales Counter ABV Upselling Script Coaching",
+    "RFID Vault Scanner Hardware Setup",
+    "Digital Barcode Tag Sync & Integration",
+    "Boutique Sales Counter Staff Workshops"
+  ];
 
   // Dynamic Phase Groups & Gantt Metrics Helper
   const getProjectPhaseGroups = (proj) => {
     if (!proj) return [];
-    const customTasks = proj.phaseTasks || [];
+    const rawTasks = proj.phaseTasks || proj.scheduledEvents || [];
+    const customTasks = rawTasks.filter(t => t && t.title && !LEGACY_DUMMY_TITLES.includes(t.title.trim()));
     const defaultOwner = proj.owner || (proj.assignedConsultants && proj.assignedConsultants[0]) || currentUser?.name || "Darla Manikanta";
 
     const basePhases = [

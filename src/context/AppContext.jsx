@@ -515,8 +515,8 @@ export const AppProvider = ({ children }) => {
             auditReports: p.audit_reports || p.auditReports,
             checklists: p.checklists,
             clientVisits: p.client_visits || p.clientVisits,
-            scheduledEvents: p.scheduled_events || p.scheduledEvents,
-            phaseTasks: p.phase_tasks || p.phaseTasks || p.scheduled_events || p.scheduledEvents || [],
+            scheduledEvents: (p.scheduled_events || p.scheduledEvents || []).filter(t => t && t.title && !["Client Vision & Goal Mapping", "Showroom Physical Tag Audit", "Executive Alignment Meeting"].some(d => t.title.includes(d))),
+            phaseTasks: (p.phase_tasks || p.phaseTasks || p.scheduled_events || p.scheduledEvents || []).filter(t => t && t.title && !["Client Vision & Goal Mapping", "Showroom Physical Tag Audit", "Executive Alignment Meeting"].some(d => t.title.includes(d))),
             phases: p.phases || p.business_details?.phases || p.businessDetails?.phases || []
           }));
           setProjects(mapped);
@@ -550,8 +550,8 @@ export const AppProvider = ({ children }) => {
               auditReports: p.audit_reports || p.auditReports,
               checklists: p.checklists,
               clientVisits: p.client_visits || p.clientVisits,
-              scheduledEvents: p.scheduled_events || p.scheduledEvents,
-              phaseTasks: p.phase_tasks || p.phaseTasks || p.scheduled_events || p.scheduledEvents || [],
+              scheduledEvents: (p.scheduled_events || p.scheduledEvents || []).filter(t => t && t.title && !["Client Vision & Goal Mapping", "Showroom Physical Tag Audit", "Executive Alignment Meeting"].some(d => t.title.includes(d))),
+              phaseTasks: (p.phase_tasks || p.phaseTasks || p.scheduled_events || p.scheduledEvents || []).filter(t => t && t.title && !["Client Vision & Goal Mapping", "Showroom Physical Tag Audit", "Executive Alignment Meeting"].some(d => t.title.includes(d))),
               phases: p.phases || p.business_details?.phases || p.businessDetails?.phases || []
             };
             setProjects(prev => {

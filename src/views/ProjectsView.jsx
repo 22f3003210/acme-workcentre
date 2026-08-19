@@ -1162,14 +1162,15 @@ export default function ProjectsView() {
     return new Date(str);
   };
 
-  const GANTT_BASE_START = new Date(2026, 6, 14, 0, 0, 0).getTime(); // 14 July 2026
-  const GANTT_TOTAL_DAYS = 56; // 8 consecutive 7-day weeks (14 Jul to 07 Sep)
+  const GANTT_BASE_START = new Date(2026, 7, 19, 0, 0, 0).getTime(); // Current Date: 19 August 2026
+  const GANTT_TOTAL_WEEKS = 10; // 10 consecutive 7-day weeks (19 Aug to 27 Oct)
+  const GANTT_TOTAL_DAYS = GANTT_TOTAL_WEEKS * 7; // 70 days
   const GANTT_TOTAL_MS = GANTT_TOTAL_DAYS * 86400000;
 
   const getGanttTimelineWeeks = () => {
     const weeks = [];
-    const start = new Date(2026, 6, 14, 0, 0, 0);
-    for (let w = 0; w < 8; w++) {
+    const start = new Date(2026, 7, 19, 0, 0, 0);
+    for (let w = 0; w < GANTT_TOTAL_WEEKS; w++) {
       const wStart = new Date(start.getTime() + w * 7 * 86400000);
       const wEnd = new Date(wStart.getTime() + 6 * 86400000);
       const label = `${wStart.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })} - ${wEnd.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}`;
@@ -1179,7 +1180,7 @@ export default function ProjectsView() {
         const globalIdx = w * 7 + d;
         days.push({
           dayNum: dayDate.getDate(),
-          isToday: globalIdx === 36 // 19 Aug 2026 is exactly Day Index 36
+          isToday: globalIdx === 0 // 19 Aug 2026 is exactly Day Index 0 (First column)
         });
       }
       weeks.push({ weekNum: w + 1, label, days });
@@ -2569,7 +2570,8 @@ export default function ProjectsView() {
                         overflow: "hidden",
                         boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
                         position: "relative",
-                        display: "flex"
+                        display: "flex",
+                        alignItems: "stretch"
                       }}
                     >
                       {/* ------------------------------------------------------------- */}
@@ -2578,7 +2580,7 @@ export default function ProjectsView() {
                       <div
                         style={{
                           position: "absolute",
-                          left: isLeftPanelCollapsed ? "240px" : "480px",
+                          left: isLeftPanelCollapsed ? "240px" : "500px",
                           top: "50%",
                           transform: "translate(-50%, -50%)",
                           zIndex: 40,
@@ -2614,24 +2616,25 @@ export default function ProjectsView() {
                       {/* ======================================================== */}
                       <div
                         style={{
-                          width: isLeftPanelCollapsed ? "240px" : "480px",
-                          minWidth: isLeftPanelCollapsed ? "240px" : "480px",
+                          width: isLeftPanelCollapsed ? "240px" : "500px",
+                          minWidth: isLeftPanelCollapsed ? "240px" : "500px",
                           borderRight: "2px solid #e2e8f0",
                           transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
                           background: "#ffffff",
-                          zIndex: 10
+                          zIndex: 10,
+                          flexShrink: 0
                         }}
                       >
-                        {/* Left Column Header Row (height matching right top tier + day numbers = 48px) */}
+                        {/* Left Column Header Row (Exact 48px height matching right two-tier header) */}
                         <div
                           style={{
                             height: "48px",
                             boxSizing: "border-box",
                             background: "#f8fafc",
                             borderBottom: "2px solid #e2e8f0",
-                            padding: "0 14px",
+                            padding: "0 12px",
                             display: "grid",
-                            gridTemplateColumns: isLeftPanelCollapsed ? "1fr" : "1.3fr 1fr 0.9fr 0.8fr",
+                            gridTemplateColumns: isLeftPanelCollapsed ? "1fr" : "180px 120px 110px 78px",
                             alignItems: "center",
                             fontWeight: "800",
                             fontSize: "0.72rem",
@@ -2650,21 +2653,21 @@ export default function ProjectsView() {
                           )}
                         </div>
 
-                        {/* Phase Rows & Tasks */}
+                        {/* Phase Rows & Tasks (Synchronized exact row heights) */}
                         {projectPhaseGroups.map(phaseGroup => {
                           const isCollapsed = !!collapsedPhases[phaseGroup.id || phaseGroup.num];
 
                           return (
                             <div key={phaseGroup.id || phaseGroup.num}>
                               
-                              {/* Phase Header Row */}
+                              {/* Phase Header Row (Exact 44px height) */}
                               <div
                                 onClick={() => setCollapsedPhases(prev => ({ ...prev, [phaseGroup.id || phaseGroup.num]: !prev[phaseGroup.id || phaseGroup.num] }))}
                                 style={{
-                                  height: "45px",
+                                  height: "44px",
                                   boxSizing: "border-box",
                                   background: phaseGroup.bg || `${phaseGroup.color}12`,
-                                  padding: "0 14px",
+                                  padding: "0 12px",
                                   borderBottom: "1px solid #e2e8f0",
                                   display: "flex",
                                   alignItems: "center",
@@ -2695,11 +2698,11 @@ export default function ProjectsView() {
                                 )}
                               </div>
 
-                              {/* Task Rows */}
+                              {/* Task Rows (Exact 44px height) */}
                               {!isCollapsed && (
                                 <>
                                   {phaseGroup.tasks.length === 0 ? (
-                                    <div style={{ height: "45px", display: "flex", alignItems: "center", padding: "0 14px", fontSize: "0.78rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
+                                    <div style={{ height: "44px", boxSizing: "border-box", display: "flex", alignItems: "center", padding: "0 12px", fontSize: "0.78rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
                                       No tasks in {phaseGroup.name}.
                                     </div>
                                   ) : (
@@ -2712,12 +2715,12 @@ export default function ProjectsView() {
                                         <div
                                           key={tk.id || tIndex}
                                           style={{
-                                            height: "45px",
+                                            height: "44px",
                                             boxSizing: "border-box",
                                             display: "grid",
-                                            gridTemplateColumns: isLeftPanelCollapsed ? "1fr" : "1.3fr 1fr 0.9fr 0.8fr",
+                                            gridTemplateColumns: isLeftPanelCollapsed ? "1fr" : "180px 120px 110px 78px",
                                             alignItems: "center",
-                                            padding: "0 14px",
+                                            padding: "0 12px",
                                             borderBottom: "1px solid #f1f5f9",
                                             fontSize: "0.8rem",
                                             background: isHovered ? "#f8fafc" : "#ffffff",
@@ -2781,7 +2784,7 @@ export default function ProjectsView() {
                       </div>
 
                       {/* ======================================================== */}
-                      {/* RIGHT SECTION: GANTT SCHEDULE CANVAS (IMAGE 2 DATE STYLE)*/}
+                      {/* RIGHT SECTION: GANTT SCHEDULE CANVAS (UNIFORM 28px DATES)*/}
                       {/* ======================================================== */}
                       <div
                         style={{
@@ -2792,21 +2795,21 @@ export default function ProjectsView() {
                         }}
                       >
                         {/* ------------------------------------------------------------- */}
-                        {/* TWO-TIER DATE HEADER MATCHING IMAGE 2 EXACTLY                 */}
+                        {/* TWO-TIER UNIFORM DATE HEADER (2240px TOTAL = 70 DAYS x 32px)  */}
                         {/* ------------------------------------------------------------- */}
-                        <div style={{ minWidth: "720px", borderBottom: "2px solid #e2e8f0" }}>
+                        <div style={{ width: "2240px", minWidth: "2240px", borderBottom: "2px solid #e2e8f0" }}>
                           
-                          {/* Top Tier: Weekly Date Ranges (14 Jul - 20 Jul, 21 Jul - 27 Jul, ...) */}
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", height: "26px", alignItems: "center", textAlign: "center", fontSize: "0.72rem", fontWeight: "700", color: "#475569" }}>
+                          {/* Top Tier: Weekly Date Ranges (Each 224px wide = 7 days x 32px) */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(10, 224px)", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", height: "26px", boxSizing: "border-box", alignItems: "center", textAlign: "center", fontSize: "0.72rem", fontWeight: "700", color: "#334155" }}>
                             {getGanttTimelineWeeks().map((w, wi) => (
-                              <div key={wi} style={{ borderRight: wi < 7 ? "1px solid #e2e8f0" : "none", padding: "0 4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                              <div key={wi} style={{ borderRight: "1px solid #cbd5e1", padding: "0 4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                 {w.label}
                               </div>
                             ))}
                           </div>
 
-                          {/* Bottom Tier: Day Numbers (14 15 16 17 18 19 20 21 22 23 ...) */}
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(56, 1fr)", background: "#ffffff", height: "22px", alignItems: "center", textAlign: "center", fontSize: "0.64rem", fontWeight: "600", color: "#64748b", position: "relative" }}>
+                          {/* Bottom Tier: Uniform Day Numbers (Each 32px wide with clean padding) */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(70, 32px)", background: "#ffffff", height: "22px", boxSizing: "border-box", alignItems: "center", textAlign: "center", fontSize: "0.68rem", fontWeight: "600", color: "#64748b", position: "relative" }}>
                             {getGanttTimelineWeeks().flatMap((w, wi) => 
                               w.days.map((d, di) => {
                                 const globalDayIndex = wi * 7 + di;
@@ -2814,7 +2817,12 @@ export default function ProjectsView() {
                                   <div
                                     key={globalDayIndex}
                                     style={{
-                                      borderRight: (globalDayIndex + 1) % 7 === 0 ? "1px solid #cbd5e1" : "1px dashed #f1f5f9",
+                                      width: "32px",
+                                      height: "22px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      justifyContent: "center",
+                                      borderRight: (globalDayIndex + 1) % 7 === 0 ? "1px solid #cbd5e1" : "1px dashed #e2e8f0",
                                       color: d.isToday ? "#4f46e5" : "#64748b",
                                       fontWeight: d.isToday ? "900" : "600",
                                       background: d.isToday ? "#ede9fe" : "transparent"
@@ -2826,11 +2834,11 @@ export default function ProjectsView() {
                               })
                             )}
 
-                            {/* "Today" Marker Pill positioned right on 19 Aug (Day index 36) */}
+                            {/* "Today" Marker Pill positioned right on Day index 0 (19 Aug) */}
                             <div
                               style={{
                                 position: "absolute",
-                                left: `${(36.5 / 56) * 100}%`,
+                                left: "16px",
                                 top: "-2px",
                                 transform: "translateX(-50%)",
                                 background: "#6366f1",
@@ -2849,14 +2857,14 @@ export default function ProjectsView() {
                           </div>
                         </div>
 
-                        {/* Gantt Canvas Content Rows */}
-                        <div style={{ minWidth: "720px", position: "relative" }}>
+                        {/* Gantt Canvas Content Rows (Exact 2240px width) */}
+                        <div style={{ width: "2240px", minWidth: "2240px", position: "relative" }}>
                           
                           {/* Continuous "Today" Vertical Line Marker through all rows */}
                           <div
                             style={{
                               position: "absolute",
-                              left: `${(36.5 / 56) * 100}%`,
+                              left: "16px",
                               top: 0,
                               bottom: 0,
                               width: "2px",
@@ -2866,17 +2874,17 @@ export default function ProjectsView() {
                             }}
                           />
 
-                          {/* Phase Header Canvas Row & Tasks */}
+                          {/* Phase Header Canvas Row & Tasks (Synchronized exact row heights) */}
                           {projectPhaseGroups.map(phaseGroup => {
                             const isCollapsed = !!collapsedPhases[phaseGroup.id || phaseGroup.num];
 
                             return (
                               <div key={phaseGroup.id || phaseGroup.num}>
                                 
-                                {/* Phase Header Canvas Bar */}
+                                {/* Phase Header Canvas Bar (Exact 44px height) */}
                                 <div
                                   style={{
-                                    height: "45px",
+                                    height: "44px",
                                     boxSizing: "border-box",
                                     background: phaseGroup.bg || `${phaseGroup.color}12`,
                                     borderBottom: "1px solid #e2e8f0",
@@ -2913,37 +2921,46 @@ export default function ProjectsView() {
                                   </button>
                                 </div>
 
-                                {/* Tasks Gantt Bars */}
+                                {/* Tasks Gantt Bars (Exact 44px height) */}
                                 {!isCollapsed && (
                                   <>
                                     {phaseGroup.tasks.length === 0 ? (
-                                      <div style={{ height: "45px", display: "flex", alignItems: "center", padding: "0 14px", fontSize: "0.78rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
+                                      <div style={{ height: "44px", boxSizing: "border-box", display: "flex", alignItems: "center", padding: "0 14px", fontSize: "0.78rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
                                         No tasks scheduled.
                                       </div>
                                     ) : (
                                       phaseGroup.tasks.map((tk, tIndex) => {
                                         const isHovered = hoveredGanttTask?.id === tk.id;
 
+                                        // Calculate pixel-perfect coordinates based on 32px day width starting at 19 Aug 2026
+                                        const sObj = parseLocalYMD(tk.startDate);
+                                        const eObj = tk.endDate ? parseLocalYMD(tk.endDate) : sObj;
+                                        const startDay = sObj ? Math.round((sObj.getTime() - GANTT_BASE_START) / 86400000) : 0;
+                                        const endDay = eObj ? Math.round((eObj.getTime() - GANTT_BASE_START) / 86400000) : startDay + 2;
+                                        const durDays = Math.max(1, endDay - startDay + 1);
+
+                                        const leftPx = Math.max(0, startDay * 32);
+                                        const widthPx = Math.max(32, durDays * 32);
+
                                         return (
                                           <div
                                             key={tk.id || tIndex}
                                             style={{
-                                              height: "45px",
+                                              height: "44px",
                                               boxSizing: "border-box",
                                               borderBottom: "1px solid #f1f5f9",
                                               background: isHovered ? "#f8fafc" : "#ffffff",
                                               position: "relative",
                                               display: "flex",
-                                              alignItems: "center",
-                                              padding: "0 10px"
+                                              alignItems: "center"
                                             }}
                                             onMouseEnter={() => setHoveredGanttTask(tk)}
                                             onMouseLeave={() => setHoveredGanttTask(null)}
                                           >
-                                            {/* 56 Day Column Guidelines */}
-                                            <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: "repeat(56, 1fr)", pointerEvents: "none" }}>
-                                              {Array.from({ length: 56 }).map((_, gi) => (
-                                                <div key={gi} style={{ borderRight: (gi + 1) % 7 === 0 ? "1px solid #e2e8f0" : "1px dashed #f8fafc" }} />
+                                            {/* 70 Day Column Guidelines (Each 32px) */}
+                                            <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: "repeat(70, 32px)", pointerEvents: "none" }}>
+                                              {Array.from({ length: 70 }).map((_, gi) => (
+                                                <div key={gi} style={{ borderRight: (gi + 1) % 7 === 0 ? "1px solid #cbd5e1" : "1px dashed #f1f5f9" }} />
                                               ))}
                                             </div>
 
@@ -2952,10 +2969,10 @@ export default function ProjectsView() {
                                               onClick={() => handleOpenEditTask(tk)}
                                               style={{
                                                 position: "absolute",
-                                                left: tk.barLeft || "5%",
-                                                width: tk.barWidth || "12%",
-                                                top: "8px",
-                                                bottom: "8px",
+                                                left: `${leftPx}px`,
+                                                width: `${widthPx}px`,
+                                                top: "7px",
+                                                bottom: "7px",
                                                 background: `linear-gradient(135deg, ${phaseGroup.color}, ${phaseGroup.color}dd)`,
                                                 borderRadius: "6px",
                                                 boxShadow: isHovered ? `0 4px 12px ${phaseGroup.color}60` : `0 2px 6px ${phaseGroup.color}35`,
@@ -2987,7 +3004,7 @@ export default function ProjectsView() {
                                               <div
                                                 style={{
                                                   position: "absolute",
-                                                  left: tk.barLeft || "5%",
+                                                  left: `${leftPx}px`,
                                                   top: "-95px",
                                                   background: "#0f172a",
                                                   color: "#ffffff",

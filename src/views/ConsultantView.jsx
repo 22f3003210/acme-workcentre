@@ -3268,41 +3268,41 @@ export default function ConsultantView({ activeTab }) {
       )}
 
 
-            {/* GUIDED CONSULTANT CHECK-IN WIZARD MODAL (LOCATION & SELFIE IN SAME STEP) */}
+      {/* GUIDED CONSULTANT CHECK-IN WIZARD MODAL (LOCATION & SELFIE IN SAME STEP) */}
       {showCheckInWizard && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-          <div style={{ background: "#ffffff", borderRadius: "20px", width: "100%", maxWidth: "620px", overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.35)", display: "flex", flexDirection: "column" }}>
+          <div style={{ background: "#ffffff", borderRadius: "18px", width: "100%", maxWidth: "580px", maxHeight: "90vh", overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.35)", display: "flex", flexDirection: "column" }}>
             
             {/* Modal Header */}
-            <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e5c 100%)", color: "#ffffff", padding: "22px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(34,197,94,0.25)", color: "#4ade80", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.2rem" }}>✓</div>
+            <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e5c 100%)", color: "#ffffff", padding: "16px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(34,197,94,0.25)", color: "#4ade80", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.1rem" }}>✓</div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "800", color: "#ffffff" }}>Consultant Shift Check-In Form</h3>
+                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#ffffff" }}>Consultant Shift Check-In Form</h3>
                 </div>
               </div>
-              <button type="button" onClick={() => setShowCheckInWizard(false)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#cbd5e1", borderRadius: "50%", width: "32px", height: "32px", fontSize: "1.2rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              <button type="button" onClick={() => setShowCheckInWizard(false)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#cbd5e1", borderRadius: "50%", width: "30px", height: "30px", fontSize: "1.1rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
 
             {/* Stepper Bar (2 Steps) */}
-            <div style={{ background: "#f8fafc", padding: "12px 28px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ background: "#f8fafc", padding: "10px 22px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
               {[
                 { step: 1, title: "1. Purpose & Scope" },
-                { step: 2, title: "2. Exact Location & Selfie Capture" }
+                { step: 2, title: "2. Location & Selfie" }
               ].map((s) => {
                 const isActive = wizardStep === s.step;
                 const isPassed = wizardStep > s.step;
                 return (
                   <div key={s.step} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <div style={{
-                      width: "26px", height: "26px", borderRadius: "50%",
+                      width: "24px", height: "24px", borderRadius: "50%",
                       background: isActive ? "#2563eb" : isPassed ? "#16a34a" : "#cbd5e1",
-                      color: "#ffffff", fontSize: "0.78rem", fontWeight: "800",
+                      color: "#ffffff", fontSize: "0.75rem", fontWeight: "800",
                       display: "flex", alignItems: "center", justifyContent: "center"
                     }}>
                       {isPassed ? "✓" : s.step}
                     </div>
-                    <span style={{ fontSize: "0.82rem", fontWeight: isActive ? "800" : "600", color: isActive ? "#0f172a" : "#64748b" }}>
+                    <span style={{ fontSize: "0.8rem", fontWeight: isActive ? "800" : "600", color: isActive ? "#0f172a" : "#64748b" }}>
                       {s.title}
                     </span>
                   </div>
@@ -3310,8 +3310,8 @@ export default function ConsultantView({ activeTab }) {
               })}
             </div>
 
-            {/* Step Body */}
-            <div style={{ padding: "26px", display: "flex", flexDirection: "column", gap: "22px", minHeight: "340px" }}>
+            {/* Step Body (Scrollable with max height) */}
+            <div style={{ padding: "18px 22px", display: "flex", flexDirection: "column", gap: "16px", flex: 1, overflowY: "auto" }}>
               
               {/* STEP 1: PURPOSE & SCOPE OF WORK */}
               {wizardStep === 1 && (
@@ -3338,15 +3338,16 @@ export default function ConsultantView({ activeTab }) {
                           outline: "none"
                         }}
                       >
-                        <option value="">-- Select Assigned Client Project Site --</option>
-                        {displayProjects.map(p => (
-                          <option key={p.id} value={p.id}>{p.name} — ({p.location || "Client Site"})</option>
+                        <option value="">-- Choose Assigned Client Store / Project Site --</option>
+                        {displayProjects.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            🏢 {p.name} {p.clientName ? `(${p.clientName})` : ""} - {p.status || "Active"}
+                          </option>
                         ))}
                       </select>
                     ) : (
-                      <div style={{ padding: "12px 16px", background: "#fff7ed", border: "1px solid #ffedd5", borderRadius: "10px", color: "#c2410c", fontSize: "0.85rem", fontWeight: "700", display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span>⚠️</span>
-                        <span>No Client Projects Assigned Yet. (Projects will be visible here once assigned by Admin)</span>
+                      <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "12px 14px", borderRadius: "8px", color: "#991b1b", fontSize: "0.85rem" }}>
+                        ⚠️ No active projects assigned yet. Please contact your manager or admin.
                       </div>
                     )}
                   </div>
@@ -3354,7 +3355,7 @@ export default function ConsultantView({ activeTab }) {
                   {/* Purpose of Shift / Site Visit */}
                   <div>
                     <label style={{ display: "block", fontSize: "0.82rem", fontWeight: "800", color: "#1e293b", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
-                      🎯 2. Purpose of Shift / Site Visit
+                      🎯 2. Primary Objective / Purpose of Store Visit
                     </label>
                     <input
                       type="text"
@@ -3401,27 +3402,27 @@ export default function ConsultantView({ activeTab }) {
                 </div>
               )}
 
-              {/* STEP 2: COMBINED EXACT LOCATION DETECTION & SELFIE PHOTO CAPTURE */}
+              {/* STEP 2: LOCATION & SELFIE (STREAMLINED INTO SINGLE STEP) */}
               {wizardStep === 2 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   
                   {/* Location Card with Live Google Maps Pin */}
-                  <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontSize: "1.3rem" }}>📍</span>
-                        <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0369a1" }}>Exact Live Location Capture</h4>
+                        <span style={{ fontSize: "1.1rem" }}>📍</span>
+                        <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: "800", color: "#1e40af" }}>Client Site Live GPS Location</h4>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                         <button
                           type="button"
                           onClick={handleDetectGpsLocation}
-                          style={{ background: "#ffffff", border: "1px solid #93c5fd", color: "#0284c7", borderRadius: "8px", padding: "4px 10px", fontSize: "0.74rem", fontWeight: "800", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                          style={{ background: "#ffffff", border: "1px solid #93c5fd", color: "#2563eb", borderRadius: "6px", padding: "3px 8px", fontSize: "0.72rem", fontWeight: "800", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
                         >
                           <span>🔄 Refresh GPS</span>
                         </button>
-                        <span style={{ background: gpsData.isDetecting ? "#fef3c7" : "#e0f2fe", color: gpsData.isDetecting ? "#b45309" : "#0369a1", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" }}>
-                          {gpsData.isDetecting ? "⏳ Auto-Detecting..." : gpsData.lat ? "● GPS Verified" : "⚠️ Location Pending"}
+                        <span style={{ background: gpsData.isDetecting ? "#fef3c7" : "#dbeafe", color: gpsData.isDetecting ? "#b45309" : "#1e40af", border: "1px solid #bfdbfe", padding: "3px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: "800" }}>
+                          {gpsData.isDetecting ? "⏳ Detecting..." : gpsData.lat ? "● GPS Verified" : "⚠️ Location Pending"}
                         </span>
                       </div>
                     </div>
@@ -3432,21 +3433,21 @@ export default function ConsultantView({ activeTab }) {
                         type="text"
                         value={locationSearchQuery}
                         onChange={(e) => handleSearchLocation(e.target.value)}
-                        placeholder="🔍 Search exact colony, building, or area (e.g. Venkatadri Colony, Serene Heights, Masab Tank)..."
-                        style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #93c5fd", fontSize: "0.8rem", outline: "none", background: "#ffffff", boxSizing: "border-box" }}
+                        placeholder="🔍 Search exact colony, building, or area (e.g. Venkatadri Colony, Serene Heights)..."
+                        style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #93c5fd", fontSize: "0.78rem", outline: "none", background: "#ffffff", boxSizing: "border-box" }}
                       />
                       {isSearchingLocation && (
-                        <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: "#0284c7" }}>⏳ Searching...</span>
+                        <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.72rem", color: "#2563eb" }}>⏳ Searching...</span>
                       )}
 
                       {/* Search Results Dropdown */}
                       {locationSearchResults.length > 0 && (
-                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100, background: "#ffffff", border: "1.5px solid #3b82f6", borderRadius: "8px", boxShadow: "0 10px 25px rgba(0,0,0,0.18)", marginTop: "4px", maxHeight: "180px", overflowY: "auto" }}>
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100, background: "#ffffff", border: "1.5px solid #3b82f6", borderRadius: "8px", boxShadow: "0 10px 25px rgba(0,0,0,0.18)", marginTop: "4px", maxHeight: "160px", overflowY: "auto" }}>
                           {locationSearchResults.map((res, i) => (
                             <div
                               key={i}
                               onClick={() => handleSelectLocationSearchResult(res)}
-                              style={{ padding: "9px 12px", borderBottom: "1px solid #f1f5f9", cursor: "pointer", fontSize: "0.78rem", color: "#1e293b", transition: "background 0.15s" }}
+                              style={{ padding: "8px 10px", borderBottom: "1px solid #f1f5f9", cursor: "pointer", fontSize: "0.76rem", color: "#1e293b", transition: "background 0.15s" }}
                               onMouseEnter={(e) => e.currentTarget.style.background = "#eff6ff"}
                               onMouseLeave={(e) => e.currentTarget.style.background = "#ffffff"}
                             >
@@ -3459,7 +3460,7 @@ export default function ConsultantView({ activeTab }) {
 
                     {/* Live Google Map Frame when coordinates detected */}
                     {gpsData.lat && gpsData.lng ? (
-                      <div style={{ width: "100%", height: "130px", borderRadius: "8px", overflow: "hidden", border: "1px solid #cbd5e1", position: "relative", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+                      <div style={{ width: "100%", height: "110px", borderRadius: "8px", overflow: "hidden", border: "1px solid #cbd5e1", position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,0.05)" }}>
                         <iframe
                           title="Live GPS Google Map Preview"
                           src={`https://maps.google.com/maps?q=${gpsData.lat},${gpsData.lng}&z=16&output=embed`}
@@ -3469,53 +3470,52 @@ export default function ConsultantView({ activeTab }) {
                       </div>
                     ) : null}
 
-                    <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748b" }}>
+                    <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#64748b" }}>
                         <span>GPS COORDINATES</span>
-                        <strong style={{ color: "#0f172a", fontSize: "0.88rem" }}>
+                        <strong style={{ color: "#0f172a", fontSize: "0.82rem" }}>
                           {gpsData.isDetecting ? "⏳ Fetching Device GPS..." : gpsData.lat ? `${gpsData.lat}° N, ${gpsData.lng}° E` : "Turn on Device Location"}
                         </strong>
                       </div>
                       <div>
-                        <label style={{ fontSize: "0.75rem", fontWeight: "800", color: "#64748b", display: "block", marginBottom: "4px" }}>EXACT RECORDED AREA / LOCATION ADDRESS</label>
+                        <label style={{ fontSize: "0.72rem", fontWeight: "800", color: "#64748b", display: "block", marginBottom: "3px" }}>EXACT RECORDED AREA / LOCATION ADDRESS</label>
                         <input
                           type="text"
                           value={gpsData.address}
                           onChange={(e) => setGpsData(prev => ({ ...prev, address: e.target.value }))}
                           placeholder={gpsData.isDetecting ? "Fetching exact area..." : "e.g. Store Site / Client Location, City, State"}
-                          style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #2563eb", fontSize: "0.88rem", fontWeight: "700", color: "#1e40af", background: "#eff6ff", boxSizing: "border-box" }}
+                          style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1.5px solid #2563eb", fontSize: "0.82rem", fontWeight: "700", color: "#1e40af", background: "#eff6ff", boxSizing: "border-box" }}
                         />
                       </div>
                     </div>
                   </div>
 
-                  {/* Real WebCam & Selfie Photo Capture Box (Overlays & Extensions Disabled) */}
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
+                  {/* Real WebCam & Selfie Photo Capture Box */}
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
                     <div style={{ textAlign: "center" }}>
-                      <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>📸 Live Webcam & Selfie Capture</h4>
-                      <p style={{ margin: "3px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Capture a real-time selfie photo for shift attendance log</p>
+                      <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: "800", color: "#0f172a" }}>📸 Live Webcam & Selfie Capture</h4>
+                      <p style={{ margin: "2px 0 0 0", fontSize: "0.74rem", color: "#64748b" }}>Capture a real-time selfie photo for shift attendance log</p>
                     </div>
 
                     {/* Camera Permission Warning Banner */}
                     {cameraPermissionDenied && (
-                      <div style={{ width: "100%", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "10px", padding: "12px 16px", color: "#991b1b", fontSize: "0.82rem", textAlign: "center", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ width: "100%", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "8px", padding: "10px 14px", color: "#991b1b", fontSize: "0.78rem", textAlign: "center", display: "flex", flexDirection: "column", gap: "6px" }}>
                         <div style={{ fontWeight: "800" }}>📷 Camera Permission Turned Off</div>
-                        <div>Your browser camera permissions are turned off. Please allow camera access in your browser's address bar to turn on your webcam, or click below to retry.</div>
-                        <button type="button" onClick={startCamera} style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "6px", padding: "8px 16px", fontWeight: "800", fontSize: "0.8rem", cursor: "pointer", alignSelf: "center" }}>
-                          🎥 Turn On Camera Permissions
+                        <div>Your browser camera permissions are turned off. Please allow camera access in your browser address bar.</div>
+                        <button type="button" onClick={startCamera} style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "6px", padding: "6px 12px", fontWeight: "800", fontSize: "0.75rem", cursor: "pointer", alignSelf: "center" }}>
+                          🎥 Retry Camera Permissions
                         </button>
                       </div>
                     )}
 
-                    {/* Hidden Canvas element for snapping frame */}
                     <canvas ref={canvasRef} style={{ display: "none" }} />
 
-                    {/* Camera Feed / Snapped Preview (No Picture-in-Picture or Translate Overlays) */}
-                    <div style={{ position: "relative", width: "180px", height: "180px", borderRadius: "50%", overflow: "hidden", border: selfiePhoto ? "4px solid #16a34a" : "4px solid #2563eb", boxShadow: "0 8px 25px rgba(37,99,235,0.25)", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {/* Camera Feed / Snapped Preview */}
+                    <div style={{ position: "relative", width: "140px", height: "140px", borderRadius: "50%", overflow: "hidden", border: selfiePhoto ? "4px solid #16a34a" : "4px solid #3b82f6", boxShadow: "0 6px 20px rgba(37,99,235,0.2)", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {selfiePhoto ? (
                         <img 
                           src={selfiePhoto} 
-                          alt="Captured Consultant Selfie" 
+                          alt="Captured Live Selfie" 
                           style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         />
                       ) : (
@@ -3534,14 +3534,14 @@ export default function ConsultantView({ activeTab }) {
                     </div>
 
                     {/* Controls */}
-                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
                       {!selfiePhoto ? (
                         <>
                           {!cameraActive && (
                             <button 
                               type="button" 
                               onClick={startCamera} 
-                              style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}
+                              style={{ background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 14px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer" }}
                             >
                               🎥 Turn On Camera
                             </button>
@@ -3549,11 +3549,11 @@ export default function ConsultantView({ activeTab }) {
                           <button 
                             type="button" 
                             onClick={captureSelfieSnapshot} 
-                            style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
+                            style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 16px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
                           >
                             📸 Snap Selfie Photo
                           </button>
-                          <label style={{ background: "#334155", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+                          <label style={{ background: "#334155", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 14px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
                             📱 Open Phone Camera / Upload Photo
                             <input 
                               type="file" 
@@ -3565,8 +3565,8 @@ export default function ConsultantView({ activeTab }) {
                           </label>
                         </>
                       ) : (
-                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                          <span style={{ padding: "6px 14px", borderRadius: "8px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#16a34a", fontSize: "0.82rem", fontWeight: "800" }}>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <span style={{ padding: "5px 12px", borderRadius: "6px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#16a34a", fontSize: "0.78rem", fontWeight: "800" }}>
                             ✓ Selfie Ready & Verified
                           </span>
                           <button 
@@ -3575,21 +3575,21 @@ export default function ConsultantView({ activeTab }) {
                               setSelfiePhoto("");
                               startCamera();
                             }} 
-                            style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                            style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "4px" }}
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                               <circle cx="12" cy="13" r="4" />
                             </svg>
-                            Retake Selfie Photo
+                            Retake Photo
                           </button>
-                          <label style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <label style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                               <polyline points="17 8 12 3 7 8" />
                               <line x1="12" y1="3" x2="12" y2="15" />
                             </svg>
-                            Upload Different Photo
+                            Upload File
                             <input 
                               type="file" 
                               accept="image/*" 
@@ -3609,13 +3609,13 @@ export default function ConsultantView({ activeTab }) {
 
             </div>
 
-            {/* Modal Footer Controls */}
-            <div style={{ padding: "18px 28px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {/* Sticky Modal Footer */}
+            <div style={{ padding: "14px 22px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
               {wizardStep > 1 ? (
                 <button 
                   type="button" 
                   onClick={() => setWizardStep(prev => prev - 1)} 
-                  style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                  style={{ padding: "9px 16px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "700", fontSize: "0.82rem", cursor: "pointer" }}
                 >
                   ← Previous Step
                 </button>
@@ -3623,7 +3623,7 @@ export default function ConsultantView({ activeTab }) {
                 <button 
                   type="button" 
                   onClick={() => setShowCheckInWizard(false)} 
-                  style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                  style={{ padding: "9px 16px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "700", fontSize: "0.82rem", cursor: "pointer" }}
                 >
                   Cancel
                 </button>
@@ -3633,10 +3633,6 @@ export default function ConsultantView({ activeTab }) {
                 <button 
                   type="button" 
                   onClick={() => {
-                    if (displayProjects.length === 0) {
-                      if (setToast) setToast({ message: "⚠️ Cannot Proceed: No Client Project is assigned to your account by Admin.", type: "error" });
-                      return;
-                    }
                     if (!selectedWizardProjectId) {
                       if (setToast) setToast({ message: "⚠️ Mandatory Field Required: Please select an assigned Client Project Site location to proceed.", type: "error" });
                       return;
@@ -3646,13 +3642,13 @@ export default function ConsultantView({ activeTab }) {
                     startCamera();
                   }} 
                   style={{ 
-                    padding: "10px 24px", 
+                    padding: "9px 20px", 
                     background: (!selectedWizardProjectId || displayProjects.length === 0) ? "#94a3b8" : "#2563eb", 
                     color: "#ffffff", 
                     border: "none", 
-                    borderRadius: "10px", 
+                    borderRadius: "8px", 
                     fontWeight: "800", 
-                    fontSize: "0.88rem", 
+                    fontSize: "0.85rem", 
                     cursor: (!selectedWizardProjectId || displayProjects.length === 0) ? "not-allowed" : "pointer", 
                     boxShadow: (!selectedWizardProjectId || displayProjects.length === 0) ? "none" : "0 4px 14px rgba(37,99,235,0.3)" 
                   }}
@@ -3664,13 +3660,13 @@ export default function ConsultantView({ activeTab }) {
                   type="button" 
                   onClick={handleCompleteCheckInSubmit} 
                   style={{ 
-                    padding: "10px 26px", 
+                    padding: "9px 22px", 
                     background: selfiePhoto ? "#16a34a" : "#94a3b8", 
                     color: "#ffffff", 
                     border: "none", 
-                    borderRadius: "10px", 
+                    borderRadius: "8px", 
                     fontWeight: "800", 
-                    fontSize: "0.9rem", 
+                    fontSize: "0.85rem", 
                     cursor: selfiePhoto ? "pointer" : "not-allowed", 
                     boxShadow: selfiePhoto ? "0 4px 14px rgba(22,163,74,0.35)" : "none" 
                   }}
@@ -3684,41 +3680,42 @@ export default function ConsultantView({ activeTab }) {
         </div>
       )}
 
-{/* GUIDED CONSULTANT CHECK-OUT WIZARD MODAL (2-STEP LOCATION & SELFIE CAPTURE) */}
+      {/* GUIDED CONSULTANT CHECK-OUT WIZARD MODAL (2-STEP LOCATION & SELFIE CAPTURE) */}
       {showCheckOutWizard && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.8)", backdropFilter: "blur(8px)", zIndex: 999999, display: "flex", alignItems: "center", justifyContent: "center", padding: "16px" }}>
-          <div style={{ background: "#ffffff", borderRadius: "20px", width: "100%", maxWidth: "620px", overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.35)", display: "flex", flexDirection: "column" }}>
+          <div style={{ background: "#ffffff", borderRadius: "18px", width: "100%", maxWidth: "580px", maxHeight: "90vh", overflow: "hidden", boxShadow: "0 25px 60px rgba(0,0,0,0.35)", display: "flex", flexDirection: "column" }}>
             
             {/* Modal Header */}
-            <div style={{ background: "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)", color: "#ffffff", padding: "22px 28px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(255,255,255,0.2)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.2rem" }}>✖</div>
+            <div style={{ background: "linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)", color: "#ffffff", padding: "16px 22px", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(255,255,255,0.2)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "1.1rem" }}>✖</div>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "800", color: "#ffffff" }}>End Shift Check-Out Form</h3>
+                  <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#ffffff" }}>End Shift Check-Out Form</h3>
                 </div>
               </div>
-              <button type="button" onClick={() => { stopCamera(); setShowCheckOutWizard(false); }} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fca5a5", borderRadius: "50%", width: "32px", height: "32px", fontSize: "1.2rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
+              <button type="button" onClick={() => { stopCamera(); setShowCheckOutWizard(false); }} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fca5a5", borderRadius: "50%", width: "30px", height: "30px", fontSize: "1.1rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>✕</button>
             </div>
 
             {/* Stepper Bar (2 Steps) */}
-            <div style={{ background: "#f8fafc", padding: "12px 28px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {/* Stepper Bar (2 Steps) */}
+            <div style={{ background: "#f8fafc", padding: "10px 22px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
               {[
-                { step: 1, title: "1. Shift Summary & Remarks" },
-                { step: 2, title: "2. Check-Out Location & Selfie" }
+                { step: 1, title: "1. Shift Remarks" },
+                { step: 2, title: "2. Location & Selfie" }
               ].map((s) => {
                 const isActive = checkOutWizardStep === s.step;
                 const isPassed = checkOutWizardStep > s.step;
                 return (
                   <div key={s.step} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <div style={{
-                      width: "26px", height: "26px", borderRadius: "50%",
+                      width: "24px", height: "24px", borderRadius: "50%",
                       background: isActive ? "#dc2626" : isPassed ? "#16a34a" : "#cbd5e1",
-                      color: "#ffffff", fontSize: "0.78rem", fontWeight: "800",
+                      color: "#ffffff", fontSize: "0.75rem", fontWeight: "800",
                       display: "flex", alignItems: "center", justifyContent: "center"
                     }}>
                       {isPassed ? "✓" : s.step}
                     </div>
-                    <span style={{ fontSize: "0.82rem", fontWeight: isActive ? "800" : "600", color: isActive ? "#0f172a" : "#64748b" }}>
+                    <span style={{ fontSize: "0.8rem", fontWeight: isActive ? "800" : "600", color: isActive ? "#0f172a" : "#64748b" }}>
                       {s.title}
                     </span>
                   </div>
@@ -3726,29 +3723,29 @@ export default function ConsultantView({ activeTab }) {
               })}
             </div>
 
-            {/* Step Content */}
-            <div style={{ padding: "26px", display: "flex", flexDirection: "column", gap: "20px", minHeight: "340px" }}>
+            {/* Step Content (Scrollable with max height) */}
+            <div style={{ padding: "18px 22px", display: "flex", flexDirection: "column", gap: "16px", flex: 1, overflowY: "auto" }}>
               
               {/* STEP 1: REMARKS */}
               {checkOutWizardStep === 1 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-                  <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "14px 18px", borderRadius: "10px" }}>
-                    <div style={{ fontSize: "0.88rem", fontWeight: "800", color: "#991b1b" }}>Shift Check-In Summary</div>
-                    <div style={{ fontSize: "0.8rem", color: "#7f1d1d", marginTop: "4px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div style={{ background: "#fef2f2", border: "1px solid #fecaca", padding: "12px 16px", borderRadius: "10px" }}>
+                    <div style={{ fontSize: "0.85rem", fontWeight: "800", color: "#991b1b" }}>Shift Check-In Summary</div>
+                    <div style={{ fontSize: "0.78rem", color: "#7f1d1d", marginTop: "3px" }}>
                       Check In Time: <strong>{todayPunch?.checkIn || "10:30 AM"}</strong> • Check-In Date: <strong>{todayPunch?.date || todayStr}</strong>
                     </div>
                   </div>
 
                   <div>
-                    <label style={{ display: "block", fontSize: "0.82rem", fontWeight: "800", color: "#1e293b", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                    <label style={{ display: "block", fontSize: "0.82rem", fontWeight: "800", color: "#1e293b", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.03em" }}>
                       📝 End of Shift Remarks / Work Completed
                     </label>
                     <textarea
                       value={wizardCheckOutRemarks}
                       onChange={(e) => setWizardCheckOutRemarks(e.target.value)}
                       placeholder="Summary of advisory tasks and store objectives completed during shift..."
-                      rows={4}
-                      style={{ width: "100%", padding: "12px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.88rem", boxSizing: "border-box", fontWeight: "600" }}
+                      rows={3}
+                      style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box", fontWeight: "600" }}
                     />
                   </div>
                 </div>
@@ -3756,25 +3753,25 @@ export default function ConsultantView({ activeTab }) {
 
               {/* STEP 2: LOCATION & SELFIE CAPTURE FOR CHECK OUT */}
               {checkOutWizardStep === 2 && (
-                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                   
                   {/* Location Card with Live Google Maps Pin */}
-                  <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "14px", padding: "18px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ background: "#f0f9ff", border: "1px solid #bae6fd", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", gap: "10px" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontSize: "1.3rem" }}>📍</span>
-                        <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0369a1" }}>Check-Out Live Location</h4>
+                        <span style={{ fontSize: "1.1rem" }}>📍</span>
+                        <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: "800", color: "#0369a1" }}>Check-Out Live Location</h4>
                       </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                         <button
                           type="button"
                           onClick={handleDetectGpsLocation}
-                          style={{ background: "#ffffff", border: "1px solid #93c5fd", color: "#0284c7", borderRadius: "8px", padding: "4px 10px", fontSize: "0.74rem", fontWeight: "800", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                          style={{ background: "#ffffff", border: "1px solid #93c5fd", color: "#0284c7", borderRadius: "6px", padding: "3px 8px", fontSize: "0.72rem", fontWeight: "800", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
                         >
                           <span>🔄 Refresh GPS</span>
                         </button>
-                        <span style={{ background: gpsData.isDetecting ? "#fef3c7" : "#e0f2fe", color: gpsData.isDetecting ? "#b45309" : "#0369a1", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "12px", fontSize: "0.75rem", fontWeight: "800" }}>
-                          {gpsData.isDetecting ? "⏳ Auto-Detecting..." : gpsData.lat ? "● GPS Verified" : "⚠️ Location Pending"}
+                        <span style={{ background: gpsData.isDetecting ? "#fef3c7" : "#e0f2fe", color: gpsData.isDetecting ? "#b45309" : "#0369a1", border: "1px solid #bae6fd", padding: "3px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: "800" }}>
+                          {gpsData.isDetecting ? "⏳ Detecting..." : gpsData.lat ? "● GPS Verified" : "⚠️ Location Pending"}
                         </span>
                       </div>
                     </div>
@@ -3785,21 +3782,21 @@ export default function ConsultantView({ activeTab }) {
                         type="text"
                         value={locationSearchQuery}
                         onChange={(e) => handleSearchLocation(e.target.value)}
-                        placeholder="🔍 Search exact colony, building, or area (e.g. Venkatadri Colony, Serene Heights, Masab Tank)..."
-                        style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #93c5fd", fontSize: "0.8rem", outline: "none", background: "#ffffff", boxSizing: "border-box" }}
+                        placeholder="🔍 Search exact colony, building, or area (e.g. Venkatadri Colony, Serene Heights)..."
+                        style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #93c5fd", fontSize: "0.78rem", outline: "none", background: "#ffffff", boxSizing: "border-box" }}
                       />
                       {isSearchingLocation && (
-                        <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.75rem", color: "#0284c7" }}>⏳ Searching...</span>
+                        <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.72rem", color: "#0284c7" }}>⏳ Searching...</span>
                       )}
 
                       {/* Search Results Dropdown */}
                       {locationSearchResults.length > 0 && (
-                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100, background: "#ffffff", border: "1.5px solid #3b82f6", borderRadius: "8px", boxShadow: "0 10px 25px rgba(0,0,0,0.18)", marginTop: "4px", maxHeight: "180px", overflowY: "auto" }}>
+                        <div style={{ position: "absolute", top: "100%", left: 0, right: 0, zIndex: 100, background: "#ffffff", border: "1.5px solid #3b82f6", borderRadius: "8px", boxShadow: "0 10px 25px rgba(0,0,0,0.18)", marginTop: "4px", maxHeight: "160px", overflowY: "auto" }}>
                           {locationSearchResults.map((res, i) => (
                             <div
                               key={i}
                               onClick={() => handleSelectLocationSearchResult(res)}
-                              style={{ padding: "9px 12px", borderBottom: "1px solid #f1f5f9", cursor: "pointer", fontSize: "0.78rem", color: "#1e293b", transition: "background 0.15s" }}
+                              style={{ padding: "8px 10px", borderBottom: "1px solid #f1f5f9", cursor: "pointer", fontSize: "0.76rem", color: "#1e293b", transition: "background 0.15s" }}
                               onMouseEnter={(e) => e.currentTarget.style.background = "#eff6ff"}
                               onMouseLeave={(e) => e.currentTarget.style.background = "#ffffff"}
                             >
@@ -3812,7 +3809,7 @@ export default function ConsultantView({ activeTab }) {
 
                     {/* Live Google Map Frame when coordinates detected */}
                     {gpsData.lat && gpsData.lng ? (
-                      <div style={{ width: "100%", height: "130px", borderRadius: "8px", overflow: "hidden", border: "1px solid #cbd5e1", position: "relative", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+                      <div style={{ width: "100%", height: "110px", borderRadius: "8px", overflow: "hidden", border: "1px solid #cbd5e1", position: "relative", boxShadow: "0 2px 6px rgba(0,0,0,0.05)" }}>
                         <iframe
                           title="Live GPS Google Map Preview"
                           src={`https://maps.google.com/maps?q=${gpsData.lat},${gpsData.lng}&z=16&output=embed`}
@@ -3822,40 +3819,40 @@ export default function ConsultantView({ activeTab }) {
                       </div>
                     ) : null}
 
-                    <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "14px", display: "flex", flexDirection: "column", gap: "8px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#64748b" }}>
+                    <div style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#64748b" }}>
                         <span>GPS COORDINATES</span>
-                        <strong style={{ color: "#0f172a", fontSize: "0.88rem" }}>
+                        <strong style={{ color: "#0f172a", fontSize: "0.82rem" }}>
                           {gpsData.isDetecting ? "⏳ Fetching Device GPS..." : gpsData.lat ? `${gpsData.lat}° N, ${gpsData.lng}° E` : "Turn on Device Location"}
                         </strong>
                       </div>
                       <div>
-                        <label style={{ fontSize: "0.75rem", fontWeight: "800", color: "#64748b", display: "block", marginBottom: "4px" }}>EXACT RECORDED AREA / LOCATION ADDRESS</label>
+                        <label style={{ fontSize: "0.72rem", fontWeight: "800", color: "#64748b", display: "block", marginBottom: "3px" }}>EXACT RECORDED AREA / LOCATION ADDRESS</label>
                         <input
                           type="text"
                           value={gpsData.address}
                           onChange={(e) => setGpsData(prev => ({ ...prev, address: e.target.value }))}
                           placeholder={gpsData.isDetecting ? "Fetching exact area..." : "e.g. Store Site / Client Location, City, State"}
-                          style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1.5px solid #dc2626", fontSize: "0.88rem", fontWeight: "700", color: "#991b1b", background: "#fef2f2", boxSizing: "border-box" }}
+                          style={{ width: "100%", padding: "8px 10px", borderRadius: "6px", border: "1.5px solid #dc2626", fontSize: "0.82rem", fontWeight: "700", color: "#991b1b", background: "#fef2f2", boxSizing: "border-box" }}
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Real WebCam & Selfie Photo Capture Box */}
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
+                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "14px", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
                     <div style={{ textAlign: "center" }}>
-                      <h4 style={{ margin: 0, fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>📸 Check-Out Live Selfie Capture</h4>
-                      <p style={{ margin: "3px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>Capture a real-time selfie photo to verify shift completion</p>
+                      <h4 style={{ margin: 0, fontSize: "0.92rem", fontWeight: "800", color: "#0f172a" }}>📸 Check-Out Live Selfie Capture</h4>
+                      <p style={{ margin: "2px 0 0 0", fontSize: "0.74rem", color: "#64748b" }}>Capture a real-time selfie photo to verify shift completion</p>
                     </div>
 
                     {/* Camera Permission Warning Banner */}
                     {cameraPermissionDenied && (
-                      <div style={{ width: "100%", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "10px", padding: "12px 16px", color: "#991b1b", fontSize: "0.82rem", textAlign: "center", display: "flex", flexDirection: "column", gap: "8px" }}>
+                      <div style={{ width: "100%", background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "8px", padding: "10px 14px", color: "#991b1b", fontSize: "0.78rem", textAlign: "center", display: "flex", flexDirection: "column", gap: "6px" }}>
                         <div style={{ fontWeight: "800" }}>📷 Camera Permission Turned Off</div>
-                        <div>Your browser camera permissions are turned off. Please allow camera access in your browser's address bar to turn on your webcam, or click below to retry.</div>
-                        <button type="button" onClick={startCamera} style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "6px", padding: "8px 16px", fontWeight: "800", fontSize: "0.8rem", cursor: "pointer", alignSelf: "center" }}>
-                          🎥 Turn On Camera Permissions
+                        <div>Your browser camera permissions are turned off. Please allow camera access in your browser's address bar to retry.</div>
+                        <button type="button" onClick={startCamera} style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "6px", padding: "6px 12px", fontWeight: "800", fontSize: "0.75rem", cursor: "pointer", alignSelf: "center" }}>
+                          🎥 Retry Camera Permissions
                         </button>
                       </div>
                     )}
@@ -3863,7 +3860,7 @@ export default function ConsultantView({ activeTab }) {
                     <canvas ref={canvasRef} style={{ display: "none" }} />
 
                     {/* Camera Feed / Snapped Preview */}
-                    <div style={{ position: "relative", width: "180px", height: "180px", borderRadius: "50%", overflow: "hidden", border: checkOutSelfiePhoto || selfiePhoto ? "4px solid #16a34a" : "4px solid #dc2626", boxShadow: "0 8px 25px rgba(220,38,38,0.25)", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ position: "relative", width: "140px", height: "140px", borderRadius: "50%", overflow: "hidden", border: checkOutSelfiePhoto || selfiePhoto ? "4px solid #16a34a" : "4px solid #dc2626", boxShadow: "0 6px 20px rgba(220,38,38,0.2)", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       {checkOutSelfiePhoto || selfiePhoto ? (
                         <img 
                           src={checkOutSelfiePhoto || selfiePhoto} 
@@ -3886,14 +3883,14 @@ export default function ConsultantView({ activeTab }) {
                     </div>
 
                     {/* Controls */}
-                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center", alignItems: "center" }}>
                       {!(checkOutSelfiePhoto || selfiePhoto) ? (
                         <>
                           {!cameraActive && (
                             <button 
                               type="button" 
                               onClick={startCamera} 
-                              style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer" }}
+                              style={{ background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 14px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer" }}
                             >
                               🎥 Turn On Camera
                             </button>
@@ -3907,11 +3904,11 @@ export default function ConsultantView({ activeTab }) {
                                 setCheckOutSelfiePhoto(dataUrl);
                               }
                             }} 
-                            style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 18px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
+                            style={{ background: "#16a34a", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 16px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer", boxShadow: "0 4px 12px rgba(22,163,74,0.3)" }}
                           >
                             📸 Snap Check-Out Selfie
                           </button>
-                          <label style={{ background: "#334155", color: "#ffffff", border: "none", borderRadius: "8px", padding: "9px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
+                          <label style={{ background: "#334155", color: "#ffffff", border: "none", borderRadius: "8px", padding: "8px 14px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>
                             📱 Open Phone Camera / Upload Photo
                             <input 
                               type="file" 
@@ -3923,8 +3920,8 @@ export default function ConsultantView({ activeTab }) {
                           </label>
                         </>
                       ) : (
-                        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                          <span style={{ padding: "6px 14px", borderRadius: "8px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#16a34a", fontSize: "0.82rem", fontWeight: "800" }}>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <span style={{ padding: "5px 12px", borderRadius: "6px", background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#16a34a", fontSize: "0.78rem", fontWeight: "800" }}>
                             ✓ Check-Out Selfie Verified
                           </span>
                           <button 
@@ -3934,21 +3931,21 @@ export default function ConsultantView({ activeTab }) {
                               setCheckOutSelfiePhoto("");
                               startCamera();
                             }} 
-                            style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                            style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "4px" }}
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
                               <circle cx="12" cy="13" r="4" />
                             </svg>
-                            Retake Selfie Photo
+                            Retake Photo
                           </button>
-                          <label style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "8px 16px", fontSize: "0.82rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <label style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "6px 12px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer", color: "#334155", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                               <polyline points="17 8 12 3 7 8" />
                               <line x1="12" y1="3" x2="12" y2="15" />
                             </svg>
-                            Upload Different Photo
+                            Upload File
                             <input 
                               type="file" 
                               accept="image/*" 
@@ -3968,13 +3965,13 @@ export default function ConsultantView({ activeTab }) {
 
             </div>
 
-            {/* Footer Buttons */}
-            <div style={{ padding: "18px 28px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            {/* Sticky Modal Footer Buttons */}
+            <div style={{ padding: "14px 22px", background: "#f8fafc", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
               {checkOutWizardStep > 1 ? (
                 <button 
                   type="button" 
                   onClick={() => setCheckOutWizardStep(prev => prev - 1)} 
-                  style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                  style={{ padding: "9px 16px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "700", fontSize: "0.82rem", cursor: "pointer" }}
                 >
                   ← Previous Step
                 </button>
@@ -3982,7 +3979,7 @@ export default function ConsultantView({ activeTab }) {
                 <button 
                   type="button" 
                   onClick={() => { stopCamera(); setShowCheckOutWizard(false); }} 
-                  style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "10px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                  style={{ padding: "9px 16px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "700", fontSize: "0.82rem", cursor: "pointer" }}
                 >
                   Cancel
                 </button>
@@ -3996,7 +3993,7 @@ export default function ConsultantView({ activeTab }) {
                     handleDetectGpsLocation();
                     startCamera();
                   }} 
-                  style={{ padding: "10px 24px", background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "10px", fontWeight: "800", fontSize: "0.88rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(220,38,38,0.3)" }}
+                  style={{ padding: "9px 20px", background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 4px 14px rgba(220,38,38,0.3)" }}
                 >
                   Next: Location & Selfie →
                 </button>
@@ -4005,18 +4002,18 @@ export default function ConsultantView({ activeTab }) {
                   type="button" 
                   onClick={handleCompleteCheckOutSubmit} 
                   style={{ 
-                    padding: "10px 26px", 
+                    padding: "9px 22px", 
                     background: (checkOutSelfiePhoto || selfiePhoto) ? "#dc2626" : "#94a3b8", 
                     color: "#ffffff", 
                     border: "none", 
-                    borderRadius: "10px", 
+                    borderRadius: "8px", 
                     fontWeight: "800", 
-                    fontSize: "0.9rem", 
+                    fontSize: "0.85rem", 
                     cursor: (checkOutSelfiePhoto || selfiePhoto) ? "pointer" : "not-allowed", 
                     boxShadow: (checkOutSelfiePhoto || selfiePhoto) ? "0 4px 14px rgba(220,38,38,0.35)" : "none" 
                   }}
                 >
-                  {(checkOutSelfiePhoto || selfiePhoto) ? "Complete Check Out & Close Shift ✖" : "📸 Take/Upload Selfie to Complete Check Out"}
+                  {(checkOutSelfiePhoto || selfiePhoto) ? "Complete Shift Check-Out ✓" : "📸 Take/Upload Selfie to Check Out"}
                 </button>
               )}
             </div>

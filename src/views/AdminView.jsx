@@ -1,4 +1,13 @@
 
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useApp, getTodayDateString } from "../context/AppContext";
+import LedgerReports from "../components/LedgerReports";
+import ProjectsView from "./ProjectsView";
+import RecruiterView from "./RecruiterView";
+import RegisterView from "./RegisterView";
+import logoImg from "../assets/logo.png";
+
 // -------------------------------------------------------------
 // LEAFLET MAP VIEW COMPONENT (SELFIE CARD ANCHORED TO LOCATION PIN)
 // -------------------------------------------------------------
@@ -100,15 +109,6 @@ const LeafletMapView = ({ lat, lng, name, avatar, fullAddress, date, time }) => 
 
   return <div ref={containerRef} style={{ width: "100%", height: "100%", zIndex: 1 }} />;
 };
-
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useApp, getTodayDateString } from "../context/AppContext";
-import LedgerReports from "../components/LedgerReports";
-import ProjectsView from "./ProjectsView";
-import RecruiterView from "./RecruiterView";
-import RegisterView from "./RegisterView";
-import logoImg from "../assets/logo.png";
 
 export default function AdminView({ activeTab, setActiveTab }) {
   const {

@@ -183,7 +183,7 @@ export const supabaseAddAttendanceRecord = async (consultantId, attendanceRecord
   if (!isSupabaseConfigured()) return;
   const payload = {
     id: `att-${consultantId}-${attendanceRecord.date}`,
-    employee_id: consultantId,
+    employee_id: String(consultantId),
     employee_name: employeeName,
     date: attendanceRecord.date,
     check_in: attendanceRecord.checkIn,
@@ -199,8 +199,15 @@ export const supabaseAddAttendanceRecord = async (consultantId, attendanceRecord
     acknowledged_checklist: attendanceRecord.acknowledgedChecklist || false,
     remarks: attendanceRecord.remarks || ""
   };
-  const { data, error } = await supabase.from("attendance").upsert([payload], { onConflict: "id" });
-  if (error) console.error("Supabase add attendance error:", error);
+  let { data, error } = await supabase.from("attendance").upsert([payload], { onConflict: "id" });
+  if (error) {
+    console.warn("Supabase add attendance upsert error by id, trying match update or insert:", error);
+    const { id: _, ...payloadWithoutId } = payload;
+    const { data: updateData, error: updateError } = await supabase.from("attendance").update(payloadWithoutId).match({ employee_id: String(consultantId), date: attendanceRecord.date });
+    if (updateError || !updateData) {
+      await supabase.from("attendance").insert([payloadWithoutId]);
+    }
+  }
   return { data, error };
 };
 
@@ -219,7 +226,7 @@ export const supabaseUpdateAttendanceCheckout = async (consultantId, dateStr, ch
   const { data, error } = await supabase.from("attendance").update(updatePayload).eq("id", id);
   if (error) {
     console.error("Supabase update attendance checkout error by id, retrying with employee_id and date:", error);
-    await supabase.from("attendance").update(updatePayload).match({ employee_id: consultantId, date: dateStr });
+    await supabase.from("attendance").update(updatePayload).match({ employee_id: String(consultantId), date: dateStr });
   }
   return { data, error };
 };

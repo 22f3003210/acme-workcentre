@@ -639,15 +639,23 @@ export default function ConsultantView({ activeTab }) {
   // Attendance & Punch calculations - retrieve live user from users state or currentUser
   const todayStr = getTodayLocalStr();
   const synchronizedUser = (users || []).find(u => 
-    (currentUser?.id && u.id === currentUser.id) ||
-    (currentUser?.empCode && (u.empCode === currentUser.empCode || u.emp_code === currentUser.empCode)) ||
+    (currentUser?.id && (u.id === currentUser.id || u.empCode === currentUser.id || u.emp_code === currentUser.id)) ||
+    (currentUser?.empCode && (u.empCode === currentUser.empCode || u.emp_code === currentUser.empCode || u.id === currentUser.empCode)) ||
     (currentUser?.email && u.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
     (currentUser?.name && u.name?.toLowerCase() === currentUser.name.toLowerCase())
   ) || currentUser;
 
-  const myAttendance = (synchronizedUser?.attendance && synchronizedUser.attendance.length > 0)
-    ? synchronizedUser.attendance
-    : (currentUser?.attendance || []);
+  const myAttendance = useMemo(() => {
+    const fromSync = synchronizedUser?.attendance || [];
+    const fromCur = currentUser?.attendance || [];
+    const attMap = new Map();
+    [...fromCur, ...fromSync].forEach(a => {
+      if (a && a.date) {
+        attMap.set(a.date, { ...(attMap.get(a.date) || {}), ...a });
+      }
+    });
+    return Array.from(attMap.values());
+  }, [synchronizedUser, currentUser]);
 
   const unclosedPunch = (myAttendance || []).slice().reverse().find(a => !a.checkOut);
   const todayPunch = unclosedPunch || (myAttendance || []).slice().reverse().find(a => a.date === todayStr || (a.date && new Date(a.date).toDateString() === new Date().toDateString()));

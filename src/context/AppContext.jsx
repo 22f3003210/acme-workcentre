@@ -593,6 +593,76 @@ export const AppProvider = ({ children }) => {
             });
           }
         })
+        .on("postgres_changes", { event: "*", schema: "public", table: "attendance" }, (payload) => {
+          if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+            const a = payload.new;
+            const item = {
+              id: a.id,
+              date: a.date,
+              checkIn: a.check_in,
+              checkOut: a.check_out,
+              status: a.status || "Present",
+              hoursWorked: Number(a.hours_worked) || 0,
+              projectId: a.project_id || "",
+              projectName: a.project_name || "",
+              checkInSelfie: a.check_in_selfie || a.selfie_url || null,
+              checkInAddress: a.check_in_address || a.location_name || a.address || "",
+              checkInCoordinates: a.check_in_coordinates || a.coordinates || null,
+              checkOutSelfie: a.check_out_selfie || a.checkout_selfie || null,
+              checkOutAddress: a.check_out_address || a.checkout_address || "",
+              checkOutCoordinates: a.check_out_coordinates || a.checkout_coordinates || null,
+              selfie: a.check_in_selfie || a.selfie_url || null,
+              locationName: a.check_in_address || a.location_name || "",
+              address: a.check_in_address || a.location_name || "",
+              coordinates: a.check_in_coordinates || a.coordinates || null,
+              tasks: a.tasks || [],
+              acknowledgedChecklist: a.acknowledged_checklist || false,
+              remarks: a.remarks || ""
+            };
+            const targetEmpId = a.employee_id ? String(a.employee_id).toLowerCase().trim() : "";
+            const targetEmpName = a.employee_name ? String(a.employee_name).toLowerCase().trim() : "";
+
+            setUsers(prevUsers => {
+              const updatedUsers = prevUsers.map(u => {
+                const normId = String(u.id).toLowerCase().trim();
+                const normCode = u.empCode ? String(u.empCode).toLowerCase().trim() : "";
+                const normEmail = u.email ? String(u.email).toLowerCase().trim() : "";
+                const normName = u.name ? String(u.name).toLowerCase().trim() : "";
+
+                const isMatch = (targetEmpId && (normId === targetEmpId || normCode === targetEmpId || normEmail === targetEmpId || normName === targetEmpId)) ||
+                                (targetEmpName && (normName === targetEmpName || normName.includes(targetEmpName) || targetEmpName.includes(normName)));
+
+                if (!isMatch) return u;
+
+                const existingAtt = u.attendance || [];
+                const merged = [...existingAtt];
+                const idx = merged.findIndex(ca => ca.date === item.date);
+                if (idx >= 0) {
+                  merged[idx] = { ...merged[idx], ...item };
+                } else {
+                  merged.push(item);
+                }
+                return { ...u, attendance: merged };
+              });
+
+              try { localStorage.setItem("workcentre_users", JSON.stringify(updatedUsers)); } catch (e) {}
+
+              // ALSO UPDATE CURRENT USER IF LOGGED IN
+              setCurrentUser(prevUser => {
+                if (!prevUser) return prevUser;
+                const matched = updatedUsers.find(u => 
+                  u.id === prevUser.id || 
+                  (prevUser.empCode && (u.empCode === prevUser.empCode || u.emp_code === prevUser.empCode)) ||
+                  (prevUser.email && u.email?.toLowerCase() === prevUser.email.toLowerCase()) ||
+                  (prevUser.name && u.name?.toLowerCase() === prevUser.name.toLowerCase())
+                );
+                return matched ? { ...prevUser, ...matched } : prevUser;
+              });
+
+              return updatedUsers;
+            });
+          }
+        })
         .subscribe();
 
       // 7. Job Titles

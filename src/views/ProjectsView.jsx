@@ -152,6 +152,382 @@ const DocxViewer = ({ doc }) => {
   );
 };
 
+// Mobile Device Detector (Android, iOS, iPadOS, Mobile Chrome, Safari)
+const isMobileDevice = () => {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  const isTouch = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  return isTouch || window.innerWidth < 768;
+};
+
+// Dynamic PDF.js Loader & Canvas Renderer for Mobile Devices (Android & iOS)
+const loadPdfJs = async () => {
+  if (window.pdfjsLib) return window.pdfjsLib;
+
+  if (!document.getElementById("pdfjs-script")) {
+    const script = document.createElement("script");
+    script.id = "pdfjs-script";
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    document.head.appendChild(script);
+
+    await new Promise((resolve, reject) => {
+      script.onload = resolve;
+      script.onerror = reject;
+    });
+  }
+
+  // Set worker
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+
+  return window.pdfjsLib;
+};
+
+// MOBILE PDF VIEWER (Renders full PDF pages on HTML5 Canvas - Android & iOS Native Quality)
+const MobilePdfViewer = ({ pdfUrl, docTitle, fileName, fileSize }) => {
+  const [numPages, setNumPages] = useState(0);
+  const [scale, setScale] = useState(1.0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const canvasContainerRef = useRef(null);
+  const fullscreenContainerRef = useRef(null);
+  const pdfDocRef = useRef(null);
+
+  // Load and parse PDF document
+  useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    setError(false);
+
+    const renderPdf = async () => {
+      try {
+        if (!pdfUrl) throw new Error("No PDF source available");
+
+        const pdfjs = await loadPdfJs();
+        if (!pdfjs) throw new Error("PDF.js library failed to load");
+
+        let loadingTask;
+        if (pdfUrl.startsWith("data:")) {
+          const base64Data = pdfUrl.split(",")[1];
+          const rawBinary = atob(base64Data);
+          const uint8Array = new Uint8Array(rawBinary.length);
+          for (let i = 0; i < rawBinary.length; i++) {
+            uint8Array[i] = rawBinary.charCodeAt(i);
+          }
+          loadingTask = pdfjs.getDocument({ data: uint8Array });
+        } else {
+          loadingTask = pdfjs.getDocument(pdfUrl);
+        }
+
+        const pdf = await loadingTask.promise;
+        if (!isMounted) return;
+
+        pdfDocRef.current = pdf;
+        setNumPages(pdf.numPages);
+        setLoading(false);
+      } catch (err) {
+        console.error("Mobile PDF render error:", err);
+        if (isMounted) {
+          setError(true);
+          setLoading(false);
+        }
+      }
+    };
+
+    renderPdf();
+    return () => { isMounted = false; };
+  }, [pdfUrl]);
+
+  // Render each page to canvas when scale, numPages or fullscreen changes
+  useEffect(() => {
+    if (!pdfDocRef.current || numPages === 0) return;
+
+    let isMounted = true;
+    const containers = [canvasContainerRef.current, fullscreenContainerRef.current].filter(Boolean);
+
+    containers.forEach(c => { c.innerHTML = ""; });
+
+    const renderAllPages = async () => {
+      const dpr = window.devicePixelRatio || 1.5;
+      const targetContainer = isFullscreen ? fullscreenContainerRef.current : canvasContainerRef.current;
+      if (!targetContainer) return;
+
+      const screenWidth = targetContainer.clientWidth || (window.innerWidth - 32);
+
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        if (!isMounted) break;
+
+        try {
+          const page = await pdfDocRef.current.getPage(pageNum);
+          const initialViewport = page.getViewport({ scale: 1.0 });
+          // Calculate scale to fit mobile screen width exactly
+          const fitScale = ((screenWidth - 16) / initialViewport.width) * scale;
+          const viewport = page.getViewport({ scale: fitScale });
+
+          const pageWrapper = document.createElement("div");
+          pageWrapper.style.marginBottom = "16px";
+          pageWrapper.style.background = "#ffffff";
+          pageWrapper.style.borderRadius = "8px";
+          pageWrapper.style.boxShadow = "0 4px 16px rgba(0,0,0,0.12)";
+          pageWrapper.style.overflow = "hidden";
+          pageWrapper.style.display = "flex";
+          pageWrapper.style.flexDirection = "column";
+          pageWrapper.style.alignItems = "center";
+          pageWrapper.style.width = "100%";
+          pageWrapper.style.maxWidth = `${Math.floor(viewport.width)}px`;
+
+          const canvas = document.createElement("canvas");
+          const context = canvas.getContext("2d");
+          canvas.width = Math.floor(viewport.width * dpr);
+          canvas.height = Math.floor(viewport.height * dpr);
+          canvas.style.width = `${Math.floor(viewport.width)}px`;
+          canvas.style.height = `${Math.floor(viewport.height)}px`;
+          canvas.style.display = "block";
+
+          context.scale(dpr, dpr);
+
+          const renderContext = {
+            canvasContext: context,
+            viewport: viewport
+          };
+
+          await page.render(renderContext).promise;
+
+          const pageBadge = document.createElement("div");
+          pageBadge.style.fontSize = "0.72rem";
+          pageBadge.style.color = "#64748b";
+          pageBadge.style.padding = "6px 12px";
+          pageBadge.style.fontWeight = "700";
+          pageBadge.style.borderTop = "1px solid #f1f5f9";
+          pageBadge.style.width = "100%";
+          pageBadge.style.textAlign = "center";
+          pageBadge.style.background = "#fafafa";
+          pageBadge.innerText = `Page ${pageNum} of ${numPages}`;
+
+          pageWrapper.appendChild(canvas);
+          pageWrapper.appendChild(pageBadge);
+          targetContainer.appendChild(pageWrapper);
+        } catch (err) {
+          console.warn(`Error rendering page ${pageNum}:`, err);
+        }
+      }
+    };
+
+    renderAllPages();
+    return () => { isMounted = false; };
+  }, [numPages, scale, isFullscreen]);
+
+  return (
+    <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
+      {/* Mobile Top Control Toolbar */}
+      <div style={{
+        background: "#0f172a",
+        color: "#ffffff",
+        borderRadius: "10px",
+        padding: "10px 14px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        flexWrap: "wrap",
+        gap: "10px",
+        boxShadow: "0 4px 14px rgba(15,23,42,0.15)"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "120px" }}>
+          <span style={{ background: "#2563eb", color: "#ffffff", padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", fontWeight: "800" }}>PDF</span>
+          <span style={{ fontSize: "0.82rem", fontWeight: "700", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {docTitle || fileName || "Audit Report"}
+          </span>
+          {numPages > 0 && (
+            <span style={{ fontSize: "0.72rem", color: "#94a3b8", background: "rgba(255,255,255,0.1)", padding: "2px 6px", borderRadius: "10px" }}>
+              {numPages} {numPages === 1 ? "Page" : "Pages"}
+            </span>
+          )}
+        </div>
+
+        {/* Zoom & Fullscreen Controls */}
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          <button
+            type="button"
+            onClick={() => setScale(s => Math.max(0.6, parseFloat((s - 0.15).toFixed(2))))}
+            style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", width: "28px", height: "28px", borderRadius: "6px", fontSize: "1.1rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+            title="Zoom Out"
+          >
+            -
+          </button>
+          <span style={{ fontSize: "0.75rem", fontWeight: "700", minWidth: "38px", textAlign: "center" }}>
+            {Math.round(scale * 100)}%
+          </span>
+          <button
+            type="button"
+            onClick={() => setScale(s => Math.min(2.5, parseFloat((s + 0.15).toFixed(2))))}
+            style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", width: "28px", height: "28px", borderRadius: "6px", fontSize: "1.1rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+            title="Zoom In"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={() => setScale(1.0)}
+            style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer" }}
+            title="Reset Zoom"
+          >
+            Fit
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsFullscreen(true)}
+            style={{ background: "#2563eb", border: "none", color: "#fff", padding: "4px 10px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+            title="Fullscreen Reader"
+          >
+            ⛶ Expand
+          </button>
+        </div>
+      </div>
+
+      {/* Loading State */}
+      {loading && (
+        <div style={{ background: "#ffffff", borderRadius: "10px", padding: "40px 20px", textAlign: "center", border: "1px solid #e2e8f0" }}>
+          <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📱</div>
+          <div style={{ fontWeight: "800", color: "#0f172a", fontSize: "0.95rem" }}>Rendering Mobile PDF Viewer...</div>
+          <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "4px" }}>Optimizing pages for smartphone screen</div>
+        </div>
+      )}
+
+      {/* Error Fallback */}
+      {error && (
+        <div style={{ background: "#ffffff", borderRadius: "10px", padding: "30px 20px", textAlign: "center", border: "1px solid #fed7aa" }}>
+          <div style={{ fontSize: "2rem", marginBottom: "8px" }}>📄</div>
+          <div style={{ fontWeight: "800", color: "#0f172a" }}>Unable to load inline preview</div>
+          <div style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "4px", marginBottom: "12px" }}>Open or download document directly:</div>
+          <a
+            href={pdfUrl}
+            download={fileName || "audit_report.pdf"}
+            style={{ background: "#2563eb", color: "#ffffff", padding: "8px 18px", borderRadius: "8px", textDecoration: "none", fontWeight: "800", fontSize: "0.82rem", display: "inline-block" }}
+          >
+            Download / Open Document ({fileSize || "PDF"})
+          </a>
+        </div>
+      )}
+
+      {/* Inline Canvas Pages Container */}
+      <div
+        ref={canvasContainerRef}
+        style={{
+          width: "100%",
+          display: loading || error ? "none" : "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch"
+        }}
+      />
+
+      {/* Fullscreen Mobile Modal Reader */}
+      {isFullscreen && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(15, 23, 42, 0.96)",
+          zIndex: 99999,
+          display: "flex",
+          flexDirection: "column",
+          padding: "12px 10px"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "12px", borderBottom: "1px solid rgba(255,255,255,0.2)", color: "#fff" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ background: "#2563eb", padding: "2px 6px", borderRadius: "4px", fontSize: "0.7rem", fontWeight: "800" }}>PDF</span>
+              <span style={{ fontWeight: "800", fontSize: "0.85rem", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {docTitle || fileName || "Mobile PDF Reader"}
+              </span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <button
+                type="button"
+                onClick={() => setScale(s => Math.max(0.6, parseFloat((s - 0.15).toFixed(2))))}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "#fff", width: "30px", height: "30px", borderRadius: "6px", fontSize: "1.1rem" }}
+              >
+                -
+              </button>
+              <button
+                type="button"
+                onClick={() => setScale(s => Math.min(2.5, parseFloat((s + 0.15).toFixed(2))))}
+                style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "#fff", width: "30px", height: "30px", borderRadius: "6px", fontSize: "1.1rem" }}
+              >
+                +
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(false)}
+                style={{ background: "#ef4444", border: "none", color: "#fff", padding: "4px 12px", borderRadius: "6px", fontWeight: "800", fontSize: "0.82rem", cursor: "pointer" }}
+              >
+                ✕ Close
+              </button>
+            </div>
+          </div>
+          <div
+            ref={fullscreenContainerRef}
+            style={{ flex: 1, overflowY: "auto", padding: "16px 0", display: "flex", flexDirection: "column", alignItems: "center", WebkitOverflowScrolling: "touch" }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// MOBILE IMAGE VIEWER (Touch zoomable with Lightbox Modal)
+const MobileImageViewer = ({ src, alt, title }) => {
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [zoom, setZoom] = useState(1);
+
+  return (
+    <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px" }}>
+      <div
+        onClick={() => setIsLightboxOpen(true)}
+        style={{ position: "relative", cursor: "pointer", maxWidth: "100%", borderRadius: "8px", overflow: "hidden", boxShadow: "0 4px 14px rgba(0,0,0,0.1)" }}
+      >
+        <img
+          src={src}
+          alt={alt || title}
+          style={{ width: "100%", maxHeight: "480px", objectFit: "contain", display: "block" }}
+        />
+        <div style={{ position: "absolute", bottom: "8px", right: "8px", background: "rgba(0,0,0,0.7)", color: "#fff", padding: "4px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "700" }}>
+          🔍 Tap to Expand
+        </div>
+      </div>
+
+      {isLightboxOpen && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(15, 23, 42, 0.96)",
+          zIndex: 99999,
+          display: "flex",
+          flexDirection: "column",
+          padding: "12px"
+        }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", color: "#fff", paddingBottom: "10px" }}>
+            <span style={{ fontWeight: "700", fontSize: "0.85rem" }}>{title || "Image Viewer"}</span>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button onClick={() => setZoom(z => Math.min(3, z + 0.25))} style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "#fff", width: "30px", height: "30px", borderRadius: "6px" }}>+</button>
+              <button onClick={() => setZoom(z => Math.max(0.75, z - 0.25))} style={{ background: "rgba(255,255,255,0.2)", border: "none", color: "#fff", width: "30px", height: "30px", borderRadius: "6px" }}>-</button>
+              <button onClick={() => setIsLightboxOpen(false)} style={{ background: "#ef4444", border: "none", color: "#fff", padding: "4px 12px", borderRadius: "6px", fontWeight: "700" }}>✕</button>
+            </div>
+          </div>
+          <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", overflow: "auto" }}>
+            <img
+              src={src}
+              alt={alt}
+              style={{ transform: `scale(${zoom})`, transition: "transform 0.15s ease", maxWidth: "95vw", maxHeight: "80vh", objectFit: "contain" }}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 export default function ProjectsView() {
   const params = useParams();
   const navigate = useNavigate();
@@ -1626,12 +2002,16 @@ export default function ProjectsView() {
                     {/* DOCUMENT CONTENT CANVAS */}
                     <div style={{ padding: "20px", background: "#f1f5f9", minHeight: "500px", display: "flex", justifyContent: "center", alignItems: "center" }}>
                       {(() => {
+                        const isMobile = isMobileDevice();
                         const resolvedUrl = getCachedDocumentUrl(activeDoc?.id, activeDoc?.url);
                         const isImage = (resolvedUrl && resolvedUrl.startsWith("data:image")) || activeDoc?.fileName?.match(/\.(png|jpg|jpeg|gif|webp)$/i);
                         const isDocx = activeDoc?.fileName?.match(/\.(docx|doc)$/i) || activeDoc?.fileType?.includes("word") || activeDoc?.fileType?.includes("officedocument");
                         const activePdfSrc = pdfBlobUrl || (resolvedUrl && resolvedUrl.length > 20 && !resolvedUrl.startsWith("#") ? resolvedUrl : activeDoc?.url);
 
                         if (isImage) {
+                          if (isMobile) {
+                            return <MobileImageViewer src={resolvedUrl || activeDoc?.url} alt={activeDoc?.title} title={activeDoc?.fileName || activeDoc?.title} />;
+                          }
                           return (
                             <img
                               src={resolvedUrl || activeDoc?.url}
@@ -1645,7 +2025,20 @@ export default function ProjectsView() {
                           return <DocxViewer doc={{ ...activeDoc, url: resolvedUrl || activeDoc?.url }} />;
                         }
 
-                        // DEFAULT / PDF: Always render clean inline iframe web viewer (zero download prompts!)
+                        // PDF / DEFAULT DOCUMENT VIEWER:
+                        // 1. MOBILE PHONE (Android / iOS): Use MobilePdfViewer (HTML5 Canvas via PDF.js)
+                        if (isMobile) {
+                          return (
+                            <MobilePdfViewer
+                              pdfUrl={activePdfSrc}
+                              docTitle={activeDoc?.title}
+                              fileName={activeDoc?.fileName}
+                              fileSize={activeDoc?.fileSize}
+                            />
+                          );
+                        }
+
+                        // 2. LAPTOP / DESKTOP (UNCHANGED): Render clean inline iframe web viewer
                         return (
                           <div style={{ width: "100%", height: "800px", background: "#ffffff", borderRadius: "8px", overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
                             <iframe

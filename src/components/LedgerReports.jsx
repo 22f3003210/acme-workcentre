@@ -3416,7 +3416,28 @@ function ReceiptViewerCard({ r, i, activeItemInGroup }) {
     activeItemInGroup?.expenseDate || activeItemInGroup?.date
   );
 
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator?.userAgent || "") || (typeof window !== "undefined" && window.innerWidth < 768);
+
   if (isPdf && isValidMediaUrl) {
+    if (isMobile) {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", width: "100%", maxWidth: "340px", padding: "24px 16px", background: "#ffffff", borderRadius: "10px", textAlign: "center", boxShadow: "0 10px 25px rgba(0,0,0,0.5)" }}>
+          <div style={{ fontSize: "2.5rem", marginBottom: "8px" }}>📄</div>
+          <div style={{ fontWeight: "800", color: "#0f172a", fontSize: "0.95rem" }}>{name}</div>
+          <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "4px", marginBottom: "16px" }}>PDF Receipt Document</div>
+          <a
+            href={rawUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            download={name}
+            style={{ background: "#2563eb", color: "#ffffff", padding: "10px 20px", borderRadius: "8px", textDecoration: "none", fontWeight: "800", fontSize: "0.85rem", display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            Open / View PDF
+          </a>
+        </div>
+      );
+    }
+
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%", height: "100%" }}>
         <iframe src={rawUrl} title={name} style={{ width: "450px", height: "540px", border: "none", background: "#ffffff", borderRadius: "4px", boxShadow: "0 10px 25px rgba(0,0,0,0.5)" }} />

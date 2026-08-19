@@ -1127,67 +1127,65 @@ export default function ProjectsView() {
       return { barLeft: `${left.toFixed(1)}%`, barWidth: `${width.toFixed(1)}%` };
     };
 
-    if (customTasks.length > 0) {
-      return basePhases.map(ph => {
-        const phTasks = customTasks
-          .filter(t => Number(t.phaseNum || 1) === ph.num)
-          .map(t => {
-            const bar = calculateBar(t.startDate, t.endDate);
-            return {
-              ...t,
-              barLeft: t.barLeft || bar.barLeft,
-              barWidth: t.barWidth || bar.barWidth
-            };
-          });
-        return {
-          ...ph,
-          tasks: phTasks,
-          count: phTasks.length
-        };
-      });
-    }
+    return basePhases.map(ph => {
+      const phTasks = customTasks
+        .filter(t => (t.phaseId && t.phaseId === ph.id) || Number(t.phaseNum || 1) === ph.num)
+        .map(t => {
+          const bar = calculateBar(t.startDate, t.endDate);
+          return {
+            ...t,
+            barLeft: t.barLeft || bar.barLeft,
+            barWidth: t.barWidth || bar.barWidth
+          };
+        });
+      return {
+        ...ph,
+        tasks: phTasks,
+        count: phTasks.length
+      };
+    });
+  };
 
-    const defaultTemplate = [
-      {
-        num: 1, name: "Discovery & Goal", fullName: "Phase 1: Discovery & Vision Alignment", color: "#2563eb", bg: "#eff6ff",
-        tasks: [
-          { id: `${proj.id}-t1`, phaseNum: 1, title: "Client Vision & Goal Mapping", consultant: defaultOwner, startDate: "2026-07-01", endDate: "2026-07-10", dates: "01 Jul - 10 Jul", duration: "10 days", status: "Completed", progress: 100, barLeft: "4%", barWidth: "16%" },
-          { id: `${proj.id}-t2`, phaseNum: 1, title: "Business Model & Intake Review", consultant: "Mayank Sarraf", startDate: "2026-07-05", endDate: "2026-07-15", dates: "05 Jul - 15 Jul", duration: "10 days", status: "Completed", progress: 100, barLeft: "12%", barWidth: "16%" },
-          { id: `${proj.id}-t3`, phaseNum: 1, title: "Executive Alignment Meeting", consultant: defaultOwner, startDate: "2026-07-12", endDate: "2026-07-20", dates: "12 Jul - 20 Jul", duration: "8 days", status: "Completed", progress: 100, barLeft: "20%", barWidth: "12%" }
-        ]
-      },
-      {
-        num: 2, name: "Vault & Stock Audit", fullName: "Phase 2: Operations & Vault Stock Audit", color: "#16a34a", bg: "#f0fdf4",
-        tasks: [
-          { id: `${proj.id}-t4`, phaseNum: 2, title: "Showroom Physical Tag Audit", consultant: defaultOwner, startDate: "2026-07-20", endDate: "2026-08-05", dates: "20 Jul - 05 Aug", duration: "16 days", status: "Completed", progress: 100, barLeft: "30%", barWidth: "22%" },
-          { id: `${proj.id}-t5`, phaseNum: 2, title: "Metal Weight Variance Reconciliation", consultant: "Anant Sarraf", startDate: "2026-07-25", endDate: "2026-08-10", dates: "25 Jul - 10 Aug", duration: "16 days", status: "Completed", progress: 100, barLeft: "38%", barWidth: "22%" },
-          { id: `${proj.id}-t6`, phaseNum: 2, title: "POS Sales Ledger Vs Vault Discrepancy Sheet", consultant: "Mayank Sarraf", startDate: "2026-08-01", endDate: "2026-08-15", dates: "01 Aug - 15 Aug", duration: "15 days", status: "In Progress", progress: 80, barLeft: "48%", barWidth: "20%" }
-        ]
-      },
-      {
-        num: 3, name: "Process & SOP Design", fullName: "Phase 3: Process Design & SOP Guidelines", color: "#7c3aed", bg: "#f5f3ff",
-        tasks: [
-          { id: `${proj.id}-t7`, phaseNum: 3, title: "Atelier Job Card Workflow Standardization", consultant: defaultOwner, startDate: "2026-08-10", endDate: "2026-08-25", dates: "10 Aug - 25 Aug", duration: "15 days", status: "In Progress", progress: 65, barLeft: "58%", barWidth: "20%" },
-          { id: `${proj.id}-t8`, phaseNum: 3, title: "RFID Vault Tagging & Inventory Control SOP", consultant: defaultOwner, startDate: "2026-08-15", endDate: "2026-08-30", dates: "15 Aug - 30 Aug", duration: "15 days", status: "In Progress", progress: 50, barLeft: "65%", barWidth: "20%" },
-          { id: `${proj.id}-t9`, phaseNum: 3, title: "Sales Counter ABV Upselling Script Coaching", consultant: "Mayank Sarraf", startDate: "2026-08-20", endDate: "2026-09-05", dates: "20 Aug - 05 Sep", duration: "16 days", status: "Scheduled", progress: 20, barLeft: "72%", barWidth: "20%" }
-        ]
-      },
-      {
-        num: 4, name: "POS System Rollout", fullName: "Phase 4: POS & Inventory System Rollout", color: "#ea580c", bg: "#fff7ed",
-        tasks: [
-          { id: `${proj.id}-t10`, phaseNum: 4, title: "RFID Vault Scanner Hardware Setup", consultant: defaultOwner, startDate: "2026-09-01", endDate: "2026-09-18", dates: "01 Sep - 18 Sep", duration: "17 days", status: "Scheduled", progress: 0, barLeft: "80%", barWidth: "15%" },
-          { id: `${proj.id}-t11`, phaseNum: 4, title: "Digital Barcode Tag Sync & Integration", consultant: "Anant Sarraf", startDate: "2026-09-10", endDate: "2026-09-25", dates: "10 Sep - 25 Sep", duration: "15 days", status: "Scheduled", progress: 0, barLeft: "88%", barWidth: "12%" }
-        ]
-      },
-      {
-        num: 5, name: "Staff Coaching", fullName: "Phase 5: Staff Coaching & Performance Audit", color: "#0284c7", bg: "#f0f9ff",
-        tasks: [
-          { id: `${proj.id}-t12`, phaseNum: 5, title: "Boutique Sales Counter Staff Workshops", consultant: defaultOwner, startDate: "2026-10-01", endDate: "2026-10-20", dates: "01 Oct - 20 Oct", duration: "19 days", status: "Scheduled", progress: 0, barLeft: "92%", barWidth: "8%" }
-        ]
-      }
+  const handleLoadStandardTemplate = () => {
+    if (!selectedProject) return;
+    const defaultOwner = selectedProject.owner || (selectedProject.assignedConsultants && selectedProject.assignedConsultants[0]) || currentUser?.name || "Darla Manikanta";
+    const templateTasks = [
+      { id: `task-${Date.now()}-1`, phaseNum: 1, title: "Client Vision & Goal Mapping", consultant: defaultOwner, startDate: "2026-07-01", endDate: "2026-07-10", dates: "01 Jul - 10 Jul", status: "Completed", progress: 100, notes: "Founder alignment and deliverables scope mapping." },
+      { id: `task-${Date.now()}-2`, phaseNum: 1, title: "Business Model & Intake Review", consultant: defaultOwner, startDate: "2026-07-05", endDate: "2026-07-15", dates: "05 Jul - 15 Jul", status: "Completed", progress: 100, notes: "Analysis of showroom retail format and inventory turns." },
+      { id: `task-${Date.now()}-3`, phaseNum: 1, title: "Executive Alignment Meeting", consultant: defaultOwner, startDate: "2026-07-12", endDate: "2026-07-20", dates: "12 Jul - 20 Jul", status: "Completed", progress: 100, notes: "Steering committee sign-off on 5-phase advisory roadmap." },
+      { id: `task-${Date.now()}-4`, phaseNum: 2, title: "Showroom Physical Tag Audit", consultant: defaultOwner, startDate: "2026-07-20", endDate: "2026-08-05", dates: "20 Jul - 05 Aug", status: "Completed", progress: 100, notes: "100% barcode count of gold and diamond trays." },
+      { id: `task-${Date.now()}-5`, phaseNum: 2, title: "Metal Weight Variance Reconciliation", consultant: defaultOwner, startDate: "2026-07-25", endDate: "2026-08-10", dates: "25 Jul - 10 Aug", status: "Completed", progress: 100, notes: "Vault weight balance vs ledger variance analysis." },
+      { id: `task-${Date.now()}-6`, phaseNum: 2, title: "POS Sales Ledger Vs Vault Discrepancy Sheet", consultant: defaultOwner, startDate: "2026-08-01", endDate: "2026-08-15", dates: "01 Aug - 15 Aug", status: "In Progress", progress: 80, notes: "Software transaction logs reconciliation." },
+      { id: `task-${Date.now()}-7`, phaseNum: 3, title: "Atelier Job Card Workflow Standardization", consultant: defaultOwner, startDate: "2026-08-10", endDate: "2026-08-25", dates: "10 Aug - 25 Aug", status: "In Progress", progress: 65, notes: "Karigar gold issue and wastage tracking standard." },
+      { id: `task-${Date.now()}-8`, phaseNum: 3, title: "RFID Vault Tagging & Inventory Control SOP", consultant: defaultOwner, startDate: "2026-08-15", endDate: "2026-08-30", dates: "15 Aug - 30 Aug", status: "In Progress", progress: 50, notes: "Daily opening & closing vault handover protocol." },
+      { id: `task-${Date.now()}-9`, phaseNum: 3, title: "Sales Counter ABV Upselling Script Coaching", consultant: defaultOwner, startDate: "2026-08-20", endDate: "2026-09-05", dates: "20 Aug - 05 Sep", status: "Scheduled", progress: 20, notes: "Staff roleplay on diamond conversion." },
+      { id: `task-${Date.now()}-10`, phaseNum: 4, title: "RFID Vault Scanner Hardware Setup", consultant: defaultOwner, startDate: "2026-09-01", endDate: "2026-09-18", dates: "01 Sep - 18 Sep", status: "Scheduled", progress: 0, notes: "Handheld RFID terminal pairing and testing." },
+      { id: `task-${Date.now()}-11`, phaseNum: 4, title: "Digital Barcode Tag Sync & Integration", consultant: defaultOwner, startDate: "2026-09-10", endDate: "2026-09-25", dates: "10 Sep - 25 Sep", status: "Scheduled", progress: 0, notes: "ERP integration and live stock sync." },
+      { id: `task-${Date.now()}-12`, phaseNum: 5, title: "Boutique Sales Counter Staff Workshops", consultant: defaultOwner, startDate: "2026-10-01", endDate: "2026-10-20", dates: "01 Oct - 20 Oct", status: "Scheduled", progress: 0, notes: "Full retail team incentive and performance evaluation." }
     ];
 
-    return defaultTemplate.map(p => ({ ...p, count: p.tasks.length }));
+    updateProject(selectedProject.id, {
+      phaseTasks: templateTasks
+    });
+
+    const updated = projects.find(p => p.id === selectedProject.id);
+    if (updated) setSelectedProject({ ...updated, phaseTasks: templateTasks });
+
+    setToast({ message: "Standard advisory roadmap loaded successfully!", type: "success" });
+  };
+
+  const handleClearAllTasks = () => {
+    if (!selectedProject) return;
+    if (!window.confirm("Are you sure you want to clear all tasks from this project plan?")) return;
+
+    updateProject(selectedProject.id, {
+      phaseTasks: []
+    });
+
+    const updated = projects.find(p => p.id === selectedProject.id);
+    if (updated) setSelectedProject({ ...updated, phaseTasks: [] });
+
+    setToast({ message: "All tasks cleared from project plan.", type: "info" });
   };
 
   const handleOpenCreateTask = (phaseNum = 1) => {
@@ -2283,26 +2281,67 @@ export default function ProjectsView() {
                       </p>
                     </div>
 
-                    <button
-                      onClick={() => handleOpenCreateTask(1)}
-                      style={{
-                        background: "#2563eb",
-                        color: "#ffffff",
-                        border: "none",
-                        padding: "10px 20px",
-                        borderRadius: "8px",
-                        fontWeight: "800",
-                        fontSize: "0.85rem",
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)"
-                      }}
-                    >
-                      <span>+</span>
-                      <span>Schedule New Task / Phase Event</span>
-                    </button>
+                    <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                      {totalTasksCount === 0 && (
+                        <button
+                          onClick={handleLoadStandardTemplate}
+                          style={{
+                            background: "#f0fdf4",
+                            color: "#16a34a",
+                            border: "1px solid #bbf7d0",
+                            padding: "9px 16px",
+                            borderRadius: "8px",
+                            fontWeight: "800",
+                            fontSize: "0.83rem",
+                            cursor: "pointer",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "6px"
+                          }}
+                        >
+                          <span>⚡</span>
+                          <span>Load Standard Roadmap Template</span>
+                        </button>
+                      )}
+                      {totalTasksCount > 0 && (
+                        <button
+                          onClick={handleClearAllTasks}
+                          style={{
+                            background: "#ffffff",
+                            color: "#dc2626",
+                            border: "1px solid #fecaca",
+                            padding: "9px 14px",
+                            borderRadius: "8px",
+                            fontWeight: "700",
+                            fontSize: "0.83rem",
+                            cursor: "pointer"
+                          }}
+                          title="Clear all tasks from this plan"
+                        >
+                          <span>🗑️ Reset Plan</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleOpenCreateTask(1)}
+                        style={{
+                          background: "#2563eb",
+                          color: "#ffffff",
+                          border: "none",
+                          padding: "10px 20px",
+                          borderRadius: "8px",
+                          fontWeight: "800",
+                          fontSize: "0.85rem",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)"
+                        }}
+                      >
+                        <span>+</span>
+                        <span>Schedule New Task / Phase Event</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Dynamic Phase Allocation Summary Badges */}

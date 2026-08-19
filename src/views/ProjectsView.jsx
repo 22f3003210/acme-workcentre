@@ -774,11 +774,9 @@ export default function ProjectsView() {
   const [taskNotes, setTaskNotes] = useState("");
 
   // Wrike-Grade Interactive Gantt State
-  const [timelineZoom, setTimelineZoom] = useState("weeks"); // "weeks" | "days" | "months"
-  const [ganttSplitMode, setGanttSplitMode] = useState("split"); // "split" | "tableOnly" | "ganttOnly"
+  const [isLeftPanelCollapsed, setIsLeftPanelCollapsed] = useState(false);
   const [hoveredGanttTask, setHoveredGanttTask] = useState(null);
   const [collapsedPhases, setCollapsedPhases] = useState({});
-  const [showDependencies, setShowDependencies] = useState(true);
 
   // Dynamic Phase Management Form State
   const [showPhaseModal, setShowPhaseModal] = useState(false);
@@ -1155,6 +1153,30 @@ export default function ProjectsView() {
     }
   };
 
+  const GANTT_BASE_START = new Date("2026-07-14T00:00:00").getTime();
+  const GANTT_TOTAL_DAYS = 56; // 8 consecutive 7-day weeks (14 Jul to 07 Sep)
+  const GANTT_TOTAL_MS = GANTT_TOTAL_DAYS * 86400000;
+
+  const getGanttTimelineWeeks = () => {
+    const weeks = [];
+    const start = new Date("2026-07-14T00:00:00");
+    for (let w = 0; w < 8; w++) {
+      const wStart = new Date(start.getTime() + w * 7 * 86400000);
+      const wEnd = new Date(wStart.getTime() + 6 * 86400000);
+      const label = `${wStart.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })} - ${wEnd.toLocaleDateString("en-GB", { day: "2-digit", month: "short" })}`;
+      const days = [];
+      for (let d = 0; d < 7; d++) {
+        const dayDate = new Date(wStart.getTime() + d * 86400000);
+        days.push({
+          dayNum: dayDate.getDate(),
+          isToday: dayDate.toISOString().split("T")[0] === "2026-08-19"
+        });
+      }
+      weeks.push({ weekNum: w + 1, label, days });
+    }
+    return weeks;
+  };
+
   // Dynamic Phase Groups & Gantt Metrics Helper
   const getProjectPhaseGroups = (proj) => {
     if (!proj) return [];
@@ -1163,15 +1185,12 @@ export default function ProjectsView() {
     const customTasks = rawTasks.filter(t => t && t.title && !LEGACY_DUMMY_TITLES.includes(t.title.trim()));
 
     const calculateBar = (sDate, eDate) => {
-      const baseStart = new Date("2026-07-01").getTime();
-      const baseEnd = new Date("2026-11-30").getTime();
-      const total = baseEnd - baseStart;
-      if (!sDate) return { barLeft: "5%", barWidth: "15%" };
+      if (!sDate) return { barLeft: "10%", barWidth: "15%" };
       const tStart = new Date(sDate).getTime();
-      const tEnd = eDate ? new Date(eDate).getTime() : (tStart + 10 * 86400000);
-      const left = Math.max(2, Math.min(90, ((tStart - baseStart) / total) * 100));
-      const width = Math.max(6, Math.min(100 - left, ((tEnd - tStart) / total) * 100));
-      return { barLeft: `${left.toFixed(1)}%`, barWidth: `${width.toFixed(1)}%` };
+      const tEnd = eDate ? new Date(eDate).getTime() : (tStart + 4 * 86400000);
+      const left = Math.max(0.5, Math.min(96, ((tStart - GANTT_BASE_START) / GANTT_TOTAL_MS) * 100));
+      const width = Math.max(2.2, Math.min(100 - left, ((tEnd - tStart + 86400000) / GANTT_TOTAL_MS) * 100));
+      return { barLeft: `${left.toFixed(2)}%`, barWidth: `${width.toFixed(2)}%` };
     };
 
     return customPhases.map(ph => {
@@ -2418,90 +2437,50 @@ export default function ProjectsView() {
               </div>
             )}
 
-            {/* TAB 4: TASKS & PLANNER (TWO COLLAPSIBLE PARTITIONS: TASK DIRECTORY & GANTT ROADMAP) */}
+            {/* TAB 4: TASKS & PLANNER (UNIFIED GANTT CHART WITH INTERSECTION COLLAPSE & TWO-TIER DATE HEADER) */}
             {activeProjectTab === "tasks" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                 
-                {/* Header Toolbar & Summary Card */}
-                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px 24px" }}>
-                  
-                  {/* Top Bar with Title, Partition Switchers & Controls */}
+                {/* Header Toolbar Card */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "18px 24px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "800", color: "#0f172a" }}>
                           Phase-Wise Task Allocation & Interactive Gantt Timeline
                         </h3>
-                        <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "3px 8px", borderRadius: "12px", fontWeight: "800" }}>
-                          SPLIT VIEW
-                        </span>
                       </div>
                       <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "#64748b" }}>
                         {projectPhaseGroups.length === 0 
                           ? "No phases created yet. Click '+ Add New Phase' below to start building your implementation roadmap."
-                          : `Manage & track ${totalTasksCount} scheduled deliverables across ${projectPhaseGroups.length} custom consulting phases`}
+                          : `Visualize ${totalTasksCount} scheduled deliverables across ${projectPhaseGroups.length} custom consulting phases`}
                       </p>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                      
-                      {/* 1. Partition View Mode Switcher */}
-                      <div style={{ display: "inline-flex", background: "#f1f5f9", padding: "3px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                        {[
-                          { id: "split", label: "🗂️ Split View (50/50)" },
-                          { id: "tableOnly", label: "📋 Tasks Only" },
-                          { id: "ganttOnly", label: "📊 Gantt Only" }
-                        ].map(mode => (
-                          <button
-                            key={mode.id}
-                            onClick={() => setGanttSplitMode(mode.id)}
-                            style={{
-                              background: ganttSplitMode === mode.id ? "#ffffff" : "transparent",
-                              color: ganttSplitMode === mode.id ? "#2563eb" : "#64748b",
-                              border: "none",
-                              padding: "5px 12px",
-                              borderRadius: "6px",
-                              fontSize: "0.75rem",
-                              fontWeight: ganttSplitMode === mode.id ? "800" : "600",
-                              cursor: "pointer",
-                              boxShadow: ganttSplitMode === mode.id ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                              transition: "all 0.15s ease"
-                            }}
-                          >
-                            {mode.label}
-                          </button>
-                        ))}
-                      </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                      {/* Collapse State Indicator Badge */}
+                      <button
+                        onClick={() => setIsLeftPanelCollapsed(prev => !prev)}
+                        style={{
+                          background: isLeftPanelCollapsed ? "#eff6ff" : "#f8fafc",
+                          color: isLeftPanelCollapsed ? "#2563eb" : "#475569",
+                          border: `1px solid ${isLeftPanelCollapsed ? "#bfdbfe" : "#cbd5e1"}`,
+                          padding: "6px 14px",
+                          borderRadius: "8px",
+                          fontSize: "0.78rem",
+                          fontWeight: "700",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          transition: "all 0.15s ease"
+                        }}
+                        title={isLeftPanelCollapsed ? "Click to show all columns" : "Click to collapse to Phase & Tasks only"}
+                      >
+                        <span>{isLeftPanelCollapsed ? "▶ Show Full Columns" : "◀ Collapse to Phase & Tasks"}</span>
+                      </button>
 
-                      {/* 2. Timeline Zoom Selector */}
-                      <div style={{ display: "inline-flex", background: "#f1f5f9", padding: "3px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                        {[
-                          { id: "weeks", label: "12 Weeks" },
-                          { id: "days", label: "30 Days" },
-                          { id: "months", label: "Quarterly" }
-                        ].map(z => (
-                          <button
-                            key={z.id}
-                            onClick={() => setTimelineZoom(z.id)}
-                            style={{
-                              background: timelineZoom === z.id ? "#ffffff" : "transparent",
-                              color: timelineZoom === z.id ? "#2563eb" : "#64748b",
-                              border: "none",
-                              padding: "5px 10px",
-                              borderRadius: "6px",
-                              fontSize: "0.75rem",
-                              fontWeight: timelineZoom === z.id ? "800" : "600",
-                              cursor: "pointer",
-                              boxShadow: timelineZoom === z.id ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                              transition: "all 0.15s ease"
-                            }}
-                          >
-                            {z.label}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* 3. Schedule New Task Button */}
+                      {/* Schedule New Task Button */}
                       {projectPhaseGroups.length > 0 && (
                         <button
                           onClick={() => handleOpenCreateTask(projectPhaseGroups[0]?.num || 1)}
@@ -2509,7 +2488,7 @@ export default function ProjectsView() {
                             background: "#2563eb",
                             color: "#ffffff",
                             border: "none",
-                            padding: "8px 16px",
+                            padding: "9px 18px",
                             borderRadius: "8px",
                             fontWeight: "800",
                             fontSize: "0.82rem",
@@ -2618,267 +2597,315 @@ export default function ProjectsView() {
                       ))}
                     </div>
 
-                    {/* TWO SYNCHRONIZED COLLAPSIBLE PARTITIONS CONTAINER */}
-                    <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
-                      
+                    {/* ======================================================== */}
+                    {/* SINGLE MERGED ENTERPRISE GANTT & TASK ROADMAP CONTAINER */}
+                    {/* ======================================================== */}
+                    <div
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "14px",
+                        overflow: "hidden",
+                        boxShadow: "0 4px 16px rgba(0,0,0,0.04)",
+                        position: "relative",
+                        display: "flex"
+                      }}
+                    >
+                      {/* ------------------------------------------------------------- */}
+                      {/* INTERSECTION LINE TOGGLE BUTTON (COLLAPSE / EXPAND HANDLE)    */}
+                      {/* ------------------------------------------------------------- */}
+                      <div
+                        style={{
+                          position: "absolute",
+                          left: isLeftPanelCollapsed ? "240px" : "480px",
+                          top: "10px",
+                          transform: "translateX(-50%)",
+                          zIndex: 30,
+                          transition: "left 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
+                        }}
+                      >
+                        <button
+                          onClick={() => setIsLeftPanelCollapsed(prev => !prev)}
+                          style={{
+                            width: "26px",
+                            height: "26px",
+                            borderRadius: "50%",
+                            background: isLeftPanelCollapsed ? "#2563eb" : "#ffffff",
+                            color: isLeftPanelCollapsed ? "#ffffff" : "#475569",
+                            border: isLeftPanelCollapsed ? "1px solid #1d4ed8" : "1px solid #cbd5e1",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            fontWeight: "900",
+                            fontSize: "0.75rem",
+                            transition: "all 0.15s ease"
+                          }}
+                          title={isLeftPanelCollapsed ? "Click to expand task metadata columns (▶)" : "Click to collapse to Phase & Tasks only (◀)"}
+                        >
+                          {isLeftPanelCollapsed ? "▶" : "◀"}
+                        </button>
+                      </div>
+
                       {/* ======================================================== */}
-                      {/* PARTITION 1 (LEFT): TASK OBJECTIVES & METADATA DIRECTORY */}
+                      {/* LEFT SECTION: TASK OBJECTIVES & BREAKDOWN TABLE          */}
                       {/* ======================================================== */}
-                      {(ganttSplitMode === "split" || ganttSplitMode === "tableOnly") && (
+                      <div
+                        style={{
+                          width: isLeftPanelCollapsed ? "240px" : "480px",
+                          minWidth: isLeftPanelCollapsed ? "240px" : "480px",
+                          borderRight: "2px solid #e2e8f0",
+                          transition: "width 0.2s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                          background: "#ffffff",
+                          zIndex: 10
+                        }}
+                      >
+                        {/* Left Column Header Row (height matching right top tier + day numbers = 48px) */}
                         <div
                           style={{
-                            flex: ganttSplitMode === "tableOnly" ? "1 1 100%" : "1 1 540px",
-                            minWidth: "360px",
-                            background: "#ffffff",
-                            border: "1px solid #e2e8f0",
-                            borderRadius: "14px",
-                            overflow: "hidden",
-                            boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
-                            transition: "all 0.2s ease"
+                            height: "48px",
+                            boxSizing: "border-box",
+                            background: "#f8fafc",
+                            borderBottom: "2px solid #e2e8f0",
+                            padding: "0 14px",
+                            display: "grid",
+                            gridTemplateColumns: isLeftPanelCollapsed ? "1fr" : "1.3fr 1fr 0.9fr 0.8fr",
+                            alignItems: "center",
+                            fontWeight: "800",
+                            fontSize: "0.72rem",
+                            color: "#475569"
                           }}
                         >
-                          {/* Partition 1 Header Bar */}
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc", borderBottom: "2px solid #e2e8f0", padding: "12px 16px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span style={{ fontSize: "0.95rem" }}>📋</span>
-                              <span style={{ fontSize: "0.82rem", fontWeight: "800", color: "#0f172a" }}>
-                                Task Breakdown & Deliverables ({totalTasksCount})
-                              </span>
-                            </div>
-
-                            <button
-                              onClick={() => setGanttSplitMode(ganttSplitMode === "tableOnly" ? "split" : "ganttOnly")}
-                              style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.72rem", fontWeight: "700", color: "#64748b", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                              title={ganttSplitMode === "tableOnly" ? "Restore Split View" : "Collapse Task Table"}
-                            >
-                              {ganttSplitMode === "tableOnly" ? "⬌ Restore Split" : "◀ Collapse"}
-                            </button>
+                          <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            TASK OBJECTIVE & SPEC
                           </div>
+                          {!isLeftPanelCollapsed && (
+                            <>
+                              <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>ASSIGNED LEAD</div>
+                              <div style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>DATES</div>
+                              <div style={{ textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>STATUS</div>
+                            </>
+                          )}
+                        </div>
 
-                          {/* Partition 1 Table Column Headers */}
-                          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1.1fr 1fr 0.8fr 0.9fr", background: "#f1f5f9", borderBottom: "1px solid #e2e8f0", padding: "10px 16px", fontWeight: "800", fontSize: "0.72rem", color: "#475569", alignItems: "center" }}>
-                            <div>TASK OBJECTIVE & SPEC</div>
-                            <div>ASSIGNED LEAD</div>
-                            <div>TIMELINE / DATES</div>
-                            <div>DURATION</div>
-                            <div style={{ textAlign: "center" }}>STATUS</div>
-                          </div>
+                        {/* Phase Rows & Tasks */}
+                        {projectPhaseGroups.map(phaseGroup => {
+                          const isCollapsed = !!collapsedPhases[phaseGroup.id || phaseGroup.num];
 
-                          {/* Partition 1 Rows Grouped by Phase */}
-                          {projectPhaseGroups.map(phaseGroup => {
-                            const isCollapsed = !!collapsedPhases[phaseGroup.id || phaseGroup.num];
-
-                            return (
-                              <div key={phaseGroup.id || phaseGroup.num}>
-                                
-                                {/* Phase Header Row */}
-                                <div
-                                  onClick={() => setCollapsedPhases(prev => ({ ...prev, [phaseGroup.id || phaseGroup.num]: !prev[phaseGroup.id || phaseGroup.num] }))}
-                                  style={{
-                                    background: phaseGroup.bg || `${phaseGroup.color}12`,
-                                    padding: "10px 16px",
-                                    borderBottom: "1px solid #e2e8f0",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    flexWrap: "wrap",
-                                    gap: "8px",
-                                    cursor: "pointer",
-                                    userSelect: "none"
-                                  }}
-                                >
-                                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-                                    <span style={{ fontSize: "0.75rem", color: phaseGroup.color, transition: "transform 0.2s", transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>
-                                      ▼
-                                    </span>
-                                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseGroup.color }} />
-                                    <span style={{ color: "#0f172a", fontWeight: "800", fontSize: "0.83rem" }}>
-                                      {phaseGroup.fullName || `Phase ${phaseGroup.num}: ${phaseGroup.name}`}
-                                    </span>
-                                    <span style={{ fontSize: "0.7rem", background: `${phaseGroup.color}20`, color: phaseGroup.color, padding: "2px 7px", borderRadius: "10px", fontWeight: "800" }}>
-                                      {phaseGroup.count} Tasks
-                                    </span>
-
-                                    {/* BEAUTIFULLY STYLED PHASE DATES BADGE (REPLACING ODD LOOKING BLUE MARKED REGIONS) */}
-                                    {phaseGroup.startDate && (
-                                      <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#ffffff", padding: "3px 10px", borderRadius: "8px", border: `1px solid ${phaseGroup.color}35`, boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={phaseGroup.color} strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                        <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#1e293b" }}>
-                                          {formatGanttDate(phaseGroup.startDate)} – {formatGanttDate(phaseGroup.endDate)}
-                                        </span>
-                                        <span style={{ fontSize: "0.68rem", fontWeight: "800", color: phaseGroup.color, background: `${phaseGroup.color}15`, padding: "1px 6px", borderRadius: "4px" }}>
-                                          {phaseGroup.durationDays || 0}d {phaseGroup.durationWeeks ? `(${phaseGroup.durationWeeks})` : ""}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }} onClick={e => e.stopPropagation()}>
-                                    <button
-                                      onClick={(e) => handleOpenEditPhase(phaseGroup, e)}
-                                      style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}
-                                      title="Edit Phase"
-                                    >
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                    </button>
-                                    <button
-                                      onClick={(e) => handleDeletePhase(phaseGroup.id, phaseGroup.num, e)}
-                                      style={{ background: "#ffffff", border: "1px solid #fecaca", borderRadius: "6px", width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#dc2626" }}
-                                      title="Delete Phase"
-                                    >
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                    </button>
-                                  </div>
+                          return (
+                            <div key={phaseGroup.id || phaseGroup.num}>
+                              
+                              {/* Phase Header Row */}
+                              <div
+                                onClick={() => setCollapsedPhases(prev => ({ ...prev, [phaseGroup.id || phaseGroup.num]: !prev[phaseGroup.id || phaseGroup.num] }))}
+                                style={{
+                                  height: "45px",
+                                  boxSizing: "border-box",
+                                  background: phaseGroup.bg || `${phaseGroup.color}12`,
+                                  padding: "0 14px",
+                                  borderBottom: "1px solid #e2e8f0",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  cursor: "pointer",
+                                  userSelect: "none"
+                                }}
+                              >
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px", overflow: "hidden" }}>
+                                  <span style={{ fontSize: "0.75rem", color: phaseGroup.color, transition: "transform 0.2s", transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>
+                                    ▼
+                                  </span>
+                                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseGroup.color, flexShrink: 0 }} />
+                                  <span style={{ color: "#0f172a", fontWeight: "800", fontSize: "0.82rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                    {phaseGroup.fullName || `Phase ${phaseGroup.num}: ${phaseGroup.name}`}
+                                  </span>
                                 </div>
 
-                                {/* Tasks Rows */}
-                                {!isCollapsed && (
-                                  <>
-                                    {phaseGroup.tasks.length === 0 ? (
-                                      <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
-                                        No tasks in {phaseGroup.name}. Click + Add Task in Gantt canvas.
-                                      </div>
-                                    ) : (
-                                      phaseGroup.tasks.map((tk, tIndex) => {
-                                        const isHovered = hoveredGanttTask?.id === tk.id;
-                                        const isCompleted = tk.status === "Completed";
-                                        const isMilestone = isCompleted || tk.durationDays <= 1;
-
-                                        return (
-                                          <div
-                                            key={tk.id || tIndex}
-                                            style={{
-                                              display: "grid",
-                                              gridTemplateColumns: "1.4fr 1.1fr 1fr 0.8fr 0.9fr",
-                                              alignItems: "center",
-                                              padding: "10px 16px",
-                                              borderBottom: "1px solid #f1f5f9",
-                                              fontSize: "0.82rem",
-                                              background: isHovered ? "#f8fafc" : "#ffffff",
-                                              transition: "background 0.15s"
-                                            }}
-                                            onMouseEnter={() => setHoveredGanttTask(tk)}
-                                            onMouseLeave={() => setHoveredGanttTask(null)}
-                                          >
-                                            <div
-                                              onClick={() => handleOpenEditTask(tk)}
-                                              style={{ fontWeight: "700", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingRight: "6px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                                              title={`${tk.title} (Click to edit)`}
-                                            >
-                                              {isMilestone && <span style={{ color: "#d97706", fontSize: "0.75rem" }}>◆</span>}
-                                              <span>{tk.title}</span>
-                                            </div>
-
-                                            <div style={{ color: "#2563eb", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
-                                              <span style={{ width: "22px", height: "22px", minWidth: "22px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: "800", border: "1px solid #bfdbfe" }}>
-                                                {tk.consultant ? tk.consultant[0] : "C"}
-                                              </span>
-                                              <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: "0.78rem" }}>{tk.consultant || "Unassigned"}</span>
-                                            </div>
-
-                                            <div style={{ color: "#475569", fontSize: "0.76rem", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
-                                              {tk.dates || (tk.startDate ? `${formatGanttDate(tk.startDate)} - ${formatGanttDate(tk.endDate)}` : "Scheduled")}
-                                            </div>
-
-                                            <div style={{ color: "#0f172a", fontSize: "0.76rem", fontWeight: "700" }}>
-                                              <span style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
-                                                {tk.durationDays ? `${tk.durationDays}d` : "—"}
-                                              </span>
-                                              <span style={{ fontSize: "0.66rem", color: "#64748b", display: "block", fontWeight: "500", marginTop: "1px" }}>{tk.durationWeeks || ""}</span>
-                                            </div>
-
-                                            <div style={{ textAlign: "center" }}>
-                                              <span
-                                                onClick={(e) => handleQuickToggleTaskStatus(tk, e)}
-                                                style={{
-                                                  background: tk.status === "Completed" ? "#dcfce7" : tk.status === "In Progress" ? "#eff6ff" : "#fff7ed",
-                                                  color: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706",
-                                                  border: `1px solid ${tk.status === "Completed" ? "#bbf7d0" : tk.status === "In Progress" ? "#bfdbfe" : "#fed7aa"}`,
-                                                  padding: "3px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: "800", cursor: "pointer",
-                                                  display: "inline-flex", alignItems: "center", gap: "4px"
-                                                }}
-                                                title="Click to toggle status"
-                                              >
-                                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706" }} />
-                                                {tk.status || "Scheduled"}
-                                              </span>
-                                            </div>
-                                          </div>
-                                        );
-                                      })
-                                    )}
-                                  </>
+                                {!isLeftPanelCollapsed && phaseGroup.startDate && (
+                                  <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#ffffff", padding: "2px 8px", borderRadius: "6px", border: `1px solid ${phaseGroup.color}35`, flexShrink: 0 }}>
+                                    <span style={{ fontSize: "0.72rem", fontWeight: "700", color: "#1e293b" }}>
+                                      {formatGanttDate(phaseGroup.startDate)} – {formatGanttDate(phaseGroup.endDate)}
+                                    </span>
+                                    <span style={{ fontSize: "0.66rem", fontWeight: "800", color: phaseGroup.color, background: `${phaseGroup.color}15`, padding: "1px 5px", borderRadius: "4px" }}>
+                                      {phaseGroup.durationDays || 0}d
+                                    </span>
+                                  </div>
                                 )}
                               </div>
-                            );
-                          })}
-                        </div>
-                      )}
 
-                      {/* ======================================================== */}
-                      {/* PARTITION 2 (RIGHT): INTERACTIVE GANTT TIMELINE CANVAS    */}
-                      {/* ======================================================== */}
-                      {(ganttSplitMode === "split" || ganttSplitMode === "ganttOnly") && (
-                        <div
-                          style={{
-                            flex: ganttSplitMode === "ganttOnly" ? "1 1 100%" : "1 1 480px",
-                            minWidth: "340px",
-                            background: "#ffffff",
-                            border: "1px solid #e2e8f0",
-                            borderRadius: "14px",
-                            overflow: "hidden",
-                            boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
-                            transition: "all 0.2s ease"
-                          }}
-                        >
-                          {/* Partition 2 Header Bar */}
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc", borderBottom: "2px solid #e2e8f0", padding: "12px 16px" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              <span style={{ fontSize: "0.95rem" }}>📊</span>
-                              <span style={{ fontSize: "0.82rem", fontWeight: "800", color: "#0f172a" }}>
-                                Gantt Schedule Roadmap
-                              </span>
+                              {/* Task Rows */}
+                              {!isCollapsed && (
+                                <>
+                                  {phaseGroup.tasks.length === 0 ? (
+                                    <div style={{ height: "45px", display: "flex", alignItems: "center", padding: "0 14px", fontSize: "0.78rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
+                                      No tasks in {phaseGroup.name}.
+                                    </div>
+                                  ) : (
+                                    phaseGroup.tasks.map((tk, tIndex) => {
+                                      const isHovered = hoveredGanttTask?.id === tk.id;
+                                      const isCompleted = tk.status === "Completed";
+                                      const isMilestone = isCompleted || tk.durationDays <= 1;
+
+                                      return (
+                                        <div
+                                          key={tk.id || tIndex}
+                                          style={{
+                                            height: "45px",
+                                            boxSizing: "border-box",
+                                            display: "grid",
+                                            gridTemplateColumns: isLeftPanelCollapsed ? "1fr" : "1.3fr 1fr 0.9fr 0.8fr",
+                                            alignItems: "center",
+                                            padding: "0 14px",
+                                            borderBottom: "1px solid #f1f5f9",
+                                            fontSize: "0.8rem",
+                                            background: isHovered ? "#f8fafc" : "#ffffff",
+                                            transition: "background 0.15s"
+                                          }}
+                                          onMouseEnter={() => setHoveredGanttTask(tk)}
+                                          onMouseLeave={() => setHoveredGanttTask(null)}
+                                        >
+                                          {/* Task Title */}
+                                          <div
+                                            onClick={() => handleOpenEditTask(tk)}
+                                            style={{ fontWeight: "700", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingRight: "6px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                            title={`${tk.title} (Click to edit)`}
+                                          >
+                                            {isMilestone && <span style={{ color: "#d97706", fontSize: "0.72rem" }}>◆</span>}
+                                            <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{tk.title}</span>
+                                          </div>
+
+                                          {/* Collapsible Metadata Columns */}
+                                          {!isLeftPanelCollapsed && (
+                                            <>
+                                              <div style={{ color: "#2563eb", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
+                                                <span style={{ width: "20px", height: "20px", minWidth: "20px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", fontWeight: "800", border: "1px solid #bfdbfe" }}>
+                                                  {tk.consultant ? tk.consultant[0] : "C"}
+                                                </span>
+                                                <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: "0.76rem" }}>{tk.consultant || "Unassigned"}</span>
+                                              </div>
+
+                                              <div style={{ color: "#475569", fontSize: "0.74rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                {tk.dates || (tk.startDate ? `${formatGanttDate(tk.startDate)} - ${formatGanttDate(tk.endDate)}` : "Scheduled")}
+                                              </div>
+
+                                              <div style={{ textAlign: "center" }}>
+                                                <span
+                                                  onClick={(e) => handleQuickToggleTaskStatus(tk, e)}
+                                                  style={{
+                                                    background: tk.status === "Completed" ? "#dcfce7" : tk.status === "In Progress" ? "#eff6ff" : "#fff7ed",
+                                                    color: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706",
+                                                    border: `1px solid ${tk.status === "Completed" ? "#bbf7d0" : tk.status === "In Progress" ? "#bfdbfe" : "#fed7aa"}`,
+                                                    padding: "2px 7px", borderRadius: "8px", fontSize: "0.68rem", fontWeight: "800", cursor: "pointer",
+                                                    display: "inline-flex", alignItems: "center", gap: "4px"
+                                                  }}
+                                                  title="Click to toggle status"
+                                                >
+                                                  <span style={{ width: "4px", height: "4px", borderRadius: "50%", background: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706" }} />
+                                                  {tk.status || "Scheduled"}
+                                                </span>
+                                              </div>
+                                            </>
+                                          )}
+                                        </div>
+                                      );
+                                    })
+                                  )}
+                                </>
+                              )}
+
                             </div>
+                          );
+                        })}
+                      </div>
 
-                            <button
-                              onClick={() => setGanttSplitMode(ganttSplitMode === "ganttOnly" ? "split" : "tableOnly")}
-                              style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.72rem", fontWeight: "700", color: "#64748b", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                              title={ganttSplitMode === "ganttOnly" ? "Restore Split View" : "Collapse Gantt Roadmap"}
+                      {/* ======================================================== */}
+                      {/* RIGHT SECTION: GANTT SCHEDULE CANVAS (IMAGE 2 DATE STYLE)*/}
+                      {/* ======================================================== */}
+                      <div
+                        style={{
+                          flex: 1,
+                          overflowX: "auto",
+                          background: "#ffffff",
+                          position: "relative"
+                        }}
+                      >
+                        {/* ------------------------------------------------------------- */}
+                        {/* TWO-TIER DATE HEADER MATCHING IMAGE 2 EXACTLY                 */}
+                        {/* ------------------------------------------------------------- */}
+                        <div style={{ minWidth: "720px", borderBottom: "2px solid #e2e8f0" }}>
+                          
+                          {/* Top Tier: Weekly Date Ranges (14 Jul - 20 Jul, 21 Jul - 27 Jul, ...) */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", height: "26px", alignItems: "center", textAlign: "center", fontSize: "0.72rem", fontWeight: "700", color: "#475569" }}>
+                            {getGanttTimelineWeeks().map((w, wi) => (
+                              <div key={wi} style={{ borderRight: wi < 7 ? "1px solid #e2e8f0" : "none", padding: "0 4px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {w.label}
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Bottom Tier: Day Numbers (14 15 16 17 18 19 20 21 22 23 ...) */}
+                          <div style={{ display: "grid", gridTemplateColumns: "repeat(56, 1fr)", background: "#ffffff", height: "22px", alignItems: "center", textAlign: "center", fontSize: "0.64rem", fontWeight: "600", color: "#64748b", position: "relative" }}>
+                            {getGanttTimelineWeeks().flatMap((w, wi) => 
+                              w.days.map((d, di) => {
+                                const globalDayIndex = wi * 7 + di;
+                                return (
+                                  <div
+                                    key={globalDayIndex}
+                                    style={{
+                                      borderRight: (globalDayIndex + 1) % 7 === 0 ? "1px solid #cbd5e1" : "1px dashed #f1f5f9",
+                                      color: d.isToday ? "#4f46e5" : "#64748b",
+                                      fontWeight: d.isToday ? "900" : "600",
+                                      background: d.isToday ? "#ede9fe" : "transparent"
+                                    }}
+                                  >
+                                    {d.dayNum}
+                                  </div>
+                                );
+                              })
+                            )}
+
+                            {/* "Today" Marker Pill positioned right on 19 Aug (Day index 36) */}
+                            <div
+                              style={{
+                                position: "absolute",
+                                left: `${(36.5 / 56) * 100}%`,
+                                top: "-2px",
+                                transform: "translateX(-50%)",
+                                background: "#6366f1",
+                                color: "#ffffff",
+                                fontSize: "0.6rem",
+                                fontWeight: "800",
+                                padding: "1px 5px",
+                                borderRadius: "3px",
+                                zIndex: 15,
+                                pointerEvents: "none",
+                                boxShadow: "0 1px 4px rgba(99,102,241,0.4)"
+                              }}
                             >
-                              {ganttSplitMode === "ganttOnly" ? "⬌ Restore Split" : "Collapse ▶"}
-                            </button>
-                          </div>
-
-                          {/* Partition 2 Timeline Column Axis (Synchronized with zoom) */}
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 70px", background: "#f1f5f9", borderBottom: "1px solid #e2e8f0", padding: "10px 16px", fontWeight: "800", fontSize: "0.72rem", color: "#475569", alignItems: "center" }}>
-                            <div>
-                              {timelineZoom === "weeks" && (
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", textAlign: "center", fontSize: "0.7rem", fontWeight: "800", color: "#64748b" }}>
-                                  {["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12"].map((w, wi) => (
-                                    <span key={w} style={{ borderRight: wi < 11 ? "1px dashed #e2e8f0" : "none" }}>{w}</span>
-                                  ))}
-                                </div>
-                              )}
-                              {timelineZoom === "days" && (
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(15, 1fr)", textAlign: "center", fontSize: "0.65rem", fontWeight: "700", color: "#64748b" }}>
-                                  {Array.from({ length: 15 }).map((_, di) => (
-                                    <span key={di} style={{ borderRight: di < 14 ? "1px dashed #e2e8f0" : "none" }}>D{di*2 + 1}</span>
-                                  ))}
-                                </div>
-                              )}
-                              {timelineZoom === "months" && (
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", textAlign: "center", fontSize: "0.72rem", fontWeight: "800", color: "#2563eb" }}>
-                                  {["Month 1", "Month 2", "Month 3", "Month 4"].map((m, mi) => (
-                                    <span key={m} style={{ borderRight: mi < 3 ? "1px solid #cbd5e1" : "none" }}>{m}</span>
-                                  ))}
-                                </div>
-                              )}
+                              Today
                             </div>
-                            <div style={{ textAlign: "center" }}>ACTIONS</div>
                           </div>
+                        </div>
 
-                          {/* Partition 2 Timeline Rows Grouped by Phase */}
+                        {/* Gantt Canvas Content Rows */}
+                        <div style={{ minWidth: "720px", position: "relative" }}>
+                          
+                          {/* Continuous "Today" Vertical Line Marker through all rows */}
+                          <div
+                            style={{
+                              position: "absolute",
+                              left: `${(36.5 / 56) * 100}%`,
+                              top: 0,
+                              bottom: 0,
+                              width: "2px",
+                              background: "#6366f1",
+                              zIndex: 5,
+                              pointerEvents: "none"
+                            }}
+                          />
+
+                          {/* Phase Header Canvas Row & Tasks */}
                           {projectPhaseGroups.map(phaseGroup => {
                             const isCollapsed = !!collapsedPhases[phaseGroup.id || phaseGroup.num];
 
@@ -2888,20 +2915,19 @@ export default function ProjectsView() {
                                 {/* Phase Header Canvas Bar */}
                                 <div
                                   style={{
-                                    background: phaseGroup.bg || `${phaseGroup.color}12`,
-                                    padding: "10px 16px",
-                                    borderBottom: "1px solid #e2e8f0",
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
                                     height: "45px",
-                                    boxSizing: "border-box"
+                                    boxSizing: "border-box",
+                                    background: phaseGroup.bg || `${phaseGroup.color}12`,
+                                    borderBottom: "1px solid #e2e8f0",
+                                    padding: "0 14px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between"
                                   }}
                                 >
                                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseGroup.color }} />
-                                    <span style={{ fontSize: "0.78rem", fontWeight: "800", color: phaseGroup.color }}>
-                                      {phaseGroup.name} Timeline
+                                    <span style={{ fontSize: "0.75rem", fontWeight: "800", color: phaseGroup.color }}>
+                                      {phaseGroup.name} Schedule
                                     </span>
                                   </div>
 
@@ -2926,12 +2952,12 @@ export default function ProjectsView() {
                                   </button>
                                 </div>
 
-                                {/* Tasks Gantt Bars Rows */}
+                                {/* Tasks Gantt Bars */}
                                 {!isCollapsed && (
                                   <>
                                     {phaseGroup.tasks.length === 0 ? (
-                                      <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
-                                        No tasks scheduled yet.
+                                      <div style={{ height: "45px", display: "flex", alignItems: "center", padding: "0 14px", fontSize: "0.78rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
+                                        No tasks scheduled.
                                       </div>
                                     ) : (
                                       phaseGroup.tasks.map((tk, tIndex) => {
@@ -2941,117 +2967,92 @@ export default function ProjectsView() {
                                           <div
                                             key={tk.id || tIndex}
                                             style={{
-                                              display: "grid",
-                                              gridTemplateColumns: "1fr 70px",
-                                              alignItems: "center",
-                                              padding: "10px 16px",
+                                              height: "45px",
+                                              boxSizing: "border-box",
                                               borderBottom: "1px solid #f1f5f9",
                                               background: isHovered ? "#f8fafc" : "#ffffff",
-                                              transition: "background 0.15s",
-                                              height: "45px",
-                                              boxSizing: "border-box"
+                                              position: "relative",
+                                              display: "flex",
+                                              alignItems: "center",
+                                              padding: "0 10px"
                                             }}
                                             onMouseEnter={() => setHoveredGanttTask(tk)}
                                             onMouseLeave={() => setHoveredGanttTask(null)}
                                           >
-                                            {/* Gantt Bar Visualizer */}
-                                            <div style={{ position: "relative", height: "26px", background: "#f8fafc", borderRadius: "6px", border: "1px solid #e2e8f0", overflow: "visible" }}>
-                                              {/* Grid guidelines */}
-                                              <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: timelineZoom === "weeks" ? "repeat(12, 1fr)" : timelineZoom === "days" ? "repeat(15, 1fr)" : "repeat(4, 1fr)", pointerEvents: "none" }}>
-                                                {Array.from({ length: timelineZoom === "weeks" ? 12 : timelineZoom === "days" ? 15 : 4 }).map((_, gi) => (
-                                                  <div key={gi} style={{ borderRight: "1px dashed #e2e8f0" }} />
-                                                ))}
-                                              </div>
+                                            {/* 56 Day Column Guidelines */}
+                                            <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: "repeat(56, 1fr)", pointerEvents: "none" }}>
+                                              {Array.from({ length: 56 }).map((_, gi) => (
+                                                <div key={gi} style={{ borderRight: (gi + 1) % 7 === 0 ? "1px solid #e2e8f0" : "1px dashed #f8fafc" }} />
+                                              ))}
+                                            </div>
 
-                                              {/* Today line */}
-                                              <div style={{ position: "absolute", left: "18%", top: 0, bottom: 0, width: "2px", background: "#ef4444", zIndex: 2, pointerEvents: "none" }} />
+                                            {/* Colored Gantt Timeline Bar */}
+                                            <div
+                                              onClick={() => handleOpenEditTask(tk)}
+                                              style={{
+                                                position: "absolute",
+                                                left: tk.barLeft || "5%",
+                                                width: tk.barWidth || "12%",
+                                                top: "8px",
+                                                bottom: "8px",
+                                                background: `linear-gradient(135deg, ${phaseGroup.color}, ${phaseGroup.color}dd)`,
+                                                borderRadius: "6px",
+                                                boxShadow: isHovered ? `0 4px 12px ${phaseGroup.color}60` : `0 2px 6px ${phaseGroup.color}35`,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "space-between",
+                                                padding: "0 8px",
+                                                color: "#ffffff",
+                                                fontSize: "0.7rem",
+                                                fontWeight: "800",
+                                                whiteSpace: "nowrap",
+                                                overflow: "hidden",
+                                                zIndex: 8,
+                                                cursor: "pointer",
+                                                transition: "all 0.2s ease",
+                                                transform: isHovered ? "scaleY(1.08)" : "scaleY(1)"
+                                              }}
+                                            >
+                                              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+                                                {tk.title}
+                                              </span>
+                                              <span style={{ fontSize: "0.66rem", opacity: 0.9, fontWeight: "800", marginLeft: "4px" }}>
+                                                {tk.progress || 0}%
+                                              </span>
+                                            </div>
 
-                                              {/* Colored Gantt bar */}
+                                            {/* Floating Preview Card on Hover */}
+                                            {isHovered && (
                                               <div
-                                                onClick={() => handleOpenEditTask(tk)}
                                                 style={{
                                                   position: "absolute",
                                                   left: tk.barLeft || "5%",
-                                                  width: tk.barWidth || "22%",
-                                                  top: "3px",
-                                                  bottom: "3px",
-                                                  background: `linear-gradient(135deg, ${phaseGroup.color}, ${phaseGroup.color}dd)`,
-                                                  borderRadius: "6px",
-                                                  boxShadow: isHovered ? `0 4px 12px ${phaseGroup.color}60` : `0 2px 6px ${phaseGroup.color}35`,
-                                                  display: "flex",
-                                                  alignItems: "center",
-                                                  justifyContent: "space-between",
-                                                  padding: "0 8px",
+                                                  top: "-95px",
+                                                  background: "#0f172a",
                                                   color: "#ffffff",
-                                                  fontSize: "0.7rem",
-                                                  fontWeight: "800",
-                                                  whiteSpace: "nowrap",
-                                                  overflow: "hidden",
-                                                  zIndex: 3,
-                                                  cursor: "pointer",
-                                                  transition: "all 0.2s ease",
-                                                  transform: isHovered ? "scaleY(1.08)" : "scaleY(1)"
+                                                  padding: "10px 14px",
+                                                  borderRadius: "10px",
+                                                  boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+                                                  zIndex: 9999,
+                                                  minWidth: "220px",
+                                                  pointerEvents: "auto"
                                                 }}
                                               >
-                                                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                                                  {tk.title}
-                                                </span>
-                                                <span style={{ fontSize: "0.68rem", opacity: 0.9, fontWeight: "800", marginLeft: "4px" }}>
-                                                  {tk.progress || 0}%
-                                                </span>
-                                              </div>
-
-                                              {/* Floating Preview Card on Hover */}
-                                              {isHovered && (
-                                                <div
-                                                  style={{
-                                                    position: "absolute",
-                                                    left: tk.barLeft || "5%",
-                                                    top: "-95px",
-                                                    background: "#0f172a",
-                                                    color: "#ffffff",
-                                                    padding: "10px 14px",
-                                                    borderRadius: "10px",
-                                                    boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
-                                                    zIndex: 9999,
-                                                    minWidth: "220px",
-                                                    pointerEvents: "auto"
-                                                  }}
-                                                >
-                                                  <div style={{ fontSize: "0.72rem", fontWeight: "800", color: "#38bdf8", textTransform: "uppercase" }}>
-                                                    {phaseGroup.fullName || `Phase ${phaseGroup.num}`}
-                                                  </div>
-                                                  <div style={{ fontSize: "0.85rem", fontWeight: "800", margin: "2px 0 4px 0" }}>
-                                                    {tk.title}
-                                                  </div>
-                                                  <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
-                                                    👤 {tk.consultant || "Unassigned"} • 📅 {tk.dates || tk.startDate || "Scheduled"} ({tk.durationDays || 0}d)
-                                                  </div>
-                                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px", borderTop: "1px solid #334155", paddingTop: "6px" }}>
-                                                    <span style={{ fontSize: "0.72rem", color: "#a7f3d0", fontWeight: "700" }}>● {tk.status} ({tk.progress || 0}%)</span>
-                                                    <span style={{ fontSize: "0.7rem", color: "#38bdf8", cursor: "pointer", fontWeight: "700" }}>Click to Edit ✏️</span>
-                                                  </div>
+                                                <div style={{ fontSize: "0.72rem", fontWeight: "800", color: "#38bdf8", textTransform: "uppercase" }}>
+                                                  {phaseGroup.fullName || `Phase ${phaseGroup.num}`}
                                                 </div>
-                                              )}
-                                            </div>
-
-                                            {/* Actions Column */}
-                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px" }}>
-                                              <button
-                                                onClick={() => handleOpenEditTask(tk)}
-                                                style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}
-                                                title="Edit Task"
-                                              >
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                              </button>
-                                              <button
-                                                onClick={(e) => handleDeletePhaseTask(tk.id, e)}
-                                                style={{ background: "#ffffff", border: "1px solid #fecaca", borderRadius: "6px", width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#ef4444" }}
-                                                title="Delete Task"
-                                              >
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                              </button>
-                                            </div>
+                                                <div style={{ fontSize: "0.85rem", fontWeight: "800", margin: "2px 0 4px 0" }}>
+                                                  {tk.title}
+                                                </div>
+                                                <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
+                                                  👤 {tk.consultant || "Unassigned"} • 📅 {tk.dates || tk.startDate || "Scheduled"} ({tk.durationDays || 0}d)
+                                                </div>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px", borderTop: "1px solid #334155", paddingTop: "6px" }}>
+                                                  <span style={{ fontSize: "0.72rem", color: "#a7f3d0", fontWeight: "700" }}>● {tk.status} ({tk.progress || 0}%)</span>
+                                                  <span style={{ fontSize: "0.7rem", color: "#38bdf8", cursor: "pointer", fontWeight: "700" }}>Click to Edit ✏️</span>
+                                                </div>
+                                              </div>
+                                            )}
                                           </div>
                                         );
                                       })
@@ -3062,8 +3063,7 @@ export default function ProjectsView() {
                             );
                           })}
                         </div>
-                      )}
-
+                      </div>
                     </div>
 
                     {/* BOTTOM ADD NEW PHASE ACTION CARD */}

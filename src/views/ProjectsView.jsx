@@ -1153,13 +1153,22 @@ export default function ProjectsView() {
     }
   };
 
-  const GANTT_BASE_START = new Date("2026-07-14T00:00:00").getTime();
+  const parseLocalYMD = (str) => {
+    if (!str) return null;
+    const parts = String(str).trim().split("-");
+    if (parts.length === 3) {
+      return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 0, 0, 0);
+    }
+    return new Date(str);
+  };
+
+  const GANTT_BASE_START = new Date(2026, 6, 14, 0, 0, 0).getTime(); // 14 July 2026
   const GANTT_TOTAL_DAYS = 56; // 8 consecutive 7-day weeks (14 Jul to 07 Sep)
   const GANTT_TOTAL_MS = GANTT_TOTAL_DAYS * 86400000;
 
   const getGanttTimelineWeeks = () => {
     const weeks = [];
-    const start = new Date("2026-07-14T00:00:00");
+    const start = new Date(2026, 6, 14, 0, 0, 0);
     for (let w = 0; w < 8; w++) {
       const wStart = new Date(start.getTime() + w * 7 * 86400000);
       const wEnd = new Date(wStart.getTime() + 6 * 86400000);
@@ -1167,9 +1176,10 @@ export default function ProjectsView() {
       const days = [];
       for (let d = 0; d < 7; d++) {
         const dayDate = new Date(wStart.getTime() + d * 86400000);
+        const globalIdx = w * 7 + d;
         days.push({
           dayNum: dayDate.getDate(),
-          isToday: dayDate.toISOString().split("T")[0] === "2026-08-19"
+          isToday: globalIdx === 36 // 19 Aug 2026 is exactly Day Index 36
         });
       }
       weeks.push({ weekNum: w + 1, label, days });
@@ -1185,11 +1195,17 @@ export default function ProjectsView() {
     const customTasks = rawTasks.filter(t => t && t.title && !LEGACY_DUMMY_TITLES.includes(t.title.trim()));
 
     const calculateBar = (sDate, eDate) => {
-      if (!sDate) return { barLeft: "10%", barWidth: "15%" };
-      const tStart = new Date(sDate).getTime();
-      const tEnd = eDate ? new Date(eDate).getTime() : (tStart + 4 * 86400000);
-      const left = Math.max(0.5, Math.min(96, ((tStart - GANTT_BASE_START) / GANTT_TOTAL_MS) * 100));
-      const width = Math.max(2.2, Math.min(100 - left, ((tEnd - tStart + 86400000) / GANTT_TOTAL_MS) * 100));
+      if (!sDate) return { barLeft: "10%", barWidth: "10%" };
+      const sObj = parseLocalYMD(sDate);
+      const eObj = eDate ? parseLocalYMD(eDate) : sObj;
+      if (!sObj) return { barLeft: "10%", barWidth: "10%" };
+
+      const startDay = Math.round((sObj.getTime() - GANTT_BASE_START) / 86400000);
+      const endDay = eObj ? Math.round((eObj.getTime() - GANTT_BASE_START) / 86400000) : startDay + 2;
+      const durDays = Math.max(1, endDay - startDay + 1);
+
+      const left = Math.max(0.2, Math.min(96, (startDay / GANTT_TOTAL_DAYS) * 100));
+      const width = Math.max(1.8, Math.min(100 - left, (durDays / GANTT_TOTAL_DAYS) * 100));
       return { barLeft: `${left.toFixed(2)}%`, barWidth: `${width.toFixed(2)}%` };
     };
 
@@ -1201,10 +1217,10 @@ export default function ProjectsView() {
           const dur = getDurationInDays(t.startDate, t.endDate);
           return {
             ...t,
-            durationDays: dur ? dur.days : (t.durationDays || 10),
-            durationWeeks: dur ? dur.weeks : (t.durationWeeks || "1.5 Wks"),
-            barLeft: t.barLeft || bar.barLeft,
-            barWidth: t.barWidth || bar.barWidth
+            durationDays: dur ? dur.days : (t.durationDays || 3),
+            durationWeeks: dur ? dur.weeks : (t.durationWeeks || "0.4 Wks"),
+            barLeft: bar.barLeft,
+            barWidth: bar.barWidth
           };
         });
       
@@ -2542,61 +2558,6 @@ export default function ProjectsView() {
                   </div>
                 ) : (
                   <>
-                    {/* Dynamic Phase Allocation Summary Badges */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px" }}>
-                      {projectPhaseGroups.map(ph => (
-                        <div
-                          key={ph.id || ph.num}
-                          onClick={() => handleOpenCreateTask(ph.num)}
-                          style={{
-                            background: "#ffffff",
-                            border: "1px solid #e2e8f0",
-                            borderLeft: `5px solid ${ph.color}`,
-                            borderRadius: "12px",
-                            padding: "14px 16px",
-                            cursor: "pointer",
-                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "space-between"
-                          }}
-                          onMouseEnter={e => {
-                            e.currentTarget.style.transform = "translateY(-2px)";
-                            e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.07)";
-                          }}
-                          onMouseLeave={e => {
-                            e.currentTarget.style.transform = "translateY(0)";
-                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.03)";
-                          }}
-                          title={`Click to add task in ${ph.name}`}
-                        >
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                            <span style={{ fontSize: "0.72rem", fontWeight: "800", color: ph.color, background: `${ph.color}15`, padding: "2px 8px", borderRadius: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                              PHASE {ph.num}
-                            </span>
-                            <span style={{ fontSize: "0.75rem", color: ph.color, fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                              Add Task
-                            </span>
-                          </div>
-                          <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: "2px 0 10px 0", lineHeight: "1.3" }}>
-                            {ph.name}
-                          </div>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", borderTop: "1px solid #f1f5f9", paddingTop: "8px" }}>
-                            <span style={{ color: ph.color, fontWeight: "700" }}>
-                              {ph.count} {ph.count === 1 ? "Task" : "Tasks"} Allocated
-                            </span>
-                            {ph.durationDays && (
-                              <span style={{ color: "#64748b", fontWeight: "600", background: "#f8fafc", padding: "2px 6px", borderRadius: "4px" }}>
-                                {ph.durationDays} Days ({ph.durationWeeks})
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
                     {/* ======================================================== */}
                     {/* SINGLE MERGED ENTERPRISE GANTT & TASK ROADMAP CONTAINER */}
                     {/* ======================================================== */}
@@ -2612,34 +2573,34 @@ export default function ProjectsView() {
                       }}
                     >
                       {/* ------------------------------------------------------------- */}
-                      {/* INTERSECTION LINE TOGGLE BUTTON (COLLAPSE / EXPAND HANDLE)    */}
+                      {/* INTERSECTION LINE TOGGLE BUTTON (VERTICALLY CENTERED HANDLE) */}
                       {/* ------------------------------------------------------------- */}
                       <div
                         style={{
                           position: "absolute",
                           left: isLeftPanelCollapsed ? "240px" : "480px",
-                          top: "10px",
-                          transform: "translateX(-50%)",
-                          zIndex: 30,
+                          top: "50%",
+                          transform: "translate(-50%, -50%)",
+                          zIndex: 40,
                           transition: "left 0.2s cubic-bezier(0.4, 0, 0.2, 1)"
                         }}
                       >
                         <button
                           onClick={() => setIsLeftPanelCollapsed(prev => !prev)}
                           style={{
-                            width: "26px",
-                            height: "26px",
+                            width: "28px",
+                            height: "28px",
                             borderRadius: "50%",
                             background: isLeftPanelCollapsed ? "#2563eb" : "#ffffff",
                             color: isLeftPanelCollapsed ? "#ffffff" : "#475569",
                             border: isLeftPanelCollapsed ? "1px solid #1d4ed8" : "1px solid #cbd5e1",
-                            boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                            boxShadow: "0 2px 10px rgba(0,0,0,0.18)",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
                             cursor: "pointer",
                             fontWeight: "900",
-                            fontSize: "0.75rem",
+                            fontSize: "0.8rem",
                             transition: "all 0.15s ease"
                           }}
                           title={isLeftPanelCollapsed ? "Click to expand task metadata columns (▶)" : "Click to collapse to Phase & Tasks only (◀)"}

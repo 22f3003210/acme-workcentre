@@ -3011,6 +3011,641 @@ export default function ProjectsView() {
               );
             })()}
 
+            {/* ── MODAL: CREATE / EDIT CUSTOM PHASE ── */}
+            {showPhaseModal && (
+              <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+                <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "520px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>
+                        {editingPhaseId ? "✏️ Edit Phase Details" : "➕ Create New Implementation Phase"}
+                      </h3>
+                      <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                        {effectiveProject.name} Roadmap Configuration
+                      </p>
+                    </div>
+                    <button onClick={() => setShowPhaseModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
+                  </div>
+
+                  <form onSubmit={handleSavePhase} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div style={{ display: "grid", gridTemplateColumns: "100px 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Phase # *
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="20"
+                          value={phaseNumInput}
+                          onChange={e => setPhaseNumInput(Number(e.target.value))}
+                          required
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", fontWeight: "700" }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Short Name (Badge) *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Discovery & Audit"
+                          value={phaseNameInput}
+                          onChange={e => setPhaseNameInput(e.target.value)}
+                          required
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Full Phase Title / Header Banner
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Phase 1: Store Operations & Inventory Control Audit"
+                        value={phaseFullNameInput}
+                        onChange={e => setPhaseFullNameInput(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Lead Consultant / Project Lead
+                      </label>
+                      <select
+                        value={phaseLeadInput}
+                        onChange={e => setPhaseLeadInput(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                      >
+                        <option value="">Select Lead Consultant...</option>
+                        {(users || []).map(u => (
+                          <option key={u.id} value={u.name}>
+                            {u.name} ({u.role || u.title || "Consultant"})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Start Date
+                        </label>
+                        <input
+                          type="date"
+                          value={phaseStartDateInput}
+                          onChange={e => setPhaseStartDateInput(e.target.value)}
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          End Date
+                        </label>
+                        <input
+                          type="date"
+                          value={phaseEndDateInput}
+                          onChange={e => setPhaseEndDateInput(e.target.value)}
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                        />
+                      </div>
+                    </div>
+
+                    {phaseStartDateInput && phaseEndDateInput && (
+                      <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "8px 12px", borderRadius: "8px", fontSize: "0.82rem", color: "#166534", fontWeight: "700" }}>
+                        ⏱️ Calculated Duration: {getDurationInDays(phaseStartDateInput, phaseEndDateInput)?.days || 0} Days ({getDurationInDays(phaseStartDateInput, phaseEndDateInput)?.weeks || "0 Wks"})
+                      </div>
+                    )}
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Phase Objectives & Deliverables Scope
+                      </label>
+                      <textarea
+                        rows="2"
+                        placeholder="Primary milestones, audit outcomes, and deliverables for this phase..."
+                        value={phaseObjectiveInput}
+                        onChange={e => setPhaseObjectiveInput(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none" }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Theme Accent Color
+                      </label>
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        {["#2563eb", "#16a34a", "#7c3aed", "#ea580c", "#0284c7", "#db2777", "#d97706", "#0d9488"].map(c => (
+                          <button
+                            type="button"
+                            key={c}
+                            onClick={() => setPhaseColorInput(c)}
+                            style={{
+                              width: "32px",
+                              height: "32px",
+                              borderRadius: "50%",
+                              background: c,
+                              border: phaseColorInput === c ? "3px solid #0f172a" : "2px solid #ffffff",
+                              cursor: "pointer",
+                              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+                            }}
+                          />
+                        ))}
+                        <input
+                          type="color"
+                          value={phaseColorInput}
+                          onChange={e => setPhaseColorInput(e.target.value)}
+                          style={{ width: "36px", height: "36px", border: "none", background: "none", cursor: "pointer" }}
+                          title="Custom color"
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: editingPhaseId ? "space-between" : "flex-end", alignItems: "center", marginTop: "12px" }}>
+                      {editingPhaseId && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeletePhase(editingPhaseId, phaseNumInput, e)}
+                          style={{ padding: "10px 16px", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
+                        >
+                          🗑️ Delete Phase
+                        </button>
+                      )}
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowPhaseModal(false)}
+                          style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          style={{ padding: "10px 22px", background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
+                        >
+                          {editingPhaseId ? "Save Phase" : "Add Phase"}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* ── MODAL: SCHEDULE / EDIT PHASE TASK DELIVERABLE ── */}
+            {showTaskModal && (
+              <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+                <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "560px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>
+                        {editingTaskId ? "✏️ Edit Phase Task / Deliverable" : `➕ Allocate Task to Phase ${taskPhaseNum}`}
+                      </h3>
+                      <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                        {effectiveProject.name} Implementation Roadmap
+                      </p>
+                    </div>
+                    <button onClick={() => setShowTaskModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
+                  </div>
+
+                  <form onSubmit={handleSavePhaseTask} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Implementation Phase *
+                      </label>
+                      <select
+                        value={taskPhaseNum}
+                        onChange={e => setTaskPhaseNum(Number(e.target.value))}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", fontWeight: "600" }}
+                      >
+                        {projectPhaseGroups.map(ph => (
+                          <option key={ph.id || ph.num} value={ph.num}>
+                            {ph.fullName || `Phase ${ph.num}: ${ph.name}`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Task Objective & Specification *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Physical Vault Stock Count & RFID Scanner Integration"
+                        value={taskTitle}
+                        onChange={e => setTaskTitle(e.target.value)}
+                        required
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Assigned Consultant / Lead
+                      </label>
+                      <select
+                        value={taskConsultant}
+                        onChange={e => setTaskConsultant(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                      >
+                        <option value="">Select Consultant / Team Member...</option>
+                        {(users || []).map(u => (
+                          <option key={u.id} value={u.name}>
+                            {u.name} ({u.role || u.title || "Consultant"})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Start Date
+                        </label>
+                        <input
+                          type="date"
+                          value={taskStartDate}
+                          onChange={e => setTaskStartDate(e.target.value)}
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          End Date
+                        </label>
+                        <input
+                          type="date"
+                          value={taskEndDate}
+                          onChange={e => setTaskEndDate(e.target.value)}
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Status
+                        </label>
+                        <select
+                          value={taskStatus}
+                          onChange={e => {
+                            const newStat = e.target.value;
+                            setTaskStatus(newStat);
+                            if (newStat === "Completed") setTaskProgress(100);
+                            else if (newStat === "In Progress" && taskProgress === 0) setTaskProgress(50);
+                            else if (newStat === "Scheduled") setTaskProgress(0);
+                          }}
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                        >
+                          <option value="Scheduled">Scheduled</option>
+                          <option value="In Progress">In Progress</option>
+                          <option value="Completed">Completed</option>
+                          <option value="On Hold">On Hold</option>
+                          <option value="Delayed">Delayed</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Progress ({taskProgress}%)
+                        </label>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            step="5"
+                            value={taskProgress}
+                            onChange={e => {
+                              const val = Number(e.target.value);
+                              setTaskProgress(val);
+                              if (val === 100) setTaskStatus("Completed");
+                              else if (val > 0 && taskStatus === "Scheduled") setTaskStatus("In Progress");
+                            }}
+                            style={{ flex: 1, accentColor: "#2563eb" }}
+                          />
+                          <span style={{ fontSize: "0.85rem", fontWeight: "800", color: "#2563eb", width: "40px", textAlign: "right" }}>
+                            {taskProgress}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Notes / Deliverable Scope
+                      </label>
+                      <textarea
+                        rows="2"
+                        placeholder="Key milestones, deliverables, and checklist items for this task..."
+                        value={taskNotes}
+                        onChange={e => setTaskNotes(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none" }}
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: editingTaskId ? "space-between" : "flex-end", alignItems: "center", marginTop: "10px" }}>
+                      {editingTaskId && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            handleDeletePhaseTask(editingTaskId, e);
+                            setShowTaskModal(false);
+                          }}
+                          style={{ padding: "10px 16px", background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
+                        >
+                          🗑️ Delete Task
+                        </button>
+                      )}
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <button
+                          type="button"
+                          onClick={() => setShowTaskModal(false)}
+                          style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          style={{ padding: "10px 22px", background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "700", cursor: "pointer", boxShadow: "0 4px 10px rgba(37, 99, 235, 0.2)" }}
+                        >
+                          {editingTaskId ? "Save Changes" : "Create Task"}
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* ── MODAL: SCHEDULE EVENT / CALL / TRAINING ── */}
+            {showEventModal && (
+              <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "520px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "700", color: "#0f172a" }}>
+                      Schedule Project Event / Call / Training
+                    </h3>
+                    <button onClick={() => setShowEventModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
+                  </div>
+
+                  <form onSubmit={handleCreateEventSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Event / Task Category
+                      </label>
+                      <select
+                        value={evtType}
+                        onChange={e => setEvtType(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                      >
+                        <option value="Call Scheduling">📞 Call Scheduling (Phone / Video Discussion)</option>
+                        <option value="Offline Visit Scheduling">🏢 Offline Visit Scheduling (On-Site Store Visit)</option>
+                        <option value="Training Session Scheduling">🎓 Training Session Scheduling (Sales Staff Coaching)</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Event Title / Objective *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Q3 Store Performance Review Call"
+                        value={evtTitle}
+                        onChange={e => setEvtTitle(e.target.value)}
+                        required
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                      />
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={evtDate}
+                          onChange={e => setEvtDate(e.target.value)}
+                          required
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Time *
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="e.g. 11:00 AM"
+                          value={evtTime}
+                          onChange={e => setEvtTime(e.target.value)}
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Assigned Consultant / Lead
+                      </label>
+                      <select
+                        value={evtConsultant}
+                        onChange={e => setEvtConsultant(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                      >
+                        <option value="Darla Manikanta">Darla Manikanta</option>
+                        <option value="Shikhar Jain">Shikhar Jain</option>
+                        <option value="Hemanth Kumar Jain">Hemanth Kumar Jain</option>
+                        <option value="Sophia Laurent">Sophia Laurent</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Agenda & Notes
+                      </label>
+                      <textarea
+                        rows="3"
+                        placeholder="Details of what will be discussed or executed..."
+                        value={evtNotes}
+                        onChange={e => setEvtNotes(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none" }}
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowEventModal(false)}
+                        style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        style={{ padding: "10px 22px", background: "#2563eb", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                      >
+                        Schedule Event
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* ── MODAL: RECORD OFFLINE CLIENT VISIT (MULTI-CONSULTANT SUPPORT) ── */}
+            {showVisitModal && (
+              <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+                <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+                    <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "700", color: "#0f172a" }}>
+                      Record Offline Client Visit & Timeline Log
+                    </h3>
+                    <button onClick={() => setShowVisitModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
+                  </div>
+
+                  <form onSubmit={handleRecordVisitSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Visit Title / Primary Objective *
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Visit #3: Stock Vault Audit & Staff Coaching"
+                        value={vTitle}
+                        onChange={e => setVTitle(e.target.value)}
+                        required
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                      />
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          Start Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={vStart}
+                          onChange={e => setVStart(e.target.value)}
+                          required
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                        />
+                      </div>
+
+                      <div>
+                        <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                          End Date *
+                        </label>
+                        <input
+                          type="date"
+                          value={vEnd}
+                          onChange={e => setVEnd(e.target.value)}
+                          required
+                          style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Multi-Consultant Selection (Sometimes 2 people visit at a time!) */}
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Visiting Team (Select all consultants who visited together) *
+                      </label>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", background: "#f8fafc", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                        {["Darla Manikanta", "Shikhar Jain", "Hemanth Kumar Jain", "Sophia Laurent"].map(name => {
+                          const isChecked = vConsultants.includes(name);
+                          return (
+                            <label key={name} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: "#1e293b", cursor: "pointer" }}>
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={e => {
+                                  if (e.target.checked) {
+                                    setVConsultants(prev => [...prev, name]);
+                                  } else {
+                                    setVConsultants(prev => prev.filter(n => n !== name));
+                                  }
+                                }}
+                                style={{ accentColor: "#059669" }}
+                              />
+                              <span>{name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Key Understandings & Observations (What was discovered/observed)
+                      </label>
+                      <textarea
+                        rows="3"
+                        placeholder="e.g., Discovered 4.2% discrepancy in gold ornament weight; sales team lacks bridal upselling techniques."
+                        value={vUnderstandings}
+                        onChange={e => setVUnderstandings(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none" }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Work Done / Deliverables Completed in Visit
+                      </label>
+                      <textarea
+                        rows="3"
+                        placeholder="e.g., Audited 1,250 ornament tags, conducted 4-hour sales floor coaching session, implemented daily ledger logbook."
+                        value={vWorkDone}
+                        onChange={e => setVWorkDone(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none" }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#334155", display: "block", marginBottom: "6px" }}>
+                        Follow-Up Action Item
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Schedule follow-up call on 25th July to review diamond cross-sell ratio."
+                        value={vFollowUp}
+                        onChange={e => setVFollowUp(e.target.value)}
+                        style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem" }}
+                      />
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "10px" }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowVisitModal(false)}
+                        style={{ padding: "10px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        style={{ padding: "10px 22px", background: "#059669", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                      >
+                        Record Client Visit
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+
         </div>
 
       </div>

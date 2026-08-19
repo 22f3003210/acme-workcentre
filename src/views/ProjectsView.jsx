@@ -625,64 +625,38 @@ export default function ProjectsView() {
   };
 
   // Helper to ensure project properties are structured cleanly
+  // Helper to ensure project properties are structured cleanly
   const getEffectiveProject = (proj) => {
     if (!proj) return null;
     
-    const defaultDetails = {
-      companyName: proj.name || proj.client || "Sunehri Virasat",
-      businessModel: "Pure Retailer",
-      headOffice: "Mumbai, Delhi",
-      showroomCount: "5",
-      locations: "Mumbai, Jaipur, Delhi",
-      headcount: "150",
-      revenueBracket: "₹25 Cr - ₹50 Cr",
-      productLine: "Fine Diamond Jewellery, High-Carat Gold Ornaments, Polki Solitaires",
-      painPoints: ["Inventory", "Sales", "Manufacturing", "Finance", "Reporting"],
-      purposeOfApproach: "Custom order tracking delays, designer-craftsman handoffs, vault shrinkage reconciliation.",
-      primaryChallenge: "Describe how metal weight variance, inventory reconciliation, or sales tracking issues affect daily workflow...",
-      staffMembers: [
-        { name: proj.pocName || "Anant Sarraf", designation: "Managing Director", contact: proj.pocContact || "9876543233" },
-        { name: "Ramesh Sharma", designation: "Head of Inventory & Vault", contact: "9812345678" }
-      ],
-      transformationOutcomes: [
-        "Minimise Stock Shrinkage & Metal Leakage",
-        "Boost Showroom Conversion & Average Bill Value (ABV)",
-        "Real-time Showroom & Stock Ledger Reconciliation"
-      ]
-    };
+    const biz = proj.businessDetails || {};
 
-    const defaultAuditDocs = [
-      {
-        id: "audit-1",
-        title: "Phase 1-3 Preliminary Audit & Gap Analysis Report",
-        category: "Site Audit Report",
-        fileName: "ACME_Retail_Audit_Report_2026.pdf",
-        fileType: "application/pdf",
-        fileSize: "2.4 MB",
-        uploadedAt: "2026-07-28",
-        uploadedBy: "Darla Manikanta",
-        url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf"
-      },
-      {
-        id: "audit-2",
-        title: "Vault Reconciliation & Metal Variance Sheet",
-        category: "Vault Discrepancy Sheet",
-        fileName: "Inventory_Vault_Discrepancy_Sheet.xlsx",
-        fileType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        fileSize: "840 KB",
-        uploadedAt: "2026-07-29",
-        uploadedBy: "Shikhar Jain",
-        url: "#"
-      }
-    ];
+    const effectiveBizDetails = {
+      companyName: biz.companyName || proj.name || proj.client || "",
+      businessModel: biz.businessModel || "Pure Retailer",
+      headOffice: biz.headOffice || (proj.location && proj.location !== "HQ / Client Site" ? proj.location : ""),
+      showroomCount: biz.showroomCount || "",
+      locations: biz.locations || (proj.location && proj.location !== "HQ / Client Site" ? proj.location : ""),
+      headcount: biz.headcount || "",
+      revenueBracket: biz.revenueBracket || "",
+      productLine: biz.productLine || "",
+      painPoints: biz.painPoints || [],
+      purposeOfApproach: biz.purposeOfApproach || proj.engagementPurpose || proj.description || "",
+      primaryChallenge: biz.primaryChallenge || "",
+      staffMembers: biz.staffMembers && biz.staffMembers.length > 0 
+        ? biz.staffMembers 
+        : (proj.pocName ? [{ name: proj.pocName, designation: "Managing Director / POC", contact: proj.pocContact || "" }] : []),
+      transformationOutcomes: biz.transformationOutcomes || [],
+      headOfficeCoordinates: biz.headOfficeCoordinates || null
+    };
 
     return {
       ...proj,
       clientVisits: proj.clientVisits || [],
       scheduledEvents: proj.scheduledEvents || [],
       checklists: proj.checklists || [],
-      engagementPurpose: proj.engagementPurpose || "Client approached us for consulting advisory, audit, and growth strategy.",
-      businessDetails: proj.businessDetails || defaultDetails,
+      engagementPurpose: proj.engagementPurpose || proj.description || "",
+      businessDetails: effectiveBizDetails,
       auditReports: proj.auditReports || []
     };
   };
@@ -1133,10 +1107,12 @@ export default function ProjectsView() {
     // Header location calculation
     const locationName = (effectiveProject.location && effectiveProject.location !== "HQ / Client Site")
       ? effectiveProject.location 
-      : (bizDetails.headOffice || (effectiveProject.code ? effectiveProject.code.split('-')[1] || "Abhor" : "Abhor"));
+      : (bizDetails.headOffice || (effectiveProject.code && effectiveProject.code.includes("-") ? effectiveProject.code.split("-")[1] : ""));
     
-    // Header Title Format: Sunehri Virasat - Abhor
-    const headerTitle = `${effectiveProject.name} - ${locationName}`;
+    // Header Title Format: Client Name - Location
+    const headerTitle = locationName && !effectiveProject.name.includes(locationName)
+      ? `${effectiveProject.name} - ${locationName}`
+      : effectiveProject.name;
 
     const handleSaveBusinessDetailsForm = () => {
       updateProject(effectiveProject.id, {
@@ -1151,21 +1127,21 @@ export default function ProjectsView() {
     const handleStartEditBusiness = () => {
       setBizForm({
         companyName: bizDetails.companyName || effectiveProject.name || "",
-        headOffice: bizDetails.headOffice || "",
+        headOffice: bizDetails.headOffice || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" ? effectiveProject.location : ""),
         showroomCount: bizDetails.showroomCount || "",
-        locations: bizDetails.locations || "",
+        locations: bizDetails.locations || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" ? effectiveProject.location : ""),
         headcount: bizDetails.headcount || "",
         revenueBracket: bizDetails.revenueBracket || "Select Range...",
         businessModel: bizDetails.businessModel || "Pure Retailer",
         productLine: bizDetails.productLine || "",
         painPoints: bizDetails.painPoints || [],
-        purposeOfApproach: bizDetails.purposeOfApproach || "",
+        purposeOfApproach: bizDetails.purposeOfApproach || effectiveProject.engagementPurpose || "",
         primaryChallenge: bizDetails.primaryChallenge || "",
         staffMembers: bizDetails.staffMembers && bizDetails.staffMembers.length > 0 
           ? bizDetails.staffMembers 
-          : [{ name: effectiveProject.pocName || "Anant Sarraf", designation: "Managing Director", contact: effectiveProject.pocContact || "9876543233" }],
+          : (effectiveProject.pocName ? [{ name: effectiveProject.pocName, designation: "Managing Director / POC", contact: effectiveProject.pocContact || "" }] : []),
         transformationOutcomes: bizDetails.transformationOutcomes || [],
-        headOfficeCoordinates: bizDetails.headOfficeCoordinates || { lat: "22.0867", lng: "79.5432", address: bizDetails.headOffice || "Seoni, Madhya Pradesh" }
+        headOfficeCoordinates: bizDetails.headOfficeCoordinates || null
       });
       setIsEditingBusinessDetails(true);
     };
@@ -1200,13 +1176,13 @@ export default function ProjectsView() {
               </div>
 
               <div>
-                {/* Clean Title Format: Sunehri Virasat - Abhor */}
+                {/* Dynamic Project Title Header */}
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <h2 style={{ margin: 0, fontSize: "1.35rem", fontWeight: "800", color: "#0f172a" }}>
                     {headerTitle}
                   </h2>
                   <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800" }}>
-                    {effectiveProject.code || "SV-ABHOR"}
+                    {effectiveProject.code || "PROJ"}
                   </span>
                   <span style={{
                     background: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#dcfce7" : "#fff7ed",

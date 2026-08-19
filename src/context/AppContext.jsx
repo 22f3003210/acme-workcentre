@@ -495,7 +495,7 @@ export const AppProvider = ({ children }) => {
       // 6. Projects
       supabase.from("projects").select("*").then(({ data, error }) => {
         if (!error && data) {
-          setProjects(data.map(p => ({
+          const mapped = data.map(p => ({
             id: p.id,
             code: p.code,
             name: p.name,
@@ -516,9 +516,84 @@ export const AppProvider = ({ children }) => {
             checklists: p.checklists,
             clientVisits: p.client_visits || p.clientVisits,
             scheduledEvents: p.scheduled_events || p.scheduledEvents
-          })));
+          }));
+          setProjects(mapped);
+          try { localStorage.setItem("workcentre_projects", JSON.stringify(mapped)); } catch (e) {}
         }
       }).catch(err => console.error("Supabase fetch projects error:", err));
+
+      // Realtime Multi-Device Sync Channel
+      const realtimeSyncChannel = supabase
+        .channel("workcentre_realtime_stream")
+        .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, (payload) => {
+          if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+            const p = payload.new;
+            const updated = {
+              id: p.id,
+              code: p.code,
+              name: p.name,
+              client: p.client,
+              pocName: p.poc_name,
+              pocContact: p.poc_contact,
+              clientContact: p.client_contact,
+              status: p.status,
+              startDate: p.start_date,
+              budget: Number(p.budget) || 0,
+              spent: Number(p.spent) || 0,
+              location: p.location,
+              description: p.description,
+              engagementPurpose: p.engagement_purpose,
+              assignedConsultants: p.assigned_consultants || [],
+              businessDetails: p.business_details || p.businessDetails,
+              auditReports: p.audit_reports || p.auditReports,
+              checklists: p.checklists,
+              clientVisits: p.client_visits || p.clientVisits,
+              scheduledEvents: p.scheduled_events || p.scheduledEvents
+            };
+            setProjects(prev => {
+              const exists = prev.some(x => x.id === updated.id);
+              const next = exists ? prev.map(x => x.id === updated.id ? { ...x, ...updated } : x) : [updated, ...prev];
+              try { localStorage.setItem("workcentre_projects", JSON.stringify(next)); } catch (e) {}
+              return next;
+            });
+          } else if (payload.eventType === "DELETE" && payload.old?.id) {
+            setProjects(prev => {
+              const next = prev.filter(x => x.id !== payload.old.id);
+              try { localStorage.setItem("workcentre_projects", JSON.stringify(next)); } catch (e) {}
+              return next;
+            });
+          }
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "expenses" }, (payload) => {
+          if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+            const e = payload.new;
+            const updatedExp = {
+              id: e.id,
+              employeeId: e.employee_id,
+              projectId: e.project_id || "",
+              projectName: e.project_name || "",
+              title: e.title || e.reason || "",
+              date: e.date,
+              expenseDate: e.date,
+              submittedDate: e.submitted_date || e.date,
+              category: e.category,
+              amount: Number(e.amount) || 0,
+              reason: e.reason || "",
+              description: e.reason || "",
+              receipt: e.receipt || "",
+              status: e.status || "Pending",
+              approvedBy: e.approved_by || null,
+              approvedDate: e.approved_date || null
+            };
+            setExpenses(prev => {
+              const exists = prev.some(x => x.id === updatedExp.id);
+              const next = exists ? prev.map(x => x.id === updatedExp.id ? { ...x, ...updatedExp } : x) : [updatedExp, ...prev];
+              try { localStorage.setItem("workcentre_expenses", JSON.stringify(next)); } catch (e) {}
+              return next;
+            });
+          }
+        })
+        .subscribe();
 
       // 7. Job Titles
       supabase.from("job_titles").select("*").then(({ data, error }) => {
@@ -1611,7 +1686,11 @@ export const AppProvider = ({ children }) => {
   };
 
   const updateProject = (projectId, updatedFields) => {
-    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, ...updatedFields } : p));
+    setProjects(prev => {
+      const next = prev.map(p => p.id === projectId ? { ...p, ...updatedFields } : p);
+      try { localStorage.setItem("workcentre_projects", JSON.stringify(next)); } catch (e) {}
+      return next;
+    });
 
     if (isSupabaseConfigured()) {
       supabaseUpdateProject(projectId, updatedFields).catch(err => console.error("Supabase write-back updateProject error:", err));
@@ -1626,15 +1705,24 @@ export const AppProvider = ({ children }) => {
       date: new Date().toLocaleString([], { dateStyle: "short", timeStyle: "short" }),
       ...discussionData
     };
-    setProjects(prev => prev.map(p => {
-      if (p.id === projectId) {
-        return {
-          ...p,
-          discussions: [newDisc, ...(p.discussions || [])]
-        };
+    setProjects(prev => {
+      let updatedDiscussions = [];
+      const next = prev.map(p => {
+        if (p.id === projectId) {
+          updatedDiscussions = [newDisc, ...(p.discussions || [])];
+          return {
+            ...p,
+            discussions: updatedDiscussions
+          };
+        }
+        return p;
+      });
+      try { localStorage.setItem("workcentre_projects", JSON.stringify(next)); } catch (e) {}
+      if (isSupabaseConfigured() && updatedDiscussions.length > 0) {
+        supabaseUpdateProject(projectId, { discussions: updatedDiscussions }).catch(e => {});
       }
-      return p;
-    }));
+      return next;
+    });
   };
 
   const addProjectVisit = (projectId, visitData) => {
@@ -1642,15 +1730,24 @@ export const AppProvider = ({ children }) => {
       id: `visit-${Date.now()}`,
       ...visitData
     };
-    setProjects(prev => prev.map(p => {
-      if (p.id === projectId) {
-        return {
-          ...p,
-          clientVisits: [newVisit, ...(p.clientVisits || [])]
-        };
+    setProjects(prev => {
+      let updatedVisits = [];
+      const next = prev.map(p => {
+        if (p.id === projectId) {
+          updatedVisits = [newVisit, ...(p.clientVisits || [])];
+          return {
+            ...p,
+            clientVisits: updatedVisits
+          };
+        }
+        return p;
+      });
+      try { localStorage.setItem("workcentre_projects", JSON.stringify(next)); } catch (e) {}
+      if (isSupabaseConfigured() && updatedVisits.length > 0) {
+        supabaseUpdateProject(projectId, { clientVisits: updatedVisits }).catch(e => {});
       }
-      return p;
-    }));
+      return next;
+    });
   };
 
   const addProjectScheduledEvent = (projectId, eventData) => {
@@ -1659,36 +1756,54 @@ export const AppProvider = ({ children }) => {
       status: "Scheduled",
       ...eventData
     };
-    setProjects(prev => prev.map(p => {
-      if (p.id === projectId) {
-        return {
-          ...p,
-          scheduledEvents: [newEvent, ...(p.scheduledEvents || [])]
-        };
+    setProjects(prev => {
+      let updatedEvents = [];
+      const next = prev.map(p => {
+        if (p.id === projectId) {
+          updatedEvents = [newEvent, ...(p.scheduledEvents || [])];
+          return {
+            ...p,
+            scheduledEvents: updatedEvents
+          };
+        }
+        return p;
+      });
+      try { localStorage.setItem("workcentre_projects", JSON.stringify(next)); } catch (e) {}
+      if (isSupabaseConfigured() && updatedEvents.length > 0) {
+        supabaseUpdateProject(projectId, { scheduledEvents: updatedEvents }).catch(e => {});
       }
-      return p;
-    }));
+      return next;
+    });
   };
 
   const toggleProjectChecklistItem = (projectId, categoryIndex, itemIndex) => {
-    setProjects(prev => prev.map(p => {
-      if (p.id === projectId && p.checklists) {
-        const updatedChecklists = p.checklists.map((cat, cIdx) => {
-          if (cIdx === categoryIndex) {
-            const updatedItems = cat.items.map((item, iIdx) => {
-              if (iIdx === itemIndex) {
-                return { ...item, completed: !item.completed };
-              }
-              return item;
-            });
-            return { ...cat, items: updatedItems };
-          }
-          return cat;
-        });
-        return { ...p, checklists: updatedChecklists };
+    setProjects(prev => {
+      let finalChecklists = [];
+      const next = prev.map(p => {
+        if (p.id === projectId && p.checklists) {
+          const updatedChecklists = p.checklists.map((cat, cIdx) => {
+            if (cIdx === categoryIndex) {
+              const updatedItems = cat.items.map((item, iIdx) => {
+                if (iIdx === itemIndex) {
+                  return { ...item, completed: !item.completed };
+                }
+                return item;
+              });
+              return { ...cat, items: updatedItems };
+            }
+            return cat;
+          });
+          finalChecklists = updatedChecklists;
+          return { ...p, checklists: updatedChecklists };
+        }
+        return p;
+      });
+      try { localStorage.setItem("workcentre_projects", JSON.stringify(next)); } catch (e) {}
+      if (isSupabaseConfigured() && finalChecklists.length > 0) {
+        supabaseUpdateProject(projectId, { checklists: finalChecklists }).catch(e => {});
       }
-      return p;
-    }));
+      return next;
+    });
   };
 
   // Expense Verification (Accounts Manager / Accountant Only)

@@ -1660,13 +1660,13 @@ export default function ProjectsView() {
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                 <span style={{ color: "#64748b" }}>HQ Location:</span>
-                <strong style={{ color: "#0f172a" }}>{bizDetails.headOffice || "Mumbai, Delhi"}</strong>
+                <strong style={{ color: "#0f172a" }}>{bizDetails.headOffice || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" ? effectiveProject.location : "") || "HQ / Client Site"}</strong>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3"/></svg>
                 <span style={{ color: "#64748b" }}>Showrooms:</span>
-                <strong style={{ color: "#0f172a" }}>{bizDetails.showroomCount || "5"}</strong>
+                <strong style={{ color: "#0f172a" }}>{bizDetails.showroomCount || "1"}</strong>
               </div>
             </div>
 
@@ -1759,20 +1759,20 @@ export default function ProjectsView() {
                     <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
                       <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>BOUTIQUES & HEAD OFFICE</span>
                       <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
-                        {bizDetails.showroomCount || "5"} Showrooms ({bizDetails.headOffice || "Mumbai"})
+                        {bizDetails.showroomCount || "1"} Showroom{Number(bizDetails.showroomCount || 1) !== 1 ? "s" : ""} ({bizDetails.headOffice || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" ? effectiveProject.location : "") || "Main Showroom"})
                       </p>
                     </div>
 
                     <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
                       <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>ANNUAL REVENUE & HEADCOUNT</span>
                       <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
-                        {bizDetails.revenueBracket || "₹25 Cr - ₹50 Cr"} ({bizDetails.headcount || "150"} Staff)
+                        {bizDetails.revenueBracket && bizDetails.revenueBracket !== "Select Range..." ? bizDetails.revenueBracket : "—"} {bizDetails.headcount ? `(${bizDetails.headcount} Staff)` : ""}
                       </p>
                     </div>
 
                     {/* Store Location GPS Coordinates Card */}
                     <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "16px", borderRadius: "10px", gridColumn: "span 3" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                           <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center" }}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -1780,20 +1780,39 @@ export default function ProjectsView() {
                           <div>
                             <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: "800", textTransform: "uppercase" }}>STORE LOCATION GPS COORDINATES (AUDIT TARGET)</span>
                             <p style={{ margin: "2px 0 0 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
-                              {bizDetails.headOfficeCoordinates?.lat || "22.0867"}° N, {bizDetails.headOfficeCoordinates?.lng || "79.5432"}° E
-                              <span style={{ marginLeft: "10px", fontSize: "0.8rem", color: "#64748b", fontWeight: "600" }}>({bizDetails.headOffice || "Seoni, Madhya Pradesh"})</span>
+                              {bizDetails.headOfficeCoordinates?.lat ? (
+                                <>
+                                  {bizDetails.headOfficeCoordinates.lat}° N, {bizDetails.headOfficeCoordinates.lng}° E
+                                  <span style={{ marginLeft: "10px", fontSize: "0.8rem", color: "#64748b", fontWeight: "600" }}>
+                                    ({bizDetails.headOfficeCoordinates.address || bizDetails.headOffice || effectiveProject.location || "Store Location"})
+                                  </span>
+                                </>
+                              ) : (
+                                <span style={{ color: "#475569", fontSize: "0.88rem", fontWeight: "600" }}>
+                                  📍 {bizDetails.headOffice || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" ? effectiveProject.location : "") || "Location address registered in profile"}
+                                </span>
+                              )}
                             </p>
                           </div>
                         </div>
-                        <a
-                          href={`https://www.openstreetmap.org/?mlat=${bizDetails.headOfficeCoordinates?.lat || "22.0867"}&mlon=${bizDetails.headOfficeCoordinates?.lng || "79.5432"}#map=16/${bizDetails.headOfficeCoordinates?.lat || "22.0867"}/${bizDetails.headOfficeCoordinates?.lng || "79.5432"}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{ background: "#ffffff", color: "#16a34a", border: "1px solid #86efac", padding: "6px 14px", borderRadius: "6px", fontWeight: "800", fontSize: "0.78rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
-                        >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                          View Store on Map
-                        </a>
+                        {bizDetails.headOfficeCoordinates?.lat ? (
+                          <a
+                            href={`https://www.openstreetmap.org/?mlat=${bizDetails.headOfficeCoordinates.lat}&mlon=${bizDetails.headOfficeCoordinates.lng}#map=16/${bizDetails.headOfficeCoordinates.lat}/${bizDetails.headOfficeCoordinates.lng}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ background: "#ffffff", color: "#16a34a", border: "1px solid #86efac", padding: "6px 14px", borderRadius: "6px", fontWeight: "800", fontSize: "0.78rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            View Store on Map
+                          </a>
+                        ) : (
+                          <button
+                            onClick={handleStartEditBusiness}
+                            style={{ background: "#ffffff", color: "#16a34a", border: "1px solid #86efac", padding: "6px 14px", borderRadius: "6px", fontWeight: "800", fontSize: "0.78rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                          >
+                            ✏️ Add GPS Coordinates
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1810,8 +1829,8 @@ export default function ProjectsView() {
                         </tr>
                       </thead>
                       <tbody>
-                        {(bizDetails.staffMembers || [
-                          { name: effectiveProject.pocName || "Anant Sarraf", designation: "Managing Director", contact: effectiveProject.pocContact || "9876543210" }
+                        {(bizDetails.staffMembers && bizDetails.staffMembers.length > 0 ? bizDetails.staffMembers : [
+                          { name: effectiveProject.pocName || "Store Director", designation: "Managing Director / POC", contact: effectiveProject.pocContact || "—" }
                         ]).map((s, sIdx) => (
                           <tr key={sIdx} style={{ borderBottom: "1px solid #f1f5f9" }}>
                             <td style={{ padding: "8px", fontWeight: "700", color: "#0f172a" }}>{s.name}</td>
@@ -1820,7 +1839,7 @@ export default function ProjectsView() {
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
                               </svg>
-                              {s.contact}
+                              {s.contact || "—"}
                             </td>
                           </tr>
                         ))}

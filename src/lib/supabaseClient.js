@@ -100,7 +100,6 @@ export const supabaseUpdateProject = async (projectId, updatedFields) => {
   if (updatedFields.description !== undefined) dbPayload.description = updatedFields.description;
   if (updatedFields.engagementPurpose !== undefined) dbPayload.engagement_purpose = updatedFields.engagementPurpose;
   if (updatedFields.assignedConsultants !== undefined) dbPayload.assigned_consultants = updatedFields.assignedConsultants;
-  if (updatedFields.businessDetails !== undefined) dbPayload.business_details = updatedFields.businessDetails;
   if (updatedFields.auditReports !== undefined) dbPayload.audit_reports = updatedFields.auditReports;
   if (updatedFields.checklists !== undefined) dbPayload.checklists = updatedFields.checklists;
   if (updatedFields.clientVisits !== undefined) dbPayload.client_visits = updatedFields.clientVisits;
@@ -108,11 +107,28 @@ export const supabaseUpdateProject = async (projectId, updatedFields) => {
   if (updatedFields.phaseTasks !== undefined) {
     dbPayload.scheduled_events = updatedFields.phaseTasks;
   }
-  if (updatedFields.phases !== undefined) {
-    dbPayload.business_details = {
-      ...(updatedFields.businessDetails || {}),
-      phases: updatedFields.phases
-    };
+
+  // Safely merge business_details without wiping existing metadata
+  if (updatedFields.businessDetails !== undefined || updatedFields.phases !== undefined) {
+    try {
+      const { data: currentRecord } = await supabase
+        .from("projects")
+        .select("business_details")
+        .eq("id", projectId)
+        .single();
+      
+      const currentBiz = currentRecord?.business_details || {};
+      dbPayload.business_details = {
+        ...currentBiz,
+        ...(updatedFields.businessDetails || {}),
+        ...(updatedFields.phases !== undefined ? { phases: updatedFields.phases } : {})
+      };
+    } catch (err) {
+      dbPayload.business_details = {
+        ...(updatedFields.businessDetails || {}),
+        ...(updatedFields.phases !== undefined ? { phases: updatedFields.phases } : {})
+      };
+    }
   }
 
   const { data, error } = await supabase.from("projects").update(dbPayload).eq("id", projectId);

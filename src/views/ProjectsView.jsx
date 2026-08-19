@@ -775,6 +775,7 @@ export default function ProjectsView() {
 
   // Wrike-Grade Interactive Gantt State
   const [timelineZoom, setTimelineZoom] = useState("weeks"); // "weeks" | "days" | "months"
+  const [ganttSplitMode, setGanttSplitMode] = useState("split"); // "split" | "tableOnly" | "ganttOnly"
   const [hoveredGanttTask, setHoveredGanttTask] = useState(null);
   const [collapsedPhases, setCollapsedPhases] = useState({});
   const [showDependencies, setShowDependencies] = useState(true);
@@ -1141,6 +1142,17 @@ export default function ProjectsView() {
     const diffDays = Math.max(1, Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1);
     const weeks = (diffDays / 7).toFixed(1).replace(".0", "");
     return { days: diffDays, weeks: `${weeks} ${weeks === "1" ? "Wk" : "Wks"}` };
+  };
+
+  const formatGanttDate = (dateStr) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+    } catch (e) {
+      return dateStr;
+    }
   };
 
   // Dynamic Phase Groups & Gantt Metrics Helper
@@ -2406,22 +2418,22 @@ export default function ProjectsView() {
               </div>
             )}
 
-            {/* TAB 4: TASKS & PLANNER (WRIKE-GRADE INTERACTIVE GANTT TIMELINE) */}
+            {/* TAB 4: TASKS & PLANNER (TWO COLLAPSIBLE PARTITIONS: TASK DIRECTORY & GANTT ROADMAP) */}
             {activeProjectTab === "tasks" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                 
-                {/* Header & Allocation Summary Cards */}
-                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", position: "relative" }}>
+                {/* Header Toolbar & Summary Card */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px 24px" }}>
                   
-                  {/* Top Bar with Title, Zoom Switchers & Controls */}
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "16px" }}>
+                  {/* Top Bar with Title, Partition Switchers & Controls */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <h3 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "800", color: "#0f172a" }}>
-                          Interactive Gantt Chart & Roadmap
+                          Phase-Wise Task Allocation & Interactive Gantt Timeline
                         </h3>
                         <span style={{ fontSize: "0.72rem", background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "3px 8px", borderRadius: "12px", fontWeight: "800" }}>
-                          WRIKE-GRADE TIMELINE
+                          SPLIT VIEW
                         </span>
                       </div>
                       <p style={{ margin: "4px 0 0 0", fontSize: "0.85rem", color: "#64748b" }}>
@@ -2431,9 +2443,37 @@ export default function ProjectsView() {
                       </p>
                     </div>
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                       
-                      {/* Timeline Zoom Selector */}
+                      {/* 1. Partition View Mode Switcher */}
+                      <div style={{ display: "inline-flex", background: "#f1f5f9", padding: "3px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                        {[
+                          { id: "split", label: "🗂️ Split View (50/50)" },
+                          { id: "tableOnly", label: "📋 Tasks Only" },
+                          { id: "ganttOnly", label: "📊 Gantt Only" }
+                        ].map(mode => (
+                          <button
+                            key={mode.id}
+                            onClick={() => setGanttSplitMode(mode.id)}
+                            style={{
+                              background: ganttSplitMode === mode.id ? "#ffffff" : "transparent",
+                              color: ganttSplitMode === mode.id ? "#2563eb" : "#64748b",
+                              border: "none",
+                              padding: "5px 12px",
+                              borderRadius: "6px",
+                              fontSize: "0.75rem",
+                              fontWeight: ganttSplitMode === mode.id ? "800" : "600",
+                              cursor: "pointer",
+                              boxShadow: ganttSplitMode === mode.id ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
+                              transition: "all 0.15s ease"
+                            }}
+                          >
+                            {mode.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* 2. Timeline Zoom Selector */}
                       <div style={{ display: "inline-flex", background: "#f1f5f9", padding: "3px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
                         {[
                           { id: "weeks", label: "12 Weeks" },
@@ -2447,7 +2487,7 @@ export default function ProjectsView() {
                               background: timelineZoom === z.id ? "#ffffff" : "transparent",
                               color: timelineZoom === z.id ? "#2563eb" : "#64748b",
                               border: "none",
-                              padding: "5px 12px",
+                              padding: "5px 10px",
                               borderRadius: "6px",
                               fontSize: "0.75rem",
                               fontWeight: timelineZoom === z.id ? "800" : "600",
@@ -2461,29 +2501,7 @@ export default function ProjectsView() {
                         ))}
                       </div>
 
-                      {/* Dependency Line Toggle */}
-                      <button
-                        onClick={() => setShowDependencies(prev => !prev)}
-                        style={{
-                          background: showDependencies ? "#eff6ff" : "#ffffff",
-                          color: showDependencies ? "#2563eb" : "#64748b",
-                          border: `1px solid ${showDependencies ? "#bfdbfe" : "#cbd5e1"}`,
-                          padding: "6px 12px",
-                          borderRadius: "8px",
-                          fontSize: "0.75rem",
-                          fontWeight: "700",
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "5px",
-                          transition: "all 0.15s ease"
-                        }}
-                        title="Toggle task dependency connection lines"
-                      >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                        Dependencies {showDependencies ? "ON" : "OFF"}
-                      </button>
-
+                      {/* 3. Schedule New Task Button */}
                       {projectPhaseGroups.length > 0 && (
                         <button
                           onClick={() => handleOpenCreateTask(projectPhaseGroups[0]?.num || 1)}
@@ -2491,7 +2509,7 @@ export default function ProjectsView() {
                             background: "#2563eb",
                             color: "#ffffff",
                             border: "none",
-                            padding: "9px 18px",
+                            padding: "8px 16px",
                             borderRadius: "8px",
                             fontWeight: "800",
                             fontSize: "0.82rem",
@@ -2508,440 +2526,584 @@ export default function ProjectsView() {
                       )}
                     </div>
                   </div>
+                </div>
 
-                  {/* Empty State when 0 phases exist */}
-                  {projectPhaseGroups.length === 0 ? (
-                    <div style={{ padding: "48px 24px", textAlign: "center", background: "#f8fafc", borderRadius: "14px", border: "2px dashed #cbd5e1" }}>
-                      <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "1.6rem", marginBottom: "16px" }}>
-                        📁
-                      </div>
-                      <h3 style={{ margin: "0 0 8px 0", fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>
-                        No Implementation Phases Created Yet
-                      </h3>
-                      <p style={{ margin: "0 auto 20px auto", maxWidth: "480px", fontSize: "0.85rem", color: "#64748b", lineHeight: "1.5" }}>
-                        Start structuring this client engagement by adding Phase 1 with custom objectives, timeline dates, and week-wise deliverables.
-                      </p>
-                      <button
-                        onClick={handleOpenAddPhase}
-                        style={{
-                          background: "#2563eb",
-                          color: "#ffffff",
-                          border: "none",
-                          padding: "12px 24px",
-                          borderRadius: "8px",
-                          fontWeight: "800",
-                          fontSize: "0.9rem",
-                          cursor: "pointer",
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          boxShadow: "0 4px 14px rgba(37, 99, 235, 0.25)"
-                        }}
-                      >
-                        <span>➕</span>
-                        <span>Create Phase 1</span>
-                      </button>
+                {/* Empty State when 0 phases exist */}
+                {projectPhaseGroups.length === 0 ? (
+                  <div style={{ padding: "48px 24px", textAlign: "center", background: "#ffffff", borderRadius: "14px", border: "2px dashed #cbd5e1" }}>
+                    <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "1.6rem", marginBottom: "16px" }}>
+                      📁
                     </div>
-                  ) : (
-                    <>
-                      {/* Dynamic Phase Allocation Summary Badges */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px", marginBottom: "24px" }}>
-                        {projectPhaseGroups.map(ph => (
-                          <div
-                            key={ph.id || ph.num}
-                            onClick={() => handleOpenCreateTask(ph.num)}
-                            style={{
-                              background: "#ffffff",
-                              border: "1px solid #e2e8f0",
-                              borderLeft: `5px solid ${ph.color}`,
-                              borderRadius: "12px",
-                              padding: "14px 16px",
-                              cursor: "pointer",
-                              transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                              boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-                              display: "flex",
-                              flexDirection: "column",
-                              justifyContent: "space-between"
-                            }}
-                            onMouseEnter={e => {
-                              e.currentTarget.style.transform = "translateY(-2px)";
-                              e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.07)";
-                            }}
-                            onMouseLeave={e => {
-                              e.currentTarget.style.transform = "translateY(0)";
-                              e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.03)";
-                            }}
-                            title={`Click to add task in ${ph.name}`}
-                          >
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                              <span style={{ fontSize: "0.72rem", fontWeight: "800", color: ph.color, background: `${ph.color}15`, padding: "2px 8px", borderRadius: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                                PHASE {ph.num}
-                              </span>
-                              <span style={{ fontSize: "0.75rem", color: ph.color, fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                Add Task
-                              </span>
-                            </div>
-                            <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: "2px 0 10px 0", lineHeight: "1.3" }}>
-                              {ph.name}
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", borderTop: "1px solid #f1f5f9", paddingTop: "8px" }}>
-                              <span style={{ color: ph.color, fontWeight: "700" }}>
-                                {ph.count} {ph.count === 1 ? "Task" : "Tasks"} Allocated
-                              </span>
-                              {ph.durationDays && (
-                                <span style={{ color: "#64748b", fontWeight: "600", background: "#f8fafc", padding: "2px 6px", borderRadius: "4px" }}>
-                                  {ph.durationDays} Days ({ph.durationWeeks})
-                                </span>
-                              )}
-                            </div>
+                    <h3 style={{ margin: "0 0 8px 0", fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>
+                      No Implementation Phases Created Yet
+                    </h3>
+                    <p style={{ margin: "0 auto 20px auto", maxWidth: "480px", fontSize: "0.85rem", color: "#64748b", lineHeight: "1.5" }}>
+                      Start structuring this client engagement by adding Phase 1 with custom objectives, timeline dates, and week-wise deliverables.
+                    </p>
+                    <button
+                      onClick={handleOpenAddPhase}
+                      style={{
+                        background: "#2563eb",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "12px 24px",
+                        borderRadius: "8px",
+                        fontWeight: "800",
+                        fontSize: "0.9rem",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        boxShadow: "0 4px 14px rgba(37, 99, 235, 0.25)"
+                      }}
+                    >
+                      <span>➕</span>
+                      <span>Create Phase 1</span>
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* Dynamic Phase Allocation Summary Badges */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "14px" }}>
+                      {projectPhaseGroups.map(ph => (
+                        <div
+                          key={ph.id || ph.num}
+                          onClick={() => handleOpenCreateTask(ph.num)}
+                          style={{
+                            background: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            borderLeft: `5px solid ${ph.color}`,
+                            borderRadius: "12px",
+                            padding: "14px 16px",
+                            cursor: "pointer",
+                            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between"
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                            e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.07)";
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.03)";
+                          }}
+                          title={`Click to add task in ${ph.name}`}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                            <span style={{ fontSize: "0.72rem", fontWeight: "800", color: ph.color, background: `${ph.color}15`, padding: "2px 8px", borderRadius: "6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                              PHASE {ph.num}
+                            </span>
+                            <span style={{ fontSize: "0.75rem", color: ph.color, fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                              Add Task
+                            </span>
                           </div>
-                        ))}
-                      </div>
-
-                      {/* DYNAMIC WRIKE-GRADE GANTT CHART CONTAINER */}
-                      <div style={{ border: "1px solid #e2e8f0", borderRadius: "12px", overflowX: "auto", background: "#ffffff", marginBottom: "20px", boxShadow: "0 4px 14px rgba(0,0,0,0.03)", position: "relative" }}>
-                        
-                        {/* Gantt Header Axis (Adapts to Zoom: Weeks / Days / Months) */}
-                        <div style={{ display: "grid", gridTemplateColumns: "240px 140px 130px 110px 105px 1fr 70px", background: "#f8fafc", borderBottom: "2px solid #e2e8f0", padding: "12px 16px", fontWeight: "800", fontSize: "0.74rem", color: "#475569", alignItems: "center" }}>
-                          <div>TASK OBJECTIVE & SPEC</div>
-                          <div>ASSIGNED LEAD</div>
-                          <div>TIMELINE / DATES</div>
-                          <div>DAYS / DURATION</div>
-                          <div>STATUS</div>
-                          <div style={{ borderLeft: "1px solid #cbd5e1", paddingLeft: "8px", position: "relative" }}>
-                            {timelineZoom === "weeks" && (
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", textAlign: "center", fontSize: "0.7rem", fontWeight: "800", color: "#64748b" }}>
-                                {["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12"].map((w, wi) => (
-                                  <span key={w} style={{ borderRight: wi < 11 ? "1px dashed #e2e8f0" : "none" }}>{w}</span>
-                                ))}
-                              </div>
-                            )}
-                            {timelineZoom === "days" && (
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(15, 1fr)", textAlign: "center", fontSize: "0.65rem", fontWeight: "700", color: "#64748b" }}>
-                                {Array.from({ length: 15 }).map((_, di) => (
-                                  <span key={di} style={{ borderRight: di < 14 ? "1px dashed #e2e8f0" : "none" }}>D{di*2 + 1}</span>
-                                ))}
-                              </div>
-                            )}
-                            {timelineZoom === "months" && (
-                              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", textAlign: "center", fontSize: "0.72rem", fontWeight: "800", color: "#2563eb" }}>
-                                {["Month 1 (Audit)", "Month 2 (Execution)", "Month 3 (Review)", "Month 4 (Scale)"].map((m, mi) => (
-                                  <span key={m} style={{ borderRight: mi < 3 ? "1px solid #cbd5e1" : "none" }}>{m}</span>
-                                ))}
-                              </div>
+                          <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a", margin: "2px 0 10px 0", lineHeight: "1.3" }}>
+                            {ph.name}
+                          </div>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.78rem", borderTop: "1px solid #f1f5f9", paddingTop: "8px" }}>
+                            <span style={{ color: ph.color, fontWeight: "700" }}>
+                              {ph.count} {ph.count === 1 ? "Task" : "Tasks"} Allocated
+                            </span>
+                            {ph.durationDays && (
+                              <span style={{ color: "#64748b", fontWeight: "600", background: "#f8fafc", padding: "2px 6px", borderRadius: "4px" }}>
+                                {ph.durationDays} Days ({ph.durationWeeks})
+                              </span>
                             )}
                           </div>
-                          <div style={{ textAlign: "center" }}>ACTIONS</div>
                         </div>
+                      ))}
+                    </div>
 
-                        {/* Gantt Rows Grouped by Phase with Accordion Collapse & Visual Dependencies */}
-                        {projectPhaseGroups.map(phaseGroup => {
-                          const isCollapsed = !!collapsedPhases[phaseGroup.id || phaseGroup.num];
+                    {/* TWO SYNCHRONIZED COLLAPSIBLE PARTITIONS CONTAINER */}
+                    <div style={{ display: "flex", gap: "16px", alignItems: "flex-start", flexWrap: "wrap" }}>
+                      
+                      {/* ======================================================== */}
+                      {/* PARTITION 1 (LEFT): TASK OBJECTIVES & METADATA DIRECTORY */}
+                      {/* ======================================================== */}
+                      {(ganttSplitMode === "split" || ganttSplitMode === "tableOnly") && (
+                        <div
+                          style={{
+                            flex: ganttSplitMode === "tableOnly" ? "1 1 100%" : "1 1 540px",
+                            minWidth: "360px",
+                            background: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "14px",
+                            overflow: "hidden",
+                            boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          {/* Partition 1 Header Bar */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc", borderBottom: "2px solid #e2e8f0", padding: "12px 16px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span style={{ fontSize: "0.95rem" }}>📋</span>
+                              <span style={{ fontSize: "0.82rem", fontWeight: "800", color: "#0f172a" }}>
+                                Task Breakdown & Deliverables ({totalTasksCount})
+                              </span>
+                            </div>
 
-                          return (
-                            <div key={phaseGroup.id || phaseGroup.num}>
-                              
-                              {/* Phase Group Header Bar (Clickable to Collapse / Expand) */}
-                              <div
-                                onClick={() => setCollapsedPhases(prev => ({ ...prev, [phaseGroup.id || phaseGroup.num]: !prev[phaseGroup.id || phaseGroup.num] }))}
-                                style={{ background: phaseGroup.bg || `${phaseGroup.color}15`, padding: "10px 16px", fontWeight: "800", fontSize: "0.84rem", color: phaseGroup.color, borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px", cursor: "pointer", userSelect: "none" }}
-                              >
-                                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-                                  <span style={{ fontSize: "0.8rem", color: phaseGroup.color, transition: "transform 0.2s", transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>
-                                    ▼
-                                  </span>
-                                  <span style={{ width: "9px", height: "9px", borderRadius: "50%", background: phaseGroup.color, boxShadow: `0 0 0 3px ${phaseGroup.color}30` }} />
-                                  <span style={{ color: "#0f172a", fontWeight: "800" }}>{phaseGroup.fullName || `Phase ${phaseGroup.num}: ${phaseGroup.name}`}</span>
-                                  <span style={{ fontSize: "0.72rem", background: `${phaseGroup.color}20`, color: phaseGroup.color, padding: "2px 8px", borderRadius: "10px", fontWeight: "800" }}>
-                                    {phaseGroup.count} Tasks
-                                  </span>
-                                  {phaseGroup.startDate && (
-                                    <span style={{ fontSize: "0.75rem", background: "#ffffff", padding: "3px 10px", borderRadius: "12px", border: `1px solid ${phaseGroup.color}40`, color: phaseGroup.color, fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "5px" }}>
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                                      {phaseGroup.startDate} to {phaseGroup.endDate || ""} • {phaseGroup.durationDays || 0} Days ({phaseGroup.durationWeeks || ""})
+                            <button
+                              onClick={() => setGanttSplitMode(ganttSplitMode === "tableOnly" ? "split" : "ganttOnly")}
+                              style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.72rem", fontWeight: "700", color: "#64748b", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                              title={ganttSplitMode === "tableOnly" ? "Restore Split View" : "Collapse Task Table"}
+                            >
+                              {ganttSplitMode === "tableOnly" ? "⬌ Restore Split" : "◀ Collapse"}
+                            </button>
+                          </div>
+
+                          {/* Partition 1 Table Column Headers */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1.1fr 1fr 0.8fr 0.9fr", background: "#f1f5f9", borderBottom: "1px solid #e2e8f0", padding: "10px 16px", fontWeight: "800", fontSize: "0.72rem", color: "#475569", alignItems: "center" }}>
+                            <div>TASK OBJECTIVE & SPEC</div>
+                            <div>ASSIGNED LEAD</div>
+                            <div>TIMELINE / DATES</div>
+                            <div>DURATION</div>
+                            <div style={{ textAlign: "center" }}>STATUS</div>
+                          </div>
+
+                          {/* Partition 1 Rows Grouped by Phase */}
+                          {projectPhaseGroups.map(phaseGroup => {
+                            const isCollapsed = !!collapsedPhases[phaseGroup.id || phaseGroup.num];
+
+                            return (
+                              <div key={phaseGroup.id || phaseGroup.num}>
+                                
+                                {/* Phase Header Row */}
+                                <div
+                                  onClick={() => setCollapsedPhases(prev => ({ ...prev, [phaseGroup.id || phaseGroup.num]: !prev[phaseGroup.id || phaseGroup.num] }))}
+                                  style={{
+                                    background: phaseGroup.bg || `${phaseGroup.color}12`,
+                                    padding: "10px 16px",
+                                    borderBottom: "1px solid #e2e8f0",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    flexWrap: "wrap",
+                                    gap: "8px",
+                                    cursor: "pointer",
+                                    userSelect: "none"
+                                  }}
+                                >
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                                    <span style={{ fontSize: "0.75rem", color: phaseGroup.color, transition: "transform 0.2s", transform: isCollapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>
+                                      ▼
                                     </span>
-                                  )}
+                                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseGroup.color }} />
+                                    <span style={{ color: "#0f172a", fontWeight: "800", fontSize: "0.83rem" }}>
+                                      {phaseGroup.fullName || `Phase ${phaseGroup.num}: ${phaseGroup.name}`}
+                                    </span>
+                                    <span style={{ fontSize: "0.7rem", background: `${phaseGroup.color}20`, color: phaseGroup.color, padding: "2px 7px", borderRadius: "10px", fontWeight: "800" }}>
+                                      {phaseGroup.count} Tasks
+                                    </span>
+
+                                    {/* BEAUTIFULLY STYLED PHASE DATES BADGE (REPLACING ODD LOOKING BLUE MARKED REGIONS) */}
+                                    {phaseGroup.startDate && (
+                                      <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#ffffff", padding: "3px 10px", borderRadius: "8px", border: `1px solid ${phaseGroup.color}35`, boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={phaseGroup.color} strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#1e293b" }}>
+                                          {formatGanttDate(phaseGroup.startDate)} – {formatGanttDate(phaseGroup.endDate)}
+                                        </span>
+                                        <span style={{ fontSize: "0.68rem", fontWeight: "800", color: phaseGroup.color, background: `${phaseGroup.color}15`, padding: "1px 6px", borderRadius: "4px" }}>
+                                          {phaseGroup.durationDays || 0}d {phaseGroup.durationWeeks ? `(${phaseGroup.durationWeeks})` : ""}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
+
                                   <div style={{ display: "inline-flex", alignItems: "center", gap: "4px" }} onClick={e => e.stopPropagation()}>
                                     <button
                                       onClick={(e) => handleOpenEditPhase(phaseGroup, e)}
-                                      style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b", transition: "all 0.15s" }}
-                                      title="Edit Phase Details"
+                                      style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}
+                                      title="Edit Phase"
                                     >
-                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     </button>
                                     <button
                                       onClick={(e) => handleDeletePhase(phaseGroup.id, phaseGroup.num, e)}
-                                      style={{ background: "#ffffff", border: "1px solid #fecaca", borderRadius: "6px", width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#dc2626", transition: "all 0.15s" }}
+                                      style={{ background: "#ffffff", border: "1px solid #fecaca", borderRadius: "6px", width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#dc2626" }}
                                       title="Delete Phase"
                                     >
-                                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                                     </button>
                                   </div>
                                 </div>
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleOpenCreateTask(phaseGroup.num); }}
-                                  style={{
-                                    background: "#ffffff",
-                                    border: `1px solid ${phaseGroup.color}50`,
-                                    color: phaseGroup.color,
-                                    padding: "4px 12px",
-                                    borderRadius: "8px",
-                                    fontSize: "0.74rem",
-                                    fontWeight: "800",
-                                    cursor: "pointer",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "4px",
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
-                                  }}
-                                >
-                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                  Add Task
-                                </button>
-                              </div>
 
-                              {/* Phase Tasks Rows (Collapsible) */}
-                              {!isCollapsed && (
-                                <>
-                                  {phaseGroup.tasks.length === 0 ? (
-                                    <div style={{ padding: "16px", fontSize: "0.82rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9", background: "#ffffff", display: "flex", alignItems: "center", gap: "8px" }}>
-                                      <span>ℹ️</span> No tasks scheduled yet in {phaseGroup.name}. Click <strong>+ Add Task</strong> above to allocate deliverables.
-                                    </div>
-                                  ) : (
-                                    phaseGroup.tasks.map((tk, tIndex) => {
-                                      const isHovered = hoveredGanttTask?.id === tk.id;
-                                      const isCompleted = tk.status === "Completed";
-                                      const isMilestone = isCompleted || tk.durationDays <= 1;
+                                {/* Tasks Rows */}
+                                {!isCollapsed && (
+                                  <>
+                                    {phaseGroup.tasks.length === 0 ? (
+                                      <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
+                                        No tasks in {phaseGroup.name}. Click + Add Task in Gantt canvas.
+                                      </div>
+                                    ) : (
+                                      phaseGroup.tasks.map((tk, tIndex) => {
+                                        const isHovered = hoveredGanttTask?.id === tk.id;
+                                        const isCompleted = tk.status === "Completed";
+                                        const isMilestone = isCompleted || tk.durationDays <= 1;
 
-                                      return (
-                                        <div
-                                          key={tk.id || tIndex}
-                                          style={{
-                                            display: "grid",
-                                            gridTemplateColumns: "240px 140px 130px 110px 105px 1fr 70px",
-                                            alignItems: "center",
-                                            padding: "10px 16px",
-                                            borderBottom: "1px solid #f1f5f9",
-                                            fontSize: "0.82rem",
-                                            background: isHovered ? "#f8fafc" : "#ffffff",
-                                            transition: "background 0.15s",
-                                            position: "relative"
-                                          }}
-                                          onMouseEnter={() => setHoveredGanttTask(tk)}
-                                          onMouseLeave={() => setHoveredGanttTask(null)}
-                                        >
+                                        return (
                                           <div
-                                            onClick={() => handleOpenEditTask(tk)}
-                                            style={{ fontWeight: "700", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingRight: "8px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
-                                            title={`${tk.title} (Click to edit)`}
+                                            key={tk.id || tIndex}
+                                            style={{
+                                              display: "grid",
+                                              gridTemplateColumns: "1.4fr 1.1fr 1fr 0.8fr 0.9fr",
+                                              alignItems: "center",
+                                              padding: "10px 16px",
+                                              borderBottom: "1px solid #f1f5f9",
+                                              fontSize: "0.82rem",
+                                              background: isHovered ? "#f8fafc" : "#ffffff",
+                                              transition: "background 0.15s"
+                                            }}
+                                            onMouseEnter={() => setHoveredGanttTask(tk)}
+                                            onMouseLeave={() => setHoveredGanttTask(null)}
                                           >
-                                            {isMilestone && <span style={{ color: "#d97706", fontSize: "0.75rem" }}>◆</span>}
-                                            <span>{tk.title}</span>
-                                          </div>
-                                          
-                                          <div style={{ color: "#2563eb", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
-                                            <span style={{ width: "24px", height: "24px", minWidth: "24px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontWeight: "800", border: "1px solid #bfdbfe" }}>
-                                              {tk.consultant ? tk.consultant[0] : "C"}
-                                            </span>
-                                            <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: "0.8rem" }}>{tk.consultant || "Unassigned"}</span>
-                                          </div>
-
-                                          <div style={{ color: "#475569", fontSize: "0.78rem", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
-                                            {tk.dates || (tk.startDate ? `${tk.startDate} - ${tk.endDate || ""}` : "Scheduled")}
-                                          </div>
-
-                                          <div style={{ color: "#0f172a", fontSize: "0.78rem", fontWeight: "700" }}>
-                                            <span style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
-                                              {tk.durationDays ? `${tk.durationDays} Days` : "—"}
-                                            </span>
-                                            <span style={{ fontSize: "0.68rem", color: "#64748b", display: "block", fontWeight: "500", marginTop: "2px" }}>{tk.durationWeeks || ""}</span>
-                                          </div>
-
-                                          <div>
-                                            <span
-                                              onClick={(e) => handleQuickToggleTaskStatus(tk, e)}
-                                              style={{
-                                                background: tk.status === "Completed" ? "#dcfce7" : tk.status === "In Progress" ? "#eff6ff" : "#fff7ed",
-                                                color: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706",
-                                                border: `1px solid ${tk.status === "Completed" ? "#bbf7d0" : tk.status === "In Progress" ? "#bfdbfe" : "#fed7aa"}`,
-                                                padding: "3px 8px", borderRadius: "10px", fontSize: "0.72rem", fontWeight: "800", cursor: "pointer",
-                                                display: "inline-flex", alignItems: "center", gap: "4px"
-                                              }}
-                                              title="Click to toggle status"
-                                            >
-                                              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706" }} />
-                                              {tk.status || "Scheduled"}
-                                            </span>
-                                          </div>
-                                          
-                                          {/* Gantt Timeline Bar Canvas Column (Wrike Interactive Visualizer) */}
-                                          <div style={{ position: "relative", height: "28px", background: "#f8fafc", borderRadius: "6px", borderLeft: "1px solid #cbd5e1", overflow: "visible" }}>
-                                            
-                                            {/* Guidelines based on zoom */}
-                                            <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: timelineZoom === "weeks" ? "repeat(12, 1fr)" : timelineZoom === "days" ? "repeat(15, 1fr)" : "repeat(4, 1fr)", pointerEvents: "none" }}>
-                                              {Array.from({ length: timelineZoom === "weeks" ? 12 : timelineZoom === "days" ? 15 : 4 }).map((_, gi) => (
-                                                <div key={gi} style={{ borderRight: "1px dashed #e2e8f0" }} />
-                                              ))}
-                                            </div>
-
-                                            {/* Today Indicator Line (Current calendar marker) */}
-                                            <div
-                                              style={{
-                                                position: "absolute",
-                                                left: "18%",
-                                                top: 0,
-                                                bottom: 0,
-                                                width: "2px",
-                                                background: "#ef4444",
-                                                zIndex: 2,
-                                                pointerEvents: "none"
-                                              }}
-                                              title="Today"
-                                            />
-
-                                            {/* Task Bar with Gradient, Progress Fill, and Drag/Hover Interactive States */}
                                             <div
                                               onClick={() => handleOpenEditTask(tk)}
-                                              style={{
-                                                position: "absolute",
-                                                left: tk.barLeft || "5%",
-                                                width: tk.barWidth || "22%",
-                                                top: "3px",
-                                                bottom: "3px",
-                                                background: `linear-gradient(135deg, ${phaseGroup.color}, ${phaseGroup.color}dd)`,
-                                                borderRadius: "6px",
-                                                boxShadow: isHovered ? `0 4px 12px ${phaseGroup.color}60` : `0 2px 6px ${phaseGroup.color}35`,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "space-between",
-                                                padding: "0 8px",
-                                                color: "#ffffff",
-                                                fontSize: "0.7rem",
-                                                fontWeight: "800",
-                                                whiteSpace: "nowrap",
-                                                overflow: "hidden",
-                                                zIndex: 3,
-                                                cursor: "pointer",
-                                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                                transform: isHovered ? "scaleY(1.08)" : "scaleY(1)"
-                                              }}
+                                              style={{ fontWeight: "700", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", paddingRight: "6px", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                                              title={`${tk.title} (Click to edit)`}
                                             >
-                                              <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-                                                {tk.title}
-                                              </span>
-                                              <span style={{ fontSize: "0.68rem", opacity: 0.9, fontWeight: "800", marginLeft: "4px" }}>
-                                                {tk.progress || 0}%
-                                              </span>
+                                              {isMilestone && <span style={{ color: "#d97706", fontSize: "0.75rem" }}>◆</span>}
+                                              <span>{tk.title}</span>
                                             </div>
 
-                                            {/* Wrike-Style Floating Hover Tooltip Card */}
-                                            {isHovered && (
+                                            <div style={{ color: "#2563eb", fontWeight: "600", display: "flex", alignItems: "center", gap: "6px", overflow: "hidden" }}>
+                                              <span style={{ width: "22px", height: "22px", minWidth: "22px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.68rem", fontWeight: "800", border: "1px solid #bfdbfe" }}>
+                                                {tk.consultant ? tk.consultant[0] : "C"}
+                                              </span>
+                                              <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", fontSize: "0.78rem" }}>{tk.consultant || "Unassigned"}</span>
+                                            </div>
+
+                                            <div style={{ color: "#475569", fontSize: "0.76rem", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/></svg>
+                                              {tk.dates || (tk.startDate ? `${formatGanttDate(tk.startDate)} - ${formatGanttDate(tk.endDate)}` : "Scheduled")}
+                                            </div>
+
+                                            <div style={{ color: "#0f172a", fontSize: "0.76rem", fontWeight: "700" }}>
+                                              <span style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                                                {tk.durationDays ? `${tk.durationDays}d` : "—"}
+                                              </span>
+                                              <span style={{ fontSize: "0.66rem", color: "#64748b", display: "block", fontWeight: "500", marginTop: "1px" }}>{tk.durationWeeks || ""}</span>
+                                            </div>
+
+                                            <div style={{ textAlign: "center" }}>
+                                              <span
+                                                onClick={(e) => handleQuickToggleTaskStatus(tk, e)}
+                                                style={{
+                                                  background: tk.status === "Completed" ? "#dcfce7" : tk.status === "In Progress" ? "#eff6ff" : "#fff7ed",
+                                                  color: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706",
+                                                  border: `1px solid ${tk.status === "Completed" ? "#bbf7d0" : tk.status === "In Progress" ? "#bfdbfe" : "#fed7aa"}`,
+                                                  padding: "3px 8px", borderRadius: "10px", fontSize: "0.7rem", fontWeight: "800", cursor: "pointer",
+                                                  display: "inline-flex", alignItems: "center", gap: "4px"
+                                                }}
+                                                title="Click to toggle status"
+                                              >
+                                                <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: tk.status === "Completed" ? "#16a34a" : tk.status === "In Progress" ? "#2563eb" : "#d97706" }} />
+                                                {tk.status || "Scheduled"}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        );
+                                      })
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* ======================================================== */}
+                      {/* PARTITION 2 (RIGHT): INTERACTIVE GANTT TIMELINE CANVAS    */}
+                      {/* ======================================================== */}
+                      {(ganttSplitMode === "split" || ganttSplitMode === "ganttOnly") && (
+                        <div
+                          style={{
+                            flex: ganttSplitMode === "ganttOnly" ? "1 1 100%" : "1 1 480px",
+                            minWidth: "340px",
+                            background: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "14px",
+                            overflow: "hidden",
+                            boxShadow: "0 4px 14px rgba(0,0,0,0.03)",
+                            transition: "all 0.2s ease"
+                          }}
+                        >
+                          {/* Partition 2 Header Bar */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc", borderBottom: "2px solid #e2e8f0", padding: "12px 16px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <span style={{ fontSize: "0.95rem" }}>📊</span>
+                              <span style={{ fontSize: "0.82rem", fontWeight: "800", color: "#0f172a" }}>
+                                Gantt Schedule Roadmap
+                              </span>
+                            </div>
+
+                            <button
+                              onClick={() => setGanttSplitMode(ganttSplitMode === "ganttOnly" ? "split" : "tableOnly")}
+                              style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", padding: "4px 8px", fontSize: "0.72rem", fontWeight: "700", color: "#64748b", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                              title={ganttSplitMode === "ganttOnly" ? "Restore Split View" : "Collapse Gantt Roadmap"}
+                            >
+                              {ganttSplitMode === "ganttOnly" ? "⬌ Restore Split" : "Collapse ▶"}
+                            </button>
+                          </div>
+
+                          {/* Partition 2 Timeline Column Axis (Synchronized with zoom) */}
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 70px", background: "#f1f5f9", borderBottom: "1px solid #e2e8f0", padding: "10px 16px", fontWeight: "800", fontSize: "0.72rem", color: "#475569", alignItems: "center" }}>
+                            <div>
+                              {timelineZoom === "weeks" && (
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(12, 1fr)", textAlign: "center", fontSize: "0.7rem", fontWeight: "800", color: "#64748b" }}>
+                                  {["W1", "W2", "W3", "W4", "W5", "W6", "W7", "W8", "W9", "W10", "W11", "W12"].map((w, wi) => (
+                                    <span key={w} style={{ borderRight: wi < 11 ? "1px dashed #e2e8f0" : "none" }}>{w}</span>
+                                  ))}
+                                </div>
+                              )}
+                              {timelineZoom === "days" && (
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(15, 1fr)", textAlign: "center", fontSize: "0.65rem", fontWeight: "700", color: "#64748b" }}>
+                                  {Array.from({ length: 15 }).map((_, di) => (
+                                    <span key={di} style={{ borderRight: di < 14 ? "1px dashed #e2e8f0" : "none" }}>D{di*2 + 1}</span>
+                                  ))}
+                                </div>
+                              )}
+                              {timelineZoom === "months" && (
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", textAlign: "center", fontSize: "0.72rem", fontWeight: "800", color: "#2563eb" }}>
+                                  {["Month 1", "Month 2", "Month 3", "Month 4"].map((m, mi) => (
+                                    <span key={m} style={{ borderRight: mi < 3 ? "1px solid #cbd5e1" : "none" }}>{m}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ textAlign: "center" }}>ACTIONS</div>
+                          </div>
+
+                          {/* Partition 2 Timeline Rows Grouped by Phase */}
+                          {projectPhaseGroups.map(phaseGroup => {
+                            const isCollapsed = !!collapsedPhases[phaseGroup.id || phaseGroup.num];
+
+                            return (
+                              <div key={phaseGroup.id || phaseGroup.num}>
+                                
+                                {/* Phase Header Canvas Bar */}
+                                <div
+                                  style={{
+                                    background: phaseGroup.bg || `${phaseGroup.color}12`,
+                                    padding: "10px 16px",
+                                    borderBottom: "1px solid #e2e8f0",
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    height: "45px",
+                                    boxSizing: "border-box"
+                                  }}
+                                >
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: phaseGroup.color }} />
+                                    <span style={{ fontSize: "0.78rem", fontWeight: "800", color: phaseGroup.color }}>
+                                      {phaseGroup.name} Timeline
+                                    </span>
+                                  </div>
+
+                                  <button
+                                    onClick={() => handleOpenCreateTask(phaseGroup.num)}
+                                    style={{
+                                      background: "#ffffff",
+                                      border: `1px solid ${phaseGroup.color}50`,
+                                      color: phaseGroup.color,
+                                      padding: "3px 10px",
+                                      borderRadius: "6px",
+                                      fontSize: "0.72rem",
+                                      fontWeight: "800",
+                                      cursor: "pointer",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "4px"
+                                    }}
+                                  >
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    Add Task
+                                  </button>
+                                </div>
+
+                                {/* Tasks Gantt Bars Rows */}
+                                {!isCollapsed && (
+                                  <>
+                                    {phaseGroup.tasks.length === 0 ? (
+                                      <div style={{ padding: "14px 16px", fontSize: "0.8rem", color: "#94a3b8", fontStyle: "italic", borderBottom: "1px solid #f1f5f9" }}>
+                                        No tasks scheduled yet.
+                                      </div>
+                                    ) : (
+                                      phaseGroup.tasks.map((tk, tIndex) => {
+                                        const isHovered = hoveredGanttTask?.id === tk.id;
+
+                                        return (
+                                          <div
+                                            key={tk.id || tIndex}
+                                            style={{
+                                              display: "grid",
+                                              gridTemplateColumns: "1fr 70px",
+                                              alignItems: "center",
+                                              padding: "10px 16px",
+                                              borderBottom: "1px solid #f1f5f9",
+                                              background: isHovered ? "#f8fafc" : "#ffffff",
+                                              transition: "background 0.15s",
+                                              height: "45px",
+                                              boxSizing: "border-box"
+                                            }}
+                                            onMouseEnter={() => setHoveredGanttTask(tk)}
+                                            onMouseLeave={() => setHoveredGanttTask(null)}
+                                          >
+                                            {/* Gantt Bar Visualizer */}
+                                            <div style={{ position: "relative", height: "26px", background: "#f8fafc", borderRadius: "6px", border: "1px solid #e2e8f0", overflow: "visible" }}>
+                                              {/* Grid guidelines */}
+                                              <div style={{ position: "absolute", inset: 0, display: "grid", gridTemplateColumns: timelineZoom === "weeks" ? "repeat(12, 1fr)" : timelineZoom === "days" ? "repeat(15, 1fr)" : "repeat(4, 1fr)", pointerEvents: "none" }}>
+                                                {Array.from({ length: timelineZoom === "weeks" ? 12 : timelineZoom === "days" ? 15 : 4 }).map((_, gi) => (
+                                                  <div key={gi} style={{ borderRight: "1px dashed #e2e8f0" }} />
+                                                ))}
+                                              </div>
+
+                                              {/* Today line */}
+                                              <div style={{ position: "absolute", left: "18%", top: 0, bottom: 0, width: "2px", background: "#ef4444", zIndex: 2, pointerEvents: "none" }} />
+
+                                              {/* Colored Gantt bar */}
                                               <div
+                                                onClick={() => handleOpenEditTask(tk)}
                                                 style={{
                                                   position: "absolute",
                                                   left: tk.barLeft || "5%",
-                                                  top: "-95px",
-                                                  background: "#0f172a",
+                                                  width: tk.barWidth || "22%",
+                                                  top: "3px",
+                                                  bottom: "3px",
+                                                  background: `linear-gradient(135deg, ${phaseGroup.color}, ${phaseGroup.color}dd)`,
+                                                  borderRadius: "6px",
+                                                  boxShadow: isHovered ? `0 4px 12px ${phaseGroup.color}60` : `0 2px 6px ${phaseGroup.color}35`,
+                                                  display: "flex",
+                                                  alignItems: "center",
+                                                  justifyContent: "space-between",
+                                                  padding: "0 8px",
                                                   color: "#ffffff",
-                                                  padding: "10px 14px",
-                                                  borderRadius: "10px",
-                                                  boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
-                                                  zIndex: 9999,
-                                                  minWidth: "220px",
-                                                  pointerEvents: "auto",
-                                                  animation: "fadeIn 0.15s ease"
+                                                  fontSize: "0.7rem",
+                                                  fontWeight: "800",
+                                                  whiteSpace: "nowrap",
+                                                  overflow: "hidden",
+                                                  zIndex: 3,
+                                                  cursor: "pointer",
+                                                  transition: "all 0.2s ease",
+                                                  transform: isHovered ? "scaleY(1.08)" : "scaleY(1)"
                                                 }}
                                               >
-                                                <div style={{ fontSize: "0.72rem", fontWeight: "800", color: "#38bdf8", textTransform: "uppercase" }}>
-                                                  {phaseGroup.fullName || `Phase ${phaseGroup.num}`}
-                                                </div>
-                                                <div style={{ fontSize: "0.85rem", fontWeight: "800", margin: "2px 0 4px 0" }}>
+                                                <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
                                                   {tk.title}
-                                                </div>
-                                                <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
-                                                  👤 {tk.consultant || "Unassigned"} • 📅 {tk.dates || tk.startDate || "Scheduled"} ({tk.durationDays || 0}d)
-                                                </div>
-                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px", borderTop: "1px solid #334155", paddingTop: "6px" }}>
-                                                  <span style={{ fontSize: "0.72rem", color: "#a7f3d0", fontWeight: "700" }}>● {tk.status} ({tk.progress || 0}%)</span>
-                                                  <span style={{ fontSize: "0.7rem", color: "#38bdf8", cursor: "pointer", fontWeight: "700" }}>Click to Edit ✏️</span>
-                                                </div>
+                                                </span>
+                                                <span style={{ fontSize: "0.68rem", opacity: 0.9, fontWeight: "800", marginLeft: "4px" }}>
+                                                  {tk.progress || 0}%
+                                                </span>
                                               </div>
-                                            )}
 
+                                              {/* Floating Preview Card on Hover */}
+                                              {isHovered && (
+                                                <div
+                                                  style={{
+                                                    position: "absolute",
+                                                    left: tk.barLeft || "5%",
+                                                    top: "-95px",
+                                                    background: "#0f172a",
+                                                    color: "#ffffff",
+                                                    padding: "10px 14px",
+                                                    borderRadius: "10px",
+                                                    boxShadow: "0 10px 25px rgba(0,0,0,0.3)",
+                                                    zIndex: 9999,
+                                                    minWidth: "220px",
+                                                    pointerEvents: "auto"
+                                                  }}
+                                                >
+                                                  <div style={{ fontSize: "0.72rem", fontWeight: "800", color: "#38bdf8", textTransform: "uppercase" }}>
+                                                    {phaseGroup.fullName || `Phase ${phaseGroup.num}`}
+                                                  </div>
+                                                  <div style={{ fontSize: "0.85rem", fontWeight: "800", margin: "2px 0 4px 0" }}>
+                                                    {tk.title}
+                                                  </div>
+                                                  <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
+                                                    👤 {tk.consultant || "Unassigned"} • 📅 {tk.dates || tk.startDate || "Scheduled"} ({tk.durationDays || 0}d)
+                                                  </div>
+                                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "8px", borderTop: "1px solid #334155", paddingTop: "6px" }}>
+                                                    <span style={{ fontSize: "0.72rem", color: "#a7f3d0", fontWeight: "700" }}>● {tk.status} ({tk.progress || 0}%)</span>
+                                                    <span style={{ fontSize: "0.7rem", color: "#38bdf8", cursor: "pointer", fontWeight: "700" }}>Click to Edit ✏️</span>
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+
+                                            {/* Actions Column */}
+                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "5px" }}>
+                                              <button
+                                                onClick={() => handleOpenEditTask(tk)}
+                                                style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b" }}
+                                                title="Edit Task"
+                                              >
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                              </button>
+                                              <button
+                                                onClick={(e) => handleDeletePhaseTask(tk.id, e)}
+                                                style={{ background: "#ffffff", border: "1px solid #fecaca", borderRadius: "6px", width: "24px", height: "24px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#ef4444" }}
+                                                title="Delete Task"
+                                              >
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                              </button>
+                                            </div>
                                           </div>
+                                        );
+                                      })
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
 
-                                          {/* Actions Column */}
-                                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                                            <button
-                                              onClick={() => handleOpenEditTask(tk)}
-                                              style={{ background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "6px", width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#64748b", transition: "all 0.15s" }}
-                                              title="Edit Task"
-                                            >
-                                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                                            </button>
-                                            <button
-                                              onClick={(e) => handleDeletePhaseTask(tk.id, e)}
-                                              style={{ background: "#ffffff", border: "1px solid #fecaca", borderRadius: "6px", width: "26px", height: "26px", display: "inline-flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#ef4444", transition: "all 0.15s" }}
-                                              title="Delete Task"
-                                            >
-                                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                            </button>
-                                          </div>
-                                        </div>
-                                      );
-                                    })
-                                  )}
-                                </>
-                              )}
+                    </div>
 
-                            </div>
-                          );
-                        })}
-
-                      </div>
-
-                      {/* BOTTOM ADD NEW PHASE ACTION CARD */}
-                      <button
-                        onClick={handleOpenAddPhase}
-                        style={{
-                          width: "100%",
-                          padding: "16px 20px",
-                          background: "#ffffff",
-                          border: "2px dashed #93c5fd",
-                          borderRadius: "12px",
-                          color: "#2563eb",
-                          fontWeight: "800",
-                          fontSize: "0.9rem",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: "10px",
-                          transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                          boxShadow: "0 2px 8px rgba(37,99,235,0.04)"
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = "#eff6ff";
-                          e.currentTarget.style.borderColor = "#2563eb";
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = "#ffffff";
-                          e.currentTarget.style.borderColor = "#93c5fd";
-                          e.currentTarget.style.transform = "translateY(0)";
-                        }}
-                      >
-                        <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "inline-flex", alignItems: "center", justifyContent: "center", border: "1px solid #bfdbfe" }}>
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        </span>
-                        <span>+ Add New Implementation Phase (Phase {projectPhaseGroups.length + 1})</span>
-                      </button>
-                    </>
-                  )}
-                </div>
-
+                    {/* BOTTOM ADD NEW PHASE ACTION CARD */}
+                    <button
+                      onClick={handleOpenAddPhase}
+                      style={{
+                        width: "100%",
+                        padding: "16px 20px",
+                        background: "#ffffff",
+                        border: "2px dashed #93c5fd",
+                        borderRadius: "12px",
+                        color: "#2563eb",
+                        fontWeight: "800",
+                        fontSize: "0.9rem",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: "10px",
+                        transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                        boxShadow: "0 2px 8px rgba(37,99,235,0.04)"
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.background = "#eff6ff";
+                        e.currentTarget.style.borderColor = "#2563eb";
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.background = "#ffffff";
+                        e.currentTarget.style.borderColor = "#93c5fd";
+                        e.currentTarget.style.transform = "translateY(0)";
+                      }}
+                    >
+                      <span style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#eff6ff", color: "#2563eb", display: "inline-flex", alignItems: "center", justifyContent: "center", border: "1px solid #bfdbfe" }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      </span>
+                      <span>+ Add New Implementation Phase (Phase {projectPhaseGroups.length + 1})</span>
+                    </button>
+                  </>
+                )}
               </div>
             )}
 

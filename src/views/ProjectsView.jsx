@@ -2483,16 +2483,18 @@ export default function ProjectsView() {
                       </thead>
                       <tbody>
                         {(bizDetails.staffMembers && bizDetails.staffMembers.length > 0 ? bizDetails.staffMembers : [
-                          { name: effectiveProject.pocName || "Store Director", designation: "Managing Director / POC", contact: effectiveProject.pocContact || "—" }
+                          { name: effectiveProject.pocName || "—", designation: effectiveProject.pocName ? "Managing Director / POC" : "—", contact: effectiveProject.pocContact || "—" }
                         ]).map((s, sIdx) => (
                           <tr key={sIdx} style={{ borderBottom: "1px solid #f1f5f9" }}>
                             <td style={{ padding: "8px", fontWeight: "700", color: "#0f172a" }}>{s.name}</td>
-                            <td style={{ padding: "8px", color: "#2563eb", fontWeight: "600" }}>{s.designation}</td>
+                            <td style={{ padding: "8px", color: s.designation !== "—" ? "#2563eb" : "#64748b", fontWeight: "600" }}>{s.designation}</td>
                             <td style={{ padding: "8px", color: "#475569", display: "flex", alignItems: "center", gap: "6px" }}>
-                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                              </svg>
-                              {s.contact || "—"}
+                              {s.contact !== "—" && (
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                                </svg>
+                              )}
+                              {s.contact}
                             </td>
                           </tr>
                         ))}
@@ -2506,10 +2508,10 @@ export default function ProjectsView() {
                       Engagement Purpose & Primary Operational Challenges
                     </h4>
                     <p style={{ margin: "0 0 10px 0", fontSize: "0.88rem", color: "#1e40af", lineHeight: "1.5" }}>
-                      {bizDetails.purposeOfApproach || effectiveProject.engagementPurpose || "Client approached for consulting advisory, stock reconciliation, and retail growth."}
+                      {bizDetails.purposeOfApproach || effectiveProject.engagementPurpose || effectiveProject.description || "—"}
                     </p>
-                    <p style={{ margin: 0, fontSize: "0.85rem", color: "#1e3a8a", fontStyle: "italic" }}>
-                      "Challenge: {bizDetails.primaryChallenge || "Describe how metal weight variance, inventory reconciliation, or sales tracking issues affect daily workflow..."}"
+                    <p style={{ margin: 0, fontSize: "0.85rem", color: "#1e3a8a", fontStyle: bizDetails.primaryChallenge ? "italic" : "normal" }}>
+                      <strong>Challenge:</strong> {bizDetails.primaryChallenge ? `"${bizDetails.primaryChallenge}"` : "—"}
                     </p>
                   </div>
                 </div>

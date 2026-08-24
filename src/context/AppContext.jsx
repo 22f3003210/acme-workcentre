@@ -1777,7 +1777,7 @@ export const AppProvider = ({ children }) => {
       spent: 0,
       discussions: [],
       assignedConsultants: [],
-      engagementPurpose: projectData.description || "Client requested consulting advisory for store operations, inventory audit, and retail growth.",
+      engagementPurpose: projectData.description || "",
       checklists: [
         {
           category: "📦 Inventory Audit Checklist",

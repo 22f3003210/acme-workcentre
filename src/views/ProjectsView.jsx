@@ -6214,8 +6214,9 @@ export default function ProjectsView() {
                                       {disc.authorRole || "Consultant"}
                                     </span>
                                   </div>
-                                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "2px" }}>
-                                    📅 {disc.formattedDate || (disc.date ? new Date(disc.date).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Recently logged")}
+                                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "3px", display: "flex", alignItems: "center", gap: "4px" }}>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                    <span>{disc.formattedDate || (disc.date ? new Date(disc.date).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Recently logged")}</span>
                                   </div>
                                 </div>
                               </div>
@@ -6224,13 +6225,23 @@ export default function ProjectsView() {
                               <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                                 {isPinned && (
                                   <span style={{ background: "#fef3c7", color: "#b45309", border: "1px solid #fde68a", fontSize: "0.72rem", fontWeight: "800", padding: "2px 8px", borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                                    📌 PINNED
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="#b45309" stroke="#b45309" strokeWidth="1.5"><polygon points="12 2 15 8 22 9 17 14 18 21 12 17 6 21 7 14 2 9 9 8 12 2"/></svg>
+                                    PINNED
                                   </span>
                                 )}
 
-                                {/* Discussion Type Badge */}
-                                <span style={{ background: typeCfg.bg, color: typeCfg.color, border: `1px solid ${typeCfg.border}`, fontSize: "0.72rem", fontWeight: "800", padding: "2px 8px", borderRadius: "6px" }}>
-                                  {typeCfg.icon} {typeCfg.label}
+                                {/* Discussion Type Badge with Vector SVG Icon */}
+                                <span style={{ background: typeCfg.bg, color: typeCfg.color, border: `1px solid ${typeCfg.border}`, fontSize: "0.74rem", fontWeight: "700", padding: "3px 10px", borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                  {disc.discussionType === "General" || !disc.discussionType ? (
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                                  ) : disc.discussionType === "Audit Note" ? (
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="m9 11 2 2 4-4"/></svg>
+                                  ) : disc.discussionType === "Strategy" ? (
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m16.24 7.76-2.12 6.36-6.36 2.12 2.12-6.36z"/></svg>
+                                  ) : (
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                  )}
+                                  <span>{typeCfg.label}</span>
                                 </span>
 
                                 {/* Priority Badge if not normal */}
@@ -6243,28 +6254,75 @@ export default function ProjectsView() {
                                 {/* Pin / Unpin Button */}
                                 <button
                                   onClick={() => handleTogglePin(disc.id, isPinned)}
-                                  style={{ background: "none", border: "none", cursor: "pointer", color: isPinned ? "#f59e0b" : "#94a3b8", fontSize: "0.95rem", padding: "4px" }}
+                                  style={{
+                                    background: isPinned ? "#fef3c7" : "#f8fafc",
+                                    border: isPinned ? "1px solid #fde68a" : "1px solid #e2e8f0",
+                                    cursor: "pointer",
+                                    color: isPinned ? "#d97706" : "#64748b",
+                                    borderRadius: "6px",
+                                    width: "28px",
+                                    height: "28px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    transition: "all 0.15s ease"
+                                  }}
                                   title={isPinned ? "Unpin note" : "Pin to top"}
                                 >
-                                  📌
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill={isPinned ? "#d97706" : "none"} stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="12" y1="17" x2="12" y2="22"/>
+                                    <path d="M5 17h14v-2l-2-2V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v8l-2 2v2z"/>
+                                  </svg>
                                 </button>
 
                                 {/* Copy Button */}
                                 <button
                                   onClick={() => handleCopyDiscussion(disc)}
-                                  style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem", padding: "4px" }}
+                                  style={{
+                                    background: "#f8fafc",
+                                    border: "1px solid #e2e8f0",
+                                    cursor: "pointer",
+                                    color: "#64748b",
+                                    borderRadius: "6px",
+                                    width: "28px",
+                                    height: "28px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    transition: "all 0.15s ease"
+                                  }}
                                   title="Copy text to clipboard"
                                 >
-                                  📋
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                                  </svg>
                                 </button>
 
                                 {/* Delete Button */}
                                 <button
                                   onClick={() => handleDeleteDiscussion(disc.id)}
-                                  style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: "0.9rem", padding: "4px" }}
+                                  style={{
+                                    background: "#fef2f2",
+                                    border: "1px solid #fecaca",
+                                    cursor: "pointer",
+                                    color: "#ef4444",
+                                    borderRadius: "6px",
+                                    width: "28px",
+                                    height: "28px",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    transition: "all 0.15s ease"
+                                  }}
                                   title="Delete note"
                                 >
-                                  🗑️
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="3 6 5 6 21 6"/>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    <line x1="10" y1="11" x2="10" y2="17"/>
+                                    <line x1="14" y1="11" x2="14" y2="17"/>
+                                  </svg>
                                 </button>
                               </div>
                             </div>
@@ -6273,7 +6331,8 @@ export default function ProjectsView() {
                             {disc.category && (
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                 <span style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe", padding: "3px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                                  <span>🏷️ {disc.category}</span>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></svg>
+                                  <span>{disc.category}</span>
                                   {disc.subCategory && (
                                     <>
                                       <span style={{ color: "#a78bfa" }}>❯</span>
@@ -6302,7 +6361,7 @@ export default function ProjectsView() {
                             {disc.audioUrl && (
                               <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
                                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                  <span style={{ fontSize: "1.1rem" }}>🎙️</span>
+                                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
                                   <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "#1e293b" }}>{disc.audioName || "Voice Note"}</span>
                                 </div>
                                 <audio controls src={disc.audioUrl} style={{ height: "34px", flex: 1, minWidth: "220px" }} />
@@ -6312,8 +6371,9 @@ export default function ProjectsView() {
                             {/* Attachments List Feed Component */}
                             {disc.attachments && disc.attachments.length > 0 && (
                               <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px" }}>
-                                <div style={{ fontSize: "0.74rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>
-                                  📎 Attached Files ({disc.attachments.length}):
+                                <div style={{ fontSize: "0.74rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase", display: "flex", alignItems: "center", gap: "5px" }}>
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                                  <span>Attached Files ({disc.attachments.length}):</span>
                                 </div>
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                                   {disc.attachments.map(att => (
@@ -6337,10 +6397,16 @@ export default function ProjectsView() {
                                         fontWeight: "600"
                                       }}
                                     >
-                                      <span>{att.type && att.type.startsWith("image/") ? "🖼️" : att.name.endsWith(".pdf") ? "📄" : "📁"}</span>
+                                      {att.type && att.type.startsWith("image/") ? (
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                      ) : att.name && att.name.endsWith(".pdf") ? (
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                                      ) : (
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                                      )}
                                       <span>{att.name}</span>
                                       {att.size && <span style={{ color: "#64748b", fontSize: "0.7rem" }}>({Math.round(att.size / 1024)} KB)</span>}
-                                      <span style={{ fontSize: "0.75rem" }}>⬇️</span>
+                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                                     </a>
                                   ))}
                                 </div>

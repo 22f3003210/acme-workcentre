@@ -196,6 +196,7 @@ ALTER TABLE public.projects
   ADD COLUMN IF NOT EXISTS pre_audit_data JSONB DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS project_plan JSONB DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS meta_lead_data JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS business_details JSONB DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS discussions JSONB DEFAULT '[]'::jsonb,
   ADD COLUMN IF NOT EXISTS locations_registry JSONB DEFAULT '[]'::jsonb;
 
@@ -207,18 +208,31 @@ CREATE TABLE IF NOT EXISTS public.project_discussions (
     author_name TEXT NOT NULL,
     author_role TEXT,
     author_avatar TEXT,
-    title TEXT NOT NULL,
-    notes TEXT NOT NULL,
+    title TEXT,
+    notes TEXT,
     discussion_type TEXT NOT NULL DEFAULT 'General', -- 'General', 'Strategy', 'Audit Note', 'Action Item'
     category TEXT, -- 'Marketing', 'Sales & Showroom', 'Inventory & Merchandising', etc.
     sub_category TEXT, -- 'Offer Planning', etc.
     action_items JSONB DEFAULT '[]'::jsonb,
+    audio_url TEXT,
+    audio_name TEXT,
+    attachments JSONB DEFAULT '[]'::jsonb,
     is_pinned BOOLEAN DEFAULT false,
     date TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
+ALTER TABLE public.project_discussions 
+  ADD COLUMN IF NOT EXISTS audio_url TEXT,
+  ADD COLUMN IF NOT EXISTS audio_name TEXT,
+  ADD COLUMN IF NOT EXISTS attachments JSONB DEFAULT '[]'::jsonb;
+
 ALTER TABLE public.project_discussions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow public read project_discussions" ON public.project_discussions;
+DROP POLICY IF EXISTS "Allow public insert project_discussions" ON public.project_discussions;
+DROP POLICY IF EXISTS "Allow public update project_discussions" ON public.project_discussions;
+DROP POLICY IF EXISTS "Allow public delete project_discussions" ON public.project_discussions;
+
 CREATE POLICY "Allow public read project_discussions" ON public.project_discussions FOR SELECT USING (true);
 CREATE POLICY "Allow public insert project_discussions" ON public.project_discussions FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow public update project_discussions" ON public.project_discussions FOR UPDATE USING (true);

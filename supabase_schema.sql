@@ -181,6 +181,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
     client_visits JSONB,
     scheduled_events JSONB,
     discussions JSONB DEFAULT '[]'::jsonb,
+    locations_registry JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -195,7 +196,8 @@ ALTER TABLE public.projects
   ADD COLUMN IF NOT EXISTS pre_audit_data JSONB DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS project_plan JSONB DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS meta_lead_data JSONB DEFAULT '{}'::jsonb,
-  ADD COLUMN IF NOT EXISTS discussions JSONB DEFAULT '[]'::jsonb;
+  ADD COLUMN IF NOT EXISTS discussions JSONB DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS locations_registry JSONB DEFAULT '[]'::jsonb;
 
 -- 9. DEDICATED PROJECT DISCUSSIONS & STRATEGY LOGS TABLE
 CREATE TABLE IF NOT EXISTS public.project_discussions (

@@ -1164,6 +1164,158 @@ export default function ProjectsView() {
     }
   };
 
+  // Multi-Location GPS & Branch Management State
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [editingLocationId, setEditingLocationId] = useState(null);
+  const [locationFormTab, setLocationFormTab] = useState("search"); // 'search' | 'manual'
+  const [locationForm, setLocationForm] = useState({
+    name: "",
+    locationType: "Main Retail Showroom / Boutique",
+    customType: "",
+    address: "",
+    city: "",
+    state: "",
+    pincode: "",
+    lat: "",
+    lng: "",
+    contactPerson: "",
+    contactPhone: "",
+    isPrimaryAuditTarget: true,
+    notes: ""
+  });
+  const [locSearchQuery, setLocSearchQuery] = useState("");
+  const [locSuggestions, setLocSuggestions] = useState([]);
+  const [isSearchingLoc, setIsSearchingLoc] = useState(false);
+  const [locSearchDebounce, setLocSearchDebounce] = useState(null);
+
+  const LOCATION_TYPES_LIST = [
+    { id: "Head Office / Corporate HQ", label: "Head Office / Corporate HQ", icon: "🏢", color: "#2563eb", bg: "#eff6ff" },
+    { id: "Main Retail Showroom / Boutique", label: "Main Retail Showroom / Boutique", icon: "🛍️", color: "#7c3aed", bg: "#f5f3ff" },
+    { id: "Branch Showroom / Retail Outlet", label: "Branch Showroom / Retail Outlet", icon: "🏪", color: "#0284c7", bg: "#f0f9ff" },
+    { id: "Manufacturing Factory / Workshop (Karkhana)", label: "Manufacturing Factory / Workshop", icon: "🏭", color: "#d97706", bg: "#fffbeb" },
+    { id: "Back Office / Accounts & Admin Hub", label: "Back Office / Accounts & Admin Hub", icon: "💼", color: "#475569", bg: "#f1f5f9" },
+    { id: "Vault / Central Secure Storage Depot", label: "Vault / Central Secure Storage Depot", icon: "🔒", color: "#16a34a", bg: "#f0fdf4" },
+    { id: "Distribution & Logistics Hub", label: "Distribution & Logistics Hub", icon: "🚚", color: "#0891b2", bg: "#ecfeff" },
+    { id: "Custom", label: "Custom Location Type...", icon: "📍", color: "#e11d48", bg: "#fff1f2" }
+  ];
+
+  const handleOpenAddLocationModal = (existingLoc = null) => {
+    if (existingLoc) {
+      setEditingLocationId(existingLoc.id);
+      setLocationForm({
+        name: existingLoc.name || "",
+        locationType: existingLoc.locationType || "Main Retail Showroom / Boutique",
+        customType: existingLoc.customType || "",
+        address: existingLoc.address || "",
+        city: existingLoc.city || "",
+        state: existingLoc.state || "",
+        pincode: existingLoc.pincode || "",
+        lat: existingLoc.lat || "",
+        lng: existingLoc.lng || "",
+        contactPerson: existingLoc.contactPerson || "",
+        contactPhone: existingLoc.contactPhone || "",
+        isPrimaryAuditTarget: Boolean(existingLoc.isPrimaryAuditTarget),
+        notes: existingLoc.notes || ""
+      });
+    } else {
+      setEditingLocationId(null);
+      setLocationForm({
+        name: "",
+        locationType: "Main Retail Showroom / Boutique",
+        customType: "",
+        address: "",
+        city: "",
+        state: "",
+        pincode: "",
+        lat: "",
+        lng: "",
+        contactPerson: "",
+        contactPhone: "",
+        isPrimaryAuditTarget: false,
+        notes: ""
+      });
+    }
+    setLocSearchQuery("");
+    setLocSuggestions([]);
+    setShowLocationModal(true);
+  };
+
+  const handleSearchLocation = (query) => {
+    setLocSearchQuery(query);
+    if (locSearchDebounce) clearTimeout(locSearchDebounce);
+    if (!query || query.length < 2) {
+      setLocSuggestions([]);
+      return;
+    }
+    setIsSearchingLoc(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1`,
+          { headers: { "Accept-Language": "en" } }
+        );
+        if (res.ok) {
+          const results = await res.json();
+          setLocSuggestions(results || []);
+        }
+      } catch (err) {
+        console.warn("Location search error:", err);
+      } finally {
+        setIsSearchingLoc(false);
+      }
+    }, 350);
+    setLocSearchDebounce(timer);
+  };
+
+  const handleSelectLocationSuggestion = (sug) => {
+    const lat = parseFloat(sug.lat).toFixed(5);
+    const lng = parseFloat(sug.lon).toFixed(5);
+    const city = sug.address?.city || sug.address?.town || sug.address?.village || sug.address?.county || "";
+    const state = sug.address?.state || "";
+    const pincode = sug.address?.postcode || "";
+    const name = sug.name || sug.display_name.split(",")[0] || "";
+
+    setLocationForm(prev => ({
+      ...prev,
+      name: prev.name || name,
+      address: sug.display_name,
+      city,
+      state,
+      pincode,
+      lat: String(lat),
+      lng: String(lng)
+    }));
+    setLocSuggestions([]);
+    if (typeof setToast === "function") {
+      setToast({ message: `Fetched GPS: ${lat}° N, ${lng}° E`, type: "success" });
+    }
+  };
+
+  const handleDetectDeviceGPS = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude.toFixed(5);
+        const lng = pos.coords.longitude.toFixed(5);
+        setLocationForm(prev => ({
+          ...prev,
+          lat: String(lat),
+          lng: String(lng),
+          address: prev.address || `Device GPS Location (${lat}, ${lng})`
+        }));
+        if (typeof setToast === "function") {
+          setToast({ message: `Detected GPS: ${lat}° N, ${lng}° E`, type: "success" });
+        }
+      },
+      (err) => {
+        alert("Unable to retrieve your location: " + err.message);
+      }
+    );
+  };
+
   // Schedule Event Form State
   const [showEventModal, setShowEventModal] = useState(false);
   const [evtTitle, setEvtTitle] = useState("");
@@ -2721,51 +2873,191 @@ export default function ProjectsView() {
                       </p>
                     </div>
 
-                    {/* Store Location GPS Coordinates Card */}
-                    <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "16px", borderRadius: "10px", gridColumn: "span 3" }}>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                          <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                    {/* Multi-Location Physical Sites & GPS Registry Hub */}
+                    {(() => {
+                      const locationsList = (effectiveProject.locationsList && effectiveProject.locationsList.length > 0)
+                        ? effectiveProject.locationsList
+                        : (effectiveProject.businessDetails?.locationsList && effectiveProject.businessDetails.locationsList.length > 0)
+                        ? effectiveProject.businessDetails.locationsList
+                        : (effectiveProject.businessDetails?.headOfficeCoordinates?.lat
+                        ? [{
+                            id: "loc-primary",
+                            name: effectiveProject.businessDetails?.headOffice || effectiveProject.name || "Main Retail Boutique / HQ",
+                            locationType: "Main Retail Showroom / Boutique",
+                            address: effectiveProject.businessDetails?.headOfficeCoordinates?.address || effectiveProject.location || "",
+                            city: "",
+                            state: "",
+                            pincode: "",
+                            lat: effectiveProject.businessDetails.headOfficeCoordinates.lat,
+                            lng: effectiveProject.businessDetails.headOfficeCoordinates.lng,
+                            contactPerson: effectiveProject.pocName || "",
+                            contactPhone: effectiveProject.pocContact || "",
+                            isPrimaryAuditTarget: true
+                          }]
+                        : []);
+
+                      return (
+                        <div style={{ background: "#ffffff", border: "1.5px solid #bbf7d0", padding: "20px", borderRadius: "12px", gridColumn: "span 3", display: "flex", flexDirection: "column", gap: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                          
+                          {/* Header with Title & Add Location Button */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px", borderBottom: "1px solid #f0fdf4", paddingBottom: "12px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                              <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", color: "#16a34a" }}>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                              </div>
+                              <div>
+                                <h4 style={{ margin: 0, fontSize: "1.02rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                                  Physical Locations & GPS Registry ({locationsList.length})
+                                </h4>
+                                <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                                  Manage all Head Offices, Showrooms, Factories (Karkhana), Backoffices, and Storage Vaults with exact GPS coordinates.
+                                </p>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleOpenAddLocationModal()}
+                              style={{
+                                background: "linear-gradient(135deg, #059669 0%, #10b981 100%)",
+                                color: "#ffffff",
+                                border: "none",
+                                padding: "8px 18px",
+                                borderRadius: "8px",
+                                fontWeight: "800",
+                                fontSize: "0.82rem",
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                boxShadow: "0 2px 6px rgba(16, 185, 129, 0.25)"
+                              }}
+                            >
+                              <span>＋</span> Add Location / GPS Coordinates
+                            </button>
                           </div>
-                          <div>
-                            <span style={{ fontSize: "0.72rem", color: "#166534", fontWeight: "800", textTransform: "uppercase" }}>STORE LOCATION GPS COORDINATES (AUDIT TARGET)</span>
-                            <p style={{ margin: "2px 0 0 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
-                              {bizDetails.headOfficeCoordinates?.lat ? (
-                                <>
-                                  {bizDetails.headOfficeCoordinates.lat}° N, {bizDetails.headOfficeCoordinates.lng}° E
-                                  <span style={{ marginLeft: "10px", fontSize: "0.8rem", color: "#64748b", fontWeight: "600" }}>
-                                    ({bizDetails.headOfficeCoordinates.address || bizDetails.headOffice || effectiveProject.location || "Store Location"})
-                                  </span>
-                                </>
-                              ) : (
-                                <span style={{ color: "#475569", fontSize: "0.88rem", fontWeight: "600" }}>
-                                  📍 {bizDetails.headOffice || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" && effectiveProject.location !== "On-site" ? effectiveProject.location : "") || "—"}
-                                </span>
-                              )}
-                            </p>
-                          </div>
+
+                          {/* Locations Cards Grid */}
+                          {locationsList.length === 0 ? (
+                            <div style={{ background: "#f8fafc", border: "1.5px dashed #cbd5e1", borderRadius: "10px", padding: "28px 20px", textAlign: "center" }}>
+                              <p style={{ margin: "0 0 10px 0", fontSize: "0.88rem", color: "#64748b", fontWeight: "600" }}>
+                                📍 No physical locations or GPS coordinates added for this client yet.
+                              </p>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenAddLocationModal()}
+                                style={{ background: "#ffffff", color: "#16a34a", border: "1px solid #86efac", padding: "6px 16px", borderRadius: "6px", fontWeight: "800", fontSize: "0.8rem", cursor: "pointer" }}
+                              >
+                                ＋ Add First Location / GPS
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "14px" }}>
+                              {locationsList.map((loc, locIdx) => {
+                                const typeCfg = LOCATION_TYPES_LIST.find(t => t.id === loc.locationType) || LOCATION_TYPES_LIST[0];
+                                const hasCoords = Boolean(loc.lat && loc.lng);
+
+                                return (
+                                  <div
+                                    key={loc.id || locIdx}
+                                    style={{
+                                      background: "#f0fdf4",
+                                      border: loc.isPrimaryAuditTarget ? "2px solid #16a34a" : "1px solid #bbf7d0",
+                                      borderRadius: "10px",
+                                      padding: "16px",
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      justifyContent: "space-between",
+                                      gap: "10px",
+                                      position: "relative"
+                                    }}
+                                  >
+                                    <div>
+                                      {/* Type Badge + Primary Audit Tag */}
+                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px", flexWrap: "wrap", gap: "6px" }}>
+                                        <span style={{ background: typeCfg.bg, color: typeCfg.color, border: `1px solid ${typeCfg.color}30`, padding: "2px 8px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                          <span>{typeCfg.icon}</span>
+                                          <span>{loc.locationType === "Custom" ? (loc.customType || "Custom") : loc.locationType}</span>
+                                        </span>
+
+                                        {loc.isPrimaryAuditTarget && (
+                                          <span style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #86efac", padding: "2px 8px", borderRadius: "6px", fontSize: "0.68rem", fontWeight: "800", textTransform: "uppercase" }}>
+                                            🌟 Primary Audit Target
+                                          </span>
+                                        )}
+                                      </div>
+
+                                      {/* Location Name */}
+                                      <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
+                                        {loc.name || "Physical Site"}
+                                      </div>
+
+                                      {/* Address */}
+                                      <div style={{ fontSize: "0.8rem", color: "#475569", marginTop: "4px", lineHeight: "1.4" }}>
+                                        📍 {loc.address || "Address not provided"}
+                                        {loc.city && <span>, {loc.city}</span>}
+                                        {loc.state && <span> ({loc.state})</span>}
+                                        {loc.pincode && <span> - {loc.pincode}</span>}
+                                      </div>
+
+                                      {/* POC Contact if present */}
+                                      {loc.contactPerson && (
+                                        <div style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                          <span>👤 Incharge: <strong>{loc.contactPerson}</strong></span>
+                                          {loc.contactPhone && <span>• 📞 {loc.contactPhone}</span>}
+                                        </div>
+                                      )}
+                                    </div>
+
+                                    {/* GPS Coords + Map Link + Actions */}
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #dcfce7", paddingTop: "10px", marginTop: "4px", flexWrap: "wrap", gap: "8px" }}>
+                                      {hasCoords ? (
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                          <span style={{ fontSize: "0.75rem", fontWeight: "700", color: "#166534", fontFamily: "monospace" }}>
+                                            🌐 {loc.lat}° N, {loc.lng}° E
+                                          </span>
+                                          <a
+                                            href={`https://www.openstreetmap.org/?mlat=${loc.lat}&mlon=${loc.lng}#map=16/${loc.lat}/${loc.lng}`}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            style={{ background: "#ffffff", color: "#16a34a", border: "1px solid #86efac", padding: "3px 8px", borderRadius: "4px", fontWeight: "700", fontSize: "0.72rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                                          >
+                                            Map ↗
+                                          </a>
+                                        </div>
+                                      ) : (
+                                        <span style={{ fontSize: "0.72rem", color: "#94a3b8", fontStyle: "italic" }}>
+                                          No GPS coordinates
+                                        </span>
+                                      )}
+
+                                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleOpenAddLocationModal(loc)}
+                                          style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "3px 8px", borderRadius: "4px", fontSize: "0.72rem", fontWeight: "700", color: "#2563eb", cursor: "pointer" }}
+                                        >
+                                          Edit
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleDeleteLocation(loc.id)}
+                                          style={{ background: "#fee2e2", border: "none", padding: "3px 8px", borderRadius: "4px", fontSize: "0.72rem", fontWeight: "700", color: "#dc2626", cursor: "pointer" }}
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                    </div>
+
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
                         </div>
-                        {bizDetails.headOfficeCoordinates?.lat ? (
-                          <a
-                            href={`https://www.openstreetmap.org/?mlat=${bizDetails.headOfficeCoordinates.lat}&mlon=${bizDetails.headOfficeCoordinates.lng}#map=16/${bizDetails.headOfficeCoordinates.lat}/${bizDetails.headOfficeCoordinates.lng}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{ background: "#ffffff", color: "#16a34a", border: "1px solid #86efac", padding: "6px 14px", borderRadius: "6px", fontWeight: "800", fontSize: "0.78rem", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                            View Store on Map
-                          </a>
-                        ) : (
-                          <button
-                            onClick={handleStartEditBusiness}
-                            style={{ background: "#ffffff", color: "#16a34a", border: "1px solid #86efac", padding: "6px 14px", borderRadius: "6px", fontWeight: "800", fontSize: "0.78rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
-                          >
-                            ✏️ Add GPS Coordinates
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Staff Roster Table */}
@@ -4708,6 +5000,357 @@ export default function ProjectsView() {
               </div>
             )}
 
+            {/* Multi-Location & GPS Coordinates Add/Edit Modal */}
+            {showLocationModal && (
+              <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.65)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", backdropFilter: "blur(4px)" }}>
+                <div style={{ background: "#ffffff", borderRadius: "18px", width: "100%", maxWidth: "640px", maxHeight: "90vh", overflowY: "auto", padding: "28px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", display: "flex", flexDirection: "column", gap: "20px" }}>
+                  
+                  {/* Modal Header */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #e2e8f0", paddingBottom: "14px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: "#dcfce7", display: "flex", alignItems: "center", justifyContent: "center", color: "#16a34a" }}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                      </div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>
+                          {editingLocationId ? "Edit Physical Location & GPS" : "Add Physical Location & GPS Coordinates"}
+                        </h3>
+                        <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                          Client: <strong>{effectiveProject.name}</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowLocationModal(false)}
+                      style={{ background: "#f1f5f9", border: "none", width: "32px", height: "32px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveLocation} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                    
+                    {/* 1. Location Type Selector */}
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "6px" }}>
+                        LOCATION CLASSIFICATION / TYPE <span style={{ color: "#dc2626" }}>*</span>
+                      </label>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "8px" }}>
+                        {LOCATION_TYPES_LIST.map(t => {
+                          const isSelected = locationForm.locationType === t.id;
+                          return (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => setLocationForm({ ...locationForm, locationType: t.id })}
+                              style={{
+                                padding: "8px 12px",
+                                borderRadius: "8px",
+                                border: isSelected ? `2px solid ${t.color}` : "1px solid #e2e8f0",
+                                background: isSelected ? t.bg : "#ffffff",
+                                color: isSelected ? t.color : "#334155",
+                                fontWeight: isSelected ? "800" : "600",
+                                fontSize: "0.82rem",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                textAlign: "left",
+                                transition: "all 0.15s ease"
+                              }}
+                            >
+                              <span>{t.icon}</span>
+                              <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {locationForm.locationType === "Custom" && (
+                        <div style={{ marginTop: "8px" }}>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Design Studio / Hallmarking Centre / Warehouse"
+                            value={locationForm.customType}
+                            onChange={e => setLocationForm({ ...locationForm, customType: e.target.value })}
+                            style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 2. Location Name / Identifier */}
+                    <div>
+                      <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
+                        LOCATION NAME / IDENTIFIER <span style={{ color: "#dc2626" }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={locationForm.name}
+                        onChange={e => setLocationForm({ ...locationForm, name: e.target.value })}
+                        placeholder="e.g. Main Showroom - Banjara Hills OR Bowbazar Manufacturing Workshop"
+                        style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", fontWeight: "600", boxSizing: "border-box" }}
+                      />
+                    </div>
+
+                    {/* 3. Tabbed Address & GPS Input Methods */}
+                    <div style={{ border: "1px solid #e2e8f0", borderRadius: "10px", overflow: "hidden", background: "#f8fafc" }}>
+                      
+                      {/* Method Tabs */}
+                      <div style={{ display: "flex", borderBottom: "1px solid #e2e8f0", background: "#ffffff" }}>
+                        <button
+                          type="button"
+                          onClick={() => setLocationFormTab("search")}
+                          style={{
+                            flex: 1,
+                            padding: "10px",
+                            border: "none",
+                            borderBottom: locationFormTab === "search" ? "2px solid #2563eb" : "none",
+                            background: locationFormTab === "search" ? "#eff6ff" : "#ffffff",
+                            color: locationFormTab === "search" ? "#2563eb" : "#64748b",
+                            fontWeight: locationFormTab === "search" ? "800" : "600",
+                            fontSize: "0.82rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px"
+                          }}
+                        >
+                          <span>🔍 Live Map & Business Search</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setLocationFormTab("manual")}
+                          style={{
+                            flex: 1,
+                            padding: "10px",
+                            border: "none",
+                            borderBottom: locationFormTab === "manual" ? "2px solid #2563eb" : "none",
+                            background: locationFormTab === "manual" ? "#eff6ff" : "#ffffff",
+                            color: locationFormTab === "manual" ? "#2563eb" : "#64748b",
+                            fontWeight: locationFormTab === "manual" ? "800" : "600",
+                            fontSize: "0.82rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "6px"
+                          }}
+                        >
+                          <span>✍️ Manual Address & GPS Input</span>
+                        </button>
+                      </div>
+
+                      {/* Tab 1: Live Business & Map Search */}
+                      {locationFormTab === "search" && (
+                        <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                          <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155" }}>
+                            SEARCH BY BUSINESS NAME, STREET, OR LANDMARK:
+                          </label>
+                          <div style={{ position: "relative" }}>
+                            <input
+                              type="text"
+                              value={locSearchQuery}
+                              onChange={e => handleSearchLocation(e.target.value)}
+                              placeholder="e.g. Joyalukkas Banjara Hills Hyderabad or Zaveri Bazaar Mumbai..."
+                              style={{ width: "100%", padding: "10px 36px 10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", background: "#ffffff", boxSizing: "border-box" }}
+                            />
+                            <div style={{ position: "absolute", right: "12px", top: "10px", color: "#94a3b8" }}>
+                              {isSearchingLoc ? (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.5" style={{ animation: "spin 1s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+                              ) : (
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                              )}
+                            </div>
+
+                            {/* Search Suggestions Dropdown */}
+                            {locSuggestions.length > 0 && (
+                              <div style={{ position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", boxShadow: "0 10px 25px rgba(0,0,0,0.15)", zIndex: 100, maxHeight: "200px", overflowY: "auto" }}>
+                                {locSuggestions.map((sug, sIdx) => (
+                                  <div
+                                    key={sIdx}
+                                    onClick={() => handleSelectLocationSuggestion(sug)}
+                                    style={{ padding: "10px 14px", borderBottom: "1px solid #f1f5f9", cursor: "pointer", fontSize: "0.82rem", lineHeight: "1.4" }}
+                                    onMouseEnter={e => e.currentTarget.style.background = "#eff6ff"}
+                                    onMouseLeave={e => e.currentTarget.style.background = "#ffffff"}
+                                  >
+                                    <strong style={{ color: "#0f172a", display: "block" }}>{sug.name || sug.display_name.split(",")[0]}</strong>
+                                    <span style={{ color: "#64748b", fontSize: "0.75rem" }}>{sug.display_name}</span>
+                                    <div style={{ marginTop: "2px", fontSize: "0.72rem", color: "#16a34a", fontWeight: "700" }}>
+                                      🌐 {parseFloat(sug.lat).toFixed(4)}° N, {parseFloat(sug.lon).toFixed(4)}° E
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                            <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
+                              Or fetch GPS from your current device position:
+                            </span>
+                            <button
+                              type="button"
+                              onClick={handleDetectDeviceGPS}
+                              style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #86efac", padding: "5px 12px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
+                            >
+                              📍 Detect Current Device GPS
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Manual Address & Coords Form */}
+                      <div style={{ padding: "16px", display: "flex", flexDirection: "column", gap: "12px", borderTop: locationFormTab === "search" ? "1px solid #e2e8f0" : "none" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "4px" }}>
+                            FULL PHYSICAL ADDRESS
+                          </label>
+                          <textarea
+                            rows="2"
+                            value={locationForm.address}
+                            onChange={e => setLocationForm({ ...locationForm, address: e.target.value })}
+                            placeholder="Plot No., Street, Floor, Area / Landmark..."
+                            style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                          />
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "700", color: "#475569", marginBottom: "4px" }}>CITY</label>
+                            <input
+                              type="text"
+                              value={locationForm.city}
+                              onChange={e => setLocationForm({ ...locationForm, city: e.target.value })}
+                              placeholder="City"
+                              style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem", boxSizing: "border-box" }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "700", color: "#475569", marginBottom: "4px" }}>STATE</label>
+                            <input
+                              type="text"
+                              value={locationForm.state}
+                              onChange={e => setLocationForm({ ...locationForm, state: e.target.value })}
+                              placeholder="State"
+                              style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem", boxSizing: "border-box" }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "700", color: "#475569", marginBottom: "4px" }}>PINCODE</label>
+                            <input
+                              type="text"
+                              value={locationForm.pincode}
+                              onChange={e => setLocationForm({ ...locationForm, pincode: e.target.value })}
+                              placeholder="PIN Code"
+                              style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem", boxSizing: "border-box" }}
+                            />
+                          </div>
+                        </div>
+
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "700", color: "#166534", marginBottom: "4px" }}>
+                              LATITUDE (° N)
+                            </label>
+                            <input
+                              type="text"
+                              value={locationForm.lat}
+                              onChange={e => setLocationForm({ ...locationForm, lat: e.target.value })}
+                              placeholder="e.g. 17.41234"
+                              style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #86efac", background: "#f0fdf4", fontSize: "0.85rem", fontWeight: "700", color: "#166534", boxSizing: "border-box" }}
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.72rem", fontWeight: "700", color: "#166534", marginBottom: "4px" }}>
+                              LONGITUDE (° E)
+                            </label>
+                            <input
+                              type="text"
+                              value={locationForm.lng}
+                              onChange={e => setLocationForm({ ...locationForm, lng: e.target.value })}
+                              placeholder="e.g. 78.43210"
+                              style={{ width: "100%", padding: "7px 10px", borderRadius: "6px", border: "1px solid #86efac", background: "#f0fdf4", fontSize: "0.85rem", fontWeight: "700", color: "#166534", boxSizing: "border-box" }}
+                            />
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* 4. Site Incharge / Contact Details */}
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "4px" }}>
+                          BRANCH / FACTORY INCHARGE NAME
+                        </label>
+                        <input
+                          type="text"
+                          value={locationForm.contactPerson}
+                          onChange={e => setLocationForm({ ...locationForm, contactPerson: e.target.value })}
+                          placeholder="e.g. Ramesh Kumar (Store Mgr)"
+                          style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "4px" }}>
+                          CONTACT PHONE NUMBER
+                        </label>
+                        <input
+                          type="text"
+                          value={locationForm.contactPhone}
+                          onChange={e => setLocationForm({ ...locationForm, contactPhone: e.target.value })}
+                          placeholder="e.g. 9876543210"
+                          style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* 5. Primary Audit Target Checkbox */}
+                    <label style={{ display: "flex", alignItems: "center", gap: "10px", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "12px 14px", borderRadius: "8px", cursor: "pointer" }}>
+                      <input
+                        type="checkbox"
+                        checked={locationForm.isPrimaryAuditTarget}
+                        onChange={e => setLocationForm({ ...locationForm, isPrimaryAuditTarget: e.target.checked })}
+                        style={{ width: "18px", height: "18px", accentColor: "#16a34a", cursor: "pointer" }}
+                      />
+                      <div>
+                        <div style={{ fontSize: "0.85rem", fontWeight: "800", color: "#166534" }}>
+                          🌟 Set as Primary Audit Target Site
+                        </div>
+                        <div style={{ fontSize: "0.74rem", color: "#475569" }}>
+                          Consultants will use this site's coordinates for physical stock audits, visit itineraries, and distance tracking.
+                        </div>
+                      </div>
+                    </label>
+
+                    {/* Modal Buttons */}
+                    <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", borderTop: "1px solid #e2e8f0", paddingTop: "14px" }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowLocationModal(false)}
+                        style={{ background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", padding: "9px 18px", borderRadius: "8px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        style={{ background: "linear-gradient(135deg, #059669 0%, #10b981 100%)", color: "#ffffff", border: "none", padding: "9px 24px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 3px 8px rgba(16, 185, 129, 0.3)" }}
+                      >
+                        ✓ Save Location & GPS
+                      </button>
+                    </div>
+
+                  </form>
+
+                </div>
+              </div>
+            )}
+
             {activeProjectTab === "discussions" && (() => {
               const allDiscussions = effectiveProject.discussions || [];
 
@@ -5128,7 +5771,7 @@ export default function ProjectsView() {
                           { id: "Strategy", label: `🎯 Strategy (${stratCount})`, color: "#7c3aed" },
                           { id: "General", label: `💬 General (${genCount})`, color: "#2563eb" },
                           { id: "Audit Note", label: `🔍 Audit Notes (${auditNotesCount})`, color: "#0284c7" },
-                          { id: "Action Item", label: `⚡ Action Items (${actionCount})`, color: "#d97706" }
+                          { id: "Action Item", label: `⚡ Action Items (${actionItemsCount})`, color: "#d97706" }
                         ].map(t => {
                           const isSelected = discTypeFilter === t.id;
                           const color = t.color || "#4f46e5";

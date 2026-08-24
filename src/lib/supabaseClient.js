@@ -138,6 +138,9 @@ export const supabaseUpdateProject = async (projectId, updatedFields) => {
   if (updatedFields.discussions !== undefined) dbPayload.discussions = updatedFields.discussions;
   if (updatedFields.locations_registry !== undefined) dbPayload.locations_registry = updatedFields.locations_registry;
   if (updatedFields.locationsList !== undefined) dbPayload.locations_registry = updatedFields.locationsList;
+  if (updatedFields.auditPlanning !== undefined) dbPayload.audit_planning = updatedFields.auditPlanning;
+  if (updatedFields.auditChecklistFiles !== undefined) dbPayload.audit_checklist_files = updatedFields.auditChecklistFiles;
+  if (updatedFields.assignedAuditors !== undefined) dbPayload.assigned_auditors = updatedFields.assignedAuditors;
   if (updatedFields.phaseTasks !== undefined) {
     dbPayload.scheduled_events = updatedFields.phaseTasks;
   }

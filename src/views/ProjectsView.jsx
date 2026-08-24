@@ -4,6 +4,7 @@ import { useApp } from "../context/AppContext";
 import { initialProjects } from "../data/initialData";
 import logoImg from "../assets/logo.png";
 import InlineGMeetScheduler from "../components/InlineGMeetScheduler";
+import AuditChecklistAndVisitPlanner from "../components/AuditChecklistAndVisitPlanner";
 
 // Base64 / URL-safe encryption for Project IDs in URL routes
 const encryptProjectId = (id) => {
@@ -1024,7 +1025,10 @@ export default function ProjectsView() {
       checklists: proj.checklists || [],
       engagementPurpose: proj.engagementPurpose || proj.description || "",
       businessDetails: effectiveBizDetails,
-      auditReports: proj.auditReports || []
+      auditReports: proj.auditReports || [],
+      auditPlanning: proj.auditPlanning || proj.audit_planning || proj.businessDetails?.auditPlanning || {},
+      auditChecklistFiles: proj.auditChecklistFiles || proj.audit_checklist_files || proj.businessDetails?.auditChecklistFiles || [],
+      assignedAuditors: proj.assignedAuditors || proj.assigned_auditors || proj.businessDetails?.assignedAuditors || []
     };
   };
 
@@ -3585,7 +3589,7 @@ export default function ProjectsView() {
                           <path d="m9 14 2 2 4-4"/>
                         </svg>
                       ),
-                      badge: `${(effectiveProject.checklists || []).length || 8} items`
+                      badge: (effectiveProject.auditChecklistFiles || []).length > 0 ? `${(effectiveProject.auditChecklistFiles || []).length} files` : "Visit Setup"
                     },
                     {
                       id: "audit_report",
@@ -3816,79 +3820,13 @@ export default function ProjectsView() {
 
                 {/* ── SUB-TAB 2: INTERNAL AUDIT CHECKLIST & VISIT PLANNING ── */}
                 {auditSubTab === "internal_checklist" && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                    
-                    {/* Checklist Overview */}
-                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span>📋</span> Internal Audit Checklist Preparation
-                          </h3>
-                          <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
-                            Internal operational checklist items to be physically audited during the on-site jewellery boutique visit.
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Checklist items list */}
-                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                        {[
-                          { id: "chk-1", category: "Inventory & Stock", text: "Physical gross weight vs net weight tag verification for 22kt Gold", done: true },
-                          { id: "chk-2", category: "Inventory & Stock", text: "Solitaire and Diamond certificate verification (IGI / GIA numbers)", done: true },
-                          { id: "chk-3", category: "POS & Billing", text: "Daily sales register reconciliation with POS software transaction ledger", done: false },
-                          { id: "chk-4", category: "Store Ambience", text: "Lighting lumens & high-security display counter lock integrity check", done: true },
-                          { id: "chk-5", category: "Vault Protocols", text: "End-of-day tray counts and vault balance tally sheets audit", done: false },
-                          { id: "chk-6", category: "Staff & CRM", text: "Sales consultant conversion metrics and client appointment logbook", done: false }
-                        ].map(item => (
-                          <div key={item.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc", padding: "12px 16px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                              <input
-                                type="checkbox"
-                                defaultChecked={item.done}
-                                style={{ width: "18px", height: "18px", cursor: "pointer", accentColor: "#4f46e5" }}
-                              />
-                              <div>
-                                <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "#4f46e5", background: "#e0e7ff", padding: "2px 6px", borderRadius: "4px", textTransform: "uppercase" }}>{item.category}</span>
-                                <div style={{ fontSize: "0.88rem", fontWeight: "700", color: "#0f172a", marginTop: "2px" }}>{item.text}</div>
-                              </div>
-                            </div>
-                            <span style={{ fontSize: "0.78rem", color: item.done ? "#16a34a" : "#ea580c", fontWeight: "700" }}>
-                              {item.done ? "✓ Verified" : "⏳ To Audit"}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Visit Planning Card */}
-                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span>📍</span> On-Site Visit Planning & Logistics
-                      </h3>
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-                        <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800" }}>PLANNED AUDIT DATES</span>
-                          <p style={{ margin: "4px 0 0 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
-                            {effectiveProject.startDate || "2026-07-15"} to {effectiveProject.endDate || "2026-07-22"}
-                          </p>
-                        </div>
-                        <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800" }}>AUDIT CONSULTANT TEAM</span>
-                          <p style={{ margin: "4px 0 0 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
-                            {effectiveProject.assignedConsultantName || "Darla Manikanta"}
-                          </p>
-                        </div>
-                        <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-                          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800" }}>SITE LOCATION</span>
-                          <p style={{ margin: "4px 0 0 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
-                            {bizDetails.headOffice || effectiveProject.location || "Main Store HQ"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
+                  <AuditChecklistAndVisitPlanner
+                    project={effectiveProject}
+                    users={users}
+                    currentUser={currentUser}
+                    onUpdateProject={updateProject}
+                    setToast={setToast}
+                  />
                 )}
 
                 {/* ── SUB-TAB 3: AUDIT REPORT & SUBMISSION ── */}

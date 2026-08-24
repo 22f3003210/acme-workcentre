@@ -198,7 +198,10 @@ ALTER TABLE public.projects
   ADD COLUMN IF NOT EXISTS meta_lead_data JSONB DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS business_details JSONB DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS discussions JSONB DEFAULT '[]'::jsonb,
-  ADD COLUMN IF NOT EXISTS locations_registry JSONB DEFAULT '[]'::jsonb;
+  ADD COLUMN IF NOT EXISTS locations_registry JSONB DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS audit_planning JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS audit_checklist_files JSONB DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS assigned_auditors JSONB DEFAULT '[]'::jsonb;
 
 -- 9. DEDICATED PROJECT DISCUSSIONS & STRATEGY LOGS TABLE
 CREATE TABLE IF NOT EXISTS public.project_discussions (

@@ -533,6 +533,9 @@ export const AppProvider = ({ children }) => {
             locations_registry: p.locations_registry || p.locationsList || p.business_details?.locations_registry || [],
             locationsList: p.locations_registry || p.locationsList || p.business_details?.locations_registry || [],
             businessModel: p.business_model || p.business_details?.businessModel || p.business_details?.business_model || "",
+            auditPlanning: p.audit_planning || p.business_details?.auditPlanning || {},
+            auditChecklistFiles: p.audit_checklist_files || p.business_details?.auditChecklistFiles || [],
+            assignedAuditors: p.assigned_auditors || p.business_details?.assignedAuditors || [],
             phases: p.phases || p.business_details?.phases || p.businessDetails?.phases || []
           }));
           setProjects(mapped);
@@ -577,6 +580,9 @@ export const AppProvider = ({ children }) => {
               discussions: p.discussions || p.business_details?.discussions || [],
               locations_registry: p.locations_registry || p.locationsList || p.business_details?.locations_registry || [],
               locationsList: p.locations_registry || p.locationsList || p.business_details?.locations_registry || [],
+              auditPlanning: p.audit_planning || p.business_details?.auditPlanning || {},
+              auditChecklistFiles: p.audit_checklist_files || p.business_details?.auditChecklistFiles || [],
+              assignedAuditors: p.assigned_auditors || p.business_details?.assignedAuditors || [],
               auditReports: p.audit_reports || p.auditReports,
               checklists: p.checklists,
               clientVisits: p.client_visits || p.clientVisits,

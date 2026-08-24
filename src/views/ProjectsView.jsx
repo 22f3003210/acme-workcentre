@@ -1144,6 +1144,18 @@ export default function ProjectsView() {
   const audioChunksRef = useRef([]);
   const recordingTimerRef = useRef(null);
 
+  // WhatsApp-style Discussion Input & Media Attachment State
+  const [chatInputText, setChatInputText] = useState("");
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [inlineAudioUrl, setInlineAudioUrl] = useState(null);
+  const [inlineAudioName, setInlineAudioName] = useState(null);
+  const [inlineAttachments, setInlineAttachments] = useState([]);
+  const docInputRef = useRef(null);
+  const mediaInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const audioInputRef = useRef(null);
+
   const handleAddCustomCategory = (newCat) => {
     if (!newCat || !newCat.trim()) return;
     const catName = newCat.trim();
@@ -5567,7 +5579,7 @@ export default function ProjectsView() {
                         </div>
                       </div>
 
-                      {/* Quick Summary Pill Stats */}
+                      {/* Quick Summary Pill Stats - Stage Contextual */}
                       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "14px", flexWrap: "wrap" }}>
                         <span style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#334155" }}>
                           💬 Total: <strong>{allDiscussions.length}</strong>
@@ -5575,15 +5587,21 @@ export default function ProjectsView() {
                         <span style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#2563eb" }}>
                           💬 General: <strong>{genCount}</strong>
                         </span>
-                        <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#0284c7" }}>
-                          🔍 Audit Notes: <strong>{auditNotesCount}</strong>
-                        </span>
-                        <span style={{ background: "#f5f3ff", border: "1px solid #ddd6fe", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#7c3aed" }}>
-                          🎯 Strategy Plans: <strong>{stratCount}</strong>
-                        </span>
-                        <span style={{ background: "#fffbeb", border: "1px solid #fde68a", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#d97706" }}>
-                          ⚡ Action Items: <strong>{actionItemsCount}</strong>
-                        </span>
+                        {currentStage !== "Lead Stage" && (
+                          <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#0284c7" }}>
+                            🔍 Audit Notes: <strong>{auditNotesCount}</strong>
+                          </span>
+                        )}
+                        {(currentStage === "Kickoff Stage" || currentStage === "On-Going Stage") && (
+                          <span style={{ background: "#f5f3ff", border: "1px solid #ddd6fe", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#7c3aed" }}>
+                            🎯 Strategy Plans: <strong>{stratCount}</strong>
+                          </span>
+                        )}
+                        {currentStage === "On-Going Stage" && (
+                          <span style={{ background: "#fffbeb", border: "1px solid #fde68a", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#d97706" }}>
+                            ⚡ Action Items: <strong>{actionItemsCount}</strong>
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -5653,49 +5671,28 @@ export default function ProjectsView() {
                         </div>
 
                         <form onSubmit={handlePostDiscussion} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-                          {/* 1. Discussion Type Selector Pills with Stage Tags */}
-                          <div>
-                            <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "8px" }}>
-                              DISCUSSION TYPE & STAGE ALIGNMENT:
-                            </label>
-                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
-                              {DISCUSSION_TYPES.map(type => {
-                                const isSelected = discForm.discussionType === type.id;
-                                const isStageDefault = type.stageLabel === currentStage;
-                                return (
-                                  <button
-                                    key={type.id}
-                                    type="button"
-                                    onClick={() => setDiscForm(prev => ({ ...prev, discussionType: type.id }))}
-                                    style={{
-                                      padding: "8px 12px",
-                                      borderRadius: "8px",
-                                      border: isSelected ? `2px solid ${type.color}` : "1px solid #e2e8f0",
-                                      background: isSelected ? type.bg : "#ffffff",
-                                      color: isSelected ? type.color : "#475569",
-                                      fontWeight: isSelected ? "800" : "600",
-                                      fontSize: "0.82rem",
-                                      cursor: "pointer",
-                                      display: "flex",
-                                      flexDirection: "column",
-                                      alignItems: "flex-start",
-                                      gap: "3px",
-                                      boxShadow: isSelected ? `0 2px 8px ${type.color}25` : "none",
-                                      transition: "all 0.15s ease"
-                                    }}
-                                  >
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                      <span>{type.icon}</span>
-                                      <span>{type.label}</span>
+                          {/* 1. Active Stage Discussion Type Display (Locked to Current Stage) */}
+                          {(() => {
+                            const activeTypeCfg = DISCUSSION_TYPES.find(t => t.id === discForm.discussionType) || DISCUSSION_TYPES[0];
+                            return (
+                              <div style={{ background: activeTypeCfg.bg, border: `1.5px solid ${activeTypeCfg.border}`, borderRadius: "10px", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                  <span style={{ fontSize: "1.25rem" }}>{activeTypeCfg.icon}</span>
+                                  <div>
+                                    <div style={{ fontSize: "0.92rem", fontWeight: "800", color: activeTypeCfg.color }}>
+                                      {activeTypeCfg.label}
                                     </div>
-                                    <span style={{ fontSize: "0.68rem", color: isSelected ? type.color : "#94a3b8", fontWeight: isStageDefault ? "800" : "500" }}>
-                                      {type.stageLabel} {isStageDefault && "• Active"}
-                                    </span>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </div>
+                                    <div style={{ fontSize: "0.74rem", color: "#64748b" }}>
+                                      Project Stage: <strong style={{ color: "#0f172a" }}>{currentStage}</strong>
+                                    </div>
+                                  </div>
+                                </div>
+                                <span style={{ background: activeTypeCfg.color, color: "#ffffff", fontSize: "0.72rem", fontWeight: "800", padding: "3px 10px", borderRadius: "6px" }}>
+                                  ● {currentStage}
+                                </span>
+                              </div>
+                            );
+                          })()}
 
                           {/* 2. Title & Subject */}
                           <div>
@@ -6026,9 +6023,9 @@ export default function ProjectsView() {
                         {[
                           { id: "All", label: `All Discussions (${allDiscussions.length})`, icon: "📋" },
                           { id: "General", label: `💬 General (${genCount})`, color: "#2563eb", stage: "Lead Stage" },
-                          { id: "Audit Note", label: `🔍 Audit Notes (${auditNotesCount})`, color: "#0284c7", stage: "Audit Stage" },
-                          { id: "Strategy", label: `🎯 Strategy Plans (${stratCount})`, color: "#7c3aed", stage: "Kickoff Stage" },
-                          { id: "Action Item", label: `⚡ Action Items (${actionItemsCount})`, color: "#d97706", stage: "On-Going Stage" }
+                          ...(currentStage !== "Lead Stage" ? [{ id: "Audit Note", label: `🔍 Audit Notes (${auditNotesCount})`, color: "#0284c7", stage: "Audit Stage" }] : []),
+                          ...(currentStage === "Kickoff Stage" || currentStage === "On-Going Stage" ? [{ id: "Strategy", label: `🎯 Strategy Plans (${stratCount})`, color: "#7c3aed", stage: "Kickoff Stage" }] : []),
+                          ...(currentStage === "On-Going Stage" ? [{ id: "Action Item", label: `⚡ Action Items (${actionItemsCount})`, color: "#d97706", stage: "On-Going Stage" }] : [])
                         ].map(t => {
                           const isSelected = discTypeFilter === t.id;
                           const color = t.color || "#4f46e5";

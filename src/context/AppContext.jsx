@@ -1835,10 +1835,18 @@ export const AppProvider = ({ children }) => {
 
   const addProjectDiscussion = (projectId, discussionData) => {
     const newDisc = {
-      id: `disc-${Date.now()}`,
-      authorName: currentUser?.name || "User",
+      id: `disc-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      authorId: currentUser?.id || "unknown",
+      authorName: currentUser?.name || "Team Member",
       authorRole: currentUser?.role || "Consultant",
-      date: new Date().toLocaleString([], { dateStyle: "short", timeStyle: "short" }),
+      authorAvatar: currentUser?.avatar || "",
+      date: new Date().toISOString(),
+      formattedDate: new Date().toLocaleString([], { dateStyle: "medium", timeStyle: "short" }),
+      discussionType: "General",
+      category: "",
+      subCategory: "",
+      actionItems: [],
+      isPinned: false,
       ...discussionData
     };
     setProjects(prev => {
@@ -1855,6 +1863,49 @@ export const AppProvider = ({ children }) => {
       });
       try { localStorage.setItem("workcentre_projects", JSON.stringify(next)); } catch (e) {}
       if (isSupabaseConfigured() && updatedDiscussions.length > 0) {
+        supabaseUpdateProject(projectId, { discussions: updatedDiscussions }).catch(e => {});
+      }
+      return next;
+    });
+    return newDisc;
+  };
+
+  const updateProjectDiscussion = (projectId, discussionId, updatedFields) => {
+    setProjects(prev => {
+      let updatedDiscussions = [];
+      const next = prev.map(p => {
+        if (p.id === projectId) {
+          updatedDiscussions = (p.discussions || []).map(d => d.id === discussionId ? { ...d, ...updatedFields } : d);
+          return {
+            ...p,
+            discussions: updatedDiscussions
+          };
+        }
+        return p;
+      });
+      try { localStorage.setItem("workcentre_projects", JSON.stringify(next)); } catch (e) {}
+      if (isSupabaseConfigured()) {
+        supabaseUpdateProject(projectId, { discussions: updatedDiscussions }).catch(e => {});
+      }
+      return next;
+    });
+  };
+
+  const deleteProjectDiscussion = (projectId, discussionId) => {
+    setProjects(prev => {
+      let updatedDiscussions = [];
+      const next = prev.map(p => {
+        if (p.id === projectId) {
+          updatedDiscussions = (p.discussions || []).filter(d => d.id !== discussionId);
+          return {
+            ...p,
+            discussions: updatedDiscussions
+          };
+        }
+        return p;
+      });
+      try { localStorage.setItem("workcentre_projects", JSON.stringify(next)); } catch (e) {}
+      if (isSupabaseConfigured()) {
         supabaseUpdateProject(projectId, { discussions: updatedDiscussions }).catch(e => {});
       }
       return next;
@@ -2492,6 +2543,8 @@ export const AppProvider = ({ children }) => {
         addProject,
         updateProject,
         addProjectDiscussion,
+        updateProjectDiscussion,
+        deleteProjectDiscussion,
         addProjectVisit,
         addProjectScheduledEvent,
         toggleProjectChecklistItem,

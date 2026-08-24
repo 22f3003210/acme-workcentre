@@ -180,6 +180,7 @@ CREATE TABLE IF NOT EXISTS public.projects (
     checklists JSONB,
     client_visits JSONB,
     scheduled_events JSONB,
+    discussions JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
@@ -193,7 +194,33 @@ ALTER TABLE public.projects
   ADD COLUMN IF NOT EXISTS stage_history JSONB DEFAULT '[]'::jsonb,
   ADD COLUMN IF NOT EXISTS pre_audit_data JSONB DEFAULT '{}'::jsonb,
   ADD COLUMN IF NOT EXISTS project_plan JSONB DEFAULT '{}'::jsonb,
-  ADD COLUMN IF NOT EXISTS meta_lead_data JSONB DEFAULT '{}'::jsonb;
+  ADD COLUMN IF NOT EXISTS meta_lead_data JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS discussions JSONB DEFAULT '[]'::jsonb;
+
+-- 9. DEDICATED PROJECT DISCUSSIONS & STRATEGY LOGS TABLE
+CREATE TABLE IF NOT EXISTS public.project_discussions (
+    id TEXT PRIMARY KEY,
+    project_id TEXT REFERENCES public.projects(id) ON DELETE CASCADE,
+    author_id TEXT,
+    author_name TEXT NOT NULL,
+    author_role TEXT,
+    author_avatar TEXT,
+    title TEXT NOT NULL,
+    notes TEXT NOT NULL,
+    discussion_type TEXT NOT NULL DEFAULT 'General', -- 'General', 'Strategy', 'Audit Note', 'Action Item'
+    category TEXT, -- 'Marketing', 'Sales & Showroom', 'Inventory & Merchandising', etc.
+    sub_category TEXT, -- 'Offer Planning', etc.
+    action_items JSONB DEFAULT '[]'::jsonb,
+    is_pinned BOOLEAN DEFAULT false,
+    date TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.project_discussions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read project_discussions" ON public.project_discussions FOR SELECT USING (true);
+CREATE POLICY "Allow public insert project_discussions" ON public.project_discussions FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update project_discussions" ON public.project_discussions FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete project_discussions" ON public.project_discussions FOR DELETE USING (true);
 
 -- Backfill existing projects to 'On-Going Stage' so all current work is preserved
 UPDATE public.projects 

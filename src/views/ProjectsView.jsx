@@ -639,6 +639,252 @@ export const STAGE_CONFIG = {
   }
 };
 
+export const DEFAULT_STRATEGY_TAXONOMY = {
+  "Marketing": [
+    "Offer Planning",
+    "Seasonal & Festival Campaigns",
+    "Gold Rate Scheme & Advance Booking",
+    "Bridal Jewellery Exhibitions",
+    "Digital Marketing & Social Media",
+    "Celebrity & Influencer Collabs",
+    "Outdoor Hoardings & Radio Ads"
+  ],
+  "Sales & Showroom Operations": [
+    "Counter Conversion SOPs",
+    "Incentive & Target Structuring",
+    "High-Ticket Bridal Consultation",
+    "VIP Client Retention & Loyalty",
+    "Staff Sales Training & Objection Handling",
+    "Daily Opening & Closing Protocol"
+  ],
+  "Inventory & Merchandising": [
+    "Dead Stock Liquidation Plan",
+    "Diamond Sieve & Karatage Optimization",
+    "Fast-Moving Design Replenishment",
+    "Melting Loss & Touch Variance Control",
+    "Bullion Hedging & Gold Purchase Strategy",
+    "Vendor Return & Exchange SOPs"
+  ],
+  "Billing, ERP & Finance": [
+    "POS Barcode & RFID Integration",
+    "Daily Vault & Cash Reconciliation",
+    "Gross Margin Analysis",
+    "GST & E-Way Bill Compliance",
+    "Old Gold Exchange Margin Control"
+  ],
+  "Security & Infrastructure": [
+    "Vault Access & Dual-Custody SOPs",
+    "CCTV Blind Spot & Guard Audit",
+    "Display Lighting & Showroom Architecture",
+    "Customer Baggage & Showcase Security"
+  ]
+};
+
+export const DISCUSSION_TYPES = [
+  { id: "General", label: "General Discussion", icon: "💬", color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe" },
+  { id: "Strategy", label: "Strategy & Planning", icon: "🎯", color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe" },
+  { id: "Audit Note", label: "Audit & Review Note", icon: "🔍", color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd" },
+  { id: "Action Item", label: "Action Item / Milestone", icon: "⚡", color: "#d97706", bg: "#fffbeb", border: "#fde68a" }
+];
+
+// Custom Searchable Dropdown with "+ Add" button for Category & Sub-Category
+function SearchableAddSelect({
+  label,
+  value,
+  onChange,
+  options,
+  onAddOption,
+  placeholder = "Search or select...",
+  addNewPlaceholder = "Add new...",
+  allowAdd = true,
+  disabled = false
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOptions = (options || []).filter(opt =>
+    opt.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const exactMatch = (options || []).some(
+    opt => opt.toLowerCase() === search.trim().toLowerCase()
+  );
+
+  const canAddNew = allowAdd && search.trim().length > 0 && !exactMatch;
+
+  const handleSelect = (opt) => {
+    onChange(opt);
+    setSearch("");
+    setIsOpen(false);
+  };
+
+  const handleAddNew = (e) => {
+    e.stopPropagation();
+    const newName = search.trim();
+    if (!newName) return;
+    if (onAddOption) onAddOption(newName);
+    onChange(newName);
+    setSearch("");
+    setIsOpen(false);
+  };
+
+  return (
+    <div ref={dropdownRef} style={{ position: "relative", width: "100%" }}>
+      {label && (
+        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
+          {label}
+        </label>
+      )}
+
+      {/* Main trigger button */}
+      <div
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        style={{
+          width: "100%",
+          padding: "9px 12px",
+          borderRadius: "8px",
+          border: isOpen ? "1.5px solid #2563eb" : "1px solid #cbd5e1",
+          background: disabled ? "#f8fafc" : "#ffffff",
+          fontSize: "0.85rem",
+          cursor: disabled ? "not-allowed" : "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          boxSizing: "border-box",
+          boxShadow: isOpen ? "0 0 0 3px rgba(37, 99, 235, 0.1)" : "none",
+          transition: "all 0.15s ease"
+        }}
+      >
+        <span style={{ color: value ? "#0f172a" : "#94a3b8", fontWeight: value ? "600" : "400" }}>
+          {value || placeholder}
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.5" style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s ease" }}>
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div style={{
+          position: "absolute",
+          top: "calc(100% + 4px)",
+          left: 0,
+          right: 0,
+          background: "#ffffff",
+          border: "1px solid #cbd5e1",
+          borderRadius: "10px",
+          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+          zIndex: 50,
+          maxHeight: "260px",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden"
+        }}>
+          {/* Search Box */}
+          <div style={{ padding: "8px", borderBottom: "1px solid #f1f5f9", background: "#f8fafc" }}>
+            <div style={{ position: "relative" }}>
+              <input
+                type="text"
+                autoFocus
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={placeholder}
+                style={{
+                  width: "100%",
+                  padding: "7px 10px 7px 28px",
+                  borderRadius: "6px",
+                  border: "1px solid #cbd5e1",
+                  fontSize: "0.82rem",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  background: "#ffffff"
+                }}
+              />
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2.5" style={{ position: "absolute", left: "9px", top: "9px" }}>
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+            </div>
+          </div>
+
+          {/* Options Shortlist */}
+          <div style={{ overflowY: "auto", maxHeight: "180px", padding: "4px" }}>
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((opt) => {
+                const isSelected = opt === value;
+                return (
+                  <div
+                    key={opt}
+                    onClick={() => handleSelect(opt)}
+                    style={{
+                      padding: "8px 12px",
+                      borderRadius: "6px",
+                      fontSize: "0.83rem",
+                      fontWeight: isSelected ? "700" : "500",
+                      color: isSelected ? "#2563eb" : "#334155",
+                      background: isSelected ? "#eff6ff" : "transparent",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between"
+                    }}
+                    onMouseEnter={e => !isSelected && (e.currentTarget.style.background = "#f1f5f9")}
+                    onMouseLeave={e => !isSelected && (e.currentTarget.style.background = "transparent")}
+                  >
+                    <span>{opt}</span>
+                    {isSelected && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
+                  </div>
+                );
+              })
+            ) : !canAddNew ? (
+              <div style={{ padding: "12px", textAlign: "center", fontSize: "0.8rem", color: "#94a3b8" }}>
+                No matching results
+              </div>
+            ) : null}
+
+            {/* + Add New Button if not found or custom */}
+            {canAddNew && (
+              <button
+                type="button"
+                onClick={handleAddNew}
+                style={{
+                  width: "100%",
+                  padding: "9px 12px",
+                  marginTop: "4px",
+                  borderRadius: "6px",
+                  border: "1.5px dashed #2563eb",
+                  background: "#eff6ff",
+                  color: "#1d4ed8",
+                  fontSize: "0.83rem",
+                  fontWeight: "700",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                <span>＋</span> Add "<strong>{search.trim()}</strong>"
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export const getProjectStage = (p) => {
   if (!p) return "On-Going Stage";
   if (p.stage) return p.stage;
@@ -655,6 +901,8 @@ export default function ProjectsView() {
     addProject, 
     updateProject, 
     addProjectDiscussion, 
+    updateProjectDiscussion,
+    deleteProjectDiscussion,
     addProjectVisit, 
     addProjectScheduledEvent,
     toggleProjectChecklistItem,
@@ -862,9 +1110,59 @@ export default function ProjectsView() {
   const fileInputRef = useRef(null);
   const [viewingDoc, setViewingDoc] = useState(null); // Active document object being viewed in full reader!
 
-  // New Discussion Form
-  const [discText, setDiscText] = useState("");
-  const [discCategory, setDiscCategory] = useState("Client Update");
+  // Taxonomy for Strategy Categories & Sub-Categories
+  const [strategyTaxonomy, setStrategyTaxonomy] = useState(DEFAULT_STRATEGY_TAXONOMY);
+
+  // Discussion Filter States
+  const [discTypeFilter, setDiscTypeFilter] = useState("All");
+  const [discCategoryFilter, setDiscCategoryFilter] = useState("All");
+  const [discSubCategoryFilter, setDiscSubCategoryFilter] = useState("All");
+  const [discAuthorFilter, setDiscAuthorFilter] = useState("All");
+  const [discSearchQuery, setDiscSearchQuery] = useState("");
+
+  // Discussion Composition Form State
+  const [isAddingDiscussion, setIsAddingDiscussion] = useState(false);
+  const [discForm, setDiscForm] = useState({
+    title: "",
+    notes: "",
+    discussionType: "Strategy", // 'General', 'Strategy', 'Audit Note', 'Action Item'
+    category: "Marketing",
+    subCategory: "Offer Planning",
+    priority: "Normal", // 'Normal', 'High', 'Urgent', 'Critical'
+    isPinned: false,
+    actionItemsText: ""
+  });
+
+  const handleAddCustomCategory = (newCat) => {
+    if (!newCat || !newCat.trim()) return;
+    const catName = newCat.trim();
+    setStrategyTaxonomy(prev => {
+      if (prev[catName]) return prev;
+      return { ...prev, [catName]: [] };
+    });
+    setDiscForm(prev => ({ ...prev, category: catName, subCategory: "" }));
+    if (typeof setToast === "function") {
+      setToast({ message: `Added new strategy category: "${catName}"`, type: "success" });
+    }
+  };
+
+  const handleAddCustomSubCategory = (newSub) => {
+    if (!newSub || !newSub.trim() || !discForm.category) return;
+    const subName = newSub.trim();
+    const currentCat = discForm.category;
+    setStrategyTaxonomy(prev => {
+      const existing = prev[currentCat] || [];
+      if (existing.includes(subName)) return prev;
+      return {
+        ...prev,
+        [currentCat]: [...existing, subName]
+      };
+    });
+    setDiscForm(prev => ({ ...prev, subCategory: subName }));
+    if (typeof setToast === "function") {
+      setToast({ message: `Added sub-category "${subName}" under "${currentCat}"`, type: "success" });
+    }
+  };
 
   // Schedule Event Form State
   const [showEventModal, setShowEventModal] = useState(false);
@@ -4410,11 +4708,715 @@ export default function ProjectsView() {
               </div>
             )}
 
-            {activeProjectTab === "discussions" && (
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
-                <h3 style={{ margin: "0 0 16px 0", fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>Discussions & Team Activity Logs</h3>
-              </div>
-            )}
+            {activeProjectTab === "discussions" && (() => {
+              const allDiscussions = effectiveProject.discussions || [];
+
+              // Extract all available categories & subcategories from taxonomy and existing discussions
+              const allKnownCategories = Array.from(new Set([
+                ...Object.keys(strategyTaxonomy),
+                ...allDiscussions.map(d => d.category).filter(Boolean)
+              ]));
+
+              const allKnownSubCategories = Array.from(new Set([
+                ...(discCategoryFilter !== "All" && strategyTaxonomy[discCategoryFilter] ? strategyTaxonomy[discCategoryFilter] : []),
+                ...allDiscussions.map(d => d.subCategory).filter(Boolean)
+              ]));
+
+              const allAuthors = Array.from(new Set(
+                allDiscussions.map(d => d.authorName).filter(Boolean)
+              ));
+
+              // Filter discussions based on user criteria
+              const filteredDiscussions = allDiscussions.filter(disc => {
+                const matchesType = discTypeFilter === "All" || disc.discussionType === discTypeFilter;
+                const matchesCategory = discCategoryFilter === "All" || disc.category === discCategoryFilter;
+                const matchesSubCategory = discSubCategoryFilter === "All" || disc.subCategory === discSubCategoryFilter;
+                const matchesAuthor = discAuthorFilter === "All" || disc.authorName === discAuthorFilter;
+                
+                const q = discSearchQuery.toLowerCase().trim();
+                const matchesQuery = !q || 
+                  (disc.title && disc.title.toLowerCase().includes(q)) ||
+                  (disc.notes && disc.notes.toLowerCase().includes(q)) ||
+                  (disc.category && disc.category.toLowerCase().includes(q)) ||
+                  (disc.subCategory && disc.subCategory.toLowerCase().includes(q)) ||
+                  (disc.authorName && disc.authorName.toLowerCase().includes(q));
+
+                return matchesType && matchesCategory && matchesSubCategory && matchesAuthor && matchesQuery;
+              });
+
+              // Sort: Pinned first, then by date descending
+              const sortedDiscussions = [...filteredDiscussions].sort((a, b) => {
+                if (a.isPinned && !b.isPinned) return -1;
+                if (!a.isPinned && b.isPinned) return 1;
+                return new Date(b.date || b.created_at || 0) - new Date(a.date || a.created_at || 0);
+              });
+
+              // Counts for quick KPI stats
+              const stratCount = allDiscussions.filter(d => d.discussionType === "Strategy").length;
+              const genCount = allDiscussions.filter(d => d.discussionType === "General").length;
+              const auditNotesCount = allDiscussions.filter(d => d.discussionType === "Audit Note").length;
+              const actionItemsCount = allDiscussions.filter(d => d.discussionType === "Action Item").length;
+
+              const handlePostDiscussion = (e) => {
+                e.preventDefault();
+                if (!discForm.title.trim() && !discForm.notes.trim()) {
+                  if (typeof setToast === "function") setToast({ message: "Please enter a subject or note for the discussion.", type: "error" });
+                  return;
+                }
+
+                // Parse action items text into array
+                const parsedActionItems = discForm.actionItemsText
+                  ? discForm.actionItemsText.split("\n").map(t => t.trim()).filter(Boolean).map(text => ({ text, completed: false }))
+                  : [];
+
+                const payload = {
+                  title: discForm.title.trim() || (discForm.discussionType === "Strategy" ? `${discForm.category} Strategy: ${discForm.subCategory || "General"}` : "Discussion Note"),
+                  notes: discForm.notes.trim(),
+                  discussionType: discForm.discussionType,
+                  category: discForm.discussionType === "Strategy" ? discForm.category : (discForm.category || ""),
+                  subCategory: discForm.discussionType === "Strategy" ? discForm.subCategory : (discForm.subCategory || ""),
+                  priority: discForm.priority || "Normal",
+                  isPinned: discForm.isPinned || false,
+                  actionItems: parsedActionItems
+                };
+
+                addProjectDiscussion(effectiveProject.id, payload);
+
+                // Reset form
+                setDiscForm({
+                  title: "",
+                  notes: "",
+                  discussionType: "Strategy",
+                  category: "Marketing",
+                  subCategory: "Offer Planning",
+                  priority: "Normal",
+                  isPinned: false,
+                  actionItemsText: ""
+                });
+                setIsAddingDiscussion(false);
+
+                if (typeof setToast === "function") {
+                  setToast({ message: "Discussion & strategy note logged successfully!", type: "success" });
+                }
+              };
+
+              const handleToggleActionItem = (discId, itemIdx) => {
+                const targetDisc = allDiscussions.find(d => d.id === discId);
+                if (!targetDisc || !targetDisc.actionItems) return;
+                const updatedItems = targetDisc.actionItems.map((item, idx) => 
+                  idx === itemIdx ? { ...item, completed: !item.completed } : item
+                );
+                updateProjectDiscussion(effectiveProject.id, discId, { actionItems: updatedItems });
+              };
+
+              const handleTogglePin = (discId, currentPinned) => {
+                updateProjectDiscussion(effectiveProject.id, discId, { isPinned: !currentPinned });
+                if (typeof setToast === "function") {
+                  setToast({ message: !currentPinned ? "📌 Pinned discussion to top." : "Unpinned discussion.", type: "success" });
+                }
+              };
+
+              const handleDeleteDiscussion = (discId) => {
+                if (window.confirm("Are you sure you want to delete this discussion note?")) {
+                  deleteProjectDiscussion(effectiveProject.id, discId);
+                  if (typeof setToast === "function") {
+                    setToast({ message: "Discussion note removed.", type: "success" });
+                  }
+                }
+              };
+
+              const handleCopyDiscussion = (disc) => {
+                const text = `[${disc.discussionType.toUpperCase()}] ${disc.title}\nCategory: ${disc.category || 'General'} ${disc.subCategory ? `> ${disc.subCategory}` : ''}\nAuthor: ${disc.authorName} (${disc.formattedDate || disc.date})\n\n${disc.notes}`;
+                navigator.clipboard.writeText(text);
+                if (typeof setToast === "function") {
+                  setToast({ message: "Copied discussion note to clipboard!", type: "success" });
+                }
+              };
+
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  
+                  {/* TOP HEADER & STATS CARD */}
+                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "22px 26px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                    <div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff", boxShadow: "0 3px 8px rgba(79, 70, 229, 0.25)" }}>
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>
+                            Discussions, Strategy Planning & Team Logs
+                          </h3>
+                          <p style={{ margin: "2px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                            Categorized discussion board with dedicated Strategy streams (Marketing, Sales, Merchandising, Ops) & filters.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Quick Summary Pill Stats */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "14px", flexWrap: "wrap" }}>
+                        <span style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#334155" }}>
+                          💬 Total: <strong>{allDiscussions.length}</strong>
+                        </span>
+                        <span style={{ background: "#f5f3ff", border: "1px solid #ddd6fe", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#7c3aed" }}>
+                          🎯 Strategy Plans: <strong>{stratCount}</strong>
+                        </span>
+                        <span style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#2563eb" }}>
+                          💬 General: <strong>{genCount}</strong>
+                        </span>
+                        <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#0284c7" }}>
+                          🔍 Audit Notes: <strong>{auditNotesCount}</strong>
+                        </span>
+                        <span style={{ background: "#fffbeb", border: "1px solid #fde68a", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#d97706" }}>
+                          ⚡ Action Items: <strong>{actionItemsCount}</strong>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* New Discussion Button */}
+                    <button
+                      onClick={() => setIsAddingDiscussion(!isAddingDiscussion)}
+                      style={{
+                        background: isAddingDiscussion ? "#f1f5f9" : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                        color: isAddingDiscussion ? "#475569" : "#ffffff",
+                        border: isAddingDiscussion ? "1px solid #cbd5e1" : "none",
+                        padding: "10px 20px",
+                        borderRadius: "10px",
+                        fontWeight: "800",
+                        fontSize: "0.88rem",
+                        cursor: "pointer",
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        boxShadow: isAddingDiscussion ? "none" : "0 4px 12px rgba(79, 70, 229, 0.3)",
+                        transition: "all 0.15s ease"
+                      }}
+                    >
+                      {isAddingDiscussion ? (
+                        <>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                          <span>Close Form</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                          <span>+ Note Discussion / Strategy</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {/* DISCUSSION & STRATEGY CREATION FORM MODAL / CARD */}
+                  {isAddingDiscussion && (
+                    <form onSubmit={handlePostDiscussion} style={{ background: "#ffffff", border: "2px solid #6366f1", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "18px", boxShadow: "0 8px 24px rgba(99, 102, 241, 0.1)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: "12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "1.2rem" }}>📝</span>
+                          <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
+                            Log New Discussion, Strategy Plan or Team Note
+                          </h4>
+                        </div>
+                        <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
+                          Author: <strong style={{ color: "#0f172a" }}>{currentUser?.name || "Consultant"}</strong> ({currentUser?.role || "Consultant"})
+                        </span>
+                      </div>
+
+                      {/* 1. Discussion Type Selector Pills */}
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "8px" }}>
+                          SELECT DISCUSSION TYPE:
+                        </label>
+                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                          {DISCUSSION_TYPES.map(type => {
+                            const isSelected = discForm.discussionType === type.id;
+                            return (
+                              <button
+                                key={type.id}
+                                type="button"
+                                onClick={() => setDiscForm(prev => ({ ...prev, discussionType: type.id }))}
+                                style={{
+                                  padding: "8px 16px",
+                                  borderRadius: "8px",
+                                  border: isSelected ? `2px solid ${type.color}` : "1px solid #e2e8f0",
+                                  background: isSelected ? type.bg : "#ffffff",
+                                  color: isSelected ? type.color : "#475569",
+                                  fontWeight: isSelected ? "800" : "600",
+                                  fontSize: "0.85rem",
+                                  cursor: "pointer",
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  boxShadow: isSelected ? `0 2px 8px ${type.color}25` : "none",
+                                  transition: "all 0.15s ease"
+                                }}
+                              >
+                                <span>{type.icon}</span>
+                                <span>{type.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* 2. Title & Subject */}
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
+                          TITLE / DISCUSSION SUBJECT <span style={{ color: "#dc2626" }}>*</span>
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={discForm.title}
+                          onChange={e => setDiscForm({ ...discForm, title: e.target.value })}
+                          placeholder={discForm.discussionType === "Strategy" ? "e.g., Diwali Akshaya Tritiya Campaign Offer Matrix" : "e.g., Weekly Client Operations & Reconciliation Sync"}
+                          style={{
+                            width: "100%",
+                            padding: "10px 14px",
+                            borderRadius: "8px",
+                            border: "1px solid #cbd5e1",
+                            fontSize: "0.9rem",
+                            fontWeight: "600",
+                            outline: "none",
+                            boxSizing: "border-box"
+                          }}
+                        />
+                      </div>
+
+                      {/* 3. Category & Sub-Category Dropdowns (Visible for Strategy and optional for other types) */}
+                      {(discForm.discussionType === "Strategy" || discForm.discussionType === "General" || discForm.discussionType === "Audit Note") && (
+                        <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px" }}>
+                          <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#4f46e5", textTransform: "uppercase", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span>🎯 STRATEGY TAXONOMY & CLASSIFICATION</span>
+                            <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "500", textTransform: "none" }}>(Search existing or type to add new on the fly)</span>
+                          </div>
+
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                            {/* Category Searchable Selector */}
+                            <SearchableAddSelect
+                              label="CATEGORY"
+                              value={discForm.category}
+                              onChange={(val) => {
+                                const subOpts = strategyTaxonomy[val] || [];
+                                setDiscForm(prev => ({
+                                  ...prev,
+                                  category: val,
+                                  subCategory: subOpts.length > 0 ? subOpts[0] : ""
+                                }));
+                              }}
+                              options={Object.keys(strategyTaxonomy)}
+                              onAddOption={handleAddCustomCategory}
+                              placeholder="Search category or type new..."
+                            />
+
+                            {/* Sub-Category Searchable Selector */}
+                            <SearchableAddSelect
+                              label="SUB-CATEGORY"
+                              value={discForm.subCategory}
+                              onChange={(val) => setDiscForm(prev => ({ ...prev, subCategory: val }))}
+                              options={strategyTaxonomy[discForm.category] || []}
+                              onAddOption={handleAddCustomSubCategory}
+                              placeholder="Search sub-category or type new..."
+                              disabled={!discForm.category}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 4. Detailed Notes Textarea */}
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
+                          DETAILED DISCUSSION NOTES / STRATEGIC ROADMAP <span style={{ color: "#dc2626" }}>*</span>
+                        </label>
+                        <textarea
+                          rows="4"
+                          required
+                          value={discForm.notes}
+                          onChange={e => setDiscForm({ ...discForm, notes: e.target.value })}
+                          placeholder="Describe discussion minutes, client feedback, strategy decisions, timelines, and milestones..."
+                          style={{
+                            width: "100%",
+                            padding: "12px",
+                            borderRadius: "8px",
+                            border: "1px solid #cbd5e1",
+                            fontSize: "0.88rem",
+                            outline: "none",
+                            lineHeight: "1.5",
+                            boxSizing: "border-box",
+                            fontFamily: "inherit"
+                          }}
+                        />
+                      </div>
+
+                      {/* 5. Optional Action Items Checklist */}
+                      <div>
+                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
+                          ACTION ITEMS / DELIVERABLES (ONE PER LINE - OPTIONAL):
+                        </label>
+                        <textarea
+                          rows="2"
+                          value={discForm.actionItemsText}
+                          onChange={e => setDiscForm({ ...discForm, actionItemsText: e.target.value })}
+                          placeholder="e.g.&#10;Draft wedding collection offer creatives&#10;Verify physical stock tray weights with manager&#10;Configure POS promotion rule"
+                          style={{
+                            width: "100%",
+                            padding: "10px",
+                            borderRadius: "8px",
+                            border: "1px solid #cbd5e1",
+                            fontSize: "0.85rem",
+                            outline: "none",
+                            boxSizing: "border-box",
+                            fontFamily: "inherit"
+                          }}
+                        />
+                      </div>
+
+                      {/* 6. Priority & Pin Options */}
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155" }}>Priority:</span>
+                            <select
+                              value={discForm.priority}
+                              onChange={e => setDiscForm({ ...discForm, priority: e.target.value })}
+                              style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem", fontWeight: "700" }}
+                            >
+                              <option value="Normal">Normal</option>
+                              <option value="High">High</option>
+                              <option value="Urgent">Urgent</option>
+                              <option value="Critical">Critical</option>
+                            </select>
+                          </div>
+
+                          <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", fontWeight: "700", color: "#475569", cursor: "pointer" }}>
+                            <input
+                              type="checkbox"
+                              checked={discForm.isPinned}
+                              onChange={e => setDiscForm({ ...discForm, isPinned: e.target.checked })}
+                              style={{ width: "16px", height: "16px", accentColor: "#4f46e5" }}
+                            />
+                            <span>📌 Pin to top of discussion board</span>
+                          </label>
+                        </div>
+
+                        <div style={{ display: "flex", gap: "10px" }}>
+                          <button
+                            type="button"
+                            onClick={() => setIsAddingDiscussion(false)}
+                            style={{ background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", padding: "9px 18px", borderRadius: "8px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            style={{ background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)", color: "#ffffff", border: "none", padding: "9px 24px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 3px 8px rgba(79, 70, 229, 0.3)" }}
+                          >
+                            ✓ Post Discussion Note
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* FILTER & SEGREGATION CONTROLS BAR */}
+                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px 20px", display: "flex", flexDirection: "column", gap: "14px", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+                    
+                    {/* Row 1: Discussion Type Filters */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        {[
+                          { id: "All", label: `All Discussions (${allDiscussions.length})`, icon: "📋" },
+                          { id: "Strategy", label: `🎯 Strategy (${stratCount})`, color: "#7c3aed" },
+                          { id: "General", label: `💬 General (${genCount})`, color: "#2563eb" },
+                          { id: "Audit Note", label: `🔍 Audit Notes (${auditNotesCount})`, color: "#0284c7" },
+                          { id: "Action Item", label: `⚡ Action Items (${actionCount})`, color: "#d97706" }
+                        ].map(t => {
+                          const isSelected = discTypeFilter === t.id;
+                          const color = t.color || "#4f46e5";
+                          return (
+                            <button
+                              key={t.id}
+                              onClick={() => setDiscTypeFilter(t.id)}
+                              style={{
+                                padding: "6px 14px",
+                                borderRadius: "6px",
+                                fontSize: "0.8rem",
+                                fontWeight: isSelected ? "800" : "600",
+                                cursor: "pointer",
+                                border: isSelected ? `1.5px solid ${color}` : "1px solid #cbd5e1",
+                                background: isSelected ? `${color}15` : "#ffffff",
+                                color: isSelected ? color : "#475569",
+                                transition: "all 0.15s ease"
+                              }}
+                            >
+                              {t.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* Search box */}
+                      <div style={{ position: "relative" }}>
+                        <input
+                          type="text"
+                          placeholder="Search discussion, plan, keyword..."
+                          value={discSearchQuery}
+                          onChange={e => setDiscSearchQuery(e.target.value)}
+                          style={{
+                            padding: "7px 12px 7px 32px",
+                            borderRadius: "6px",
+                            border: "1px solid #cbd5e1",
+                            width: "260px",
+                            fontSize: "0.82rem",
+                            outline: "none",
+                            background: "#ffffff"
+                          }}
+                        />
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" style={{ position: "absolute", left: "10px", top: "9px" }}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      </div>
+                    </div>
+
+                    {/* Row 2: Secondary Dropdown Filters (Category, Sub-Category, Team Author) */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px", borderTop: "1px solid #f1f5f9", paddingTop: "12px", flexWrap: "wrap" }}>
+                      <span style={{ fontSize: "0.78rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>
+                        SEGREGATE BY:
+                      </span>
+
+                      {/* Category Filter */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>Category:</span>
+                        <select
+                          value={discCategoryFilter}
+                          onChange={e => {
+                            setDiscCategoryFilter(e.target.value);
+                            setDiscSubCategoryFilter("All");
+                          }}
+                          style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", fontWeight: "700", background: "#ffffff", color: "#0f172a" }}
+                        >
+                          <option value="All">All Categories</option>
+                          {allKnownCategories.map(cat => (
+                            <option key={cat} value={cat}>{cat}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Sub-Category Filter */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>Sub-Category:</span>
+                        <select
+                          value={discSubCategoryFilter}
+                          onChange={e => setDiscSubCategoryFilter(e.target.value)}
+                          style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", fontWeight: "700", background: "#ffffff", color: "#0f172a" }}
+                        >
+                          <option value="All">All Sub-Categories</option>
+                          {allKnownSubCategories.map(sub => (
+                            <option key={sub} value={sub}>{sub}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Author Filter */}
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>Team Member:</span>
+                        <select
+                          value={discAuthorFilter}
+                          onChange={e => setDiscAuthorFilter(e.target.value)}
+                          style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", fontWeight: "700", background: "#ffffff", color: "#0f172a" }}
+                        >
+                          <option value="All">All Authors</option>
+                          {allAuthors.map(auth => (
+                            <option key={auth} value={auth}>{auth}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Reset Filters button */}
+                      {(discTypeFilter !== "All" || discCategoryFilter !== "All" || discSubCategoryFilter !== "All" || discAuthorFilter !== "All" || discSearchQuery) && (
+                        <button
+                          onClick={() => {
+                            setDiscTypeFilter("All");
+                            setDiscCategoryFilter("All");
+                            setDiscSubCategoryFilter("All");
+                            setDiscAuthorFilter("All");
+                            setDiscSearchQuery("");
+                          }}
+                          style={{ background: "#fee2e2", color: "#dc2626", border: "none", padding: "5px 12px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "800", cursor: "pointer" }}
+                        >
+                          ✕ Clear Filters
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* DISCUSSION & STRATEGY FEED LIST */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                    {sortedDiscussions.length === 0 ? (
+                      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "48px 24px", textAlign: "center" }}>
+                        <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "#eff6ff", color: "#4f46e5", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 16px auto", fontSize: "1.5rem" }}>
+                          💬
+                        </div>
+                        <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
+                          No Discussions or Plans Found
+                        </h4>
+                        <p style={{ margin: "6px 0 16px 0", fontSize: "0.85rem", color: "#64748b", maxWidth: "420px", marginInline: "auto" }}>
+                          {allDiscussions.length === 0
+                            ? "Start logging strategy roadmaps, marketing offer plans, inventory audits, or general meeting notes."
+                            : "No discussions match your active search and category filters."}
+                        </p>
+                        <button
+                          onClick={() => setIsAddingDiscussion(true)}
+                          style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "8px 18px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)" }}
+                        >
+                          ＋ Note Discussion / Strategy
+                        </button>
+                      </div>
+                    ) : (
+                      sortedDiscussions.map(disc => {
+                        const typeCfg = DISCUSSION_TYPES.find(t => t.id === disc.discussionType) || DISCUSSION_TYPES[0];
+                        const isPinned = Boolean(disc.isPinned);
+
+                        return (
+                          <div
+                            key={disc.id}
+                            style={{
+                              background: "#ffffff",
+                              border: isPinned ? "2px solid #f59e0b" : "1px solid #e2e8f0",
+                              borderRadius: "12px",
+                              padding: "20px 24px",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "12px",
+                              boxShadow: isPinned ? "0 4px 14px rgba(245, 158, 11, 0.12)" : "0 1px 3px rgba(0,0,0,0.02)",
+                              position: "relative"
+                            }}
+                          >
+                            {/* Card Header: Author Info + Badges + Controls */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "10px" }}>
+                              
+                              {/* Author and Date */}
+                              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                <img
+                                  src={disc.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(disc.authorName || 'User')}`}
+                                  alt={disc.authorName}
+                                  style={{ width: "38px", height: "38px", borderRadius: "50%", objectFit: "cover", border: "1.5px solid #e2e8f0" }}
+                                />
+                                <div>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <strong style={{ fontSize: "0.92rem", color: "#0f172a" }}>{disc.authorName}</strong>
+                                    <span style={{ fontSize: "0.72rem", background: "#f1f5f9", color: "#475569", padding: "1px 6px", borderRadius: "4px", fontWeight: "700" }}>
+                                      {disc.authorRole || "Consultant"}
+                                    </span>
+                                  </div>
+                                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "2px" }}>
+                                    📅 {disc.formattedDate || (disc.date ? new Date(disc.date).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Recently logged")}
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Badges & Actions */}
+                              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                                {isPinned && (
+                                  <span style={{ background: "#fef3c7", color: "#b45309", border: "1px solid #fde68a", fontSize: "0.72rem", fontWeight: "800", padding: "2px 8px", borderRadius: "6px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                    📌 PINNED
+                                  </span>
+                                )}
+
+                                {/* Discussion Type Badge */}
+                                <span style={{ background: typeCfg.bg, color: typeCfg.color, border: `1px solid ${typeCfg.border}`, fontSize: "0.72rem", fontWeight: "800", padding: "2px 8px", borderRadius: "6px" }}>
+                                  {typeCfg.icon} {typeCfg.label}
+                                </span>
+
+                                {/* Priority Badge if not normal */}
+                                {disc.priority && disc.priority !== "Normal" && (
+                                  <span style={{ background: disc.priority === "Critical" ? "#fee2e2" : "#fef3c7", color: disc.priority === "Critical" ? "#b91c1c" : "#b45309", fontSize: "0.7rem", fontWeight: "800", padding: "2px 6px", borderRadius: "4px" }}>
+                                    ● {disc.priority}
+                                  </span>
+                                )}
+
+                                {/* Pin / Unpin Button */}
+                                <button
+                                  onClick={() => handleTogglePin(disc.id, isPinned)}
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: isPinned ? "#f59e0b" : "#94a3b8", fontSize: "0.95rem", padding: "4px" }}
+                                  title={isPinned ? "Unpin note" : "Pin to top"}
+                                >
+                                  📌
+                                </button>
+
+                                {/* Copy Button */}
+                                <button
+                                  onClick={() => handleCopyDiscussion(disc)}
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: "#64748b", fontSize: "0.9rem", padding: "4px" }}
+                                  title="Copy text to clipboard"
+                                >
+                                  📋
+                                </button>
+
+                                {/* Delete Button */}
+                                <button
+                                  onClick={() => handleDeleteDiscussion(disc.id)}
+                                  style={{ background: "none", border: "none", cursor: "pointer", color: "#ef4444", fontSize: "0.9rem", padding: "4px" }}
+                                  title="Delete note"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Category & Sub-Category Pill */}
+                            {disc.category && (
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe", padding: "3px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                  <span>🏷️ {disc.category}</span>
+                                  {disc.subCategory && (
+                                    <>
+                                      <span style={{ color: "#a78bfa" }}>❯</span>
+                                      <span style={{ color: "#4c1d95" }}>{disc.subCategory}</span>
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Title */}
+                            <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
+                              {disc.title}
+                            </h4>
+
+                            {/* Notes Content */}
+                            <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
+                              {disc.notes}
+                            </p>
+
+                            {/* Action Items Interactive Checklist */}
+                            {disc.actionItems && disc.actionItems.length > 0 && (
+                              <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "12px 16px", marginTop: "4px" }}>
+                                <div style={{ fontSize: "0.75rem", fontWeight: "800", color: "#475569", textTransform: "uppercase", marginBottom: "8px" }}>
+                                  ⚡ Action Items / Checklist ({disc.actionItems.filter(i => i.completed).length}/{disc.actionItems.length} Done):
+                                </div>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                                  {disc.actionItems.map((item, idx) => (
+                                    <label key={idx} style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.85rem", color: item.completed ? "#94a3b8" : "#1e293b", textDecoration: item.completed ? "line-through" : "none", cursor: "pointer" }}>
+                                      <input
+                                        type="checkbox"
+                                        checked={Boolean(item.completed)}
+                                        onChange={() => handleToggleActionItem(disc.id, idx)}
+                                        style={{ width: "16px", height: "16px", accentColor: "#16a34a", cursor: "pointer" }}
+                                      />
+                                      <span>{item.text}</span>
+                                    </label>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                </div>
+              );
+            })()}
 
             {activeProjectTab === "expenses" && (() => {
               const linkedExps = expenses.filter(e =>

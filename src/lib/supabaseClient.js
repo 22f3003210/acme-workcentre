@@ -90,7 +90,9 @@ export const supabaseAddProject = async (project) => {
     audit_reports: project.auditReports || null,
     checklists: project.checklists || null,
     client_visits: project.clientVisits || null,
-    scheduled_events: project.phaseTasks || project.scheduledEvents || null
+    scheduled_events: project.phaseTasks || project.scheduledEvents || null,
+    discussions: project.discussions || [],
+    locations_registry: project.locations_registry || project.locationsList || []
   };
   const { data, error } = await supabase.from("projects").upsert([payload], { onConflict: "id" });
   if (error) console.error("Supabase add project error:", error);
@@ -127,6 +129,9 @@ export const supabaseUpdateProject = async (projectId, updatedFields) => {
   if (updatedFields.checklists !== undefined) dbPayload.checklists = updatedFields.checklists;
   if (updatedFields.clientVisits !== undefined) dbPayload.client_visits = updatedFields.clientVisits;
   if (updatedFields.scheduledEvents !== undefined) dbPayload.scheduled_events = updatedFields.scheduledEvents;
+  if (updatedFields.discussions !== undefined) dbPayload.discussions = updatedFields.discussions;
+  if (updatedFields.locations_registry !== undefined) dbPayload.locations_registry = updatedFields.locations_registry;
+  if (updatedFields.locationsList !== undefined) dbPayload.locations_registry = updatedFields.locationsList;
   if (updatedFields.phaseTasks !== undefined) {
     dbPayload.scheduled_events = updatedFields.phaseTasks;
   }

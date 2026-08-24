@@ -1316,6 +1316,86 @@ export default function ProjectsView() {
     );
   };
 
+  const handleSaveLocation = (e) => {
+    e.preventDefault();
+    if (!locationForm.name.trim() && !locationForm.address.trim()) {
+      if (typeof setToast === "function") setToast({ message: "Please provide a location name or address.", type: "error" });
+      return;
+    }
+
+    const existingLocations = (effectiveProject && (effectiveProject.locationsList || effectiveProject.businessDetails?.locationsList || effectiveProject.locations_registry)) || [];
+
+    const newLocationObj = {
+      id: editingLocationId || `loc-${Date.now()}`,
+      name: locationForm.name.trim() || (locationForm.locationType === "Custom" ? locationForm.customType : locationForm.locationType),
+      locationType: locationForm.locationType === "Custom" ? (locationForm.customType || "Custom Location") : locationForm.locationType,
+      customType: locationForm.customType,
+      address: locationForm.address.trim(),
+      city: locationForm.city.trim(),
+      state: locationForm.state.trim(),
+      pincode: locationForm.pincode.trim(),
+      lat: locationForm.lat.trim(),
+      lng: locationForm.lng.trim(),
+      contactPerson: locationForm.contactPerson.trim(),
+      contactPhone: locationForm.contactPhone.trim(),
+      isPrimaryAuditTarget: Boolean(locationForm.isPrimaryAuditTarget),
+      notes: locationForm.notes ? locationForm.notes.trim() : ""
+    };
+
+    let updatedList = [];
+    if (editingLocationId) {
+      updatedList = existingLocations.map(l => l.id === editingLocationId ? newLocationObj : (newLocationObj.isPrimaryAuditTarget ? { ...l, isPrimaryAuditTarget: false } : l));
+    } else {
+      const resetList = newLocationObj.isPrimaryAuditTarget ? existingLocations.map(l => ({ ...l, isPrimaryAuditTarget: false })) : existingLocations;
+      updatedList = [...resetList, newLocationObj];
+    }
+
+    const primaryLoc = updatedList.find(l => l.isPrimaryAuditTarget) || updatedList[0];
+    const updatedBizDetails = {
+      ...(bizDetails || {}),
+      locationsList: updatedList,
+      headOffice: primaryLoc ? (primaryLoc.name + (primaryLoc.city ? ` (${primaryLoc.city})` : "")) : (bizDetails?.headOffice || ""),
+      headOfficeCoordinates: primaryLoc && primaryLoc.lat ? {
+        lat: primaryLoc.lat,
+        lng: primaryLoc.lng,
+        address: primaryLoc.address || primaryLoc.name
+      } : (bizDetails?.headOfficeCoordinates || null)
+    };
+
+    updateProject(effectiveProject.id, {
+      locationsList: updatedList,
+      locations_registry: updatedList,
+      businessDetails: updatedBizDetails,
+      business_details: updatedBizDetails
+    });
+
+    setShowLocationModal(false);
+    setEditingLocationId(null);
+    if (typeof setToast === "function") {
+      setToast({ message: "Location & GPS coordinates saved successfully!", type: "success" });
+    }
+  };
+
+  const handleDeleteLocation = (locId) => {
+    if (window.confirm("Are you sure you want to remove this location?")) {
+      const existingLocations = (effectiveProject && (effectiveProject.locationsList || effectiveProject.businessDetails?.locationsList || effectiveProject.locations_registry)) || [];
+      const updatedList = existingLocations.filter(l => l.id !== locId);
+      const updatedBizDetails = {
+        ...(bizDetails || {}),
+        locationsList: updatedList
+      };
+      updateProject(effectiveProject.id, {
+        locationsList: updatedList,
+        locations_registry: updatedList,
+        businessDetails: updatedBizDetails,
+        business_details: updatedBizDetails
+      });
+      if (typeof setToast === "function") {
+        setToast({ message: "Location removed.", type: "success" });
+      }
+    }
+  };
+
   // Schedule Event Form State
   const [showEventModal, setShowEventModal] = useState(false);
   const [evtTitle, setEvtTitle] = useState("");

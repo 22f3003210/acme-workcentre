@@ -6833,10 +6833,6 @@ export default function ProjectsView() {
                     <p style={{ margin: 0, fontSize: "0.95rem", color: "#1e293b", lineHeight: "1.55" }}>
                       Are you sure you want to promote <strong>{promoteConfirmation.project?.name}</strong> from <span style={{ color: "#475569", fontWeight: "700" }}>{promoteConfirmation.currentStage}</span> to <span style={{ color: "#4f46e5", fontWeight: "800" }}>{promoteConfirmation.targetStage}</span>?
                     </p>
-                    <div style={{ marginTop: "10px", fontSize: "0.78rem", color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
-                      <span>ℹ️</span>
-                      <span>Clicking <strong>Yes</strong> will save changes and move to the next stage. <strong>No</strong> will stay on the current stage.</span>
-                    </div>
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
@@ -7578,10 +7574,6 @@ export default function ProjectsView() {
               <p style={{ margin: 0, fontSize: "0.95rem", color: "#1e293b", lineHeight: "1.55" }}>
                 Are you sure you want to promote <strong>{promoteConfirmation.project?.name}</strong> from <span style={{ color: "#475569", fontWeight: "700" }}>{promoteConfirmation.currentStage}</span> to <span style={{ color: "#4f46e5", fontWeight: "800" }}>{promoteConfirmation.targetStage}</span>?
               </p>
-              <div style={{ marginTop: "10px", fontSize: "0.78rem", color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
-                <span>ℹ️</span>
-                <span>Clicking <strong>Yes</strong> will save changes and move to the next stage. <strong>No</strong> will stay on the current stage.</span>
-              </div>
             </div>
 
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>

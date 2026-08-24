@@ -2530,102 +2530,17 @@ export default function ProjectsView() {
                   <span style={{ background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", padding: "2px 8px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800" }}>
                     {effectiveProject.code || "PROJ"}
                   </span>
-                  <span style={{
-                    background: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#dcfce7" : "#fff7ed",
-                    color: (effectiveProject.status || "Active").toLowerCase() === "active" ? "#16a34a" : "#d97706",
-                    padding: "2px 10px", borderRadius: "14px", fontSize: "0.75rem", fontWeight: "800"
-                  }}>
-                    ● {effectiveProject.status || "Active"}
-                  </span>
                 </div>
 
-                {/* Subtitle with Started on & Dynamic Owner */}
+                {/* Subtitle with Started on */}
                 <div style={{ fontSize: "0.82rem", color: "#64748b", marginTop: "6px", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
                   <span>Started on {effectiveProject.startDate || "2026-07-01"}</span>
-                  <span>•</span>
-                  <span>Owner: <strong style={{ color: "#0f172a" }}>{effectiveProject.owner || (effectiveProject.assignedConsultants && effectiveProject.assignedConsultants[0]) || currentUser?.name || "Darla Manikanta"}</strong></span>
-                  {!isConsultant && (
-                    <button onClick={handleStartEditBusiness} style={{ background: "none", border: "none", color: "#2563eb", cursor: "pointer", fontWeight: "700", padding: "0 4px", display: "inline-flex", alignItems: "center" }} title="Edit Business Details">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                      </svg>
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
 
             {/* Quick Action Buttons & Right Close ✕ Button */}
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              
-              {/* Assign Consultant Dropdown Widget - ADMIN ONLY */}
-              {!isConsultant ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "4px 10px", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}>
-                  <span style={{ fontSize: "0.8rem", fontWeight: "800", color: "#334155", display: "flex", alignItems: "center", gap: "4px", whiteSpace: "nowrap" }}>
-                    👤 Assign Consultant:
-                  </span>
-                  <select
-                    value={effectiveProject.assignedConsultantId || (effectiveProject.assignedConsultants && effectiveProject.assignedConsultants[0]) || ""}
-                    onChange={(e) => {
-                      const selectedId = e.target.value;
-                      const selectedUser = (users || []).find(u => u.id === selectedId || u.empCode === selectedId || u.emp_code === selectedId);
-                      const consultantName = selectedUser ? selectedUser.name : "";
-                      const assignedList = selectedUser 
-                        ? Array.from(new Set([selectedUser.id, selectedUser.empCode, selectedUser.emp_code, selectedUser.email, selectedUser.name].filter(Boolean)))
-                        : [];
-                      
-                      updateProject(effectiveProject.id, {
-                        assignedConsultantId: selectedId,
-                        assignedConsultantName: consultantName,
-                        assignedConsultant: consultantName,
-                        assignedConsultants: assignedList
-                      });
-
-                      const updated = projects.find(p => p.id === selectedProject.id);
-                      if (updated) {
-                        setSelectedProject({ 
-                          ...updated, 
-                          assignedConsultantId: selectedId, 
-                          assignedConsultantName: consultantName,
-                          assignedConsultant: consultantName,
-                          assignedConsultants: assignedList
-                        });
-                      }
-
-                      if (setToast) {
-                        setToast({ 
-                          message: selectedId ? `✓ Project assigned to ${consultantName}! It will now appear on all devices.` : "Consultant assignment removed.", 
-                          type: "success" 
-                        });
-                      }
-                    }}
-                    style={{
-                      padding: "6px 10px",
-                      borderRadius: "6px",
-                      border: "1px solid #cbd5e1",
-                      fontSize: "0.82rem",
-                      fontWeight: "800",
-                      background: "#ffffff",
-                      color: "#0f172a",
-                      cursor: "pointer",
-                      outline: "none"
-                    }}
-                  >
-                    <option value="">-- Select Active Consultant --</option>
-                    {(users || []).map(u => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} ({u.role || "Consultant"} • {u.email || u.empCode || u.id})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "6px 12px", fontSize: "0.82rem", fontWeight: "700", color: "#166534" }}>
-                  <span>👤 Assigned Lead:</span>
-                  <strong style={{ color: "#15803d" }}>{effectiveProject.assignedConsultantName || effectiveProject.assignedConsultant || currentUser?.name || "Consultant"}</strong>
-                </div>
-              )}
               <button style={{ background: "#f1f5f9", border: "none", width: "36px", height: "36px", borderRadius: "50%", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }} title="Send Email">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </button>

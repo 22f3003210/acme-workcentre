@@ -223,25 +223,28 @@ export default function InlineGMeetScheduler({
         background: "#ffffff",
         border: "1px solid #e2e8f0",
         borderRadius: "16px",
-        padding: "24px",
+        padding: "26px",
         display: "flex",
         flexDirection: "column",
-        gap: "20px",
-        boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.05)"
+        gap: "22px",
+        boxShadow: "0 4px 20px -2px rgba(0, 0, 0, 0.04)"
       }}
     >
       {/* HEADER SECTION */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px", borderBottom: "1px solid #f1f5f9", paddingBottom: "18px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px", borderBottom: "1px solid #f1f5f9", paddingBottom: "18px" }}>
         <div style={{ flex: "1 1 340px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
-            <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: "#e0e7ff", color: "#4f46e5", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>
-              📹
+          <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+            <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "linear-gradient(135deg, #00832d 0%, #00ac47 50%, #0066da 100%)", color: "#ffffff", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 3px 10px rgba(0, 172, 71, 0.25)" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="23 7 16 12 23 17 23 7"/>
+                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+              </svg>
             </div>
             <div>
               <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>
                 Google Meet Pre-Audit Session & Calendar Scheduler
               </h3>
-              <p style={{ margin: "2px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+              <p style={{ margin: "3px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
                 Official Google Meet video room creation, calendar synchronization, and client invitation management.
               </p>
             </div>
@@ -251,18 +254,19 @@ export default function InlineGMeetScheduler({
         {/* STATUS BADGE */}
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {hasConfiguredMeet ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#dcfce7", color: "#15803d", padding: "6px 12px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: "800", border: "1px solid #bbf7d0" }}>
-              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#16a34a", display: "inline-block" }} />
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#dcfce7", color: "#15803d", padding: "6px 14px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: "800", border: "1px solid #bbf7d0" }}>
+              <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#16a34a", display: "inline-block" }} />
               Google Meet Configured
             </div>
           ) : meetingDate ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#fef3c7", color: "#b45309", padding: "6px 12px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: "800", border: "1px solid #fde68a" }}>
-              <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#f59e0b", display: "inline-block" }} />
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#fef3c7", color: "#b45309", padding: "6px 14px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: "800", border: "1px solid #fde68a" }}>
+              <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#f59e0b", display: "inline-block" }} />
               Date Set (Pending Meet Link)
             </div>
           ) : (
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", background: "#f1f5f9", color: "#64748b", padding: "6px 12px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: "700" }}>
-              ⚪ Not Scheduled
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#f1f5f9", color: "#64748b", padding: "6px 14px", borderRadius: "20px", fontSize: "0.78rem", fontWeight: "700" }}>
+              <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#94a3b8", display: "inline-block" }} />
+              Not Scheduled
             </div>
           )}
         </div>
@@ -282,11 +286,12 @@ export default function InlineGMeetScheduler({
           gap: "14px"
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-          <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "#4338ca", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-            ⚡ Genuine Google Meet Provisioning
+        <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
+          <span style={{ fontSize: "0.75rem", fontWeight: "800", color: "#4338ca", textTransform: "uppercase", letterSpacing: "0.5px", display: "flex", alignItems: "center", gap: "6px" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4338ca" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            GENUINE GOOGLE MEET PROVISIONING
           </span>
-          <span style={{ fontSize: "0.85rem", color: "#334155", fontWeight: "600" }}>
+          <span style={{ fontSize: "0.84rem", color: "#334155", fontWeight: "600" }}>
             Generate actual Google Meet video rooms or sync directly via Google Calendar
           </span>
         </div>
@@ -304,13 +309,15 @@ export default function InlineGMeetScheduler({
               fontWeight: "800",
               fontSize: "0.85rem",
               cursor: "pointer",
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
               gap: "8px",
-              boxShadow: "0 2px 10px rgba(79, 70, 229, 0.3)"
+              boxShadow: "0 2px 10px rgba(79, 70, 229, 0.25)",
+              transition: "all 0.15s ease"
             }}
           >
-            <span>✨</span> Create Live Meet (meet.google.com/new)
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+            <span>Create Live Meet (meet.google.com/new)</span>
           </button>
 
           <button
@@ -325,13 +332,15 @@ export default function InlineGMeetScheduler({
               fontWeight: "700",
               fontSize: "0.85rem",
               cursor: "pointer",
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
               gap: "8px",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.06)"
+              boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+              transition: "all 0.15s ease"
             }}
           >
-            <span>📅</span> Schedule in Google Calendar
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            <span>Schedule in Google Calendar</span>
           </button>
         </div>
       </div>
@@ -342,19 +351,21 @@ export default function InlineGMeetScheduler({
           background: "#ffffff",
           border: isValidUrl ? "1px solid #86efac" : hasConfiguredMeet ? "1px solid #cbd5e1" : "1px dashed #cbd5e1",
           borderRadius: "12px",
-          padding: "18px",
+          padding: "18px 20px",
           display: "flex",
           flexDirection: "column",
           gap: "12px"
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-          <label style={{ fontSize: "0.78rem", fontWeight: "800", color: "#334155", textTransform: "uppercase" }}>
-            🔗 Active Google Meet URL / Join Link:
+          <label style={{ fontSize: "0.78rem", fontWeight: "800", color: "#334155", textTransform: "uppercase", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" strokeWidth="2.2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Active Google Meet URL / Join Link:
           </label>
           {isValidUrl && (
-            <span style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px" }}>
-              ✓ Valid Google Meet Room Format
+            <span style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: "700", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Valid Google Meet Room Format
             </span>
           )}
         </div>
@@ -393,13 +404,17 @@ export default function InlineGMeetScheduler({
               fontSize: "0.85rem",
               fontWeight: "700",
               cursor: "pointer",
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
               gap: "6px"
             }}
           >
-            <span>{copiedLink ? "✓" : "📋"}</span>
-            {copiedLink ? "Copied!" : "Copy Link"}
+            {copiedLink ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            )}
+            <span>{copiedLink ? "Copied!" : "Copy Link"}</span>
           </button>
 
           <a
@@ -414,13 +429,17 @@ export default function InlineGMeetScheduler({
               fontSize: "0.85rem",
               fontWeight: "800",
               textDecoration: "none",
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
               gap: "8px",
               boxShadow: "0 2px 8px rgba(22, 163, 74, 0.25)"
             }}
           >
-            <span>🚀</span> Launch Meet ➔
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="23 7 16 12 23 17 23 7"/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+            </svg>
+            <span>Launch Meet ➔</span>
           </a>
         </div>
       </div>
@@ -429,8 +448,9 @@ export default function InlineGMeetScheduler({
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", borderTop: "1px solid #f1f5f9", paddingTop: "18px" }}>
         {/* Date */}
         <div>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>
-            📅 MEETING DATE
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            MEETING DATE
           </label>
           <input
             type="date"
@@ -443,15 +463,17 @@ export default function InlineGMeetScheduler({
               border: "1px solid #cbd5e1",
               fontSize: "0.85rem",
               boxSizing: "border-box",
-              fontWeight: "600"
+              fontWeight: "600",
+              background: "#ffffff"
             }}
           />
         </div>
 
         {/* Time Slot */}
         <div>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>
-            ⏰ TIME SLOT
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            TIME SLOT
           </label>
           <input
             type="text"
@@ -465,7 +487,8 @@ export default function InlineGMeetScheduler({
               border: "1px solid #cbd5e1",
               fontSize: "0.85rem",
               boxSizing: "border-box",
-              fontWeight: "600"
+              fontWeight: "600",
+              background: "#ffffff"
             }}
           />
           {/* Quick preset chips */}
@@ -494,8 +517,9 @@ export default function InlineGMeetScheduler({
 
         {/* Duration */}
         <div>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>
-            ⏳ DURATION
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 10"/></svg>
+            DURATION
           </label>
           <select
             value={duration}
@@ -507,7 +531,8 @@ export default function InlineGMeetScheduler({
               border: "1px solid #cbd5e1",
               fontSize: "0.85rem",
               boxSizing: "border-box",
-              fontWeight: "600"
+              fontWeight: "600",
+              background: "#ffffff"
             }}
           >
             <option value="30">30 Minutes</option>
@@ -520,8 +545,9 @@ export default function InlineGMeetScheduler({
 
         {/* Lead Consultant */}
         <div>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>
-            👨‍💼 LEAD CONSULTANT
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            LEAD CONSULTANT
           </label>
           <select
             value={leadConsultant}
@@ -533,7 +559,8 @@ export default function InlineGMeetScheduler({
               border: "1px solid #cbd5e1",
               fontSize: "0.85rem",
               boxSizing: "border-box",
-              fontWeight: "600"
+              fontWeight: "600",
+              background: "#ffffff"
             }}
           >
             {(users || []).map((u) => (
@@ -551,8 +578,9 @@ export default function InlineGMeetScheduler({
       {/* CLIENT CONTACT & AGENDA SECTION */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "14px" }}>
         <div>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>
-            📱 CLIENT POC CONTACT / ATTENDEE EMAIL
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><path d="M12 18h.01"/></svg>
+            CLIENT POC CONTACT / ATTENDEE EMAIL
           </label>
           <input
             type="text"
@@ -565,14 +593,16 @@ export default function InlineGMeetScheduler({
               borderRadius: "8px",
               border: "1px solid #cbd5e1",
               fontSize: "0.85rem",
-              boxSizing: "border-box"
+              boxSizing: "border-box",
+              background: "#ffffff"
             }}
           />
         </div>
 
         <div>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>
-            📝 PRE-AUDIT VIRTUAL AGENDA & OBJECTIVES
+          <label style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px", textTransform: "uppercase" }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            PRE-AUDIT VIRTUAL AGENDA & OBJECTIVES
           </label>
           <textarea
             rows={3}
@@ -587,7 +617,8 @@ export default function InlineGMeetScheduler({
               lineHeight: "1.5",
               boxSizing: "border-box",
               fontFamily: "inherit",
-              resize: "vertical"
+              resize: "vertical",
+              background: "#ffffff"
             }}
           />
         </div>
@@ -617,13 +648,18 @@ export default function InlineGMeetScheduler({
             fontSize: "0.85rem",
             fontWeight: "700",
             cursor: "pointer",
-            display: "flex",
+            display: "inline-flex",
             alignItems: "center",
-            gap: "8px"
+            gap: "8px",
+            transition: "all 0.15s ease"
           }}
         >
-          <span>{copiedInvite ? "✓" : "💬"}</span>
-          {copiedInvite ? "Invite Copied!" : "Copy WhatsApp / Email Client Invite"}
+          {copiedInvite ? (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          ) : (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          )}
+          <span>{copiedInvite ? "Invite Copied!" : "Copy WhatsApp / Email Client Invite"}</span>
         </button>
 
         <div style={{ display: "flex", gap: "10px" }}>
@@ -631,7 +667,7 @@ export default function InlineGMeetScheduler({
             type="button"
             onClick={handleSaveAndSync}
             style={{
-              background: "#2563eb",
+              background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
               color: "#ffffff",
               border: "none",
               padding: "10px 24px",
@@ -639,13 +675,15 @@ export default function InlineGMeetScheduler({
               fontWeight: "800",
               fontSize: "0.9rem",
               cursor: "pointer",
-              display: "flex",
+              display: "inline-flex",
               alignItems: "center",
               gap: "8px",
-              boxShadow: "0 2px 8px rgba(37, 99, 235, 0.3)"
+              boxShadow: "0 3px 10px rgba(37, 99, 235, 0.25)",
+              transition: "all 0.15s ease"
             }}
           >
-            <span>💾</span> Save & Sync to ACME Calendar
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            <span>Save & Sync to ACME Calendar</span>
           </button>
         </div>
       </div>

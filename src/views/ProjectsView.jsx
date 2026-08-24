@@ -3560,43 +3560,86 @@ export default function ProjectsView() {
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                 
                 {/* SUB-TABS NAVIGATION HEADER */}
-                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "8px 12px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "8px 12px", display: "flex", gap: "10px", flexWrap: "wrap", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
                   {[
-                    { id: "pre_audit", label: "📹 1. Pre-Audit Virtual Session & G-Meet", badge: effectiveProject.preAuditData?.gmeetLink ? "Scheduled" : "Pending" },
-                    { id: "internal_checklist", label: "📋 2. Internal Audit Checklist & Visit Planning", badge: `${(effectiveProject.checklists || []).length || 8} items` },
-                    { id: "audit_report", label: "📄 3. Audit Report & Publishing", badge: auditDocs.length > 0 ? "Uploaded" : "Pending" }
-                  ].map(st => (
-                    <button
-                      key={st.id}
-                      onClick={() => setAuditSubTab(st.id)}
-                      style={{
-                        padding: "10px 18px",
-                        borderRadius: "8px",
-                        border: auditSubTab === st.id ? "1px solid #4f46e5" : "1px solid transparent",
-                        background: auditSubTab === st.id ? "#e0e7ff" : "transparent",
-                        color: auditSubTab === st.id ? "#4338ca" : "#475569",
-                        fontWeight: auditSubTab === st.id ? "800" : "600",
-                        fontSize: "0.85rem",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        transition: "all 0.15s ease"
-                      }}
-                    >
-                      <span>{st.label}</span>
-                      <span style={{
-                        fontSize: "0.7rem",
-                        padding: "2px 8px",
-                        borderRadius: "10px",
-                        background: auditSubTab === st.id ? "#4f46e5" : "#f1f5f9",
-                        color: auditSubTab === st.id ? "#ffffff" : "#64748b",
-                        fontWeight: "700"
-                      }}>
-                        {st.badge}
-                      </span>
-                    </button>
-                  ))}
+                    {
+                      id: "pre_audit",
+                      num: "1",
+                      title: "Pre-Audit Virtual Session & G-Meet",
+                      icon: (
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <polygon points="23 7 16 12 23 17 23 7"/>
+                          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                        </svg>
+                      ),
+                      badge: effectiveProject.preAuditData?.gmeetLink ? "Scheduled" : "Pending"
+                    },
+                    {
+                      id: "internal_checklist",
+                      num: "2",
+                      title: "Internal Audit Checklist & Visit Planning",
+                      icon: (
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+                          <path d="m9 14 2 2 4-4"/>
+                        </svg>
+                      ),
+                      badge: `${(effectiveProject.checklists || []).length || 8} items`
+                    },
+                    {
+                      id: "audit_report",
+                      num: "3",
+                      title: "Audit Report & Publishing",
+                      icon: (
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                          <polyline points="14 2 14 8 20 8"/>
+                          <line x1="16" y1="13" x2="8" y2="13"/>
+                          <line x1="16" y1="17" x2="8" y2="17"/>
+                          <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                      ),
+                      badge: auditDocs.length > 0 ? "Uploaded" : "Pending"
+                    }
+                  ].map(st => {
+                    const isActive = auditSubTab === st.id;
+                    return (
+                      <button
+                        key={st.id}
+                        onClick={() => setAuditSubTab(st.id)}
+                        style={{
+                          padding: "9px 16px",
+                          borderRadius: "8px",
+                          border: isActive ? "1px solid #4f46e5" : "1px solid transparent",
+                          background: isActive ? "#eef2ff" : "transparent",
+                          color: isActive ? "#4338ca" : "#475569",
+                          fontWeight: isActive ? "800" : "600",
+                          fontSize: "0.84rem",
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          transition: "all 0.15s ease"
+                        }}
+                      >
+                        <span style={{ color: isActive ? "#4f46e5" : "#94a3b8", display: "flex", alignItems: "center" }}>
+                          {st.icon}
+                        </span>
+                        <span>{st.num}. {st.title}</span>
+                        <span style={{
+                          fontSize: "0.7rem",
+                          padding: "2px 8px",
+                          borderRadius: "10px",
+                          background: isActive ? "#4f46e5" : "#f1f5f9",
+                          color: isActive ? "#ffffff" : "#64748b",
+                          fontWeight: "700"
+                        }}>
+                          {st.badge}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* ── SUB-TAB 1: PRE-AUDIT VIRTUAL SESSION & G-MEET ── */}
@@ -3615,10 +3658,11 @@ export default function ProjectsView() {
 
                     {/* Pre-Audit Interactive Questionnaire Examples */}
                     <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
                         <div>
-                          <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span>📋</span> Pre-Audit Questionnaire (Jewellery Baseline Checklist)
+                          <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="m9 14 2 2 4-4"/></svg>
+                            <span>Pre-Audit Questionnaire (Jewellery Baseline Checklist)</span>
                           </h3>
                           <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
                             Key diagnostic data captured during the pre-audit virtual session with client management.
@@ -3627,9 +3671,10 @@ export default function ProjectsView() {
 
                         <button
                           onClick={() => handleSaveQuestionnaire(effectiveProject, qAnswers)}
-                          style={{ background: "#16a34a", color: "#ffffff", border: "none", padding: "8px 18px", borderRadius: "6px", fontWeight: "800", fontSize: "0.82rem", cursor: "pointer" }}
+                          style={{ background: "#16a34a", color: "#ffffff", border: "none", padding: "8px 18px", borderRadius: "6px", fontWeight: "800", fontSize: "0.82rem", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}
                         >
-                          💾 Save Questionnaire
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                          <span>Save Questionnaire</span>
                         </button>
                       </div>
 
@@ -3724,8 +3769,9 @@ export default function ProjectsView() {
                     <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
                         <div>
-                          <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span>🤖</span> AI Pre-Audit Meeting Notes & Transcript Analyzer
+                          <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "inline-flex", alignItems: "center", gap: "8px" }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                            <span>AI Pre-Audit Meeting Notes & Transcript Analyzer</span>
                           </h3>
                           <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
                             Auto-fetches recorded discussion transcript and produces structured executive takeaways and action items.
@@ -3744,13 +3790,14 @@ export default function ProjectsView() {
                             fontWeight: "800",
                             fontSize: "0.85rem",
                             cursor: isGeneratingAiNotes ? "wait" : "pointer",
-                            display: "flex",
+                            display: "inline-flex",
                             alignItems: "center",
                             gap: "8px",
                             boxShadow: "0 2px 8px rgba(124, 58, 237, 0.25)"
                           }}
                         >
-                          <span>{isGeneratingAiNotes ? "⏳ Analyzing Transcript..." : "✨ Generate AI Notes & Takeaways"}</span>
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                          <span>{isGeneratingAiNotes ? "Analyzing Transcript..." : "Generate AI Notes & Takeaways"}</span>
                         </button>
                       </div>
 

@@ -682,10 +682,10 @@ export const DEFAULT_STRATEGY_TAXONOMY = {
 };
 
 export const DISCUSSION_TYPES = [
-  { id: "General", label: "General Discussion", icon: "💬", color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe" },
-  { id: "Strategy", label: "Strategy & Planning", icon: "🎯", color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe" },
-  { id: "Audit Note", label: "Audit & Review Note", icon: "🔍", color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd" },
-  { id: "Action Item", label: "Action Item / Milestone", icon: "⚡", color: "#d97706", bg: "#fffbeb", border: "#fde68a" }
+  { id: "General", label: "General Discussion", stageLabel: "Lead Stage", icon: "💬", color: "#2563eb", bg: "#eff6ff", border: "#bfdbfe" },
+  { id: "Audit Note", label: "Audit Notes", stageLabel: "Audit Stage", icon: "🔍", color: "#0284c7", bg: "#f0f9ff", border: "#bae6fd" },
+  { id: "Strategy", label: "Strategy Plans", stageLabel: "Kickoff Stage", icon: "🎯", color: "#7c3aed", bg: "#f5f3ff", border: "#ddd6fe" },
+  { id: "Action Item", label: "Action Items", stageLabel: "On-Going Stage", icon: "⚡", color: "#d97706", bg: "#fffbeb", border: "#fde68a" }
 ];
 
 // Custom Searchable Dropdown with "+ Add" button for Category & Sub-Category
@@ -1126,13 +1126,23 @@ export default function ProjectsView() {
   const [discForm, setDiscForm] = useState({
     title: "",
     notes: "",
-    discussionType: "Strategy", // 'General', 'Strategy', 'Audit Note', 'Action Item'
+    discussionType: "General", // 'General', 'Strategy', 'Audit Note', 'Action Item'
     category: "Marketing",
     subCategory: "Offer Planning",
     priority: "Normal", // 'Normal', 'High', 'Urgent', 'Critical'
     isPinned: false,
-    actionItemsText: ""
+    actionItemsText: "",
+    audioUrl: null,
+    audioName: null,
+    attachments: []
   });
+
+  // Audio recording states & refs
+  const [isRecordingAudio, setIsRecordingAudio] = useState(false);
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
 
   const handleAddCustomCategory = (newCat) => {
     if (!newCat || !newCat.trim()) return;
@@ -5253,6 +5263,18 @@ export default function ProjectsView() {
 
             {activeProjectTab === "discussions" && (() => {
               const allDiscussions = effectiveProject.discussions || [];
+              const currentStage = getProjectStage(effectiveProject);
+              
+              // Stage-to-Discussion-Type mapping:
+              // Lead Stage -> General
+              // Audit Stage -> Audit Notes
+              // Kickoff Stage -> Strategy Plans
+              // On-Going Stage -> Action Items
+              const stageDefaultDiscussionType = currentStage === "Lead Stage" ? "General"
+                : currentStage === "Audit Stage" ? "Audit Note"
+                : currentStage === "Kickoff Stage" ? "Strategy"
+                : currentStage === "On-Going Stage" ? "Action Item"
+                : "General";
 
               // Extract all available categories & subcategories from taxonomy and existing discussions
               const allKnownCategories = Array.from(new Set([
@@ -5300,10 +5322,135 @@ export default function ProjectsView() {
               const auditNotesCount = allDiscussions.filter(d => d.discussionType === "Audit Note").length;
               const actionItemsCount = allDiscussions.filter(d => d.discussionType === "Action Item").length;
 
+              const handleOpenAddDiscussionModal = (typeOverride = null) => {
+                const targetType = typeOverride || stageDefaultDiscussionType;
+                setDiscForm({
+                  title: "",
+                  notes: "",
+                  discussionType: targetType,
+                  category: targetType === "Strategy" ? "Marketing" : "",
+                  subCategory: targetType === "Strategy" ? "Offer Planning" : "",
+                  priority: "Normal",
+                  isPinned: false,
+                  actionItemsText: "",
+                  audioUrl: null,
+                  audioName: null,
+                  attachments: []
+                });
+                setIsRecordingAudio(false);
+                setRecordingSeconds(0);
+                setIsAddingDiscussion(true);
+              };
+
+              const handleStartRecording = async () => {
+                try {
+                  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    if (typeof setToast === "function") setToast({ message: "Audio recording is not supported in this browser. You can upload an audio file below.", type: "error" });
+                    return;
+                  }
+                  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                  audioChunksRef.current = [];
+                  const mediaRecorder = new MediaRecorder(stream);
+                  mediaRecorderRef.current = mediaRecorder;
+
+                  mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                      audioChunksRef.current.push(event.data);
+                    }
+                  };
+
+                  mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(audioBlob);
+                    reader.onloadend = () => {
+                      const base64Audio = reader.result;
+                      setDiscForm(prev => ({
+                        ...prev,
+                        audioUrl: base64Audio,
+                        audioName: `Voice_Memo_${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).replace(/:/g, '')}.webm`
+                      }));
+                    };
+                    stream.getTracks().forEach(track => track.stop());
+                  };
+
+                  mediaRecorder.start();
+                  setIsRecordingAudio(true);
+                  setRecordingSeconds(0);
+                  if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+                  recordingTimerRef.current = setInterval(() => {
+                    setRecordingSeconds(sec => sec + 1);
+                  }, 1000);
+
+                } catch (err) {
+                  console.error("Microphone access error:", err);
+                  if (typeof setToast === "function") {
+                    setToast({ message: "Microphone access denied. You can upload an audio file instead.", type: "error" });
+                  }
+                }
+              };
+
+              const handleStopRecording = () => {
+                if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+                  mediaRecorderRef.current.stop();
+                }
+                setIsRecordingAudio(false);
+                if (recordingTimerRef.current) {
+                  clearInterval(recordingTimerRef.current);
+                  recordingTimerRef.current = null;
+                }
+              };
+
+              const handleAudioFileUpload = (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (uploadEvent) => {
+                  setDiscForm(prev => ({
+                    ...prev,
+                    audioUrl: uploadEvent.target.result,
+                    audioName: file.name
+                  }));
+                };
+                reader.readAsDataURL(file);
+                e.target.value = "";
+              };
+
+              const handleAttachmentUpload = (e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length === 0) return;
+                
+                files.forEach(file => {
+                  const reader = new FileReader();
+                  reader.onload = (uploadEvent) => {
+                    const newAttachment = {
+                      id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+                      name: file.name,
+                      size: file.size,
+                      type: file.type,
+                      dataUrl: uploadEvent.target.result
+                    };
+                    setDiscForm(prev => ({
+                      ...prev,
+                      attachments: [...(prev.attachments || []), newAttachment]
+                    }));
+                  };
+                  reader.readAsDataURL(file);
+                });
+                e.target.value = "";
+              };
+
+              const handleRemoveAttachment = (attId) => {
+                setDiscForm(prev => ({
+                  ...prev,
+                  attachments: (prev.attachments || []).filter(a => a.id !== attId)
+                }));
+              };
+
               const handlePostDiscussion = (e) => {
                 e.preventDefault();
-                if (!discForm.title.trim() && !discForm.notes.trim()) {
-                  if (typeof setToast === "function") setToast({ message: "Please enter a subject or note for the discussion.", type: "error" });
+                if (!discForm.title.trim() && !discForm.notes.trim() && !discForm.audioUrl && (!discForm.attachments || discForm.attachments.length === 0)) {
+                  if (typeof setToast === "function") setToast({ message: "Please enter a subject, detailed note, voice recording, or attach a file.", type: "error" });
                   return;
                 }
 
@@ -5312,15 +5459,28 @@ export default function ProjectsView() {
                   ? discForm.actionItemsText.split("\n").map(t => t.trim()).filter(Boolean).map(text => ({ text, completed: false }))
                   : [];
 
+                const defaultTitle = discForm.discussionType === "General"
+                  ? (discForm.audioUrl ? "Voice Discussion Memo" : "General Discussion Note")
+                  : discForm.discussionType === "Audit Note"
+                  ? "Audit Observation & Review"
+                  : discForm.discussionType === "Strategy"
+                  ? (discForm.category ? `${discForm.category} Strategy: ${discForm.subCategory || "General"}` : "Strategy Plan")
+                  : "Action Item & Milestone";
+
+                const isGeneral = discForm.discussionType === "General";
+
                 const payload = {
-                  title: discForm.title.trim() || (discForm.discussionType === "Strategy" ? `${discForm.category} Strategy: ${discForm.subCategory || "General"}` : "Discussion Note"),
+                  title: discForm.title.trim() || defaultTitle,
                   notes: discForm.notes.trim(),
                   discussionType: discForm.discussionType,
-                  category: discForm.discussionType === "Strategy" ? discForm.category : (discForm.category || ""),
-                  subCategory: discForm.discussionType === "Strategy" ? discForm.subCategory : (discForm.subCategory || ""),
+                  category: isGeneral ? "" : (discForm.category || ""),
+                  subCategory: isGeneral ? "" : (discForm.subCategory || ""),
                   priority: discForm.priority || "Normal",
                   isPinned: discForm.isPinned || false,
-                  actionItems: parsedActionItems
+                  actionItems: parsedActionItems,
+                  audioUrl: discForm.audioUrl || null,
+                  audioName: discForm.audioName || null,
+                  attachments: discForm.attachments || []
                 };
 
                 addProjectDiscussion(effectiveProject.id, payload);
@@ -5329,17 +5489,22 @@ export default function ProjectsView() {
                 setDiscForm({
                   title: "",
                   notes: "",
-                  discussionType: "Strategy",
-                  category: "Marketing",
-                  subCategory: "Offer Planning",
+                  discussionType: stageDefaultDiscussionType,
+                  category: stageDefaultDiscussionType === "Strategy" ? "Marketing" : "",
+                  subCategory: stageDefaultDiscussionType === "Strategy" ? "Offer Planning" : "",
                   priority: "Normal",
                   isPinned: false,
-                  actionItemsText: ""
+                  actionItemsText: "",
+                  audioUrl: null,
+                  audioName: null,
+                  attachments: []
                 });
                 setIsAddingDiscussion(false);
+                setIsRecordingAudio(false);
+                if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
 
                 if (typeof setToast === "function") {
-                  setToast({ message: "Discussion & strategy note logged successfully!", type: "success" });
+                  setToast({ message: `${discForm.discussionType === "General" ? "General discussion" : discForm.discussionType} recorded successfully!`, type: "success" });
                 }
               };
 
@@ -5369,11 +5534,17 @@ export default function ProjectsView() {
               };
 
               const handleCopyDiscussion = (disc) => {
-                const text = `[${disc.discussionType.toUpperCase()}] ${disc.title}\nCategory: ${disc.category || 'General'} ${disc.subCategory ? `> ${disc.subCategory}` : ''}\nAuthor: ${disc.authorName} (${disc.formattedDate || disc.date})\n\n${disc.notes}`;
+                const text = `[${disc.discussionType.toUpperCase()}] ${disc.title}\n${disc.category ? `Category: ${disc.category} ${disc.subCategory ? `> ${disc.subCategory}` : ''}\n` : ''}Author: ${disc.authorName} (${disc.formattedDate || disc.date})\n\n${disc.notes}`;
                 navigator.clipboard.writeText(text);
                 if (typeof setToast === "function") {
                   setToast({ message: "Copied discussion note to clipboard!", type: "success" });
                 }
+              };
+
+              const formatSeconds = (sec) => {
+                const m = Math.floor(sec / 60).toString().padStart(2, '0');
+                const s = (sec % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
               };
 
               return (
@@ -5388,10 +5559,10 @@ export default function ProjectsView() {
                         </div>
                         <div>
                           <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#0f172a" }}>
-                            Discussions, Strategy Planning & Team Logs
+                            Discussions & Logs
                           </h3>
                           <p style={{ margin: "2px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
-                            Categorized discussion board with dedicated Strategy streams (Marketing, Sales, Merchandising, Ops) & filters.
+                            Stage-aligned discussion streams: <strong>General</strong> (Lead), <strong>Audit Notes</strong> (Audit), <strong>Strategy Plans</strong> (Kickoff) & <strong>Action Items</strong> (On-Going).
                           </p>
                         </div>
                       </div>
@@ -5401,14 +5572,14 @@ export default function ProjectsView() {
                         <span style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#334155" }}>
                           💬 Total: <strong>{allDiscussions.length}</strong>
                         </span>
-                        <span style={{ background: "#f5f3ff", border: "1px solid #ddd6fe", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#7c3aed" }}>
-                          🎯 Strategy Plans: <strong>{stratCount}</strong>
-                        </span>
                         <span style={{ background: "#eff6ff", border: "1px solid #bfdbfe", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#2563eb" }}>
                           💬 General: <strong>{genCount}</strong>
                         </span>
                         <span style={{ background: "#f0f9ff", border: "1px solid #bae6fd", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#0284c7" }}>
                           🔍 Audit Notes: <strong>{auditNotesCount}</strong>
+                        </span>
+                        <span style={{ background: "#f5f3ff", border: "1px solid #ddd6fe", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#7c3aed" }}>
+                          🎯 Strategy Plans: <strong>{stratCount}</strong>
                         </span>
                         <span style={{ background: "#fffbeb", border: "1px solid #fde68a", padding: "4px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#d97706" }}>
                           ⚡ Action Items: <strong>{actionItemsCount}</strong>
@@ -5416,10 +5587,9 @@ export default function ProjectsView() {
                       </div>
                     </div>
 
-                    {/* New Discussion Button */}
-                    {/* New Discussion Button */}
+                    {/* New Discussion Button - Stage Contextual */}
                     <button
-                      onClick={() => setIsAddingDiscussion(true)}
+                      onClick={() => handleOpenAddDiscussionModal()}
                       style={{
                         background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
                         color: "#ffffff",
@@ -5437,11 +5607,16 @@ export default function ProjectsView() {
                       }}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      <span>+ Note Discussion / Strategy</span>
+                      <span>
+                        {currentStage === "Lead Stage" ? "+ Add General Discussion"
+                          : currentStage === "Audit Stage" ? "+ Log Audit Note"
+                          : currentStage === "Kickoff Stage" ? "+ Add Strategy Plan"
+                          : "+ Create Action Item"}
+                      </span>
                     </button>
                   </div>
 
-                  {/* DISCUSSION & STRATEGY CREATION POP-UP MODAL */}
+                  {/* DISCUSSION CREATION POP-UP MODAL */}
                   {isAddingDiscussion && (
                     <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.65)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", backdropFilter: "blur(4px)" }}>
                       <div style={{ background: "#ffffff", borderRadius: "18px", width: "100%", maxWidth: "680px", maxHeight: "90vh", overflowY: "auto", padding: "28px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -5454,17 +5629,23 @@ export default function ProjectsView() {
                             </div>
                             <div>
                               <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
-                                Log New Discussion, Strategy Plan or Note
+                                {discForm.discussionType === "General" ? "💬 Log General Discussion / Voice Note"
+                                  : discForm.discussionType === "Audit Note" ? "🔍 Log Audit & Observation Note"
+                                  : discForm.discussionType === "Strategy" ? "🎯 Note Strategy Plan & Roadmap"
+                                  : "⚡ Create Action Item / Milestone"}
                               </h4>
                               <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>
-                                Author: <strong style={{ color: "#0f172a" }}>{currentUser?.name || "Consultant"}</strong> ({currentUser?.role || "Consultant"}) • Project: <strong>{effectiveProject.name}</strong>
+                                Stage: <strong style={{ color: "#4f46e5" }}>{currentStage}</strong> • Author: <strong>{currentUser?.name || "Consultant"}</strong>
                               </p>
                             </div>
                           </div>
 
                           <button
                             type="button"
-                            onClick={() => setIsAddingDiscussion(false)}
+                            onClick={() => {
+                              handleStopRecording();
+                              setIsAddingDiscussion(false);
+                            }}
                             style={{ background: "#f1f5f9", border: "none", width: "32px", height: "32px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}
                           >
                             ✕
@@ -5472,37 +5653,44 @@ export default function ProjectsView() {
                         </div>
 
                         <form onSubmit={handlePostDiscussion} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-                          {/* 1. Discussion Type Selector Pills */}
+                          {/* 1. Discussion Type Selector Pills with Stage Tags */}
                           <div>
                             <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "8px" }}>
-                              SELECT DISCUSSION TYPE:
+                              DISCUSSION TYPE & STAGE ALIGNMENT:
                             </label>
-                            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "10px" }}>
                               {DISCUSSION_TYPES.map(type => {
                                 const isSelected = discForm.discussionType === type.id;
+                                const isStageDefault = type.stageLabel === currentStage;
                                 return (
                                   <button
                                     key={type.id}
                                     type="button"
                                     onClick={() => setDiscForm(prev => ({ ...prev, discussionType: type.id }))}
                                     style={{
-                                      padding: "8px 16px",
+                                      padding: "8px 12px",
                                       borderRadius: "8px",
                                       border: isSelected ? `2px solid ${type.color}` : "1px solid #e2e8f0",
                                       background: isSelected ? type.bg : "#ffffff",
                                       color: isSelected ? type.color : "#475569",
                                       fontWeight: isSelected ? "800" : "600",
-                                      fontSize: "0.85rem",
+                                      fontSize: "0.82rem",
                                       cursor: "pointer",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "8px",
+                                      display: "flex",
+                                      flexDirection: "column",
+                                      alignItems: "flex-start",
+                                      gap: "3px",
                                       boxShadow: isSelected ? `0 2px 8px ${type.color}25` : "none",
                                       transition: "all 0.15s ease"
                                     }}
                                   >
-                                    <span>{type.icon}</span>
-                                    <span>{type.label}</span>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                      <span>{type.icon}</span>
+                                      <span>{type.label}</span>
+                                    </div>
+                                    <span style={{ fontSize: "0.68rem", color: isSelected ? type.color : "#94a3b8", fontWeight: isStageDefault ? "800" : "500" }}>
+                                      {type.stageLabel} {isStageDefault && "• Active"}
+                                    </span>
                                   </button>
                                 );
                               })}
@@ -5512,14 +5700,18 @@ export default function ProjectsView() {
                           {/* 2. Title & Subject */}
                           <div>
                             <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
-                              TITLE / DISCUSSION SUBJECT <span style={{ color: "#dc2626" }}>*</span>
+                              TITLE / SUBJECT {discForm.discussionType !== "General" && <span style={{ color: "#dc2626" }}>*</span>}
                             </label>
                             <input
                               type="text"
-                              required
                               value={discForm.title}
                               onChange={e => setDiscForm({ ...discForm, title: e.target.value })}
-                              placeholder={discForm.discussionType === "Strategy" ? "e.g., Diwali Akshaya Tritiya Campaign Offer Matrix" : "e.g., Weekly Client Operations & Reconciliation Sync"}
+                              placeholder={
+                                discForm.discussionType === "General" ? "e.g., Initial Client Inquiry & Showroom Brief"
+                                : discForm.discussionType === "Audit Note" ? "e.g., Physical Gold Inventory Reconciliation Findings"
+                                : discForm.discussionType === "Strategy" ? "e.g., Diwali Akshaya Tritiya Campaign Offer Matrix"
+                                : "e.g., Implement Daily Sales Ledger Verification Rule"
+                              }
                               style={{
                                 width: "100%",
                                 padding: "10px 14px",
@@ -5533,12 +5725,12 @@ export default function ProjectsView() {
                             />
                           </div>
 
-                          {/* 3. Category & Sub-Category Dropdowns */}
-                          {(discForm.discussionType === "Strategy" || discForm.discussionType === "General" || discForm.discussionType === "Audit Note") && (
+                          {/* 3. Category & Sub-Category Taxonomy — HIDDEN FOR GENERAL DISCUSSIONS */}
+                          {discForm.discussionType !== "General" && (
                             <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px" }}>
                               <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#4f46e5", textTransform: "uppercase", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
                                 <span>🎯 STRATEGY TAXONOMY & CLASSIFICATION</span>
-                                <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "500", textTransform: "none" }}>(Search existing or type to add new on the fly)</span>
+                                <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "500", textTransform: "none" }}>(Search existing or type to add new)</span>
                               </div>
 
                               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
@@ -5576,14 +5768,17 @@ export default function ProjectsView() {
                           {/* 4. Detailed Notes Textarea */}
                           <div>
                             <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
-                              DETAILED DISCUSSION NOTES / STRATEGIC ROADMAP <span style={{ color: "#dc2626" }}>*</span>
+                              {discForm.discussionType === "General" ? "MANUAL ENTRY NOTES" : "DETAILED DISCUSSION NOTES"}
                             </label>
                             <textarea
-                              rows="4"
-                              required
+                              rows="3"
                               value={discForm.notes}
                               onChange={e => setDiscForm({ ...discForm, notes: e.target.value })}
-                              placeholder="Describe discussion minutes, client feedback, strategy decisions, timelines, and milestones..."
+                              placeholder={
+                                discForm.discussionType === "General"
+                                  ? "Type general discussion notes, call summary, client requests..."
+                                  : "Describe discussion minutes, client feedback, strategy decisions, timelines..."
+                              }
                               style={{
                                 width: "100%",
                                 padding: "12px",
@@ -5598,30 +5793,179 @@ export default function ProjectsView() {
                             />
                           </div>
 
-                          {/* 5. Optional Action Items Checklist */}
-                          <div>
-                            <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
-                              ACTION ITEMS / DELIVERABLES (ONE PER LINE - OPTIONAL):
-                            </label>
-                            <textarea
-                              rows="2"
-                              value={discForm.actionItemsText}
-                              onChange={e => setDiscForm({ ...discForm, actionItemsText: e.target.value })}
-                              placeholder="e.g.&#10;Draft wedding collection offer creatives&#10;Verify physical stock tray weights with manager&#10;Configure POS promotion rule"
-                              style={{
-                                width: "100%",
-                                padding: "10px",
-                                borderRadius: "8px",
-                                border: "1px solid #cbd5e1",
-                                fontSize: "0.85rem",
-                                outline: "none",
-                                boxSizing: "border-box",
-                                fontFamily: "inherit"
-                              }}
-                            />
+                          {/* 5. AUDIO VOICE NOTE / RECORDING INPUT */}
+                          <div style={{ background: "#f8fafc", border: "1.5px dashed #cbd5e1", borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                              <span style={{ fontSize: "0.78rem", fontWeight: "800", color: "#1e293b", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span>🎙️</span>
+                                <span>AUDIO INPUT & VOICE MEMO</span>
+                              </span>
+                              {discForm.audioUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => setDiscForm(prev => ({ ...prev, audioUrl: null, audioName: null }))}
+                                  style={{ background: "#fee2e2", color: "#dc2626", border: "none", padding: "3px 8px", borderRadius: "4px", fontSize: "0.72rem", fontWeight: "700", cursor: "pointer" }}
+                                >
+                                  ✕ Remove Audio
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Voice Recording Controls */}
+                            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+                              {!isRecordingAudio ? (
+                                <button
+                                  type="button"
+                                  onClick={handleStartRecording}
+                                  style={{
+                                    background: "#eff6ff",
+                                    color: "#2563eb",
+                                    border: "1px solid #bfdbfe",
+                                    padding: "7px 14px",
+                                    borderRadius: "8px",
+                                    fontWeight: "700",
+                                    fontSize: "0.82rem",
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "6px"
+                                  }}
+                                >
+                                  <span>🔴</span>
+                                  <span>Record Voice Note</span>
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={handleStopRecording}
+                                  style={{
+                                    background: "#dc2626",
+                                    color: "#ffffff",
+                                    border: "none",
+                                    padding: "7px 16px",
+                                    borderRadius: "8px",
+                                    fontWeight: "800",
+                                    fontSize: "0.82rem",
+                                    cursor: "pointer",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    animation: "pulse 1.2s infinite"
+                                  }}
+                                >
+                                  <span>⏹️</span>
+                                  <span>Stop Recording ({formatSeconds(recordingSeconds)})</span>
+                                </button>
+                              )}
+
+                              <label style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "6px 12px", borderRadius: "8px", fontSize: "0.8rem", fontWeight: "600", color: "#475569", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                <span>📁</span>
+                                <span>Upload Audio (.mp3, .wav, .m4a)</span>
+                                <input
+                                  type="file"
+                                  accept="audio/*,.mp3,.wav,.m4a,.ogg,.webm"
+                                  onChange={handleAudioFileUpload}
+                                  style={{ display: "none" }}
+                                />
+                              </label>
+                            </div>
+
+                            {/* Audio Player Preview */}
+                            {discForm.audioUrl && (
+                              <div style={{ background: "#ffffff", border: "1px solid #bbf7d0", borderRadius: "8px", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                  <span style={{ fontSize: "1.1rem" }}>🎵</span>
+                                  <span style={{ fontSize: "0.8rem", fontWeight: "700", color: "#166534" }}>{discForm.audioName || "Voice Note"}</span>
+                                </div>
+                                <audio controls src={discForm.audioUrl} style={{ height: "32px", maxWidth: "260px" }} />
+                              </div>
+                            )}
                           </div>
 
-                          {/* 6. Priority & Pin Options */}
+                          {/* 6. ATTACHMENTS & DOCUMENT UPLOAD */}
+                          <div style={{ background: "#f8fafc", border: "1.5px dashed #cbd5e1", borderRadius: "10px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span style={{ fontSize: "0.78rem", fontWeight: "800", color: "#1e293b", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span>📎</span>
+                                <span>ATTACHMENTS (DOCUMENTS, IMAGES, PDFS)</span>
+                              </span>
+                              <label style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "5px 12px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "700", color: "#2563eb", cursor: "pointer" }}>
+                                + Choose Files
+                                <input
+                                  type="file"
+                                  multiple
+                                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip"
+                                  onChange={handleAttachmentUpload}
+                                  style={{ display: "none" }}
+                                />
+                              </label>
+                            </div>
+
+                            {/* Attachment Chips List */}
+                            {discForm.attachments && discForm.attachments.length > 0 ? (
+                              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                {discForm.attachments.map(att => (
+                                  <div
+                                    key={att.id}
+                                    style={{
+                                      background: "#ffffff",
+                                      border: "1px solid #cbd5e1",
+                                      borderRadius: "6px",
+                                      padding: "4px 10px",
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "8px",
+                                      fontSize: "0.78rem"
+                                    }}
+                                  >
+                                    <span>{att.type && att.type.startsWith("image/") ? "🖼️" : att.name.endsWith(".pdf") ? "📄" : "📁"}</span>
+                                    <span style={{ fontWeight: "700", color: "#0f172a", maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                      {att.name}
+                                    </span>
+                                    <span style={{ color: "#64748b", fontSize: "0.7rem" }}>({Math.round(att.size / 1024)} KB)</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveAttachment(att.id)}
+                                      style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontWeight: "800", padding: "0 2px" }}
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: "0.75rem", color: "#94a3b8", fontStyle: "italic" }}>
+                                No attachments added yet.
+                              </span>
+                            )}
+                          </div>
+
+                          {/* 7. Action Items (for Action Item type or optional for others) */}
+                          {discForm.discussionType === "Action Item" && (
+                            <div>
+                              <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
+                                ACTION ITEMS / CHECKLIST DELIVERABLES (ONE PER LINE):
+                              </label>
+                              <textarea
+                                rows="2"
+                                value={discForm.actionItemsText}
+                                onChange={e => setDiscForm({ ...discForm, actionItemsText: e.target.value })}
+                                placeholder="e.g.&#10;Verify physical stock tray weights with manager&#10;Configure POS promotion rule"
+                                style={{
+                                  width: "100%",
+                                  padding: "10px",
+                                  borderRadius: "8px",
+                                  border: "1px solid #cbd5e1",
+                                  fontSize: "0.85rem",
+                                  outline: "none",
+                                  boxSizing: "border-box",
+                                  fontFamily: "inherit"
+                                }}
+                              />
+                            </div>
+                          )}
+
+                          {/* 8. Priority & Pin Options */}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
                             <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -5645,14 +5989,17 @@ export default function ProjectsView() {
                                   onChange={e => setDiscForm({ ...discForm, isPinned: e.target.checked })}
                                   style={{ width: "16px", height: "16px", accentColor: "#4f46e5" }}
                                 />
-                                <span>📌 Pin to top of discussion board</span>
+                                <span>📌 Pin to top</span>
                               </label>
                             </div>
 
                             <div style={{ display: "flex", gap: "10px" }}>
                               <button
                                 type="button"
-                                onClick={() => setIsAddingDiscussion(false)}
+                                onClick={() => {
+                                  handleStopRecording();
+                                  setIsAddingDiscussion(false);
+                                }}
                                 style={{ background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", padding: "9px 18px", borderRadius: "8px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
                               >
                                 Cancel
@@ -5661,7 +6008,7 @@ export default function ProjectsView() {
                                 type="submit"
                                 style={{ background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)", color: "#ffffff", border: "none", padding: "9px 24px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 3px 8px rgba(79, 70, 229, 0.3)" }}
                               >
-                                ✓ Post Discussion Note
+                                ✓ Save & Post Note
                               </button>
                             </div>
                           </div>
@@ -5678,10 +6025,10 @@ export default function ProjectsView() {
                       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                         {[
                           { id: "All", label: `All Discussions (${allDiscussions.length})`, icon: "📋" },
-                          { id: "Strategy", label: `🎯 Strategy (${stratCount})`, color: "#7c3aed" },
-                          { id: "General", label: `💬 General (${genCount})`, color: "#2563eb" },
-                          { id: "Audit Note", label: `🔍 Audit Notes (${auditNotesCount})`, color: "#0284c7" },
-                          { id: "Action Item", label: `⚡ Action Items (${actionItemsCount})`, color: "#d97706" }
+                          { id: "General", label: `💬 General (${genCount})`, color: "#2563eb", stage: "Lead Stage" },
+                          { id: "Audit Note", label: `🔍 Audit Notes (${auditNotesCount})`, color: "#0284c7", stage: "Audit Stage" },
+                          { id: "Strategy", label: `🎯 Strategy Plans (${stratCount})`, color: "#7c3aed", stage: "Kickoff Stage" },
+                          { id: "Action Item", label: `⚡ Action Items (${actionItemsCount})`, color: "#d97706", stage: "On-Going Stage" }
                         ].map(t => {
                           const isSelected = discTypeFilter === t.id;
                           const color = t.color || "#4f46e5";
@@ -5728,44 +6075,52 @@ export default function ProjectsView() {
                       </div>
                     </div>
 
-                    {/* Row 2: Secondary Dropdown Filters (Category, Sub-Category, Team Author) */}
+                    {/* Row 2: Secondary Dropdown Filters (Category & Sub-Category only when not strictly General) */}
                     <div style={{ display: "flex", alignItems: "center", gap: "12px", borderTop: "1px solid #f1f5f9", paddingTop: "12px", flexWrap: "wrap" }}>
                       <span style={{ fontSize: "0.78rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>
                         SEGREGATE BY:
                       </span>
 
-                      {/* Category Filter */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>Category:</span>
-                        <select
-                          value={discCategoryFilter}
-                          onChange={e => {
-                            setDiscCategoryFilter(e.target.value);
-                            setDiscSubCategoryFilter("All");
-                          }}
-                          style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", fontWeight: "700", background: "#ffffff", color: "#0f172a" }}
-                        >
-                          <option value="All">All Categories</option>
-                          {allKnownCategories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                          ))}
-                        </select>
-                      </div>
+                      {discTypeFilter !== "General" ? (
+                        <>
+                          {/* Category Filter */}
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>Category:</span>
+                            <select
+                              value={discCategoryFilter}
+                              onChange={e => {
+                                setDiscCategoryFilter(e.target.value);
+                                setDiscSubCategoryFilter("All");
+                              }}
+                              style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", fontWeight: "700", background: "#ffffff", color: "#0f172a" }}
+                            >
+                              <option value="All">All Categories</option>
+                              {allKnownCategories.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                              ))}
+                            </select>
+                          </div>
 
-                      {/* Sub-Category Filter */}
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                        <span style={{ fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>Sub-Category:</span>
-                        <select
-                          value={discSubCategoryFilter}
-                          onChange={e => setDiscSubCategoryFilter(e.target.value)}
-                          style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", fontWeight: "700", background: "#ffffff", color: "#0f172a" }}
-                        >
-                          <option value="All">All Sub-Categories</option>
-                          {allKnownSubCategories.map(sub => (
-                            <option key={sub} value={sub}>{sub}</option>
-                          ))}
-                        </select>
-                      </div>
+                          {/* Sub-Category Filter */}
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            <span style={{ fontSize: "0.8rem", color: "#475569", fontWeight: "600" }}>Sub-Category:</span>
+                            <select
+                              value={discSubCategoryFilter}
+                              onChange={e => setDiscSubCategoryFilter(e.target.value)}
+                              style={{ padding: "5px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.8rem", fontWeight: "700", background: "#ffffff", color: "#0f172a" }}
+                            >
+                              <option value="All">All Sub-Categories</option>
+                              {allKnownSubCategories.map(sub => (
+                                <option key={sub} value={sub}>{sub}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </>
+                      ) : (
+                        <span style={{ fontSize: "0.76rem", color: "#94a3b8", fontStyle: "italic" }}>
+                          Categories not applicable for General Discussions (Manual, Voice & Attachments).
+                        </span>
+                      )}
 
                       {/* Author Filter */}
                       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -5808,18 +6163,18 @@ export default function ProjectsView() {
                           💬
                         </div>
                         <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
-                          No Discussions or Plans Found
+                          No Discussions or Notes Found
                         </h4>
                         <p style={{ margin: "6px 0 16px 0", fontSize: "0.85rem", color: "#64748b", maxWidth: "420px", marginInline: "auto" }}>
                           {allDiscussions.length === 0
-                            ? "Start logging strategy roadmaps, marketing offer plans, inventory audits, or general meeting notes."
-                            : "No discussions match your active search and category filters."}
+                            ? "Start logging general discussions, voice memos, audit notes, strategy plans, or action items."
+                            : "No discussions match your active search and filters."}
                         </p>
                         <button
-                          onClick={() => setIsAddingDiscussion(true)}
+                          onClick={() => handleOpenAddDiscussionModal()}
                           style={{ background: "#2563eb", color: "#ffffff", border: "none", padding: "8px 18px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 2px 6px rgba(37, 99, 235, 0.25)" }}
                         >
-                          ＋ Note Discussion / Strategy
+                          ＋ Add Discussion Note
                         </button>
                       </div>
                     ) : (
@@ -5914,7 +6269,7 @@ export default function ProjectsView() {
                               </div>
                             </div>
 
-                            {/* Category & Sub-Category Pill */}
+                            {/* Category & Sub-Category Pill (if present) */}
                             {disc.category && (
                               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                                 <span style={{ background: "#f5f3ff", color: "#6d28d9", border: "1px solid #ddd6fe", padding: "3px 10px", borderRadius: "6px", fontSize: "0.78rem", fontWeight: "800", display: "inline-flex", alignItems: "center", gap: "6px" }}>
@@ -5930,14 +6285,67 @@ export default function ProjectsView() {
                             )}
 
                             {/* Title */}
-                            <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
-                              {disc.title}
-                            </h4>
+                            {disc.title && (
+                              <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
+                                {disc.title}
+                              </h4>
+                            )}
 
                             {/* Notes Content */}
-                            <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
-                              {disc.notes}
-                            </p>
+                            {disc.notes && (
+                              <p style={{ margin: 0, fontSize: "0.9rem", color: "#334155", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
+                                {disc.notes}
+                              </p>
+                            )}
+
+                            {/* Audio Player Feed Component */}
+                            {disc.audioUrl && (
+                              <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                  <span style={{ fontSize: "1.1rem" }}>🎙️</span>
+                                  <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "#1e293b" }}>{disc.audioName || "Voice Note"}</span>
+                                </div>
+                                <audio controls src={disc.audioUrl} style={{ height: "34px", flex: 1, minWidth: "220px" }} />
+                              </div>
+                            )}
+
+                            {/* Attachments List Feed Component */}
+                            {disc.attachments && disc.attachments.length > 0 && (
+                              <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginTop: "4px" }}>
+                                <div style={{ fontSize: "0.74rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>
+                                  📎 Attached Files ({disc.attachments.length}):
+                                </div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                                  {disc.attachments.map(att => (
+                                    <a
+                                      key={att.id}
+                                      href={att.dataUrl}
+                                      download={att.name}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        background: "#eff6ff",
+                                        border: "1px solid #bfdbfe",
+                                        borderRadius: "6px",
+                                        padding: "5px 10px",
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        textDecoration: "none",
+                                        color: "#1e40af",
+                                        fontSize: "0.8rem",
+                                        fontWeight: "600"
+                                      }}
+                                    >
+                                      <span>{att.type && att.type.startsWith("image/") ? "🖼️" : att.name.endsWith(".pdf") ? "📄" : "📁"}</span>
+                                      <span>{att.name}</span>
+                                      {att.size && <span style={{ color: "#64748b", fontSize: "0.7rem" }}>({Math.round(att.size / 1024)} KB)</span>}
+                                      <span style={{ fontSize: "0.75rem" }}>⬇️</span>
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
 
                             {/* Action Items Interactive Checklist */}
                             {disc.actionItems && disc.actionItems.length > 0 && (

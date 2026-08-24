@@ -1483,6 +1483,7 @@ export default function ProjectsView() {
   const [showDiscontinueModal, setShowDiscontinueModal] = useState(false);
   const [discontinueTargetProject, setDiscontinueTargetProject] = useState(null);
   const [discontinueReasonInput, setDiscontinueReasonInput] = useState("");
+  const [promoteConfirmation, setPromoteConfirmation] = useState(null);
   const [draggedProjectId, setDraggedProjectId] = useState(null);
 
   // Pre-Audit Questionnaire States
@@ -1697,6 +1698,30 @@ export default function ProjectsView() {
   const discontinuedCount = roleScopedProjects.filter(p => getProjectStage(p) === "Discontinued Stage").length;
 
   // Stage Advancement & Decision Handlers
+  const handleRequestAdvanceStage = (proj, targetStage = null) => {
+    if (!proj) return;
+    const curStage = getProjectStage(proj);
+    let nextStage = targetStage;
+    if (!nextStage) {
+      if (curStage === "Lead Stage") nextStage = "Audit Stage";
+      else if (curStage === "Audit Stage") nextStage = "Kickoff Stage";
+      else if (curStage === "Kickoff Stage") nextStage = "On-Going Stage";
+      else nextStage = "On-Going Stage";
+    }
+    setPromoteConfirmation({
+      project: proj,
+      currentStage: curStage,
+      targetStage: nextStage
+    });
+  };
+
+  const handleConfirmPromoteStage = () => {
+    if (!promoteConfirmation) return;
+    const { project, targetStage } = promoteConfirmation;
+    setPromoteConfirmation(null);
+    handleAdvanceStage(project, targetStage);
+  };
+
   const handleAdvanceStage = (proj, targetStage = null) => {
     if (!proj) return;
     const curStage = getProjectStage(proj);
@@ -1813,7 +1838,7 @@ export default function ProjectsView() {
       if (destStage === "Discontinued Stage") {
         handleOpenDiscontinueModal(proj);
       } else {
-        handleAdvanceStage(proj, destStage);
+        handleRequestAdvanceStage(proj, destStage);
       }
     } else {
       setToast({ message: `Direct jump from ${curStage} to ${destStage} is restricted. Follow sequential progression.`, type: "warning" });
@@ -2712,7 +2737,7 @@ export default function ProjectsView() {
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     {currentStage === "Lead Stage" && (
                       <button
-                        onClick={() => handleAdvanceStage(effectiveProject, "Audit Stage")}
+                        onClick={() => handleRequestAdvanceStage(effectiveProject, "Audit Stage")}
                         style={{
                           background: "#4f46e5",
                           color: "#ffffff",
@@ -2736,7 +2761,7 @@ export default function ProjectsView() {
 
                     {currentStage === "Audit Stage" && (
                       <button
-                        onClick={() => handleAdvanceStage(effectiveProject, "Kickoff Stage")}
+                        onClick={() => handleRequestAdvanceStage(effectiveProject, "Kickoff Stage")}
                         style={{
                           background: "#0284c7",
                           color: "#ffffff",
@@ -2760,7 +2785,7 @@ export default function ProjectsView() {
 
                     {currentStage === "Kickoff Stage" && (
                       <button
-                        onClick={() => handleAdvanceStage(effectiveProject, "On-Going Stage")}
+                        onClick={() => handleRequestAdvanceStage(effectiveProject, "On-Going Stage")}
                         style={{
                           background: "#16a34a",
                           color: "#ffffff",
@@ -3887,7 +3912,7 @@ export default function ProjectsView() {
                       <button
                         onClick={() => {
                           updateProject(effectiveProject.id, { auditSubStage: "audit_completed" });
-                          handleAdvanceStage(effectiveProject, "Kickoff Stage");
+                          handleRequestAdvanceStage(effectiveProject, "Kickoff Stage");
                         }}
                         style={{
                           background: "#16a34a",
@@ -4058,7 +4083,7 @@ export default function ProjectsView() {
 
                       <div style={{ display: "flex", gap: "10px" }}>
                         <button
-                          onClick={() => handleAdvanceStage(effectiveProject, "On-Going Stage")}
+                          onClick={() => handleRequestAdvanceStage(effectiveProject, "On-Going Stage")}
                           style={{
                             background: "#16a34a",
                             color: "#ffffff",
@@ -7064,7 +7089,7 @@ export default function ProjectsView() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleAdvanceStage(proj, "Audit Stage");
+                        handleRequestAdvanceStage(proj, "Audit Stage");
                       }}
                       style={{ background: "#e0e7ff", color: "#4338ca", border: "1px solid #c7d2fe", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}
                     >
@@ -7077,7 +7102,7 @@ export default function ProjectsView() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleAdvanceStage(proj, "Kickoff Stage");
+                        handleRequestAdvanceStage(proj, "Kickoff Stage");
                       }}
                       style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}
                     >
@@ -7090,7 +7115,7 @@ export default function ProjectsView() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleAdvanceStage(proj, "On-Going Stage");
+                        handleRequestAdvanceStage(proj, "On-Going Stage");
                       }}
                       style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #bbf7d0", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}
                     >
@@ -7433,48 +7458,110 @@ export default function ProjectsView() {
         </div>
       )}
 
+      {/* ── MODAL: STAGE PROMOTION CONFIRMATION POPUP (YES/NO) ── */}
+      {promoteConfirmation && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.65)", backdropFilter: "blur(4px)", zIndex: 10001, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "480px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", display: "flex", flexDirection: "column", gap: "18px" }}>
+            
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#e0e7ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#4f46e5", fontSize: "1.3rem", flexShrink: 0 }}>
+                🚀
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: "1.18rem", fontWeight: "800", color: "#0f172a" }}>
+                  Promote Project Stage?
+                </h3>
+                <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                  Lifecycle Progression Confirmation
+                </p>
+              </div>
+            </div>
+
+            <div style={{ background: "#f8fafc", border: "1.5px solid #e2e8f0", borderRadius: "10px", padding: "16px" }}>
+              <p style={{ margin: 0, fontSize: "0.95rem", color: "#1e293b", lineHeight: "1.55" }}>
+                Are you sure you want to promote <strong>{promoteConfirmation.project?.name}</strong> from <span style={{ color: "#475569", fontWeight: "700" }}>{promoteConfirmation.currentStage}</span> to <span style={{ color: "#4f46e5", fontWeight: "800" }}>{promoteConfirmation.targetStage}</span>?
+              </p>
+              <div style={{ marginTop: "10px", fontSize: "0.78rem", color: "#64748b", display: "flex", alignItems: "center", gap: "6px" }}>
+                <span>ℹ️</span>
+                <span>Clicking <strong>Yes</strong> will save changes and move to the next stage. <strong>No</strong> will stay on the current stage.</span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+              <button
+                type="button"
+                onClick={() => setPromoteConfirmation(null)}
+                style={{ padding: "10px 20px", background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "700", fontSize: "0.86rem", cursor: "pointer" }}
+              >
+                No, Stay Back
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmPromoteStage}
+                style={{ padding: "10px 24px", background: "linear-gradient(135deg, #4f46e5 0%, #4338ca 100%)", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "0.86rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)" }}
+              >
+                Yes, Save & Move Next ➔
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
       {/* ── MODAL: DISCONTINUE PROJECT WITH REASON CAPTURE (ACCESSIBLE FROM ANY STAGE) ── */}
       {showDiscontinueModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "520px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.15)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#dc2626", display: "flex", alignItems: "center", gap: "8px" }}>
-                <span>🛑</span> Discontinue Project / Engagement
-              </h3>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.65)", backdropFilter: "blur(4px)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "520px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", color: "#dc2626", fontSize: "1.2rem", flexShrink: 0 }}>
+                  🛑
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.18rem", fontWeight: "800", color: "#dc2626" }}>
+                    Discontinue Project?
+                  </h3>
+                  <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                    Confirmation & Audit History Capture
+                  </p>
+                </div>
+              </div>
               <button onClick={() => setShowDiscontinueModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
             </div>
 
-            <p style={{ margin: "0 0 16px 0", fontSize: "0.85rem", color: "#64748b", lineHeight: "1.5" }}>
-              You are discontinuing <strong>{discontinueTargetProject?.name}</strong> from <strong>{getProjectStage(discontinueTargetProject)}</strong>. Please specify the reason or client feedback for our audit history:
-            </p>
+            <div style={{ background: "#fff1f2", border: "1px solid #fecdd3", borderRadius: "10px", padding: "14px" }}>
+              <p style={{ margin: 0, fontSize: "0.9rem", color: "#991b1b", lineHeight: "1.5" }}>
+                Are you sure you want to discontinue <strong>{discontinueTargetProject?.name}</strong> from <strong>{getProjectStage(discontinueTargetProject)}</strong>?
+              </p>
+            </div>
 
-            <div style={{ marginBottom: "18px" }}>
+            <div>
               <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#374151", marginBottom: "6px" }}>
-                Discontinuation Reason / Client Remarks *
+                Discontinuation Reason / Remarks *
               </label>
               <textarea
-                rows="4"
-                placeholder="e.g., Client paused expansion due to showroom lease delay; or commercial terms not aligned..."
+                rows="3"
+                placeholder="e.g., Client paused expansion; commercial terms mismatch; showroom fitout delay..."
                 value={discontinueReasonInput}
                 onChange={e => setDiscontinueReasonInput(e.target.value)}
                 style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none", boxSizing: "border-box" }}
               />
             </div>
 
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px", marginTop: "4px" }}>
               <button
                 type="button"
                 onClick={() => setShowDiscontinueModal(false)}
-                style={{ padding: "9px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+                style={{ padding: "9px 18px", background: "#ffffff", border: "1px solid #cbd5e1", color: "#475569", borderRadius: "8px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
               >
-                Cancel
+                No, Stay Back
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDiscontinue}
                 style={{ padding: "9px 22px", background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 4px 10px rgba(220, 38, 38, 0.25)" }}
               >
-                Confirm Discontinue 🛑
+                Yes, Discontinue Project 🛑
               </button>
             </div>
           </div>

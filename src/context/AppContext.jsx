@@ -529,6 +529,10 @@ export const AppProvider = ({ children }) => {
             clientVisits: p.client_visits || p.clientVisits,
             scheduledEvents: (p.scheduled_events || p.scheduledEvents || []).filter(t => t && t.title && !["Client Vision & Goal Mapping", "Showroom Physical Tag Audit", "Executive Alignment Meeting"].some(d => t.title.includes(d))),
             phaseTasks: (p.phase_tasks || p.phaseTasks || p.scheduled_events || p.scheduledEvents || []).filter(t => t && t.title && !["Client Vision & Goal Mapping", "Showroom Physical Tag Audit", "Executive Alignment Meeting"].some(d => t.title.includes(d))),
+            discussions: p.discussions || p.business_details?.discussions || [],
+            locations_registry: p.locations_registry || p.locationsList || p.business_details?.locations_registry || [],
+            locationsList: p.locations_registry || p.locationsList || p.business_details?.locations_registry || [],
+            businessModel: p.business_model || p.business_details?.businessModel || p.business_details?.business_model || "",
             phases: p.phases || p.business_details?.phases || p.businessDetails?.phases || []
           }));
           setProjects(mapped);
@@ -569,6 +573,10 @@ export const AppProvider = ({ children }) => {
               engagementPurpose: p.engagement_purpose,
               assignedConsultants: p.assigned_consultants || [],
               businessDetails: p.business_details || p.businessDetails,
+              businessModel: p.business_model || p.business_details?.businessModel || p.business_details?.business_model || "",
+              discussions: p.discussions || p.business_details?.discussions || [],
+              locations_registry: p.locations_registry || p.locationsList || p.business_details?.locations_registry || [],
+              locationsList: p.locations_registry || p.locationsList || p.business_details?.locations_registry || [],
               auditReports: p.audit_reports || p.auditReports,
               checklists: p.checklists,
               clientVisits: p.client_visits || p.clientVisits,

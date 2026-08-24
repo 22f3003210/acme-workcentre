@@ -996,7 +996,7 @@ export default function ProjectsView() {
 
     const effectiveBizDetails = {
       companyName: biz.companyName || proj.name || proj.client || "",
-      businessModel: biz.businessModel || "",
+      businessModel: biz.businessModel || proj.businessModel || proj.business_model || "",
       headOffice: biz.headOffice || (proj.location && proj.location !== "HQ / Client Site" ? proj.location : ""),
       showroomCount: biz.showroomCount || "",
       locations: biz.locations || (proj.location && proj.location !== "HQ / Client Site" ? proj.location : ""),
@@ -1015,6 +1015,9 @@ export default function ProjectsView() {
 
     return {
       ...proj,
+      discussions: proj.discussions || proj.businessDetails?.discussions || [],
+      locationsList: proj.locationsList || proj.locations_registry || proj.businessDetails?.locationsList || [],
+      locations_registry: proj.locations_registry || proj.locationsList || proj.businessDetails?.locations_registry || [],
       clientVisits: proj.clientVisits || [],
       scheduledEvents: proj.scheduledEvents || [],
       phaseTasks: proj.phaseTasks || [],

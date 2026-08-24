@@ -996,7 +996,7 @@ export default function ProjectsView() {
 
     const effectiveBizDetails = {
       companyName: biz.companyName || proj.name || proj.client || "",
-      businessModel: biz.businessModel || "Pure Retailer",
+      businessModel: biz.businessModel || "",
       headOffice: biz.headOffice || (proj.location && proj.location !== "HQ / Client Site" ? proj.location : ""),
       showroomCount: biz.showroomCount || "",
       locations: biz.locations || (proj.location && proj.location !== "HQ / Client Site" ? proj.location : ""),
@@ -1044,7 +1044,7 @@ export default function ProjectsView() {
     locations: "",
     headcount: "",
     revenueBracket: "Select Range...",
-    businessModel: "Pure Retailer",
+    businessModel: "Retail",
     productLine: "",
     painPoints: [],
     purposeOfApproach: "",
@@ -1493,6 +1493,7 @@ export default function ProjectsView() {
   // New Project Form (matches exact Create project drawer design)
   const [assignedConsultantId, setAssignedConsultantId] = useState("");
   const [newName, setNewName] = useState("");
+  const [newBusinessModel, setNewBusinessModel] = useState("Retail");
   const [pocName, setPocName] = useState("");
   const [pocContact, setPocContact] = useState("");
   const [newCode, setNewCode] = useState("");
@@ -1945,6 +1946,22 @@ export default function ProjectsView() {
       stageHistory: [
         { stage: newStage || "On-Going Stage", date: todayStr, notes: `Project initialized in ${newStage || "On-Going Stage"}` }
       ],
+      businessDetails: {
+        companyName: newName,
+        businessModel: newBusinessModel || "Retail",
+        headOffice: "HQ / Client Site",
+        showroomCount: "",
+        locations: "",
+        headcount: "",
+        revenueBracket: "",
+        productLine: "",
+        painPoints: [],
+        purposeOfApproach: description || "",
+        primaryChallenge: "",
+        staffMembers: pocName ? [{ name: pocName, designation: "Managing Director / POC", contact: pocContact || "" }] : [],
+        transformationOutcomes: [],
+        headOfficeCoordinates: null
+      },
       metaLeadData: newStage === "Lead Stage" ? {
         campaign: metaCampaignInput || "Meta Ads Inbound",
         formName: metaFormNameInput || "Jewellery Lead Form",
@@ -1958,6 +1975,7 @@ export default function ProjectsView() {
 
     setToast({ message: `Project '${newName}' registered in ${newStage}!`, type: "success" });
     setNewName("");
+    setNewBusinessModel("Retail");
     setAssignedConsultantId("");
     setPocName("");
     setPocContact("");
@@ -2460,7 +2478,7 @@ export default function ProjectsView() {
         locations: bizDetails.locations || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" ? effectiveProject.location : ""),
         headcount: bizDetails.headcount || "",
         revenueBracket: bizDetails.revenueBracket || "Select Range...",
-        businessModel: bizDetails.businessModel || "Pure Retailer",
+        businessModel: bizDetails.businessModel || "Retail",
         productLine: bizDetails.productLine || "",
         painPoints: bizDetails.painPoints || [],
         purposeOfApproach: bizDetails.purposeOfApproach || effectiveProject.engagementPurpose || "",
@@ -3418,12 +3436,14 @@ export default function ProjectsView() {
 
                             <div>
                               <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "700", color: "#475569", marginBottom: "6px" }}>PRIMARY BUSINESS MODEL</label>
-                              <select value={bizForm.businessModel} onChange={e => setBizForm({...bizForm, businessModel: e.target.value})} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box" }}>
-                                <option>Pure Retailer</option>
-                                <option>Wholesaler</option>
-                                <option>Manufacturer</option>
-                                <option>Omnichannel Retail + Wholesale</option>
-                                <option>Bespoke Atelier</option>
+                              <select value={bizForm.businessModel} onChange={e => setBizForm({...bizForm, businessModel: e.target.value})} style={{ width: "100%", padding: "10px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.9rem", boxSizing: "border-box", fontWeight: "600" }}>
+                                <option value="Retail">Retail</option>
+                                <option value="Wholesale">Wholesale</option>
+                                <option value="Manufacturing">Manufacturing</option>
+                                <option value="Retail & Wholesale">Retail & Wholesale</option>
+                                <option value="Retail & Manufacturing">Retail & Manufacturing</option>
+                                <option value="Wholesale & Manufacturing">Wholesale & Manufacturing</option>
+                                <option value="Retail, Wholesale & Manufacturing">Retail, Wholesale & Manufacturing (Integrated)</option>
                               </select>
                             </div>
 
@@ -7432,6 +7452,37 @@ export default function ProjectsView() {
                     }}
                   />
                 </div>
+              </div>
+
+              {/* Business Model Selection */}
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
+                  Business Model *
+                </label>
+                <select
+                  value={newBusinessModel}
+                  onChange={e => setNewBusinessModel(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    fontSize: "0.9rem",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "6px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    background: "#ffffff",
+                    fontWeight: "600",
+                    color: "#0f172a"
+                  }}
+                >
+                  <option value="Retail">Retail</option>
+                  <option value="Wholesale">Wholesale</option>
+                  <option value="Manufacturing">Manufacturing</option>
+                  <option value="Retail & Wholesale">Retail & Wholesale</option>
+                  <option value="Retail & Manufacturing">Retail & Manufacturing</option>
+                  <option value="Wholesale & Manufacturing">Wholesale & Manufacturing</option>
+                  <option value="Retail, Wholesale & Manufacturing">Retail, Wholesale & Manufacturing (Integrated)</option>
+                </select>
               </div>
 
               {/* Two Column: Project code & Assigned Consultant */}

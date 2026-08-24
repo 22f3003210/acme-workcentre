@@ -5517,12 +5517,13 @@ export default function ProjectsView() {
                     </div>
 
                     {/* New Discussion Button */}
+                    {/* New Discussion Button */}
                     <button
-                      onClick={() => setIsAddingDiscussion(!isAddingDiscussion)}
+                      onClick={() => setIsAddingDiscussion(true)}
                       style={{
-                        background: isAddingDiscussion ? "#f1f5f9" : "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
-                        color: isAddingDiscussion ? "#475569" : "#ffffff",
-                        border: isAddingDiscussion ? "1px solid #cbd5e1" : "none",
+                        background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)",
+                        color: "#ffffff",
+                        border: "none",
                         padding: "10px 20px",
                         borderRadius: "10px",
                         fontWeight: "800",
@@ -5531,233 +5532,242 @@ export default function ProjectsView() {
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "8px",
-                        boxShadow: isAddingDiscussion ? "none" : "0 4px 12px rgba(79, 70, 229, 0.3)",
+                        boxShadow: "0 4px 12px rgba(79, 70, 229, 0.3)",
                         transition: "all 0.15s ease"
                       }}
                     >
-                      {isAddingDiscussion ? (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          <span>Close Form</span>
-                        </>
-                      ) : (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                          <span>+ Note Discussion / Strategy</span>
-                        </>
-                      )}
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      <span>+ Note Discussion / Strategy</span>
                     </button>
                   </div>
 
-                  {/* DISCUSSION & STRATEGY CREATION FORM MODAL / CARD */}
+                  {/* DISCUSSION & STRATEGY CREATION POP-UP MODAL */}
                   {isAddingDiscussion && (
-                    <form onSubmit={handlePostDiscussion} style={{ background: "#ffffff", border: "2px solid #6366f1", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "18px", boxShadow: "0 8px 24px rgba(99, 102, 241, 0.1)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: "12px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                          <span style={{ fontSize: "1.2rem" }}>📝</span>
-                          <h4 style={{ margin: 0, fontSize: "1.05rem", fontWeight: "800", color: "#0f172a" }}>
-                            Log New Discussion, Strategy Plan or Team Note
-                          </h4>
-                        </div>
-                        <span style={{ fontSize: "0.78rem", color: "#64748b" }}>
-                          Author: <strong style={{ color: "#0f172a" }}>{currentUser?.name || "Consultant"}</strong> ({currentUser?.role || "Consultant"})
-                        </span>
-                      </div>
-
-                      {/* 1. Discussion Type Selector Pills */}
-                      <div>
-                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "8px" }}>
-                          SELECT DISCUSSION TYPE:
-                        </label>
-                        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                          {DISCUSSION_TYPES.map(type => {
-                            const isSelected = discForm.discussionType === type.id;
-                            return (
-                              <button
-                                key={type.id}
-                                type="button"
-                                onClick={() => setDiscForm(prev => ({ ...prev, discussionType: type.id }))}
-                                style={{
-                                  padding: "8px 16px",
-                                  borderRadius: "8px",
-                                  border: isSelected ? `2px solid ${type.color}` : "1px solid #e2e8f0",
-                                  background: isSelected ? type.bg : "#ffffff",
-                                  color: isSelected ? type.color : "#475569",
-                                  fontWeight: isSelected ? "800" : "600",
-                                  fontSize: "0.85rem",
-                                  cursor: "pointer",
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: "8px",
-                                  boxShadow: isSelected ? `0 2px 8px ${type.color}25` : "none",
-                                  transition: "all 0.15s ease"
-                                }}
-                              >
-                                <span>{type.icon}</span>
-                                <span>{type.label}</span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* 2. Title & Subject */}
-                      <div>
-                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
-                          TITLE / DISCUSSION SUBJECT <span style={{ color: "#dc2626" }}>*</span>
-                        </label>
-                        <input
-                          type="text"
-                          required
-                          value={discForm.title}
-                          onChange={e => setDiscForm({ ...discForm, title: e.target.value })}
-                          placeholder={discForm.discussionType === "Strategy" ? "e.g., Diwali Akshaya Tritiya Campaign Offer Matrix" : "e.g., Weekly Client Operations & Reconciliation Sync"}
-                          style={{
-                            width: "100%",
-                            padding: "10px 14px",
-                            borderRadius: "8px",
-                            border: "1px solid #cbd5e1",
-                            fontSize: "0.9rem",
-                            fontWeight: "600",
-                            outline: "none",
-                            boxSizing: "border-box"
-                          }}
-                        />
-                      </div>
-
-                      {/* 3. Category & Sub-Category Dropdowns (Visible for Strategy and optional for other types) */}
-                      {(discForm.discussionType === "Strategy" || discForm.discussionType === "General" || discForm.discussionType === "Audit Note") && (
-                        <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px" }}>
-                          <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#4f46e5", textTransform: "uppercase", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span>🎯 STRATEGY TAXONOMY & CLASSIFICATION</span>
-                            <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "500", textTransform: "none" }}>(Search existing or type to add new on the fly)</span>
+                    <div style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,0.65)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px", backdropFilter: "blur(4px)" }}>
+                      <div style={{ background: "#ffffff", borderRadius: "18px", width: "100%", maxWidth: "680px", maxHeight: "90vh", overflowY: "auto", padding: "28px", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.25)", display: "flex", flexDirection: "column", gap: "20px" }}>
+                        
+                        {/* Modal Top Header */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #f1f5f9", paddingBottom: "14px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                            <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)", display: "flex", alignItems: "center", justifyContent: "center", color: "#ffffff", boxShadow: "0 3px 8px rgba(79, 70, 229, 0.25)" }}>
+                              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                            </div>
+                            <div>
+                              <h4 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a" }}>
+                                Log New Discussion, Strategy Plan or Note
+                              </h4>
+                              <p style={{ margin: "2px 0 0 0", fontSize: "0.78rem", color: "#64748b" }}>
+                                Author: <strong style={{ color: "#0f172a" }}>{currentUser?.name || "Consultant"}</strong> ({currentUser?.role || "Consultant"}) • Project: <strong>{effectiveProject.name}</strong>
+                              </p>
+                            </div>
                           </div>
 
-                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                            {/* Category Searchable Selector */}
-                            <SearchableAddSelect
-                              label="CATEGORY"
-                              value={discForm.category}
-                              onChange={(val) => {
-                                const subOpts = strategyTaxonomy[val] || [];
-                                setDiscForm(prev => ({
-                                  ...prev,
-                                  category: val,
-                                  subCategory: subOpts.length > 0 ? subOpts[0] : ""
-                                }));
-                              }}
-                              options={Object.keys(strategyTaxonomy)}
-                              onAddOption={handleAddCustomCategory}
-                              placeholder="Search category or type new..."
-                            />
-
-                            {/* Sub-Category Searchable Selector */}
-                            <SearchableAddSelect
-                              label="SUB-CATEGORY"
-                              value={discForm.subCategory}
-                              onChange={(val) => setDiscForm(prev => ({ ...prev, subCategory: val }))}
-                              options={strategyTaxonomy[discForm.category] || []}
-                              onAddOption={handleAddCustomSubCategory}
-                              placeholder="Search sub-category or type new..."
-                              disabled={!discForm.category}
-                            />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* 4. Detailed Notes Textarea */}
-                      <div>
-                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
-                          DETAILED DISCUSSION NOTES / STRATEGIC ROADMAP <span style={{ color: "#dc2626" }}>*</span>
-                        </label>
-                        <textarea
-                          rows="4"
-                          required
-                          value={discForm.notes}
-                          onChange={e => setDiscForm({ ...discForm, notes: e.target.value })}
-                          placeholder="Describe discussion minutes, client feedback, strategy decisions, timelines, and milestones..."
-                          style={{
-                            width: "100%",
-                            padding: "12px",
-                            borderRadius: "8px",
-                            border: "1px solid #cbd5e1",
-                            fontSize: "0.88rem",
-                            outline: "none",
-                            lineHeight: "1.5",
-                            boxSizing: "border-box",
-                            fontFamily: "inherit"
-                          }}
-                        />
-                      </div>
-
-                      {/* 5. Optional Action Items Checklist */}
-                      <div>
-                        <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
-                          ACTION ITEMS / DELIVERABLES (ONE PER LINE - OPTIONAL):
-                        </label>
-                        <textarea
-                          rows="2"
-                          value={discForm.actionItemsText}
-                          onChange={e => setDiscForm({ ...discForm, actionItemsText: e.target.value })}
-                          placeholder="e.g.&#10;Draft wedding collection offer creatives&#10;Verify physical stock tray weights with manager&#10;Configure POS promotion rule"
-                          style={{
-                            width: "100%",
-                            padding: "10px",
-                            borderRadius: "8px",
-                            border: "1px solid #cbd5e1",
-                            fontSize: "0.85rem",
-                            outline: "none",
-                            boxSizing: "border-box",
-                            fontFamily: "inherit"
-                          }}
-                        />
-                      </div>
-
-                      {/* 6. Priority & Pin Options */}
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155" }}>Priority:</span>
-                            <select
-                              value={discForm.priority}
-                              onChange={e => setDiscForm({ ...discForm, priority: e.target.value })}
-                              style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem", fontWeight: "700" }}
-                            >
-                              <option value="Normal">Normal</option>
-                              <option value="High">High</option>
-                              <option value="Urgent">Urgent</option>
-                              <option value="Critical">Critical</option>
-                            </select>
-                          </div>
-
-                          <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", fontWeight: "700", color: "#475569", cursor: "pointer" }}>
-                            <input
-                              type="checkbox"
-                              checked={discForm.isPinned}
-                              onChange={e => setDiscForm({ ...discForm, isPinned: e.target.checked })}
-                              style={{ width: "16px", height: "16px", accentColor: "#4f46e5" }}
-                            />
-                            <span>📌 Pin to top of discussion board</span>
-                          </label>
-                        </div>
-
-                        <div style={{ display: "flex", gap: "10px" }}>
                           <button
                             type="button"
                             onClick={() => setIsAddingDiscussion(false)}
-                            style={{ background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", padding: "9px 18px", borderRadius: "8px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                            style={{ background: "#f1f5f9", border: "none", width: "32px", height: "32px", borderRadius: "8px", cursor: "pointer", fontWeight: "700", color: "#64748b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1rem" }}
                           >
-                            Cancel
-                          </button>
-                          <button
-                            type="submit"
-                            style={{ background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)", color: "#ffffff", border: "none", padding: "9px 24px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 3px 8px rgba(79, 70, 229, 0.3)" }}
-                          >
-                            ✓ Post Discussion Note
+                            ✕
                           </button>
                         </div>
+
+                        <form onSubmit={handlePostDiscussion} style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+                          {/* 1. Discussion Type Selector Pills */}
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "8px" }}>
+                              SELECT DISCUSSION TYPE:
+                            </label>
+                            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                              {DISCUSSION_TYPES.map(type => {
+                                const isSelected = discForm.discussionType === type.id;
+                                return (
+                                  <button
+                                    key={type.id}
+                                    type="button"
+                                    onClick={() => setDiscForm(prev => ({ ...prev, discussionType: type.id }))}
+                                    style={{
+                                      padding: "8px 16px",
+                                      borderRadius: "8px",
+                                      border: isSelected ? `2px solid ${type.color}` : "1px solid #e2e8f0",
+                                      background: isSelected ? type.bg : "#ffffff",
+                                      color: isSelected ? type.color : "#475569",
+                                      fontWeight: isSelected ? "800" : "600",
+                                      fontSize: "0.85rem",
+                                      cursor: "pointer",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "8px",
+                                      boxShadow: isSelected ? `0 2px 8px ${type.color}25` : "none",
+                                      transition: "all 0.15s ease"
+                                    }}
+                                  >
+                                    <span>{type.icon}</span>
+                                    <span>{type.label}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* 2. Title & Subject */}
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
+                              TITLE / DISCUSSION SUBJECT <span style={{ color: "#dc2626" }}>*</span>
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={discForm.title}
+                              onChange={e => setDiscForm({ ...discForm, title: e.target.value })}
+                              placeholder={discForm.discussionType === "Strategy" ? "e.g., Diwali Akshaya Tritiya Campaign Offer Matrix" : "e.g., Weekly Client Operations & Reconciliation Sync"}
+                              style={{
+                                width: "100%",
+                                padding: "10px 14px",
+                                borderRadius: "8px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "0.9rem",
+                                fontWeight: "600",
+                                outline: "none",
+                                boxSizing: "border-box"
+                              }}
+                            />
+                          </div>
+
+                          {/* 3. Category & Sub-Category Dropdowns */}
+                          {(discForm.discussionType === "Strategy" || discForm.discussionType === "General" || discForm.discussionType === "Audit Note") && (
+                            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px" }}>
+                              <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#4f46e5", textTransform: "uppercase", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span>🎯 STRATEGY TAXONOMY & CLASSIFICATION</span>
+                                <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "500", textTransform: "none" }}>(Search existing or type to add new on the fly)</span>
+                              </div>
+
+                              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                                {/* Category Searchable Selector */}
+                                <SearchableAddSelect
+                                  label="CATEGORY"
+                                  value={discForm.category}
+                                  onChange={(val) => {
+                                    const subOpts = strategyTaxonomy[val] || [];
+                                    setDiscForm(prev => ({
+                                      ...prev,
+                                      category: val,
+                                      subCategory: subOpts.length > 0 ? subOpts[0] : ""
+                                    }));
+                                  }}
+                                  options={Object.keys(strategyTaxonomy)}
+                                  onAddOption={handleAddCustomCategory}
+                                  placeholder="Search category or type new..."
+                                />
+
+                                {/* Sub-Category Searchable Selector */}
+                                <SearchableAddSelect
+                                  label="SUB-CATEGORY"
+                                  value={discForm.subCategory}
+                                  onChange={(val) => setDiscForm(prev => ({ ...prev, subCategory: val }))}
+                                  options={strategyTaxonomy[discForm.category] || []}
+                                  onAddOption={handleAddCustomSubCategory}
+                                  placeholder="Search sub-category or type new..."
+                                  disabled={!discForm.category}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 4. Detailed Notes Textarea */}
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
+                              DETAILED DISCUSSION NOTES / STRATEGIC ROADMAP <span style={{ color: "#dc2626" }}>*</span>
+                            </label>
+                            <textarea
+                              rows="4"
+                              required
+                              value={discForm.notes}
+                              onChange={e => setDiscForm({ ...discForm, notes: e.target.value })}
+                              placeholder="Describe discussion minutes, client feedback, strategy decisions, timelines, and milestones..."
+                              style={{
+                                width: "100%",
+                                padding: "12px",
+                                borderRadius: "8px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "0.88rem",
+                                outline: "none",
+                                lineHeight: "1.5",
+                                boxSizing: "border-box",
+                                fontFamily: "inherit"
+                              }}
+                            />
+                          </div>
+
+                          {/* 5. Optional Action Items Checklist */}
+                          <div>
+                            <label style={{ display: "block", fontSize: "0.78rem", fontWeight: "700", color: "#334155", marginBottom: "5px" }}>
+                              ACTION ITEMS / DELIVERABLES (ONE PER LINE - OPTIONAL):
+                            </label>
+                            <textarea
+                              rows="2"
+                              value={discForm.actionItemsText}
+                              onChange={e => setDiscForm({ ...discForm, actionItemsText: e.target.value })}
+                              placeholder="e.g.&#10;Draft wedding collection offer creatives&#10;Verify physical stock tray weights with manager&#10;Configure POS promotion rule"
+                              style={{
+                                width: "100%",
+                                padding: "10px",
+                                borderRadius: "8px",
+                                border: "1px solid #cbd5e1",
+                                fontSize: "0.85rem",
+                                outline: "none",
+                                boxSizing: "border-box",
+                                fontFamily: "inherit"
+                              }}
+                            />
+                          </div>
+
+                          {/* 6. Priority & Pin Options */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "16px", flexWrap: "wrap" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ fontSize: "0.78rem", fontWeight: "700", color: "#334155" }}>Priority:</span>
+                                <select
+                                  value={discForm.priority}
+                                  onChange={e => setDiscForm({ ...discForm, priority: e.target.value })}
+                                  style={{ padding: "6px 10px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.82rem", fontWeight: "700" }}
+                                >
+                                  <option value="Normal">Normal</option>
+                                  <option value="High">High</option>
+                                  <option value="Urgent">Urgent</option>
+                                  <option value="Critical">Critical</option>
+                                </select>
+                              </div>
+
+                              <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.82rem", fontWeight: "700", color: "#475569", cursor: "pointer" }}>
+                                <input
+                                  type="checkbox"
+                                  checked={discForm.isPinned}
+                                  onChange={e => setDiscForm({ ...discForm, isPinned: e.target.checked })}
+                                  style={{ width: "16px", height: "16px", accentColor: "#4f46e5" }}
+                                />
+                                <span>📌 Pin to top of discussion board</span>
+                              </label>
+                            </div>
+
+                            <div style={{ display: "flex", gap: "10px" }}>
+                              <button
+                                type="button"
+                                onClick={() => setIsAddingDiscussion(false)}
+                                style={{ background: "#f1f5f9", color: "#475569", border: "1px solid #cbd5e1", padding: "9px 18px", borderRadius: "8px", fontWeight: "700", fontSize: "0.85rem", cursor: "pointer" }}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                style={{ background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)", color: "#ffffff", border: "none", padding: "9px 24px", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 3px 8px rgba(79, 70, 229, 0.3)" }}
+                              >
+                                ✓ Post Discussion Note
+                              </button>
+                            </div>
+                          </div>
+                        </form>
                       </div>
-                    </form>
+                    </div>
                   )}
 
                   {/* FILTER & SEGREGATION CONTROLS BAR */}

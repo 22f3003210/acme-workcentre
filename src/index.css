@@ -55,6 +55,14 @@
   scrollbar-width: thin;
 }
 
+/* Crisp & Light Placeholders */
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8 !important;
+  opacity: 0.75 !important;
+  font-weight: 400 !important;
+}
+
 /* Hide left sidebar & expand main content full width when an individual client project is active */
 body.hide-sidebar .youtube-sidebar {
   display: none !important;

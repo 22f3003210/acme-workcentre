@@ -3902,44 +3902,7 @@ export default function ProjectsView() {
                       style={{ display: "none" }}
                     />
 
-                    {/* Submit Audit Report Action Banner (Transitions to Kickoff Stage) */}
-                    <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "12px", padding: "16px 20px", marginBottom: "18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ fontSize: "1.6rem" }}>🚀</span>
-                        <div>
-                          <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#166534" }}>
-                            Complete Audit Stage & Advance to Kickoff Stage
-                          </div>
-                          <div style={{ fontSize: "0.8rem", color: "#15803d", marginTop: "2px" }}>
-                            Publishing the final audit evaluation report will automatically transition this client to the <strong>Kickoff Stage</strong>.
-                          </div>
-                        </div>
-                      </div>
 
-                      <button
-                        onClick={() => {
-                          updateProject(effectiveProject.id, { auditSubStage: "audit_completed" });
-                          handleRequestAdvanceStage(effectiveProject, "Kickoff Stage");
-                        }}
-                        style={{
-                          background: "#16a34a",
-                          color: "#ffffff",
-                          border: "none",
-                          padding: "10px 22px",
-                          borderRadius: "8px",
-                          fontWeight: "800",
-                          fontSize: "0.88rem",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          boxShadow: "0 4px 12px rgba(22, 163, 74, 0.25)"
-                        }}
-                      >
-                        <span>✅ Submit Audit Report & Move to Kickoff</span>
-                        <span>➔</span>
-                      </button>
-                    </div>
 
                     {auditDocs.length === 0 ? (
                       /* EMPTY STATE WHEN NO DOCUMENT IS UPLOADED INITIALY */

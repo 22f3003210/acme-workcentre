@@ -528,15 +528,67 @@ const MobileImageViewer = ({ src, alt, title }) => {
   );
 };
 
+// Professional SVG Stage Icon Component
+export const StageIcon = ({ stage, size = 16, color = "currentColor", style = {} }) => {
+  switch (stage) {
+    case "Lead Stage":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, ...style }}>
+          <circle cx="12" cy="12" r="10" />
+          <path d="m4.93 4.93 4.24 4.24" />
+          <path d="m14.83 9.17 4.24-4.24" />
+          <path d="m14.83 14.83 4.24 4.24" />
+          <path d="m9.17 14.83-4.24 4.24" />
+          <circle cx="12" cy="12" r="2" />
+        </svg>
+      );
+    case "Audit Stage":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, ...style }}>
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <path d="m9 15 2 2 4-4" />
+        </svg>
+      );
+    case "Kickoff Stage":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, ...style }}>
+          <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+          <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+          <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+          <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+        </svg>
+      );
+    case "On-Going Stage":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, ...style }}>
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        </svg>
+      );
+    case "Discontinued Stage":
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, ...style }}>
+          <circle cx="12" cy="12" r="10" />
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+        </svg>
+      );
+    default:
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, ...style }}>
+          <circle cx="12" cy="12" r="10" />
+        </svg>
+      );
+  }
+};
+
 export const STAGE_CONFIG = {
   "Lead Stage": {
     label: "Lead Stage",
     shortLabel: "Lead",
-    icon: "🎯",
     color: "#d97706",
     bg: "#fef3c7",
     border: "#fde68a",
-    badge: "🎯 Lead / Meta Inquiry",
+    badge: "Lead / Inquiry",
     description: "Potential clients exploring engagement scope & initial discussions.",
     allowedTabs: ["business", "team", "discussions"],
     nextStage: "Audit Stage"
@@ -544,11 +596,10 @@ export const STAGE_CONFIG = {
   "Audit Stage": {
     label: "Audit Stage",
     shortLabel: "Audit",
-    icon: "🔍",
     color: "#4f46e5",
     bg: "#e0e7ff",
     border: "#c7d2fe",
-    badge: "🔍 Audit In-Progress",
+    badge: "Audit In-Progress",
     description: "Interested clients undergoing pre-audit session, internal checklist prep & physical audit.",
     allowedTabs: ["business", "audit", "team", "discussions"],
     nextStage: "Kickoff Stage"
@@ -556,11 +607,10 @@ export const STAGE_CONFIG = {
   "Kickoff Stage": {
     label: "Kickoff Stage",
     shortLabel: "Kickoff",
-    icon: "🚀",
     color: "#0284c7",
     bg: "#e0f2fe",
     border: "#bae6fd",
-    badge: "🚀 Kickoff / Decision",
+    badge: "Kickoff / Decision",
     description: "Audit completed. Project plan & SOW prepared. Client to decide on onboarding.",
     allowedTabs: ["business", "audit", "plan", "expenses", "team", "discussions"],
     nextStage: "On-Going Stage"
@@ -568,11 +618,10 @@ export const STAGE_CONFIG = {
   "On-Going Stage": {
     label: "On-Going Stage",
     shortLabel: "On-Going",
-    icon: "⚡",
     color: "#16a34a",
     bg: "#dcfce7",
     border: "#bbf7d0",
-    badge: "⚡ On-Going Project",
+    badge: "On-Going Project",
     description: "Active client execution with full tasks, planner, deliverables, and team tracking.",
     allowedTabs: ["business", "audit", "plan", "tasks", "visits", "documents", "team", "discussions", "expenses"],
     nextStage: null
@@ -580,11 +629,10 @@ export const STAGE_CONFIG = {
   "Discontinued Stage": {
     label: "Discontinued Stage",
     shortLabel: "Discontinued",
-    icon: "🛑",
     color: "#dc2626",
     bg: "#fee2e2",
     border: "#fecaca",
-    badge: "🛑 Discontinued",
+    badge: "Discontinued",
     description: "Project or lead discontinued with originating stage and reason tracking.",
     allowedTabs: ["business", "audit", "team", "discussions", "expenses"],
     nextStage: null
@@ -2050,7 +2098,9 @@ export default function ProjectsView() {
                 {isDiscontinued && (
                   <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                      <span style={{ fontSize: "1.5rem" }}>🛑</span>
+                      <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "#fee2e2", display: "flex", alignItems: "center", justifyContent: "center", color: "#dc2626" }}>
+                        <StageIcon stage="Discontinued Stage" size={20} color="#dc2626" />
+                      </div>
                       <div>
                         <div style={{ fontSize: "0.92rem", fontWeight: "800", color: "#991b1b" }}>
                           Project Discontinued from {effectiveProject.discontinuedFromStage || "Kickoff Stage"}
@@ -2068,15 +2118,19 @@ export default function ProjectsView() {
                         background: "#dc2626",
                         color: "#ffffff",
                         border: "none",
-                        padding: "7px 16px",
+                        padding: "8px 18px",
                         borderRadius: "6px",
                         fontWeight: "700",
                         fontSize: "0.82rem",
                         cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
                         boxShadow: "0 2px 6px rgba(220, 38, 38, 0.25)"
                       }}
                     >
-                      ↩ Re-activate to {effectiveProject.discontinuedFromStage || "On-Going Stage"}
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                      <span>Re-activate to {effectiveProject.discontinuedFromStage || "On-Going Stage"}</span>
                     </button>
                   </div>
                 )}
@@ -2085,11 +2139,12 @@ export default function ProjectsView() {
                 <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px" }}>
                   
                   {/* Stepper items */}
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", flex: 1 }}>
                     {stageOrder.map((st, idx) => {
                       const cfg = STAGE_CONFIG[st];
                       const isPassed = !isDiscontinued && currentStageIndex > idx;
                       const isCurrent = !isDiscontinued && currentStageIndex === idx;
+                      const stageIconColor = isCurrent ? cfg.color : isPassed ? "#166534" : "#94a3b8";
 
                       return (
                         <React.Fragment key={st}>
@@ -2098,23 +2153,28 @@ export default function ProjectsView() {
                               display: "flex",
                               alignItems: "center",
                               gap: "8px",
-                              padding: "6px 12px",
+                              padding: "7px 14px",
                               borderRadius: "8px",
                               background: isCurrent ? cfg.bg : isPassed ? "#f0fdf4" : "#f8fafc",
                               border: isCurrent ? `1.5px solid ${cfg.color}` : isPassed ? "1px solid #bbf7d0" : "1px solid #e2e8f0",
                               color: isCurrent ? cfg.color : isPassed ? "#166534" : "#94a3b8",
-                              fontWeight: isCurrent ? "800" : isPassed ? "700" : "500",
-                              fontSize: "0.82rem"
+                              fontWeight: isCurrent ? "800" : isPassed ? "700" : "600",
+                              fontSize: "0.82rem",
+                              transition: "all 0.15s ease"
                             }}
                           >
-                            <span>{isPassed ? "✓" : cfg.icon}</span>
+                            {isPassed ? (
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#166534" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            ) : (
+                              <StageIcon stage={st} size={15} color={stageIconColor} />
+                            )}
                             <span>{idx + 1}. {cfg.label}</span>
                             {isCurrent && (
                               <span style={{ background: cfg.color, color: "#ffffff", fontSize: "0.68rem", padding: "1px 6px", borderRadius: "4px", fontWeight: "800", textTransform: "uppercase" }}>Active</span>
                             )}
                           </div>
                           {idx < stageOrder.length - 1 && (
-                            <span style={{ color: isPassed ? "#16a34a" : "#cbd5e1", fontSize: "0.85rem", fontWeight: "800" }}>➔</span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isPassed ? "#16a34a" : "#cbd5e1"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                           )}
                         </React.Fragment>
                       );
@@ -2130,19 +2190,20 @@ export default function ProjectsView() {
                           background: "#4f46e5",
                           color: "#ffffff",
                           border: "none",
-                          padding: "7px 16px",
+                          padding: "8px 18px",
                           borderRadius: "6px",
                           fontWeight: "700",
                           fontSize: "0.82rem",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
-                          gap: "6px",
+                          gap: "8px",
                           boxShadow: "0 2px 6px rgba(79, 70, 229, 0.25)"
                         }}
                       >
-                        <span>🔍 Promote to Audit Stage</span>
-                        <span>➔</span>
+                        <StageIcon stage="Audit Stage" size={15} color="#ffffff" />
+                        <span>Promote to Audit Stage</span>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                       </button>
                     )}
 
@@ -2153,19 +2214,20 @@ export default function ProjectsView() {
                           background: "#0284c7",
                           color: "#ffffff",
                           border: "none",
-                          padding: "7px 16px",
+                          padding: "8px 18px",
                           borderRadius: "6px",
                           fontWeight: "700",
                           fontSize: "0.82rem",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
-                          gap: "6px",
+                          gap: "8px",
                           boxShadow: "0 2px 6px rgba(2, 132, 199, 0.25)"
                         }}
                       >
-                        <span>🚀 Advance to Kickoff Stage</span>
-                        <span>➔</span>
+                        <StageIcon stage="Kickoff Stage" size={15} color="#ffffff" />
+                        <span>Advance to Kickoff Stage</span>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                       </button>
                     )}
 
@@ -2176,19 +2238,20 @@ export default function ProjectsView() {
                           background: "#16a34a",
                           color: "#ffffff",
                           border: "none",
-                          padding: "7px 16px",
+                          padding: "8px 18px",
                           borderRadius: "6px",
                           fontWeight: "700",
                           fontSize: "0.82rem",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
-                          gap: "6px",
+                          gap: "8px",
                           boxShadow: "0 2px 6px rgba(22, 163, 74, 0.25)"
                         }}
                       >
-                        <span>⚡ On-board & Start Project</span>
-                        <span>➔</span>
+                        <StageIcon stage="On-Going Stage" size={15} color="#ffffff" />
+                        <span>On-board & Start Project</span>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                       </button>
                     )}
 
@@ -2199,15 +2262,19 @@ export default function ProjectsView() {
                           background: "#fff1f2",
                           color: "#e11d48",
                           border: "1px solid #fecdd3",
-                          padding: "7px 14px",
+                          padding: "8px 14px",
                           borderRadius: "6px",
                           fontWeight: "700",
                           fontSize: "0.8rem",
-                          cursor: "pointer"
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px"
                         }}
                         title="Discontinue project at this stage"
                       >
-                        🛑 Discontinue
+                        <StageIcon stage="Discontinued Stage" size={14} color="#e11d48" />
+                        <span>Discontinue</span>
                       </button>
                     )}
                   </div>
@@ -2219,36 +2286,40 @@ export default function ProjectsView() {
           })()}
 
           {/* ------------------------------------------------------------- */}
-          {/* RED MARKED DETAILS CARD (MOVED INSIDE UPPER CARD ABOVE TAB BAR) */}
+          {/* DETAILS CARD ABOVE TAB BAR (NO HARDCODED DATA FALLBACKS)       */}
           {/* ------------------------------------------------------------- */}
           <div style={{ margin: "0 0 14px 0", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "12px 18px", display: "flex", flexDirection: "column", gap: "10px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "24px", fontSize: "0.85rem", color: "#475569", flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
                 <span style={{ color: "#64748b" }}>Business Model:</span>
-                <strong style={{ color: "#0f172a" }}>{bizDetails.businessModel || "Pure Retailer"}</strong>
+                <strong style={{ color: "#0f172a" }}>{bizDetails.businessModel || "—"}</strong>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
                 <span style={{ color: "#64748b" }}>HQ Location:</span>
-                <strong style={{ color: "#0f172a" }}>{bizDetails.headOffice || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" ? effectiveProject.location : "") || "HQ / Client Site"}</strong>
+                <strong style={{ color: "#0f172a" }}>{bizDetails.headOffice || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" && effectiveProject.location !== "On-site" ? effectiveProject.location : "") || "—"}</strong>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="2"><path d="M3 21h18M3 7v14M21 7v14M6 7V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3"/></svg>
                 <span style={{ color: "#64748b" }}>Showrooms:</span>
-                <strong style={{ color: "#0f172a" }}>{bizDetails.showroomCount || "1"}</strong>
+                <strong style={{ color: "#0f172a" }}>{bizDetails.showroomCount || "—"}</strong>
               </div>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "8px", borderTop: "1px solid #e2e8f0", paddingTop: "8px", flexWrap: "wrap" }}>
               <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800", textTransform: "uppercase" }}>PRODUCT LINE / SKILLS:</span>
-              {(bizDetails.productLine ? bizDetails.productLine.split(",") : ["Fine Diamond Jewellery", "High-Carat Gold Ornaments", "Polki Solitaires"]).map((tag, tIdx) => (
-                <span key={tIdx} style={{ background: "#ffffff", border: "1px solid #cbd5e1", color: "#475569", padding: "2px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700" }}>
-                  {tag.trim()}
-                </span>
-              ))}
+              {bizDetails.productLine ? (
+                bizDetails.productLine.split(",").map((tag, tIdx) => (
+                  <span key={tIdx} style={{ background: "#ffffff", border: "1px solid #cbd5e1", color: "#475569", padding: "2px 10px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "700" }}>
+                    {tag.trim()}
+                  </span>
+                ))
+              ) : (
+                <span style={{ color: "#94a3b8", fontSize: "0.85rem", fontWeight: "600" }}>—</span>
+              )}
             </div>
           </div>
 
@@ -2333,14 +2404,15 @@ export default function ProjectsView() {
                     <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
                       <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>PRIMARY BUSINESS MODEL</span>
                       <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#2563eb" }}>
-                        {bizDetails.businessModel || "Pure Retailer"}
+                        {bizDetails.businessModel || "—"}
                       </p>
                     </div>
 
                     <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
                       <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "700", textTransform: "uppercase" }}>BOUTIQUES & HEAD OFFICE</span>
                       <p style={{ margin: "6px 0 0 0", fontSize: "1rem", fontWeight: "800", color: "#0f172a" }}>
-                        {bizDetails.showroomCount || "1"} Showroom{Number(bizDetails.showroomCount || 1) !== 1 ? "s" : ""} ({bizDetails.headOffice || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" ? effectiveProject.location : "") || "Main Showroom"})
+                        {bizDetails.showroomCount ? `${bizDetails.showroomCount} Showroom${Number(bizDetails.showroomCount) !== 1 ? "s" : ""}` : (bizDetails.headOffice ? bizDetails.headOffice : "—")}
+                        {bizDetails.showroomCount && bizDetails.headOffice ? ` (${bizDetails.headOffice})` : ""}
                       </p>
                     </div>
 
@@ -2370,7 +2442,7 @@ export default function ProjectsView() {
                                 </>
                               ) : (
                                 <span style={{ color: "#475569", fontSize: "0.88rem", fontWeight: "600" }}>
-                                  📍 {bizDetails.headOffice || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" ? effectiveProject.location : "") || "Location address registered in profile"}
+                                  📍 {bizDetails.headOffice || (effectiveProject.location && effectiveProject.location !== "HQ / Client Site" && effectiveProject.location !== "On-site" ? effectiveProject.location : "") || "—"}
                                 </span>
                               )}
                             </p>
@@ -5163,7 +5235,8 @@ export default function ProjectsView() {
       {/* Summary KPI Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "14px" }}>
         <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", borderLeft: "4px solid #334155" }}>
-          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2.2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10M6 10h10"/></svg>
             {isConsultant ? "MY CLIENTS" : "TOTAL PROJECTS"}
           </div>
           <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
@@ -5172,8 +5245,9 @@ export default function ProjectsView() {
         </div>
 
         <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", borderLeft: "4px solid #d97706" }}>
-          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            🎯 LEAD STAGE
+          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#d97706", textTransform: "uppercase", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
+            <StageIcon stage="Lead Stage" size={14} color="#d97706" />
+            LEAD STAGE
           </div>
           <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
             {leadCount} <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "500" }}>leads</span>
@@ -5181,8 +5255,9 @@ export default function ProjectsView() {
         </div>
 
         <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", borderLeft: "4px solid #4f46e5" }}>
-          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            🔍 AUDIT STAGE
+          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#4f46e5", textTransform: "uppercase", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
+            <StageIcon stage="Audit Stage" size={14} color="#4f46e5" />
+            AUDIT STAGE
           </div>
           <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
             {auditCount} <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "500" }}>auditing</span>
@@ -5190,8 +5265,9 @@ export default function ProjectsView() {
         </div>
 
         <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", borderLeft: "4px solid #0284c7" }}>
-          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            🚀 KICKOFF STAGE
+          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#0284c7", textTransform: "uppercase", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
+            <StageIcon stage="Kickoff Stage" size={14} color="#0284c7" />
+            KICKOFF STAGE
           </div>
           <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
             {kickoffCount} <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "500" }}>pending</span>
@@ -5199,8 +5275,9 @@ export default function ProjectsView() {
         </div>
 
         <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", borderLeft: "4px solid #16a34a" }}>
-          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            ⚡ ON-GOING
+          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#16a34a", textTransform: "uppercase", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "6px" }}>
+            <StageIcon stage="On-Going Stage" size={14} color="#16a34a" />
+            ON-GOING
           </div>
           <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
             {ongoingCount} <span style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: "600" }}>active</span>
@@ -5214,31 +5291,40 @@ export default function ProjectsView() {
         {/* Stage Filter Buttons */}
         <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
           {[
-            { id: "All", label: `All (${roleScopedProjects.length})` },
-            { id: "Lead Stage", label: `🎯 Lead Stage (${leadCount})`, color: "#d97706" },
-            { id: "Audit Stage", label: `🔍 Audit Stage (${auditCount})`, color: "#4f46e5" },
-            { id: "Kickoff Stage", label: `🚀 Kickoff Stage (${kickoffCount})`, color: "#0284c7" },
-            { id: "On-Going Stage", label: `⚡ On-Going (${ongoingCount})`, color: "#16a34a" },
-            { id: "Discontinued Stage", label: `🛑 Discontinued (${discontinuedCount})`, color: "#dc2626" }
-          ].map(st => (
-            <button
-              key={st.id}
-              onClick={() => setStageFilter(st.id)}
-              style={{
-                padding: "6px 14px",
-                borderRadius: "6px",
-                fontSize: "0.8rem",
-                fontWeight: stageFilter === st.id ? "800" : "600",
-                cursor: "pointer",
-                border: stageFilter === st.id ? `1.5px solid ${st.color || '#4f46e5'}` : "1px solid #cbd5e1",
-                background: stageFilter === st.id ? (st.color ? `${st.color}15` : "#e0e7ff") : "#ffffff",
-                color: stageFilter === st.id ? (st.color || "#4f46e5") : "#475569",
-                transition: "all 0.15s ease"
-              }}
-            >
-              {st.label}
-            </button>
-          ))}
+            { id: "All", label: `All (${roleScopedProjects.length})`, stage: null },
+            { id: "Lead Stage", label: `Lead Stage (${leadCount})`, color: "#d97706", stage: "Lead Stage" },
+            { id: "Audit Stage", label: `Audit Stage (${auditCount})`, color: "#4f46e5", stage: "Audit Stage" },
+            { id: "Kickoff Stage", label: `Kickoff Stage (${kickoffCount})`, color: "#0284c7", stage: "Kickoff Stage" },
+            { id: "On-Going Stage", label: `On-Going (${ongoingCount})`, color: "#16a34a", stage: "On-Going Stage" },
+            { id: "Discontinued Stage", label: `Discontinued (${discontinuedCount})`, color: "#dc2626", stage: "Discontinued Stage" }
+          ].map(st => {
+            const isSelected = stageFilter === st.id;
+            const btnColor = st.color || "#4f46e5";
+
+            return (
+              <button
+                key={st.id}
+                onClick={() => setStageFilter(st.id)}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "6px",
+                  fontSize: "0.8rem",
+                  fontWeight: isSelected ? "800" : "600",
+                  cursor: "pointer",
+                  border: isSelected ? `1.5px solid ${btnColor}` : "1px solid #cbd5e1",
+                  background: isSelected ? `${btnColor}15` : "#ffffff",
+                  color: isSelected ? btnColor : "#475569",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                {st.stage && <StageIcon stage={st.stage} size={13} color={isSelected ? btnColor : "#64748b"} />}
+                <span>{st.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Search input */}
@@ -5331,23 +5417,28 @@ export default function ProjectsView() {
                       borderRadius: "12px",
                       background: stageCfg.bg,
                       border: `1px solid ${stageCfg.border}`,
-                      color: stageCfg.color
+                      color: stageCfg.color,
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px"
                     }}
                   >
-                    {stageCfg.badge}
+                    <StageIcon stage={stage} size={12} color={stageCfg.color} />
+                    <span>{stageCfg.badge}</span>
                   </span>
                 </div>
 
                 {/* Discontinued banner notice */}
                 {isDiscontinued && (
-                  <div style={{ margin: "6px 0", background: "#fef2f2", padding: "6px 10px", borderRadius: "6px", fontSize: "0.75rem", color: "#991b1b" }}>
-                    🛑 Discontinued from {proj.discontinuedFromStage || "Kickoff Stage"}: <em>{proj.discontinuedReason || "N/A"}</em>
+                  <div style={{ margin: "6px 0", background: "#fef2f2", padding: "8px 12px", borderRadius: "6px", fontSize: "0.75rem", color: "#991b1b", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <StageIcon stage="Discontinued Stage" size={14} color="#dc2626" />
+                    <span>Discontinued from {proj.discontinuedFromStage || "Kickoff Stage"}: <em>{proj.discontinuedReason || "N/A"}</em></span>
                   </div>
                 )}
 
                 {/* Details Pills */}
                 <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "10px", display: "flex", gap: "14px", flexWrap: "wrap" }}>
-                  <span>📍 {proj.location || "On-site"}</span>
+                  <span>📍 {proj.location && proj.location !== "HQ / Client Site" && proj.location !== "On-site" ? proj.location : "—"}</span>
                   <span>💬 {proj.discussions?.length || 0} Discussions</span>
                   <span>💸 {projExpenses.length} Expenses</span>
                   {proj.preAuditData?.gmeetLink && <span>📹 G-Meet Linked</span>}
@@ -5365,9 +5456,10 @@ export default function ProjectsView() {
                         e.stopPropagation();
                         handleAdvanceStage(proj, "Audit Stage");
                       }}
-                      style={{ background: "#e0e7ff", color: "#4338ca", border: "1px solid #c7d2fe", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                      style={{ background: "#e0e7ff", color: "#4338ca", border: "1px solid #c7d2fe", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}
                     >
-                      Promote to Audit ➔
+                      <StageIcon stage="Audit Stage" size={12} color="#4338ca" />
+                      <span>Promote to Audit ➔</span>
                     </button>
                   )}
 
@@ -5377,9 +5469,10 @@ export default function ProjectsView() {
                         e.stopPropagation();
                         handleAdvanceStage(proj, "Kickoff Stage");
                       }}
-                      style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                      style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}
                     >
-                      Advance to Kickoff ➔
+                      <StageIcon stage="Kickoff Stage" size={12} color="#0369a1" />
+                      <span>Advance to Kickoff ➔</span>
                     </button>
                   )}
 
@@ -5389,9 +5482,10 @@ export default function ProjectsView() {
                         e.stopPropagation();
                         handleAdvanceStage(proj, "On-Going Stage");
                       }}
-                      style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #bbf7d0", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                      style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #bbf7d0", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}
                     >
-                      Start Project ➔
+                      <StageIcon stage="On-Going Stage" size={12} color="#15803d" />
+                      <span>Start Project ➔</span>
                     </button>
                   )}
 
@@ -5401,9 +5495,9 @@ export default function ProjectsView() {
                         e.stopPropagation();
                         handleReactivateProject(proj);
                       }}
-                      style={{ background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                      style={{ background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "5px" }}
                     >
-                      ↩ Reactivate
+                      <span>↩ Reactivate</span>
                     </button>
                   )}
                 </div>

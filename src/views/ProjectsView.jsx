@@ -5166,19 +5166,6 @@ export default function ProjectsView() {
                               </div>
                             )}
                           </div>
-
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
-                            <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
-                              Or fetch GPS from your current device position:
-                            </span>
-                            <button
-                              type="button"
-                              onClick={handleDetectDeviceGPS}
-                              style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #86efac", padding: "5px 12px", borderRadius: "6px", fontSize: "0.75rem", fontWeight: "800", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}
-                            >
-                              📍 Detect Current Device GPS
-                            </button>
-                          </div>
                         </div>
                       )}
 

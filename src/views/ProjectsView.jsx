@@ -3,6 +3,7 @@ import { useParams, useNavigate, useSearchParams, Navigate } from "react-router-
 import { useApp } from "../context/AppContext";
 import { initialProjects } from "../data/initialData";
 import logoImg from "../assets/logo.png";
+import InlineGMeetScheduler from "../components/InlineGMeetScheduler";
 
 // Base64 / URL-safe encryption for Project IDs in URL routes
 const encryptProjectId = (id) => {
@@ -1452,10 +1453,7 @@ export default function ProjectsView() {
   const [discontinueReasonInput, setDiscontinueReasonInput] = useState("");
   const [draggedProjectId, setDraggedProjectId] = useState(null);
 
-  // Pre-Audit G-Meet & Questionnaire States
-  const [gmeetDateInput, setGmeetDateInput] = useState("");
-  const [gmeetTimeInput, setGmeetTimeInput] = useState("11:00 AM");
-  const [gmeetConsultantInput, setGmeetConsultantInput] = useState("Darla Manikanta");
+  // Pre-Audit Questionnaire States
   const [isGeneratingAiNotes, setIsGeneratingAiNotes] = useState(false);
   const [qAnswers, setQAnswers] = useState({});
 
@@ -1790,64 +1788,31 @@ export default function ProjectsView() {
     }
   };
 
-  // Google Meet link generator & Calendar event scheduler
-  const handleAutoGenerateGMeetLink = (proj) => {
-    const randomCode = `acm-${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 5)}`;
-    const generatedUrl = `https://meet.google.com/${randomCode}`;
-    const prevPre = proj.preAuditData || {};
-    const updatedPre = { ...prevPre, gmeetLink: generatedUrl };
+  // Google Meet Pre-Audit Schedule & Calendar Synchronizer
+  const handlePreAuditScheduleSync = ({ projectId, projectName, date, time, consultant, gmeetLink, agenda }) => {
+    if (!projectId) return;
     
-    updateProject(proj.id, { preAuditData: updatedPre });
-    setSelectedProject(prev => prev ? { ...prev, preAuditData: updatedPre } : prev);
-    
-    try {
-      navigator.clipboard.writeText(generatedUrl);
-    } catch(e) {}
-    
-    setToast({ message: `Google Meet link generated & copied: ${generatedUrl}`, type: "success" });
-  };
-
-  const handleSaveScheduleGMeet = (proj, scheduledDate, scheduledTime, consultantName) => {
-    if (!scheduledDate) {
-      setToast({ message: "Please select a date for the Pre-Audit meeting.", type: "warning" });
-      return;
-    }
-    const prevPre = proj.preAuditData || {};
-    const link = prevPre.gmeetLink || `https://meet.google.com/acm-${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 5)}`;
-    const updatedPre = {
-      ...prevPre,
-      gmeetLink: link,
-      scheduledDate,
-      scheduledTime: scheduledTime || "11:00 AM",
-      consultantName: consultantName || currentUser?.name || "Consultant"
-    };
-
-    updateProject(proj.id, { preAuditData: updatedPre });
-    setSelectedProject(prev => prev ? { ...prev, preAuditData: updatedPre } : prev);
-
-    // Auto-sync into AppContext scheduled events & company calendar
-    addProjectScheduledEvent(proj.id, {
-      title: `Pre-Audit Virtual Session: ${proj.name}`,
+    // Auto-sync into AppContext scheduled events for this project
+    addProjectScheduledEvent(projectId, {
+      title: `Pre-Audit Virtual Session: ${projectName || "Client Project"}`,
       type: "Pre-Audit Video Call",
-      date: scheduledDate,
-      time: scheduledTime || "11:00 AM",
-      consultant: consultantName || currentUser?.name || "Consultant",
-      notes: `Google Meet link: ${link}`,
+      date,
+      time: time || "11:00 AM",
+      consultant: consultant || currentUser?.name || "Consultant",
+      notes: `Google Meet link: ${gmeetLink || "https://meet.google.com/new"}\nAgenda: ${agenda || ""}`,
       status: "Scheduled"
     });
 
     if (typeof addSchedule === "function") {
       addSchedule({
-        title: `Pre-Audit G-Meet: ${proj.name}`,
-        date: scheduledDate,
-        time: scheduledTime || "11:00 AM",
+        title: `Pre-Audit G-Meet: ${projectName || "Client Project"}`,
+        date,
+        time: time || "11:00 AM",
         type: "Virtual Audit",
-        project: proj.name,
-        link: link
+        project: projectName || "Client Project",
+        link: gmeetLink || "https://meet.google.com/new"
       });
     }
-
-    setToast({ message: `Pre-Audit G-Meet scheduled for ${scheduledDate} at ${scheduledTime || '11:00 AM'} and synced to calendar!`, type: "success" });
   };
 
   const handleSaveQuestionnaire = (proj, answers) => {
@@ -3621,130 +3586,15 @@ export default function ProjectsView() {
                 {auditSubTab === "pre_audit" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                     
-                    {/* Google Meet & Schedule Card */}
-                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "18px" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-                        <div>
-                          <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span>📹</span> Google Meet Pre-Audit Session & Calendar Sync
-                          </h3>
-                          <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
-                            Auto-generate unique meeting link, schedule virtual discussion with client, and auto-sync directly to company calendar.
-                          </p>
-                        </div>
-
-                        <button
-                          onClick={() => handleAutoGenerateGMeetLink(effectiveProject)}
-                          style={{
-                            background: "#4f46e5",
-                            color: "#ffffff",
-                            border: "none",
-                            padding: "9px 18px",
-                            borderRadius: "8px",
-                            fontWeight: "800",
-                            fontSize: "0.85rem",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            boxShadow: "0 2px 8px rgba(79, 70, 229, 0.25)"
-                          }}
-                        >
-                          <span>✨</span> Generate New G-Meet Link & Copy
-                        </button>
-                      </div>
-
-                      {/* Meeting Link Display & Launch */}
-                      <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                          <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "#fee2e2", color: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>
-                            🎥
-                          </div>
-                          <div>
-                            <span style={{ fontSize: "0.72rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>ACTIVE GOOGLE MEET URL:</span>
-                            <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#2563eb", marginTop: "2px" }}>
-                              {effectiveProject.preAuditData?.gmeetLink || "https://meet.google.com/acm-pre-aud"}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div style={{ display: "flex", gap: "10px" }}>
-                          <button
-                            onClick={() => {
-                              const link = effectiveProject.preAuditData?.gmeetLink || "https://meet.google.com/acm-pre-aud";
-                              try { navigator.clipboard.writeText(link); } catch(e){}
-                              setToast({ message: "G-Meet Link copied to clipboard!", type: "success" });
-                            }}
-                            style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 14px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "700", color: "#334155", cursor: "pointer" }}
-                          >
-                            📋 Copy Link
-                          </button>
-                          <a
-                            href={effectiveProject.preAuditData?.gmeetLink || "https://meet.google.com/acm-pre-aud"}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{ background: "#16a34a", color: "#ffffff", padding: "8px 18px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "800", textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}
-                          >
-                            Launch Meet ➔
-                          </a>
-                        </div>
-                      </div>
-
-                      {/* Scheduling inputs */}
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>MEETING DATE</label>
-                          <input
-                            type="date"
-                            defaultValue={effectiveProject.preAuditData?.scheduledDate || new Date().toISOString().split("T")[0]}
-                            onChange={e => setGmeetDateInput(e.target.value)}
-                            style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
-                          />
-                        </div>
-
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>TIME SLOT</label>
-                          <input
-                            type="text"
-                            defaultValue={effectiveProject.preAuditData?.scheduledTime || "11:00 AM - 12:30 PM"}
-                            onChange={e => setGmeetTimeInput(e.target.value)}
-                            placeholder="e.g. 11:00 AM"
-                            style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
-                          />
-                        </div>
-
-                        <div>
-                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>LEAD CONSULTANT</label>
-                          <select
-                            defaultValue={effectiveProject.preAuditData?.consultantName || currentUser?.name || "Darla Manikanta"}
-                            onChange={e => setGmeetConsultantInput(e.target.value)}
-                            style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
-                          >
-                            {(users || []).map(u => (
-                              <option key={u.id} value={u.name}>{u.name} ({u.role || "Consultant"})</option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-
-                      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                        <button
-                          onClick={() => handleSaveScheduleGMeet(effectiveProject, gmeetDateInput || effectiveProject.preAuditData?.scheduledDate || new Date().toISOString().split("T")[0], gmeetTimeInput, gmeetConsultantInput)}
-                          style={{
-                            background: "#2563eb",
-                            color: "#ffffff",
-                            border: "none",
-                            padding: "9px 20px",
-                            borderRadius: "8px",
-                            fontWeight: "800",
-                            fontSize: "0.85rem",
-                            cursor: "pointer"
-                          }}
-                        >
-                          📅 Save & Sync to Calendar
-                        </button>
-                      </div>
-                    </div>
+                    {/* Inline Google Meet Scheduler Component */}
+                    <InlineGMeetScheduler
+                      project={effectiveProject}
+                      users={users}
+                      currentUser={currentUser}
+                      onUpdateProject={updateProject}
+                      onScheduleSync={handlePreAuditScheduleSync}
+                      setToast={setToast}
+                    />
 
                     {/* Pre-Audit Interactive Questionnaire Examples */}
                     <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>

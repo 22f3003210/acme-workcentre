@@ -86,7 +86,13 @@ export const supabaseAddProject = async (project) => {
     description: project.description || "",
     engagement_purpose: project.engagementPurpose || "",
     assigned_consultants: project.assignedConsultants || [],
-    business_details: project.businessDetails || null,
+    business_details: {
+      ...(project.businessDetails || {}),
+      stage: project.stage || "On-Going Stage",
+      auditSubStage: project.auditSubStage || "pre_audit_virtual",
+      stageHistory: project.stageHistory || [],
+      preAuditData: project.preAuditData || {}
+    },
     audit_reports: project.auditReports || null,
     checklists: project.checklists || null,
     client_visits: project.clientVisits || null,
@@ -137,26 +143,32 @@ export const supabaseUpdateProject = async (projectId, updatedFields) => {
   }
 
   // Safely merge business_details without wiping existing metadata
-  if (updatedFields.businessDetails !== undefined || updatedFields.phases !== undefined) {
-    try {
-      const { data: currentRecord } = await supabase
-        .from("projects")
-        .select("business_details")
-        .eq("id", projectId)
-        .single();
-      
-      const currentBiz = currentRecord?.business_details || {};
-      dbPayload.business_details = {
-        ...currentBiz,
-        ...(updatedFields.businessDetails || {}),
-        ...(updatedFields.phases !== undefined ? { phases: updatedFields.phases } : {})
-      };
-    } catch (err) {
-      dbPayload.business_details = {
-        ...(updatedFields.businessDetails || {}),
-        ...(updatedFields.phases !== undefined ? { phases: updatedFields.phases } : {})
-      };
-    }
+  try {
+    const { data: currentRecord } = await supabase
+      .from("projects")
+      .select("business_details")
+      .eq("id", projectId)
+      .single();
+    
+    const currentBiz = currentRecord?.business_details || {};
+    dbPayload.business_details = {
+      ...currentBiz,
+      ...(updatedFields.businessDetails || {}),
+      ...(updatedFields.phases !== undefined ? { phases: updatedFields.phases } : {}),
+      ...(updatedFields.stage !== undefined ? { stage: updatedFields.stage } : {}),
+      ...(updatedFields.auditSubStage !== undefined ? { auditSubStage: updatedFields.auditSubStage } : {}),
+      ...(updatedFields.stageHistory !== undefined ? { stageHistory: updatedFields.stageHistory } : {}),
+      ...(updatedFields.preAuditData !== undefined ? { preAuditData: updatedFields.preAuditData } : {})
+    };
+  } catch (err) {
+    dbPayload.business_details = {
+      ...(updatedFields.businessDetails || {}),
+      ...(updatedFields.phases !== undefined ? { phases: updatedFields.phases } : {}),
+      ...(updatedFields.stage !== undefined ? { stage: updatedFields.stage } : {}),
+      ...(updatedFields.auditSubStage !== undefined ? { auditSubStage: updatedFields.auditSubStage } : {}),
+      ...(updatedFields.stageHistory !== undefined ? { stageHistory: updatedFields.stageHistory } : {}),
+      ...(updatedFields.preAuditData !== undefined ? { preAuditData: updatedFields.preAuditData } : {})
+    };
   }
 
   const { data, error } = await supabase.from("projects").update(dbPayload).eq("id", projectId);

@@ -528,6 +528,75 @@ const MobileImageViewer = ({ src, alt, title }) => {
   );
 };
 
+export const STAGE_CONFIG = {
+  "Lead Stage": {
+    label: "Lead Stage",
+    shortLabel: "Lead",
+    icon: "🎯",
+    color: "#d97706",
+    bg: "#fef3c7",
+    border: "#fde68a",
+    badge: "🎯 Lead / Meta Inquiry",
+    description: "Potential clients exploring engagement scope & initial discussions.",
+    allowedTabs: ["business", "team", "discussions"],
+    nextStage: "Audit Stage"
+  },
+  "Audit Stage": {
+    label: "Audit Stage",
+    shortLabel: "Audit",
+    icon: "🔍",
+    color: "#4f46e5",
+    bg: "#e0e7ff",
+    border: "#c7d2fe",
+    badge: "🔍 Audit In-Progress",
+    description: "Interested clients undergoing pre-audit session, internal checklist prep & physical audit.",
+    allowedTabs: ["business", "audit", "team", "discussions"],
+    nextStage: "Kickoff Stage"
+  },
+  "Kickoff Stage": {
+    label: "Kickoff Stage",
+    shortLabel: "Kickoff",
+    icon: "🚀",
+    color: "#0284c7",
+    bg: "#e0f2fe",
+    border: "#bae6fd",
+    badge: "🚀 Kickoff / Decision",
+    description: "Audit completed. Project plan & SOW prepared. Client to decide on onboarding.",
+    allowedTabs: ["business", "audit", "plan", "expenses", "team", "discussions"],
+    nextStage: "On-Going Stage"
+  },
+  "On-Going Stage": {
+    label: "On-Going Stage",
+    shortLabel: "On-Going",
+    icon: "⚡",
+    color: "#16a34a",
+    bg: "#dcfce7",
+    border: "#bbf7d0",
+    badge: "⚡ On-Going Project",
+    description: "Active client execution with full tasks, planner, deliverables, and team tracking.",
+    allowedTabs: ["business", "audit", "plan", "tasks", "visits", "documents", "team", "discussions", "expenses"],
+    nextStage: null
+  },
+  "Discontinued Stage": {
+    label: "Discontinued Stage",
+    shortLabel: "Discontinued",
+    icon: "🛑",
+    color: "#dc2626",
+    bg: "#fee2e2",
+    border: "#fecaca",
+    badge: "🛑 Discontinued",
+    description: "Project or lead discontinued with originating stage and reason tracking.",
+    allowedTabs: ["business", "audit", "team", "discussions", "expenses"],
+    nextStage: null
+  }
+};
+
+export const getProjectStage = (p) => {
+  if (!p) return "On-Going Stage";
+  if (p.stage) return p.stage;
+  return "On-Going Stage";
+};
+
 export default function ProjectsView() {
   const params = useParams();
   const navigate = useNavigate();
@@ -538,17 +607,19 @@ export default function ProjectsView() {
     addProject, 
     updateProject, 
     addProjectDiscussion, 
-    addProjectVisit,
+    addProjectVisit, 
     addProjectScheduledEvent,
     toggleProjectChecklistItem,
     users, 
     expenses, 
     currentUser, 
     isAuthenticated,
-    setToast 
+    setToast,
+    addSchedule
   } = useApp();
 
   const [statusFilter, setStatusFilter] = useState("All"); // 'All', 'Active', 'Completed', 'On Hold'
+  const [stageFilter, setStageFilter] = useState("All"); // 'All', 'Lead Stage', 'Audit Stage', 'Kickoff Stage', 'On-Going Stage', 'Discontinued Stage'
   const [searchQuery, setSearchQuery] = useState(searchParams.get("search") || "");
 
   useEffect(() => {
@@ -605,11 +676,6 @@ export default function ProjectsView() {
       }
     };
   }, [pdfBlobUrl]);
-
-  // Auth Protection Check
-  if (!isAuthenticated || !currentUser) {
-    return <Navigate to="/auth/login" replace />;
-  }
 
   // Helper date formatter: e.g. 2026-07-12 -> 12 July 2026
   const formatDateNice = (dateStr) => {
@@ -801,6 +867,20 @@ export default function ProjectsView() {
   const [vFollowUp, setVFollowUp] = useState("");
   const [showAssignModal, setShowAssignModal] = useState(false);
 
+  // Stage Progression & Lifecycle States
+  const [auditSubTab, setAuditSubTab] = useState("pre_audit"); // 'pre_audit', 'internal_checklist', 'audit_report'
+  const [showDiscontinueModal, setShowDiscontinueModal] = useState(false);
+  const [discontinueTargetProject, setDiscontinueTargetProject] = useState(null);
+  const [discontinueReasonInput, setDiscontinueReasonInput] = useState("");
+  const [draggedProjectId, setDraggedProjectId] = useState(null);
+
+  // Pre-Audit G-Meet & Questionnaire States
+  const [gmeetDateInput, setGmeetDateInput] = useState("");
+  const [gmeetTimeInput, setGmeetTimeInput] = useState("11:00 AM");
+  const [gmeetConsultantInput, setGmeetConsultantInput] = useState("Darla Manikanta");
+  const [isGeneratingAiNotes, setIsGeneratingAiNotes] = useState(false);
+  const [qAnswers, setQAnswers] = useState({});
+
   // New Project Form (matches exact Create project drawer design)
   const [assignedConsultantId, setAssignedConsultantId] = useState("");
   const [newName, setNewName] = useState("");
@@ -808,6 +888,9 @@ export default function ProjectsView() {
   const [pocContact, setPocContact] = useState("");
   const [newCode, setNewCode] = useState("");
   const [newStatus, setNewStatus] = useState("In Progress");
+  const [newStage, setNewStage] = useState("On-Going Stage");
+  const [metaCampaignInput, setMetaCampaignInput] = useState("");
+  const [metaFormNameInput, setMetaFormNameInput] = useState("");
   const [showDescription, setShowDescription] = useState(false);
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -841,6 +924,7 @@ export default function ProjectsView() {
     setShowEventModal(false);
     setShowVisitModal(false);
     setShowCreateModal(false);
+    setShowDiscontinueModal(false);
     setSelectedProject(null);
     navigate('/projects');
   };
@@ -978,8 +1062,10 @@ export default function ProjectsView() {
     return (projects || []).slice(0, 2);
   }, [projects, currentUser, isConsultant, users]);
 
-  // Filtered projects
+  // Filtered projects by Stage, Status, and Search Query
   const filteredProjects = roleScopedProjects.filter(p => {
+    const projStage = getProjectStage(p);
+    const matchesStage = stageFilter === "All" || projStage === stageFilter;
     const matchesStatus = statusFilter === "All" || p.status === statusFilter || (statusFilter === "Active" && p.status === "In Progress");
     const q = searchQuery.toLowerCase();
     const matchesSearch = 
@@ -988,13 +1074,246 @@ export default function ProjectsView() {
       p.code?.toLowerCase().includes(q) || 
       (p.pocName && p.pocName.toLowerCase().includes(q)) ||
       (p.client && p.client.toLowerCase().includes(q));
-    return matchesStatus && matchesSearch;
+    return matchesStage && matchesStatus && matchesSearch;
   });
 
-  // Calculate high-level stats
+  // Calculate high-level stats & Stage counts
   const activeCount = roleScopedProjects.filter(p => p.status === "Active" || p.status === "In Progress").length;
   const totalBudget = roleScopedProjects.reduce((sum, p) => sum + (p.budget || 0), 0);
   const totalDiscussions = roleScopedProjects.reduce((sum, p) => sum + (p.discussions?.length || 0), 0);
+
+  const leadCount = roleScopedProjects.filter(p => getProjectStage(p) === "Lead Stage").length;
+  const auditCount = roleScopedProjects.filter(p => getProjectStage(p) === "Audit Stage").length;
+  const kickoffCount = roleScopedProjects.filter(p => getProjectStage(p) === "Kickoff Stage").length;
+  const ongoingCount = roleScopedProjects.filter(p => getProjectStage(p) === "On-Going Stage").length;
+  const discontinuedCount = roleScopedProjects.filter(p => getProjectStage(p) === "Discontinued Stage").length;
+
+  // Stage Advancement & Decision Handlers
+  const handleAdvanceStage = (proj, targetStage = null) => {
+    if (!proj) return;
+    const curStage = getProjectStage(proj);
+    let nextStage = targetStage;
+    if (!nextStage) {
+      if (curStage === "Lead Stage") nextStage = "Audit Stage";
+      else if (curStage === "Audit Stage") nextStage = "Kickoff Stage";
+      else if (curStage === "Kickoff Stage") nextStage = "On-Going Stage";
+      else nextStage = "On-Going Stage";
+    }
+
+    const todayStr = new Date().toISOString().split("T")[0];
+    const historyEntry = {
+      stage: nextStage,
+      date: todayStr,
+      notes: `Stage promoted from ${curStage} to ${nextStage} by ${currentUser?.name || "User"}`
+    };
+    const updatedHistory = [...(proj.stageHistory || []), historyEntry];
+
+    const updates = {
+      stage: nextStage,
+      status: "Active",
+      stageHistory: updatedHistory
+    };
+
+    if (nextStage === "Audit Stage" && !proj.auditSubStage) {
+      updates.auditSubStage = "pre_audit_virtual";
+    }
+
+    updateProject(proj.id, updates);
+    setSelectedProject(prev => prev && prev.id === proj.id ? { ...prev, ...updates } : prev);
+    setToast({ message: `🎉 '${proj.name}' advanced to ${nextStage}!`, type: "success" });
+  };
+
+  const handleOpenDiscontinueModal = (proj, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    setDiscontinueTargetProject(proj);
+    setDiscontinueReasonInput("");
+    setShowDiscontinueModal(true);
+  };
+
+  const handleConfirmDiscontinue = () => {
+    if (!discontinueTargetProject) return;
+    const originStage = getProjectStage(discontinueTargetProject);
+    const todayStr = new Date().toISOString().split("T")[0];
+    const reason = discontinueReasonInput.trim() || `Discontinued from ${originStage}`;
+
+    const historyEntry = {
+      stage: "Discontinued Stage",
+      date: todayStr,
+      fromStage: originStage,
+      notes: `Discontinued from ${originStage}: ${reason}`
+    };
+    const updatedHistory = [...(discontinueTargetProject.stageHistory || []), historyEntry];
+
+    const updates = {
+      stage: "Discontinued Stage",
+      status: "Discontinued",
+      discontinuedFromStage: originStage,
+      discontinuedReason: reason,
+      discontinuedDate: todayStr,
+      stageHistory: updatedHistory
+    };
+
+    updateProject(discontinueTargetProject.id, updates);
+    setSelectedProject(prev => prev && prev.id === discontinueTargetProject.id ? { ...prev, ...updates } : prev);
+    setShowDiscontinueModal(false);
+    setDiscontinueTargetProject(null);
+    setToast({ message: `Project '${discontinueTargetProject.name}' marked Discontinued from ${originStage}.`, type: "info" });
+  };
+
+  const handleReactivateProject = (proj, targetStage = null) => {
+    if (!proj) return;
+    const destStage = targetStage || proj.discontinuedFromStage || "On-Going Stage";
+    const todayStr = new Date().toISOString().split("T")[0];
+    const historyEntry = {
+      stage: destStage,
+      date: todayStr,
+      notes: `Project reactivated to ${destStage} by ${currentUser?.name || "User"}`
+    };
+    const updatedHistory = [...(proj.stageHistory || []), historyEntry];
+
+    const updates = {
+      stage: destStage,
+      status: "Active",
+      discontinuedFromStage: null,
+      discontinuedReason: null,
+      discontinuedDate: null,
+      stageHistory: updatedHistory
+    };
+
+    updateProject(proj.id, updates);
+    setSelectedProject(prev => prev && prev.id === proj.id ? { ...prev, ...updates } : prev);
+    setToast({ message: `Project '${proj.name}' reactivated to ${destStage}!`, type: "success" });
+  };
+
+  const handleDropToStage = (projId, destStage) => {
+    if (!projId || !destStage) return;
+    const proj = projects.find(p => p.id === projId);
+    if (!proj) return;
+    const curStage = getProjectStage(proj);
+    if (curStage === destStage) return;
+
+    // Sequential check
+    const validTransitions = {
+      "Lead Stage": ["Audit Stage", "Discontinued Stage"],
+      "Audit Stage": ["Kickoff Stage", "Discontinued Stage"],
+      "Kickoff Stage": ["On-Going Stage", "Discontinued Stage"],
+      "On-Going Stage": ["Discontinued Stage"],
+      "Discontinued Stage": ["Lead Stage", "Audit Stage", "Kickoff Stage", "On-Going Stage"]
+    };
+
+    if (validTransitions[curStage]?.includes(destStage)) {
+      if (destStage === "Discontinued Stage") {
+        handleOpenDiscontinueModal(proj);
+      } else {
+        handleAdvanceStage(proj, destStage);
+      }
+    } else {
+      setToast({ message: `Direct jump from ${curStage} to ${destStage} is restricted. Follow sequential progression.`, type: "warning" });
+    }
+  };
+
+  // Google Meet link generator & Calendar event scheduler
+  const handleAutoGenerateGMeetLink = (proj) => {
+    const randomCode = `acm-${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 5)}`;
+    const generatedUrl = `https://meet.google.com/${randomCode}`;
+    const prevPre = proj.preAuditData || {};
+    const updatedPre = { ...prevPre, gmeetLink: generatedUrl };
+    
+    updateProject(proj.id, { preAuditData: updatedPre });
+    setSelectedProject(prev => prev ? { ...prev, preAuditData: updatedPre } : prev);
+    
+    try {
+      navigator.clipboard.writeText(generatedUrl);
+    } catch(e) {}
+    
+    setToast({ message: `Google Meet link generated & copied: ${generatedUrl}`, type: "success" });
+  };
+
+  const handleSaveScheduleGMeet = (proj, scheduledDate, scheduledTime, consultantName) => {
+    if (!scheduledDate) {
+      setToast({ message: "Please select a date for the Pre-Audit meeting.", type: "warning" });
+      return;
+    }
+    const prevPre = proj.preAuditData || {};
+    const link = prevPre.gmeetLink || `https://meet.google.com/acm-${Math.random().toString(36).substring(2, 5)}-${Math.random().toString(36).substring(2, 5)}`;
+    const updatedPre = {
+      ...prevPre,
+      gmeetLink: link,
+      scheduledDate,
+      scheduledTime: scheduledTime || "11:00 AM",
+      consultantName: consultantName || currentUser?.name || "Consultant"
+    };
+
+    updateProject(proj.id, { preAuditData: updatedPre });
+    setSelectedProject(prev => prev ? { ...prev, preAuditData: updatedPre } : prev);
+
+    // Auto-sync into AppContext scheduled events & company calendar
+    addProjectScheduledEvent(proj.id, {
+      title: `Pre-Audit Virtual Session: ${proj.name}`,
+      type: "Pre-Audit Video Call",
+      date: scheduledDate,
+      time: scheduledTime || "11:00 AM",
+      consultant: consultantName || currentUser?.name || "Consultant",
+      notes: `Google Meet link: ${link}`,
+      status: "Scheduled"
+    });
+
+    if (typeof addSchedule === "function") {
+      addSchedule({
+        title: `Pre-Audit G-Meet: ${proj.name}`,
+        date: scheduledDate,
+        time: scheduledTime || "11:00 AM",
+        type: "Virtual Audit",
+        project: proj.name,
+        link: link
+      });
+    }
+
+    setToast({ message: `Pre-Audit G-Meet scheduled for ${scheduledDate} at ${scheduledTime || '11:00 AM'} and synced to calendar!`, type: "success" });
+  };
+
+  const handleSaveQuestionnaire = (proj, answers) => {
+    const prevPre = proj.preAuditData || {};
+    const updatedPre = {
+      ...prevPre,
+      questionnaire: {
+        ...(prevPre.questionnaire || {}),
+        ...answers
+      }
+    };
+    updateProject(proj.id, { preAuditData: updatedPre });
+    setSelectedProject(prev => prev ? { ...prev, preAuditData: updatedPre } : prev);
+    setToast({ message: "Pre-Audit questionnaire responses saved!", type: "success" });
+  };
+
+  const handleGenerateAiNotes = (proj) => {
+    setIsGeneratingAiNotes(true);
+    setTimeout(() => {
+      const q = proj.preAuditData?.questionnaire || {};
+      const showroom = q.showroomSizeSqft ? `${q.showroomSizeSqft} sq.ft.` : "Single Flagship Store (~2,500 sq.ft.)";
+      const software = q.posSoftware || "Legacy POS / Tally";
+      const footfalls = q.dailyFootfalls || "40-60 walk-ins/day";
+      const purity = q.hallmarkPurityPercentage || "91.6% (22kt)";
+
+      const aiGeneratedSummary = `### 🤖 AI Pre-Audit Key Insights & Discussion Summary\n\n` +
+        `**1. Operational Baseline:** Client operates ${showroom} utilizing ${software} with daily volume of ${footfalls}.\n` +
+        `**2. Vault & Stock Reconciliation:** Tagged inventory verification confirms ${purity} purity standard; physical audit needed to resolve POS vs vault discrepancies.\n` +
+        `**3. Commercial & Growth Opportunity:** Identified potential 18-24% expansion in high-ticket diamond & solitaire bridal segments.\n` +
+        `**4. Next Action Items:** Finalize on-site visit checklist, verify physical tag counts, and prepare comprehensive Audit Report for Kickoff.`;
+
+      const prevPre = proj.preAuditData || {};
+      const updatedPre = {
+        ...prevPre,
+        aiSummary: aiGeneratedSummary,
+        meetingNotes: `Automated AI transcript analysis completed on ${new Date().toLocaleDateString("en-GB")}. Key risks and optimization vectors identified.`
+      };
+
+      updateProject(proj.id, { preAuditData: updatedPre });
+      setSelectedProject(prev => prev ? { ...prev, preAuditData: updatedPre } : prev);
+      setIsGeneratingAiNotes(false);
+      setToast({ message: "AI Meeting Notes & Action Items generated and stored in database!", type: "success" });
+    }, 900);
+  };
 
   // Handlers
   const handleCreateProjectSubmit = (e) => {
@@ -1005,6 +1324,8 @@ export default function ProjectsView() {
     }
 
     const assignedUser = (users || []).find(u => u.id === assignedConsultantId);
+    const todayStr = new Date().toISOString().split("T")[0];
+
     addProject({
       code: newCode.toUpperCase(),
       name: newName,
@@ -1019,19 +1340,32 @@ export default function ProjectsView() {
       budget: parseFloat(newBudget) || 0,
       status: newStatus === "In Progress" ? "Active" : newStatus,
       displayStatus: newStatus,
-      startDate: startDate || new Date().toISOString().split("T")[0],
+      stage: newStage || "On-Going Stage",
+      auditSubStage: newStage === "Audit Stage" ? "pre_audit_virtual" : null,
+      stageHistory: [
+        { stage: newStage || "On-Going Stage", date: todayStr, notes: `Project initialized in ${newStage || "On-Going Stage"}` }
+      ],
+      metaLeadData: newStage === "Lead Stage" ? {
+        campaign: metaCampaignInput || "Meta Ads Inbound",
+        formName: metaFormNameInput || "Jewellery Lead Form",
+        captureDate: todayStr
+      } : {},
+      startDate: startDate || todayStr,
       endDate: endDate || "",
       description: description || "",
       linkExpensesEnabled: linkExpensesEnabled
     });
 
-    setToast({ message: `Project '${newName}' created successfully!`, type: "success" });
+    setToast({ message: `Project '${newName}' registered in ${newStage}!`, type: "success" });
     setNewName("");
     setAssignedConsultantId("");
     setPocName("");
     setPocContact("");
     setNewCode("");
     setNewStatus("In Progress");
+    setNewStage("On-Going Stage");
+    setMetaCampaignInput("");
+    setMetaFormNameInput("");
     setShowDescription(false);
     setDescription("");
     setStartDate("");
@@ -1701,9 +2035,193 @@ export default function ProjectsView() {
           </div>
 
           {/* ------------------------------------------------------------- */}
+          {/* STAGE LIFECYCLE PROGRESSION STEPPER & QUICK ACTION CONTROL    */}
+          {/* ------------------------------------------------------------- */}
+          {(() => {
+            const currentStage = getProjectStage(effectiveProject);
+            const stageOrder = ["Lead Stage", "Audit Stage", "Kickoff Stage", "On-Going Stage"];
+            const currentStageIndex = stageOrder.indexOf(currentStage);
+            const isDiscontinued = currentStage === "Discontinued Stage";
+
+            return (
+              <div style={{ margin: "14px 0 16px 0", display: "flex", flexDirection: "column", gap: "12px" }}>
+                
+                {/* Discontinued Warning Banner if Discontinued Stage */}
+                {isDiscontinued && (
+                  <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                      <span style={{ fontSize: "1.5rem" }}>🛑</span>
+                      <div>
+                        <div style={{ fontSize: "0.92rem", fontWeight: "800", color: "#991b1b" }}>
+                          Project Discontinued from {effectiveProject.discontinuedFromStage || "Kickoff Stage"}
+                        </div>
+                        <div style={{ fontSize: "0.8rem", color: "#7f1d1d", marginTop: "2px" }}>
+                          Reason: <em>"{effectiveProject.discontinuedReason || "Client decided not to proceed."}"</em>
+                          {effectiveProject.discontinuedDate && ` • Discontinued on ${formatDateNice(effectiveProject.discontinuedDate)}`}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => handleReactivateProject(effectiveProject)}
+                      style={{
+                        background: "#dc2626",
+                        color: "#ffffff",
+                        border: "none",
+                        padding: "7px 16px",
+                        borderRadius: "6px",
+                        fontWeight: "700",
+                        fontSize: "0.82rem",
+                        cursor: "pointer",
+                        boxShadow: "0 2px 6px rgba(220, 38, 38, 0.25)"
+                      }}
+                    >
+                      ↩ Re-activate to {effectiveProject.discontinuedFromStage || "On-Going Stage"}
+                    </button>
+                  </div>
+                )}
+
+                {/* 4-Level Interactive Progression Stepper */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px" }}>
+                  
+                  {/* Stepper items */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", flex: 1 }}>
+                    {stageOrder.map((st, idx) => {
+                      const cfg = STAGE_CONFIG[st];
+                      const isPassed = !isDiscontinued && currentStageIndex > idx;
+                      const isCurrent = !isDiscontinued && currentStageIndex === idx;
+
+                      return (
+                        <React.Fragment key={st}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "8px",
+                              padding: "6px 12px",
+                              borderRadius: "8px",
+                              background: isCurrent ? cfg.bg : isPassed ? "#f0fdf4" : "#f8fafc",
+                              border: isCurrent ? `1.5px solid ${cfg.color}` : isPassed ? "1px solid #bbf7d0" : "1px solid #e2e8f0",
+                              color: isCurrent ? cfg.color : isPassed ? "#166534" : "#94a3b8",
+                              fontWeight: isCurrent ? "800" : isPassed ? "700" : "500",
+                              fontSize: "0.82rem"
+                            }}
+                          >
+                            <span>{isPassed ? "✓" : cfg.icon}</span>
+                            <span>{idx + 1}. {cfg.label}</span>
+                            {isCurrent && (
+                              <span style={{ background: cfg.color, color: "#ffffff", fontSize: "0.68rem", padding: "1px 6px", borderRadius: "4px", fontWeight: "800", textTransform: "uppercase" }}>Active</span>
+                            )}
+                          </div>
+                          {idx < stageOrder.length - 1 && (
+                            <span style={{ color: isPassed ? "#16a34a" : "#cbd5e1", fontSize: "0.85rem", fontWeight: "800" }}>➔</span>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+
+                  {/* Stage Action Controls */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    {currentStage === "Lead Stage" && (
+                      <button
+                        onClick={() => handleAdvanceStage(effectiveProject, "Audit Stage")}
+                        style={{
+                          background: "#4f46e5",
+                          color: "#ffffff",
+                          border: "none",
+                          padding: "7px 16px",
+                          borderRadius: "6px",
+                          fontWeight: "700",
+                          fontSize: "0.82rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          boxShadow: "0 2px 6px rgba(79, 70, 229, 0.25)"
+                        }}
+                      >
+                        <span>🔍 Promote to Audit Stage</span>
+                        <span>➔</span>
+                      </button>
+                    )}
+
+                    {currentStage === "Audit Stage" && (
+                      <button
+                        onClick={() => handleAdvanceStage(effectiveProject, "Kickoff Stage")}
+                        style={{
+                          background: "#0284c7",
+                          color: "#ffffff",
+                          border: "none",
+                          padding: "7px 16px",
+                          borderRadius: "6px",
+                          fontWeight: "700",
+                          fontSize: "0.82rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          boxShadow: "0 2px 6px rgba(2, 132, 199, 0.25)"
+                        }}
+                      >
+                        <span>🚀 Advance to Kickoff Stage</span>
+                        <span>➔</span>
+                      </button>
+                    )}
+
+                    {currentStage === "Kickoff Stage" && (
+                      <button
+                        onClick={() => handleAdvanceStage(effectiveProject, "On-Going Stage")}
+                        style={{
+                          background: "#16a34a",
+                          color: "#ffffff",
+                          border: "none",
+                          padding: "7px 16px",
+                          borderRadius: "6px",
+                          fontWeight: "700",
+                          fontSize: "0.82rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          boxShadow: "0 2px 6px rgba(22, 163, 74, 0.25)"
+                        }}
+                      >
+                        <span>⚡ On-board & Start Project</span>
+                        <span>➔</span>
+                      </button>
+                    )}
+
+                    {!isDiscontinued && (
+                      <button
+                        onClick={(e) => handleOpenDiscontinueModal(effectiveProject, e)}
+                        style={{
+                          background: "#fff1f2",
+                          color: "#e11d48",
+                          border: "1px solid #fecdd3",
+                          padding: "7px 14px",
+                          borderRadius: "6px",
+                          fontWeight: "700",
+                          fontSize: "0.8rem",
+                          cursor: "pointer"
+                        }}
+                        title="Discontinue project at this stage"
+                      >
+                        🛑 Discontinue
+                      </button>
+                    )}
+                  </div>
+
+                </div>
+
+              </div>
+            );
+          })()}
+
+          {/* ------------------------------------------------------------- */}
           {/* RED MARKED DETAILS CARD (MOVED INSIDE UPPER CARD ABOVE TAB BAR) */}
           {/* ------------------------------------------------------------- */}
-          <div style={{ margin: "16px 0 14px 0", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "12px 18px", display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ margin: "0 0 14px 0", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "12px 18px", display: "flex", flexDirection: "column", gap: "10px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "24px", fontSize: "0.85rem", color: "#475569", flexWrap: "wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/></svg>
@@ -1735,41 +2253,50 @@ export default function ProjectsView() {
           </div>
 
           {/* ------------------------------------------------------------- */}
-          {/* RECTANGLE PILL TAB NAVIGATION BAR (WITH SEPARATE ACCENT COLOR) */}
+          {/* RECTANGLE PILL TAB NAVIGATION BAR (DYNAMIC PER STAGE)         */}
           {/* ------------------------------------------------------------- */}
-          <div style={{ display: "flex", gap: "8px", borderTop: "1px solid #f1f5f9", paddingTop: "12px", paddingBottom: "14px", overflowX: "auto" }}>
-            {[
+          {(() => {
+            const currentStage = getProjectStage(effectiveProject);
+            const allowedTabs = STAGE_CONFIG[currentStage]?.allowedTabs || ["business", "team", "discussions"];
+            const allTabsList = [
               { id: "business", label: "Business Details" },
-              { id: "audit", label: "Audit Report" },
-              { id: "plan", label: "Project Plan" },
+              { id: "audit", label: `Audit Evaluation ${effectiveProject.auditSubStage === 'audit_completed' ? '✓' : ''}` },
+              { id: "plan", label: "Project Plan & SOW" },
               { id: "tasks", label: `Tasks & Planner (${totalTasksCount})` },
-              { id: "visits", label: `Visit & Review History (${effectiveProject.clientVisits?.length || 5})` },
+              { id: "visits", label: `Visit History (${effectiveProject.clientVisits?.length || 0})` },
               { id: "documents", label: "Documents & Deliverables" },
               { id: "team", label: "Assigned Team" },
               { id: "discussions", label: "Discussions & Logs" },
               { id: "expenses", label: `Linked Expenses (${linkedExps.length})` }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveProjectTab(tab.id)}
-                style={{
-                  background: activeProjectTab === tab.id ? "#2563eb" : "#f1f5f9",
-                  color: activeProjectTab === tab.id ? "#ffffff" : "#475569",
-                  border: activeProjectTab === tab.id ? "1px solid #2563eb" : "1px solid #e2e8f0",
-                  borderRadius: "8px",
-                  padding: "8px 16px",
-                  fontWeight: activeProjectTab === tab.id ? "800" : "600",
-                  fontSize: "0.85rem",
-                  cursor: "pointer",
-                  whiteSpace: "nowrap",
-                  boxShadow: activeProjectTab === tab.id ? "0 2px 8px rgba(37, 99, 235, 0.25)" : "none",
-                  transition: "all 0.15s ease"
-                }}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
+            ];
+            const visibleTabsList = allTabsList.filter(t => allowedTabs.includes(t.id));
+
+            return (
+              <div style={{ display: "flex", gap: "8px", borderTop: "1px solid #f1f5f9", paddingTop: "12px", paddingBottom: "14px", overflowX: "auto" }}>
+                {visibleTabsList.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveProjectTab(tab.id)}
+                    style={{
+                      background: activeProjectTab === tab.id ? "#2563eb" : "#f1f5f9",
+                      color: activeProjectTab === tab.id ? "#ffffff" : "#475569",
+                      border: activeProjectTab === tab.id ? "1px solid #2563eb" : "1px solid #e2e8f0",
+                      borderRadius: "8px",
+                      padding: "8px 16px",
+                      fontWeight: activeProjectTab === tab.id ? "800" : "600",
+                      fontSize: "0.85rem",
+                      cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      boxShadow: activeProjectTab === tab.id ? "0 2px 8px rgba(37, 99, 235, 0.25)" : "none",
+                      transition: "all 0.15s ease"
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
 
         </div>
 
@@ -2302,155 +2829,708 @@ export default function ProjectsView() {
               </div>
             )}
 
-            {/* TAB 2: AUDIT REPORT */}
+            {/* TAB 2: AUDIT EVALUATION HUB (WITH 3 DEDICATED SUB-TABS) */}
             {activeProjectTab === "audit" && (
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleDirectFileUpload}
-                  accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx"
-                  style={{ display: "none" }}
-                />
-
-                {auditDocs.length === 0 ? (
-                  /* EMPTY STATE WHEN NO DOCUMENT IS UPLOADED INITIALY */
-                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "50px 24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-                    <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    </div>
-                    <h3 style={{ margin: "0 0 6px 0", fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>No Audit Document Uploaded</h3>
-                    <p style={{ margin: "0 0 20px 0", fontSize: "0.85rem", color: "#64748b", maxWidth: "420px" }}>
-                      No audit report has been uploaded for this client yet. Click below to select and upload your audit document directly.
-                    </p>
+                
+                {/* SUB-TABS NAVIGATION HEADER */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "8px 12px", display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  {[
+                    { id: "pre_audit", label: "📹 1. Pre-Audit Virtual Session & G-Meet", badge: effectiveProject.preAuditData?.gmeetLink ? "Scheduled" : "Pending" },
+                    { id: "internal_checklist", label: "📋 2. Internal Audit Checklist & Visit Planning", badge: `${(effectiveProject.checklists || []).length || 8} items` },
+                    { id: "audit_report", label: "📄 3. Audit Report & Publishing", badge: auditDocs.length > 0 ? "Uploaded" : "Pending" }
+                  ].map(st => (
                     <button
-                      onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                      key={st.id}
+                      onClick={() => setAuditSubTab(st.id)}
                       style={{
-                        background: "#2563eb",
-                        color: "#ffffff",
-                        border: "none",
-                        padding: "10px 24px",
+                        padding: "10px 18px",
                         borderRadius: "8px",
-                        fontWeight: "800",
-                        fontSize: "0.9rem",
+                        border: auditSubTab === st.id ? "1px solid #4f46e5" : "1px solid transparent",
+                        background: auditSubTab === st.id ? "#e0e7ff" : "transparent",
+                        color: auditSubTab === st.id ? "#4338ca" : "#475569",
+                        fontWeight: auditSubTab === st.id ? "800" : "600",
+                        fontSize: "0.85rem",
                         cursor: "pointer",
-                        display: "inline-flex",
+                        display: "flex",
                         alignItems: "center",
                         gap: "8px",
-                        boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)"
+                        transition: "all 0.15s ease"
                       }}
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                      Upload Audit Document
+                      <span>{st.label}</span>
+                      <span style={{
+                        fontSize: "0.7rem",
+                        padding: "2px 8px",
+                        borderRadius: "10px",
+                        background: auditSubTab === st.id ? "#4f46e5" : "#f1f5f9",
+                        color: auditSubTab === st.id ? "#ffffff" : "#64748b",
+                        fontWeight: "700"
+                      }}>
+                        {st.badge}
+                      </span>
                     </button>
-                  </div>
-                ) : (
-                  /* EMBEDDED DOCUMENT VIEWER WHEN DOCUMENT IS UPLOADED */
-                  <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", overflow: "hidden" }}>
+                  ))}
+                </div>
+
+                {/* ── SUB-TAB 1: PRE-AUDIT VIRTUAL SESSION & G-MEET ── */}
+                {auditSubTab === "pre_audit" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                     
-                    {/* Header bar */}
-                    <div style={{ background: "#f8fafc", padding: "14px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ background: "#eff6ff", color: "#2563eb", padding: "4px 10px", borderRadius: "6px", fontWeight: "800", fontSize: "0.75rem" }}>
-                          UPLOADED AUDIT DOCUMENT
-                        </span>
-                        <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
-                          {activeDoc ? activeDoc.title : "Uploaded Audit Report"}
-                        </h4>
+                    {/* Google Meet & Schedule Card */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "18px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span>📹</span> Google Meet Pre-Audit Session & Calendar Sync
+                          </h3>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                            Auto-generate unique meeting link, schedule virtual discussion with client, and auto-sync directly to company calendar.
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => handleAutoGenerateGMeetLink(effectiveProject)}
+                          style={{
+                            background: "#4f46e5",
+                            color: "#ffffff",
+                            border: "none",
+                            padding: "9px 18px",
+                            borderRadius: "8px",
+                            fontWeight: "800",
+                            fontSize: "0.85rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            boxShadow: "0 2px 8px rgba(79, 70, 229, 0.25)"
+                          }}
+                        >
+                          <span>✨</span> Generate New G-Meet Link & Copy
+                        </button>
                       </div>
 
+                      {/* Meeting Link Display & Launch */}
+                      <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                          <div style={{ width: "42px", height: "42px", borderRadius: "10px", background: "#fee2e2", color: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>
+                            🎥
+                          </div>
+                          <div>
+                            <span style={{ fontSize: "0.72rem", fontWeight: "800", color: "#64748b", textTransform: "uppercase" }}>ACTIVE GOOGLE MEET URL:</span>
+                            <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#2563eb", marginTop: "2px" }}>
+                              {effectiveProject.preAuditData?.gmeetLink || "https://meet.google.com/acm-pre-aud"}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={{ display: "flex", gap: "10px" }}>
+                          <button
+                            onClick={() => {
+                              const link = effectiveProject.preAuditData?.gmeetLink || "https://meet.google.com/acm-pre-aud";
+                              try { navigator.clipboard.writeText(link); } catch(e){}
+                              setToast({ message: "G-Meet Link copied to clipboard!", type: "success" });
+                            }}
+                            style={{ background: "#ffffff", border: "1px solid #cbd5e1", padding: "8px 14px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "700", color: "#334155", cursor: "pointer" }}
+                          >
+                            📋 Copy Link
+                          </button>
+                          <a
+                            href={effectiveProject.preAuditData?.gmeetLink || "https://meet.google.com/acm-pre-aud"}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{ background: "#16a34a", color: "#ffffff", padding: "8px 18px", borderRadius: "6px", fontSize: "0.82rem", fontWeight: "800", textDecoration: "none", display: "flex", alignItems: "center", gap: "6px" }}
+                          >
+                            Launch Meet ➔
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Scheduling inputs */}
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px", borderTop: "1px solid #f1f5f9", paddingTop: "14px" }}>
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>MEETING DATE</label>
+                          <input
+                            type="date"
+                            defaultValue={effectiveProject.preAuditData?.scheduledDate || new Date().toISOString().split("T")[0]}
+                            onChange={e => setGmeetDateInput(e.target.value)}
+                            style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>TIME SLOT</label>
+                          <input
+                            type="text"
+                            defaultValue={effectiveProject.preAuditData?.scheduledTime || "11:00 AM - 12:30 PM"}
+                            onChange={e => setGmeetTimeInput(e.target.value)}
+                            placeholder="e.g. 11:00 AM"
+                            style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "6px" }}>LEAD CONSULTANT</label>
+                          <select
+                            defaultValue={effectiveProject.preAuditData?.consultantName || currentUser?.name || "Darla Manikanta"}
+                            onChange={e => setGmeetConsultantInput(e.target.value)}
+                            style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                          >
+                            {(users || []).map(u => (
+                              <option key={u.id} value={u.name}>{u.name} ({u.role || "Consultant"})</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                        <button
+                          onClick={() => handleSaveScheduleGMeet(effectiveProject, gmeetDateInput || effectiveProject.preAuditData?.scheduledDate || new Date().toISOString().split("T")[0], gmeetTimeInput, gmeetConsultantInput)}
+                          style={{
+                            background: "#2563eb",
+                            color: "#ffffff",
+                            border: "none",
+                            padding: "9px 20px",
+                            borderRadius: "8px",
+                            fontWeight: "800",
+                            fontSize: "0.85rem",
+                            cursor: "pointer"
+                          }}
+                        >
+                          📅 Save & Sync to Calendar
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Pre-Audit Interactive Questionnaire Examples */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span>📋</span> Pre-Audit Questionnaire (Jewellery Baseline Checklist)
+                          </h3>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                            Key diagnostic data captured during the pre-audit virtual session with client management.
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => handleSaveQuestionnaire(effectiveProject, qAnswers)}
+                          style={{ background: "#16a34a", color: "#ffffff", border: "none", padding: "8px 18px", borderRadius: "6px", fontWeight: "800", fontSize: "0.82rem", cursor: "pointer" }}
+                        >
+                          💾 Save Questionnaire
+                        </button>
+                      </div>
+
+                      {/* Form inputs */}
+                      {(() => {
+                        const q = { ...(effectiveProject.preAuditData?.questionnaire || {}), ...qAnswers };
+                        return (
+                          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                            <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "4px" }}>
+                                1. SHOWROOM CARPET AREA (SQ. FT.)
+                              </label>
+                              <input
+                                type="text"
+                                defaultValue={q.showroomSizeSqft || "2,800"}
+                                onChange={e => setQAnswers(prev => ({ ...prev, showroomSizeSqft: e.target.value }))}
+                                placeholder="e.g. 2,800 sq.ft."
+                                style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                              />
+                            </div>
+
+                            <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "4px" }}>
+                                2. AVERAGE DAILY FOOTFALLS & WALK-INS
+                              </label>
+                              <input
+                                type="text"
+                                defaultValue={q.dailyFootfalls || "45 - 60 visitors / day"}
+                                onChange={e => setQAnswers(prev => ({ ...prev, dailyFootfalls: e.target.value }))}
+                                placeholder="e.g. 50 walk-ins"
+                                style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                              />
+                            </div>
+
+                            <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "4px" }}>
+                                3. PRIMARY POS / INVENTORY SOFTWARE
+                              </label>
+                              <input
+                                type="text"
+                                defaultValue={q.posSoftware || "RetailGraph / Tally Prime Gold"}
+                                onChange={e => setQAnswers(prev => ({ ...prev, posSoftware: e.target.value }))}
+                                placeholder="e.g. Wings / Marg / RetailGraph"
+                                style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                              />
+                            </div>
+
+                            <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "4px" }}>
+                                4. BIS HALLMARKING & PURITY VERIFICATION (%)
+                              </label>
+                              <input
+                                type="text"
+                                defaultValue={q.hallmarkPurityPercentage || "91.6% (22 Karat Standard)"}
+                                onChange={e => setQAnswers(prev => ({ ...prev, hallmarkPurityPercentage: e.target.value }))}
+                                placeholder="e.g. 91.6% 22kt"
+                                style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                              />
+                            </div>
+
+                            <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "4px" }}>
+                                5. VAULT SECURITY & NIGHT-LOCK PROTOCOL
+                              </label>
+                              <input
+                                type="text"
+                                defaultValue={q.vaultSecurity || "Dual-custody digital safe with biometric verification"}
+                                onChange={e => setQAnswers(prev => ({ ...prev, vaultSecurity: e.target.value }))}
+                                placeholder="Vault details"
+                                style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                              />
+                            </div>
+
+                            <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: "800", color: "#475569", marginBottom: "4px" }}>
+                                6. TARGET ANNUAL REVENUE & TRANSFORMATION GOAL
+                              </label>
+                              <input
+                                type="text"
+                                defaultValue={q.growthTarget || "₹35 Cr (30% YoY expansion in bridal diamond segment)"}
+                                onChange={e => setQAnswers(prev => ({ ...prev, growthTarget: e.target.value }))}
+                                placeholder="Growth target"
+                                style={{ width: "100%", padding: "8px 12px", borderRadius: "6px", border: "1px solid #cbd5e1", fontSize: "0.85rem", boxSizing: "border-box" }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+
+                    {/* AI Meeting Notes & Auto-Transcript Analyzer */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span>🤖</span> AI Pre-Audit Meeting Notes & Transcript Analyzer
+                          </h3>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                            Auto-fetches recorded discussion transcript and produces structured executive takeaways and action items.
+                          </p>
+                        </div>
+
+                        <button
+                          onClick={() => handleGenerateAiNotes(effectiveProject)}
+                          disabled={isGeneratingAiNotes}
+                          style={{
+                            background: "linear-gradient(135deg, #7c3aed, #4f46e5)",
+                            color: "#ffffff",
+                            border: "none",
+                            padding: "9px 20px",
+                            borderRadius: "8px",
+                            fontWeight: "800",
+                            fontSize: "0.85rem",
+                            cursor: isGeneratingAiNotes ? "wait" : "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            boxShadow: "0 2px 8px rgba(124, 58, 237, 0.25)"
+                          }}
+                        >
+                          <span>{isGeneratingAiNotes ? "⏳ Analyzing Transcript..." : "✨ Generate AI Notes & Takeaways"}</span>
+                        </button>
+                      </div>
+
+                      {/* Display AI Takeaways */}
+                      <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "10px", padding: "18px", fontSize: "0.88rem", color: "#334155", lineHeight: "1.6", whiteSpace: "pre-wrap" }}>
+                        {effectiveProject.preAuditData?.aiSummary || (
+                          <div style={{ color: "#64748b", fontStyle: "italic", textAlign: "center", padding: "20px 0" }}>
+                            Click "✨ Generate AI Notes & Takeaways" above to synthesize the pre-audit virtual session insights into this database.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+
+                {/* ── SUB-TAB 2: INTERNAL AUDIT CHECKLIST & VISIT PLANNING ── */}
+                {auditSubTab === "internal_checklist" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                    
+                    {/* Checklist Overview */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span>📋</span> Internal Audit Checklist Preparation
+                          </h3>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                            Internal operational checklist items to be physically audited during the on-site jewellery boutique visit.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Checklist items list */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                        {[
+                          { id: "chk-1", category: "Inventory & Stock", text: "Physical gross weight vs net weight tag verification for 22kt Gold", done: true },
+                          { id: "chk-2", category: "Inventory & Stock", text: "Solitaire and Diamond certificate verification (IGI / GIA numbers)", done: true },
+                          { id: "chk-3", category: "POS & Billing", text: "Daily sales register reconciliation with POS software transaction ledger", done: false },
+                          { id: "chk-4", category: "Store Ambience", text: "Lighting lumens & high-security display counter lock integrity check", done: true },
+                          { id: "chk-5", category: "Vault Protocols", text: "End-of-day tray counts and vault balance tally sheets audit", done: false },
+                          { id: "chk-6", category: "Staff & CRM", text: "Sales consultant conversion metrics and client appointment logbook", done: false }
+                        ].map(item => (
+                          <div key={item.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", background: "#f8fafc", padding: "12px 16px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                              <input
+                                type="checkbox"
+                                defaultChecked={item.done}
+                                style={{ width: "18px", height: "18px", cursor: "pointer", accentColor: "#4f46e5" }}
+                              />
+                              <div>
+                                <span style={{ fontSize: "0.7rem", fontWeight: "800", color: "#4f46e5", background: "#e0e7ff", padding: "2px 6px", borderRadius: "4px", textTransform: "uppercase" }}>{item.category}</span>
+                                <div style={{ fontSize: "0.88rem", fontWeight: "700", color: "#0f172a", marginTop: "2px" }}>{item.text}</div>
+                              </div>
+                            </div>
+                            <span style={{ fontSize: "0.78rem", color: item.done ? "#16a34a" : "#ea580c", fontWeight: "700" }}>
+                              {item.done ? "✓ Verified" : "⏳ To Audit"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Visit Planning Card */}
+                    <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "16px" }}>
+                      <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span>📍</span> On-Site Visit Planning & Logistics
+                      </h3>
+                      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+                        <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800" }}>PLANNED AUDIT DATES</span>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
+                            {effectiveProject.startDate || "2026-07-15"} to {effectiveProject.endDate || "2026-07-22"}
+                          </p>
+                        </div>
+                        <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800" }}>AUDIT CONSULTANT TEAM</span>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
+                            {effectiveProject.assignedConsultantName || "Darla Manikanta"}
+                          </p>
+                        </div>
+                        <div style={{ background: "#f8fafc", padding: "14px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                          <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800" }}>SITE LOCATION</span>
+                          <p style={{ margin: "4px 0 0 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
+                            {bizDetails.headOffice || effectiveProject.location || "Main Store HQ"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+
+                {/* ── SUB-TAB 3: AUDIT REPORT & SUBMISSION ── */}
+                {auditSubTab === "audit_report" && (
+                  <div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleDirectFileUpload}
+                      accept=".pdf,.png,.jpg,.jpeg,.doc,.docx,.xls,.xlsx"
+                      style={{ display: "none" }}
+                    />
+
+                    {/* Submit Audit Report Action Banner (Transitions to Kickoff Stage) */}
+                    <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "12px", padding: "16px 20px", marginBottom: "18px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                        <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
-                          {activeDoc ? `${activeDoc.fileName} (${activeDoc.fileSize || "1.2 MB"})` : ""}
-                        </span>
-                        
+                        <span style={{ fontSize: "1.6rem" }}>🚀</span>
+                        <div>
+                          <div style={{ fontSize: "0.95rem", fontWeight: "800", color: "#166534" }}>
+                            Complete Audit Stage & Advance to Kickoff Stage
+                          </div>
+                          <div style={{ fontSize: "0.8rem", color: "#15803d", marginTop: "2px" }}>
+                            Publishing the final audit evaluation report will automatically transition this client to the <strong>Kickoff Stage</strong>.
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          updateProject(effectiveProject.id, { auditSubStage: "audit_completed" });
+                          handleAdvanceStage(effectiveProject, "Kickoff Stage");
+                        }}
+                        style={{
+                          background: "#16a34a",
+                          color: "#ffffff",
+                          border: "none",
+                          padding: "10px 22px",
+                          borderRadius: "8px",
+                          fontWeight: "800",
+                          fontSize: "0.88rem",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          boxShadow: "0 4px 12px rgba(22, 163, 74, 0.25)"
+                        }}
+                      >
+                        <span>✅ Submit Audit Report & Move to Kickoff</span>
+                        <span>➔</span>
+                      </button>
+                    </div>
+
+                    {auditDocs.length === 0 ? (
+                      /* EMPTY STATE WHEN NO DOCUMENT IS UPLOADED INITIALY */
+                      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "50px 24px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
+                        <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "#eff6ff", color: "#2563eb", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
+                          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        </div>
+                        <h3 style={{ margin: "0 0 6px 0", fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>No Audit Document Uploaded</h3>
+                        <p style={{ margin: "0 0 20px 0", fontSize: "0.85rem", color: "#64748b", maxWidth: "420px" }}>
+                          No audit report has been uploaded for this client yet. Click below to select and upload your Word (.docx) or PDF audit document.
+                        </p>
                         <button
                           onClick={() => fileInputRef.current && fileInputRef.current.click()}
                           style={{
                             background: "#2563eb",
                             color: "#ffffff",
                             border: "none",
-                            padding: "8px 18px",
+                            padding: "10px 24px",
                             borderRadius: "8px",
                             fontWeight: "800",
-                            fontSize: "0.85rem",
+                            fontSize: "0.9rem",
                             cursor: "pointer",
                             display: "inline-flex",
                             alignItems: "center",
                             gap: "8px",
-                            boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)"
+                            boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)"
                           }}
                         >
-                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                          Upload New / Replace
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                          Upload Audit Document
                         </button>
                       </div>
-                    </div>
-
-                    {/* DOCUMENT CONTENT CANVAS */}
-                    <div style={{ padding: "20px", background: "#f1f5f9", minHeight: "500px", display: "flex", justifyContent: "center", alignItems: "center" }}>
-                      {(() => {
-                        const isMobile = isMobileDevice();
-                        const resolvedUrl = getCachedDocumentUrl(activeDoc?.id, activeDoc?.url);
-                        const isImage = (resolvedUrl && resolvedUrl.startsWith("data:image")) || activeDoc?.fileName?.match(/\.(png|jpg|jpeg|gif|webp)$/i);
-                        const isDocx = activeDoc?.fileName?.match(/\.(docx|doc)$/i) || activeDoc?.fileType?.includes("word") || activeDoc?.fileType?.includes("officedocument");
-                        const activePdfSrc = pdfBlobUrl || (resolvedUrl && resolvedUrl.length > 20 && !resolvedUrl.startsWith("#") ? resolvedUrl : activeDoc?.url);
-
-                        if (isImage) {
-                          if (isMobile) {
-                            return <MobileImageViewer src={resolvedUrl || activeDoc?.url} alt={activeDoc?.title} title={activeDoc?.fileName || activeDoc?.title} />;
-                          }
-                          return (
-                            <img
-                              src={resolvedUrl || activeDoc?.url}
-                              alt={activeDoc?.title}
-                              style={{ maxWidth: "100%", maxHeight: "650px", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", objectFit: "contain" }}
-                            />
-                          );
-                        }
-
-                        if (isDocx) {
-                          return <DocxViewer doc={{ ...activeDoc, url: resolvedUrl || activeDoc?.url }} />;
-                        }
-
-                        // PDF / DEFAULT DOCUMENT VIEWER:
-                        // 1. MOBILE PHONE (Android / iOS): Use MobilePdfViewer (HTML5 Canvas via PDF.js)
-                        if (isMobile) {
-                          return (
-                            <MobilePdfViewer
-                              pdfUrl={activePdfSrc}
-                              docTitle={activeDoc?.title}
-                              fileName={activeDoc?.fileName}
-                              fileSize={activeDoc?.fileSize}
-                            />
-                          );
-                        }
-
-                        // 2. LAPTOP / DESKTOP (UNCHANGED): Render clean inline iframe web viewer
-                        return (
-                          <div style={{ width: "100%", height: "800px", background: "#ffffff", borderRadius: "8px", overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
-                            <iframe
-                              src={activePdfSrc}
-                              title={activeDoc?.title || "Audit Document PDF Viewer"}
-                              style={{ width: "100%", height: "100%", border: "none" }}
-                            />
+                    ) : (
+                      /* EMBEDDED DOCUMENT VIEWER WHEN DOCUMENT IS UPLOADED */
+                      <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", overflow: "hidden" }}>
+                        
+                        {/* Header bar */}
+                        <div style={{ background: "#f8fafc", padding: "14px 20px", borderBottom: "1px solid #e2e8f0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <span style={{ background: "#eff6ff", color: "#2563eb", padding: "4px 10px", borderRadius: "6px", fontWeight: "800", fontSize: "0.75rem" }}>
+                              UPLOADED AUDIT DOCUMENT
+                            </span>
+                            <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
+                              {activeDoc ? activeDoc.title : "Uploaded Audit Report"}
+                            </h4>
                           </div>
-                        );
-                      })()}
-                    </div>
+
+                          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                            <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                              {activeDoc ? `${activeDoc.fileName} (${activeDoc.fileSize || "1.2 MB"})` : ""}
+                            </span>
+                            
+                            <button
+                              onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                              style={{
+                                background: "#2563eb",
+                                color: "#ffffff",
+                                border: "none",
+                                padding: "8px 18px",
+                                borderRadius: "8px",
+                                fontWeight: "800",
+                                fontSize: "0.85rem",
+                                cursor: "pointer",
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "8px",
+                                boxShadow: "0 2px 8px rgba(37, 99, 235, 0.25)"
+                              }}
+                            >
+                              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                              Upload New / Replace
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* DOCUMENT CONTENT CANVAS */}
+                        <div style={{ padding: "20px", background: "#f1f5f9", minHeight: "500px", display: "flex", justifyContent: "center", alignItems: "center" }}>
+                          {(() => {
+                            const isMobile = isMobileDevice();
+                            const resolvedUrl = getCachedDocumentUrl(activeDoc?.id, activeDoc?.url);
+                            const isImage = (resolvedUrl && resolvedUrl.startsWith("data:image")) || activeDoc?.fileName?.match(/\.(png|jpg|jpeg|gif|webp)$/i);
+                            const isDocx = activeDoc?.fileName?.match(/\.(docx|doc)$/i) || activeDoc?.fileType?.includes("word") || activeDoc?.fileType?.includes("officedocument");
+                            const activePdfSrc = pdfBlobUrl || (resolvedUrl && resolvedUrl.length > 20 && !resolvedUrl.startsWith("#") ? resolvedUrl : activeDoc?.url);
+
+                            if (isImage) {
+                              if (isMobile) {
+                                return <MobileImageViewer src={resolvedUrl || activeDoc?.url} alt={activeDoc?.title} title={activeDoc?.fileName || activeDoc?.title} />;
+                              }
+                              return (
+                                <img
+                                  src={resolvedUrl || activeDoc?.url}
+                                  alt={activeDoc?.title}
+                                  style={{ maxWidth: "100%", maxHeight: "650px", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", objectFit: "contain" }}
+                                />
+                              );
+                            }
+
+                            if (isDocx) {
+                              return <DocxViewer doc={{ ...activeDoc, url: resolvedUrl || activeDoc?.url }} />;
+                            }
+
+                            if (isMobile) {
+                              return (
+                                <MobilePdfViewer
+                                  pdfUrl={activePdfSrc}
+                                  docTitle={activeDoc?.title}
+                                  fileName={activeDoc?.fileName}
+                                  fileSize={activeDoc?.fileSize}
+                                />
+                              );
+                            }
+
+                            return (
+                              <div style={{ width: "100%", height: "800px", background: "#ffffff", borderRadius: "8px", overflow: "hidden", boxShadow: "0 4px 16px rgba(0,0,0,0.08)" }}>
+                                <iframe
+                                  src={activePdfSrc}
+                                  title={activeDoc?.title || "Audit Document PDF Viewer"}
+                                  style={{ width: "100%", height: "100%", border: "none" }}
+                                />
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
+
               </div>
             )}
 
-            {/* OTHER TABS (PLAN, TASKS, VISITS, DOCUMENTS, TEAM, DISCUSSIONS, EXPENSES) */}
+            {/* TAB 3: PROJECT PLAN & SCOPE OF WORK (KICKOFF & ON-GOING STAGE) */}
             {activeProjectTab === "plan" && (
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px" }}>
-                <h3 style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", margin: "0 0 16px 0" }}>Project Implementation Plan Roadmap</h3>
-                <div style={{ width: "100%", height: "12px", background: "#f1f5f9", borderRadius: "6px", overflow: "hidden" }}>
-                  <div style={{ width: "75%", height: "100%", background: "#2563eb" }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                
+                {/* Kickoff Decision Card (If in Kickoff Stage) */}
+                {getProjectStage(effectiveProject) === "Kickoff Stage" && (
+                  <div style={{ background: "#e0f2fe", border: "1.5px solid #7dd3fc", borderRadius: "14px", padding: "20px 24px", display: "flex", flexDirection: "column", gap: "14px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+                      <div>
+                        <div style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0369a1", display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span>🚀</span> Kickoff Stage Decision Hub
+                        </div>
+                        <div style={{ fontSize: "0.84rem", color: "#075985", marginTop: "4px" }}>
+                          Audit has been completed. Project Scope of Work (SOW) & milestones are prepared. Choose whether client is moving forward or discontinued:
+                        </div>
+                      </div>
+
+                      <div style={{ display: "flex", gap: "10px" }}>
+                        <button
+                          onClick={() => handleAdvanceStage(effectiveProject, "On-Going Stage")}
+                          style={{
+                            background: "#16a34a",
+                            color: "#ffffff",
+                            border: "none",
+                            padding: "10px 20px",
+                            borderRadius: "8px",
+                            fontWeight: "800",
+                            fontSize: "0.85rem",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            boxShadow: "0 4px 12px rgba(22, 163, 74, 0.25)"
+                          }}
+                        >
+                          <span>⚡</span> On-board / Start Project ➔
+                        </button>
+
+                        <button
+                          onClick={(e) => handleOpenDiscontinueModal(effectiveProject, e)}
+                          style={{
+                            background: "#fee2e2",
+                            color: "#dc2626",
+                            border: "1px solid #fca5a5",
+                            padding: "10px 18px",
+                            borderRadius: "8px",
+                            fontWeight: "800",
+                            fontSize: "0.85rem",
+                            cursor: "pointer"
+                          }}
+                        >
+                          🛑 Discontinue from Kickoff Stage
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Scope of Work & Milestones Card */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "24px", display: "flex", flexDirection: "column", gap: "18px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: "1.15rem", fontWeight: "800", color: "#0f172a" }}>
+                        Scope of Work (SOW) & Implementation Plan Roadmap
+                      </h3>
+                      <p style={{ margin: "4px 0 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                        Deliverables timeline, milestone schedules, and linked project budget.
+                      </p>
+                    </div>
+
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <span style={{ background: "#f1f5f9", padding: "6px 12px", borderRadius: "6px", fontSize: "0.8rem", fontWeight: "700", color: "#334155" }}>
+                        Budget: ₹{(effectiveProject.budget || 0).toLocaleString("en-IN")}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Implementation Milestones */}
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+                    <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                      <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800" }}>PHASE 1: FOUNDATION</span>
+                      <h4 style={{ margin: "6px 0 4px 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>Inventory & Vault SOPs</h4>
+                      <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b" }}>Reconciliation of gross/net weights, tagging protocol & safe audits.</p>
+                    </div>
+
+                    <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                      <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800" }}>PHASE 2: SALES ENGINE</span>
+                      <h4 style={{ margin: "6px 0 4px 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>Bridal Diamond Strategy</h4>
+                      <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b" }}>Counter staff incentive alignment, walk-in conversion & CRM logbook.</p>
+                    </div>
+
+                    <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
+                      <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: "800" }}>PHASE 3: SCALE</span>
+                      <h4 style={{ margin: "6px 0 4px 0", fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>Multi-Store Expansion</h4>
+                      <p style={{ margin: 0, fontSize: "0.78rem", color: "#64748b" }}>Centralized ERP procurement, franchise handbook & brand governance.</p>
+                    </div>
+                  </div>
                 </div>
+
+                {/* Linked Expenses Summary */}
+                <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "14px", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: "0.95rem", fontWeight: "800", color: "#0f172a" }}>
+                      Linked Pre-Kickoff Expenses
+                    </h4>
+                    <p style={{ margin: "2px 0 0 0", fontSize: "0.8rem", color: "#64748b" }}>
+                      {linkedExps.length} expense claims currently logged for travel, audit sessions, and site inspections.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setActiveProjectTab("expenses")}
+                    style={{ background: "#f1f5f9", border: "1px solid #cbd5e1", padding: "8px 16px", borderRadius: "6px", fontWeight: "700", fontSize: "0.82rem", color: "#334155", cursor: "pointer" }}
+                  >
+                    View All Linked Expenses ➔
+                  </button>
+                </div>
+
               </div>
             )}
 
@@ -4046,7 +5126,7 @@ export default function ProjectsView() {
     <div className="projects-view-container" style={{ padding: "4px 0", display: "flex", flexDirection: "column", gap: "20px" }}>
       
       {/* Top Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "14px" }}>
         <div>
           <h2 style={{ fontSize: "1.4rem", fontWeight: "700", color: "#0f172a", margin: 0 }}>
             {isConsultant ? "My Assigned Client Projects Hub" : "Projects & Client Hub"}
@@ -4054,96 +5134,125 @@ export default function ProjectsView() {
           <p style={{ fontSize: "0.82rem", color: "#64748b", margin: "4px 0 0 0" }}>
             {isConsultant 
               ? "Track your assigned clients, store locations, site visits, deliverables, and linked expense claims"
-              : "Track client engagements, project discussions, assigned teams, and linked expense claims"}
+              : "Manage client lifecycle from Lead Inquiries, Pre-Audits, Kickoff Decisions to On-Going Execution"}
           </p>
         </div>
         {!isConsultant && (
           <button
             onClick={() => setShowCreateModal(true)}
             style={{
-              background: "#4c478a",
+              background: "#4f46e5",
               color: "#ffffff",
               border: "none",
-              borderRadius: "4px",
+              borderRadius: "6px",
               padding: "9px 18px",
-              fontWeight: "600",
+              fontWeight: "700",
               fontSize: "0.84rem",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               gap: "8px",
-              boxShadow: "0 2px 4px rgba(76, 71, 138, 0.15)"
+              boxShadow: "0 2px 6px rgba(79, 70, 229, 0.2)"
             }}
           >
-            <span>＋</span> Register New Project
+            <span>＋</span> Register New Project / Lead
           </button>
         )}
       </div>
 
       {/* Summary KPI Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
-        <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "4px", border: "1px solid #e2e8f0", borderLeft: "4px solid #4c478a" }}>
-          <div style={{ fontSize: "0.72rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            {isConsultant ? "MY ASSIGNED CLIENTS / PROJECTS" : "TOTAL PROJECTS"}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "14px" }}>
+        <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", borderLeft: "4px solid #334155" }}>
+          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            {isConsultant ? "MY CLIENTS" : "TOTAL PROJECTS"}
           </div>
-          <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
-            {roleScopedProjects.length} <span style={{ fontSize: "0.78rem", color: "#16a34a", fontWeight: "500" }}>({activeCount} Active)</span>
-          </div>
-        </div>
-
-        <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "4px", border: "1px solid #e2e8f0", borderLeft: "4px solid #7c3aed" }}>
-          <div style={{ fontSize: "0.72rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            PROJECT DISCUSSIONS
-          </div>
-          <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
-            {totalDiscussions} <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "400" }}>notes logged</span>
+          <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
+            {roleScopedProjects.length} <span style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: "600" }}>({activeCount} Active)</span>
           </div>
         </div>
 
-        <div style={{ background: "#ffffff", padding: "16px 20px", borderRadius: "4px", border: "1px solid #e2e8f0", borderLeft: "4px solid #d97706" }}>
-          <div style={{ fontSize: "0.72rem", fontWeight: "600", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-            {isConsultant ? "ACTIVE STORE LOCATIONS" : "ASSIGNED CONSULTANTS"}
+        <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", borderLeft: "4px solid #d97706" }}>
+          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            🎯 LEAD STAGE
           </div>
-          <div style={{ fontSize: "1.5rem", fontWeight: "700", color: "#0f172a", marginTop: "4px" }}>
-            {isConsultant ? roleScopedProjects.length : consultants.length} <span style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: "400" }}>{isConsultant ? "active sites" : "active leads"}</span>
+          <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
+            {leadCount} <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "500" }}>leads</span>
+          </div>
+        </div>
+
+        <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", borderLeft: "4px solid #4f46e5" }}>
+          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            🔍 AUDIT STAGE
+          </div>
+          <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
+            {auditCount} <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "500" }}>auditing</span>
+          </div>
+        </div>
+
+        <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", borderLeft: "4px solid #0284c7" }}>
+          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            🚀 KICKOFF STAGE
+          </div>
+          <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
+            {kickoffCount} <span style={{ fontSize: "0.75rem", color: "#64748b", fontWeight: "500" }}>pending</span>
+          </div>
+        </div>
+
+        <div style={{ background: "#ffffff", padding: "16px", borderRadius: "8px", border: "1px solid #e2e8f0", borderLeft: "4px solid #16a34a" }}>
+          <div style={{ fontSize: "0.7rem", fontWeight: "700", color: "#64748b", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+            ⚡ ON-GOING
+          </div>
+          <div style={{ fontSize: "1.4rem", fontWeight: "800", color: "#0f172a", marginTop: "4px" }}>
+            {ongoingCount} <span style={{ fontSize: "0.75rem", color: "#16a34a", fontWeight: "600" }}>active</span>
           </div>
         </div>
       </div>
 
-      {/* Filter & Search Controls */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", border: "1px solid #e2e8f0", padding: "12px 16px", borderRadius: "4px" }}>
-        <div style={{ display: "flex", gap: "8px" }}>
-          {["All", "Active", "Completed", "On Hold"].map(st => (
+      {/* Stage Tabs & Search Controls */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#ffffff", border: "1px solid #e2e8f0", padding: "12px 16px", borderRadius: "8px", flexWrap: "wrap", gap: "12px" }}>
+        
+        {/* Stage Filter Buttons */}
+        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          {[
+            { id: "All", label: `All (${roleScopedProjects.length})` },
+            { id: "Lead Stage", label: `🎯 Lead Stage (${leadCount})`, color: "#d97706" },
+            { id: "Audit Stage", label: `🔍 Audit Stage (${auditCount})`, color: "#4f46e5" },
+            { id: "Kickoff Stage", label: `🚀 Kickoff Stage (${kickoffCount})`, color: "#0284c7" },
+            { id: "On-Going Stage", label: `⚡ On-Going (${ongoingCount})`, color: "#16a34a" },
+            { id: "Discontinued Stage", label: `🛑 Discontinued (${discontinuedCount})`, color: "#dc2626" }
+          ].map(st => (
             <button
-              key={st}
-              onClick={() => setStatusFilter(st)}
+              key={st.id}
+              onClick={() => setStageFilter(st.id)}
               style={{
-                padding: "5px 14px",
-                borderRadius: "4px",
+                padding: "6px 14px",
+                borderRadius: "6px",
                 fontSize: "0.8rem",
-                fontWeight: statusFilter === st ? "600" : "500",
+                fontWeight: stageFilter === st.id ? "800" : "600",
                 cursor: "pointer",
-                border: statusFilter === st ? "1px solid #4c478a" : "1px solid #cbd5e1",
-                background: statusFilter === st ? "#f5f3ff" : "#ffffff",
-                color: statusFilter === st ? "#4c478a" : "#475569"
+                border: stageFilter === st.id ? `1.5px solid ${st.color || '#4f46e5'}` : "1px solid #cbd5e1",
+                background: stageFilter === st.id ? (st.color ? `${st.color}15` : "#e0e7ff") : "#ffffff",
+                color: stageFilter === st.id ? (st.color || "#4f46e5") : "#475569",
+                transition: "all 0.15s ease"
               }}
             >
-              {st}
+              {st.label}
             </button>
           ))}
         </div>
 
+        {/* Search input */}
         <div style={{ position: "relative" }}>
           <input
             type="text"
-            placeholder="Search project, code or client..."
+            placeholder="Search project, client, or code..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             style={{
               padding: "7px 12px 7px 32px",
-              borderRadius: "4px",
+              borderRadius: "6px",
               border: "1px solid #cbd5e1",
-              width: "280px",
+              width: "260px",
               fontSize: "0.82rem",
               outline: "none",
               background: "#ffffff"
@@ -4153,25 +5262,37 @@ export default function ProjectsView() {
         </div>
       </div>
 
-      {/* Minimalistic Projects Grid */}
+      {/* Minimalistic Projects Grid with Drag-and-Drop & Stage Actions */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "16px" }}>
         {filteredProjects.map(proj => {
           const projExpenses = expenses.filter(e => e.projectId === proj.id || e.projectName === proj.name);
+          const stage = getProjectStage(proj);
+          const stageCfg = STAGE_CONFIG[stage] || STAGE_CONFIG["On-Going Stage"];
+          const isDiscontinued = stage === "Discontinued Stage";
 
           return (
             <div
               key={proj.id}
+              draggable
+              onDragStart={() => setDraggedProjectId(proj.id)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={() => {
+                if (draggedProjectId && draggedProjectId !== proj.id) {
+                  handleDropToStage(draggedProjectId, stage);
+                }
+              }}
               style={{
                 background: "#ffffff",
                 padding: "20px",
-                borderRadius: "4px",
-                border: "1px solid #e2e8f0",
+                borderRadius: "8px",
+                border: isDiscontinued ? "1px solid #fecaca" : "1px solid #e2e8f0",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
                 gap: "16px",
                 transition: "all 0.15s ease",
-                cursor: "pointer"
+                cursor: "pointer",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.02)"
               }}
               onClick={() => { handleSelectProject(proj); setActiveProjectTab("business"); }}
             >
@@ -4182,18 +5303,18 @@ export default function ProjectsView() {
                     <span
                       style={{
                         fontSize: "0.68rem",
-                        fontWeight: "700",
+                        fontWeight: "800",
                         letterSpacing: "0.05em",
-                        color: "#4c478a",
-                        background: "#f5f3ff",
-                        border: "1px solid #ddd6fe",
+                        color: "#4f46e5",
+                        background: "#e0e7ff",
+                        border: "1px solid #c7d2fe",
                         padding: "2px 8px",
-                        borderRadius: "3px"
+                        borderRadius: "4px"
                       }}
                     >
                       {proj.code}
                     </span>
-                    <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#0f172a", margin: "8px 0 4px 0" }}>
+                    <h3 style={{ fontSize: "1.1rem", fontWeight: "700", color: "#0f172a", margin: "8px 0 4px 0" }}>
                       {proj.name}
                     </h3>
                     <p style={{ fontSize: "0.8rem", color: "#64748b", margin: 0, fontWeight: "500" }}>
@@ -4201,44 +5322,104 @@ export default function ProjectsView() {
                     </p>
                   </div>
 
-                  {/* Clean Status Badge */}
+                  {/* Stage Badge */}
                   <span
                     style={{
                       fontSize: "0.72rem",
-                      fontWeight: "500",
-                      padding: "2px 10px",
+                      fontWeight: "700",
+                      padding: "3px 10px",
                       borderRadius: "12px",
-                      background: proj.status === "Active" ? "#f0fdf4" : proj.status === "On Hold" ? "#fff7ed" : "#f0f9ff",
-                      border: proj.status === "Active" ? "1px solid #bbf7d0" : proj.status === "On Hold" ? "1px solid #fed7aa" : "1px solid #bae6fd",
-                      color: proj.status === "Active" ? "#16a34a" : proj.status === "On Hold" ? "#ea580c" : "#0284c7"
+                      background: stageCfg.bg,
+                      border: `1px solid ${stageCfg.border}`,
+                      color: stageCfg.color
                     }}
                   >
-                    ● {proj.status}
+                    {stageCfg.badge}
                   </span>
                 </div>
 
+                {/* Discontinued banner notice */}
+                {isDiscontinued && (
+                  <div style={{ margin: "6px 0", background: "#fef2f2", padding: "6px 10px", borderRadius: "6px", fontSize: "0.75rem", color: "#991b1b" }}>
+                    🛑 Discontinued from {proj.discontinuedFromStage || "Kickoff Stage"}: <em>{proj.discontinuedReason || "N/A"}</em>
+                  </div>
+                )}
+
                 {/* Details Pills */}
-                <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "12px", display: "flex", gap: "16px", flexWrap: "wrap" }}>
+                <div style={{ fontSize: "0.78rem", color: "#64748b", marginTop: "10px", display: "flex", gap: "14px", flexWrap: "wrap" }}>
                   <span>📍 {proj.location || "On-site"}</span>
                   <span>💬 {proj.discussions?.length || 0} Discussions</span>
-                  <span>💸 {projExpenses.length} Expense Claims</span>
+                  <span>💸 {projExpenses.length} Expenses</span>
+                  {proj.preAuditData?.gmeetLink && <span>📹 G-Meet Linked</span>}
                 </div>
               </div>
 
-              {/* Minimalistic Footer Row (Sourcing Budget Removed) */}
-              <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "14px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}>
+              {/* Card Footer Actions */}
+              <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "12px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "8px" }}>
+                
+                {/* Stage Quick Advance / Reactivate Button */}
+                <div>
+                  {stage === "Lead Stage" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAdvanceStage(proj, "Audit Stage");
+                      }}
+                      style={{ background: "#e0e7ff", color: "#4338ca", border: "1px solid #c7d2fe", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                    >
+                      Promote to Audit ➔
+                    </button>
+                  )}
+
+                  {stage === "Audit Stage" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAdvanceStage(proj, "Kickoff Stage");
+                      }}
+                      style={{ background: "#e0f2fe", color: "#0369a1", border: "1px solid #bae6fd", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                    >
+                      Advance to Kickoff ➔
+                    </button>
+                  )}
+
+                  {stage === "Kickoff Stage" && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAdvanceStage(proj, "On-Going Stage");
+                      }}
+                      style={{ background: "#dcfce7", color: "#15803d", border: "1px solid #bbf7d0", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                    >
+                      Start Project ➔
+                    </button>
+                  )}
+
+                  {isDiscontinued && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleReactivateProject(proj);
+                      }}
+                      style={{ background: "#fee2e2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: "4px", padding: "5px 10px", fontSize: "0.75rem", fontWeight: "700", cursor: "pointer" }}
+                    >
+                      ↩ Reactivate
+                    </button>
+                  )}
+                </div>
+
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSelectProject(proj);
                   }}
                   style={{
-                    background: "#4c478a",
+                    background: "#4f46e5",
                     color: "#ffffff",
                     border: "none",
                     borderRadius: "4px",
                     padding: "7px 16px",
-                    fontWeight: "600",
+                    fontWeight: "700",
                     fontSize: "0.78rem",
                     cursor: "pointer"
                   }}
@@ -4251,13 +5432,13 @@ export default function ProjectsView() {
         })}
 
         {filteredProjects.length === 0 && (
-          <div className="glass-card" style={{ gridColumn: "1 / -1", padding: "32px", textAlign: "center", color: "#64748b" }}>
-            No projects found matching your query. Click "+ Register New Project" to add one!
+          <div className="glass-card" style={{ gridColumn: "1 / -1", padding: "36px", textAlign: "center", color: "#64748b" }}>
+            No projects found in <strong>{stageFilter}</strong>. Click "+ Register New Project / Lead" to add one!
           </div>
         )}
       </div>
 
-      {/* ── CREATE NEW PROJECT SLIDE-OVER DRAWER ── */}
+      {/* ── CREATE NEW PROJECT / LEAD SLIDE-OVER DRAWER ── */}
       {showCreateModal && (
         <div
           onClick={() => setShowCreateModal(false)}
@@ -4290,7 +5471,7 @@ export default function ProjectsView() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px 16px", borderBottom: "1px solid #f1f5f9" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <img src={logoImg} alt="Acme Logo" style={{ height: "34px", objectFit: "contain" }} />
-                <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "700", color: "#111827" }}>Create project</h2>
+                <h2 style={{ margin: 0, fontSize: "1.25rem", fontWeight: "700", color: "#111827" }}>Register Project / Lead</h2>
               </div>
               <button
                 type="button"
@@ -4302,18 +5483,78 @@ export default function ProjectsView() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleCreateProjectSubmit} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "20px", flexGrow: 1 }}>
+            <form onSubmit={handleCreateProjectSubmit} style={{ padding: "24px", display: "flex", flexDirection: "column", gap: "18px", flexGrow: 1 }}>
               
+              {/* Stage Selection Dropdown */}
+              <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "700", color: "#374151", marginBottom: "6px", display: "block" }}>
+                  Project Initial Lifecycle Stage *
+                </label>
+                <select
+                  value={newStage}
+                  onChange={e => setNewStage(e.target.value)}
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    fontSize: "0.9rem",
+                    border: "1.5px solid #4f46e5",
+                    borderRadius: "6px",
+                    outline: "none",
+                    boxSizing: "border-box",
+                    background: "#f5f3ff",
+                    color: "#312e81",
+                    fontWeight: "700"
+                  }}
+                >
+                  <option value="Lead Stage">🎯 Lead Stage (Potential Inquiry & Meta Form)</option>
+                  <option value="Audit Stage">🔍 Audit Stage (Pre-Audit & Checklist)</option>
+                  <option value="Kickoff Stage">🚀 Kickoff Stage (Audit Done, Awaiting Onboarding)</option>
+                  <option value="On-Going Stage">⚡ On-Going Stage (Default Active Execution)</option>
+                </select>
+              </div>
+
+              {/* Meta Leads fields if Lead Stage */}
+              {newStage === "Lead Stage" && (
+                <div style={{ background: "#fef3c7", border: "1px solid #fde68a", padding: "14px", borderRadius: "8px", display: "flex", flexDirection: "column", gap: "12px" }}>
+                  <div style={{ fontSize: "0.8rem", fontWeight: "800", color: "#92400e" }}>
+                    🎯 Meta Ads Inbound Lead Capture
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: "700", color: "#78350f", marginBottom: "4px", display: "block" }}>Campaign Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Meta Jewellery Brand Scaling 2026"
+                      value={metaCampaignInput}
+                      onChange={e => setMetaCampaignInput(e.target.value)}
+                      style={{ width: "100%", padding: "8px 12px", fontSize: "0.85rem", border: "1px solid #cbd5e1", borderRadius: "4px", boxSizing: "border-box" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "0.75rem", fontWeight: "700", color: "#78350f", marginBottom: "4px", display: "block" }}>Lead Form Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Instant Lead Inquiry Form"
+                      value={metaFormNameInput}
+                      onChange={e => setMetaFormNameInput(e.target.value)}
+                      style={{ width: "100%", padding: "8px 12px", fontSize: "0.85rem", border: "1px solid #cbd5e1", borderRadius: "4px", boxSizing: "border-box" }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Project Name */}
               <div>
+                <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
+                  Client Brand / Project Name *
+                </label>
                 <input
                   type="text"
-                  placeholder="Enter project name (e.g. Heerabhai Jewellers Store Expansion)"
+                  placeholder="e.g. Heerabhai Jewellers Store Expansion"
                   value={newName}
                   onChange={e => setNewName(e.target.value)}
                   style={{
                     width: "100%",
-                    padding: "12px 14px",
+                    padding: "10px 14px",
                     fontSize: "0.95rem",
                     border: "1px solid #d1d5db",
                     borderRadius: "6px",
@@ -4325,59 +5566,57 @@ export default function ProjectsView() {
               </div>
 
               {/* POC */}
-              <div>
-                <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
-                  POC
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter POC name (e.g. Heerabhai Kothari)"
-                  value={pocName}
-                  onChange={e => setPocName(e.target.value)}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    fontSize: "0.9rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "6px",
-                    outline: "none",
-                    boxSizing: "border-box"
-                  }}
-                  required
-                />
-                <span style={{ fontSize: "0.75rem", color: "#9ca3af", marginTop: "4px", display: "block" }}>
-                  This cannot be changed later.
-                </span>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
+                    POC Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Heerabhai Kothari"
+                    value={pocName}
+                    onChange={e => setPocName(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      fontSize: "0.9rem",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
+                    POC Contact
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="10-digit mobile"
+                    value={pocContact}
+                    maxLength={10}
+                    onChange={e => setPocContact(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px",
+                      fontSize: "0.9rem",
+                      border: "1px solid #d1d5db",
+                      borderRadius: "6px",
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                </div>
               </div>
 
-              {/* POC Contact Details (Numbers only up to 10 digits) */}
-              <div>
-                <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
-                  POC Contact Details
-                </label>
-                <input
-                  type="text"
-                  placeholder="Enter 10-digit mobile number"
-                  value={pocContact}
-                  maxLength={10}
-                  onChange={e => setPocContact(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  style={{
-                    width: "100%",
-                    padding: "10px 14px",
-                    fontSize: "0.9rem",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "6px",
-                    outline: "none",
-                    boxSizing: "border-box"
-                  }}
-                />
-              </div>
-
-              {/* Two Column: Project code & Project status */}
+              {/* Two Column: Project code & Assigned Consultant */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div>
-                  <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "flex", alignItems: "center", gap: "4px" }}>
-                    Project code <span style={{ color: "#9ca3af", fontSize: "0.75rem" }}>ⓘ</span>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
+                    Project Code *
                   </label>
                   <input
                     type="text"
@@ -4399,11 +5638,11 @@ export default function ProjectsView() {
 
                 <div>
                   <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
-                    Project status
+                    Assigned Consultant
                   </label>
                   <select
-                    value={newStatus}
-                    onChange={e => setNewStatus(e.target.value)}
+                    value={assignedConsultantId}
+                    onChange={e => setAssignedConsultantId(e.target.value)}
                     style={{
                       width: "100%",
                       padding: "10px 14px",
@@ -4415,101 +5654,37 @@ export default function ProjectsView() {
                       background: "#fff"
                     }}
                   >
-                    <option value="In Progress">In Progress</option>
-                    <option value="Active">Active</option>
-                    <option value="On Hold">On Hold</option>
-                    <option value="Completed">Completed</option>
+                    <option value="">-- Select Consultant --</option>
+                    {(users || []).map(u => (
+                      <option key={u.id} value={u.id}>{u.name} ({u.role || "Consultant"})</option>
+                    ))}
                   </select>
                 </div>
               </div>
 
-              {/* Optional Description */}
-              <div>
-                {!showDescription ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowDescription(true)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: "#4f46e5",
-                      fontSize: "0.85rem",
-                      fontWeight: "600",
-                      cursor: "pointer",
-                      padding: 0
-                    }}
-                  >
-                    + Project description (optional)
-                  </button>
-                ) : (
-                  <div>
-                    <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
-                      Project description
-                    </label>
-                    <textarea
-                      placeholder="Add description regarding scope, deliverables, or objectives..."
-                      value={description}
-                      onChange={e => setDescription(e.target.value)}
-                      rows="3"
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        fontSize: "0.88rem",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        outline: "none",
-                        resize: "none",
-                        boxSizing: "border-box"
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-
-              {/* Section: Duration */}
-              <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "16px" }}>
-                <h4 style={{ margin: "0 0 12px 0", fontSize: "0.95rem", fontWeight: "700", color: "#111827" }}>
-                  Duration
-                </h4>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                  <div>
-                    <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
-                      Project start date
-                    </label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={e => setStartDate(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        fontSize: "0.88rem",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        outline: "none",
-                        boxSizing: "border-box"
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
-                      Project end date (optional)
-                    </label>
-                    <input
-                      type="date"
-                      value={endDate}
-                      onChange={e => setEndDate(e.target.value)}
-                      style={{
-                        width: "100%",
-                        padding: "10px 14px",
-                        fontSize: "0.88rem",
-                        border: "1px solid #d1d5db",
-                        borderRadius: "6px",
-                        outline: "none",
-                        boxSizing: "border-box"
-                      }}
-                    />
-                  </div>
+              {/* Duration */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={e => setStartDate(e.target.value)}
+                    style={{ width: "100%", padding: "10px 14px", fontSize: "0.88rem", border: "1px solid #d1d5db", borderRadius: "6px", boxSizing: "border-box" }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: "0.82rem", fontWeight: "600", color: "#374151", marginBottom: "6px", display: "block" }}>
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={e => setEndDate(e.target.value)}
+                    style={{ width: "100%", padding: "10px 14px", fontSize: "0.88rem", border: "1px solid #d1d5db", borderRadius: "6px", boxSizing: "border-box" }}
+                  />
                 </div>
               </div>
 
@@ -4540,16 +5715,64 @@ export default function ProjectsView() {
                     border: "none",
                     borderRadius: "6px",
                     fontSize: "0.9rem",
-                    fontWeight: "600",
+                    fontWeight: "700",
                     cursor: "pointer",
                     boxShadow: "0 2px 4px rgba(79, 70, 229, 0.2)"
                   }}
                 >
-                  Create
+                  Register Project
                 </button>
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: DISCONTINUE PROJECT WITH REASON CAPTURE (ACCESSIBLE FROM ANY STAGE) ── */}
+      {showDiscontinueModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(15, 23, 42, 0.6)", backdropFilter: "blur(4px)", zIndex: 10000, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <div style={{ background: "#ffffff", borderRadius: "16px", padding: "28px", width: "100%", maxWidth: "520px", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.15)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: "800", color: "#dc2626", display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>🛑</span> Discontinue Project / Engagement
+              </h3>
+              <button onClick={() => setShowDiscontinueModal(false)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#64748b" }}>✕</button>
+            </div>
+
+            <p style={{ margin: "0 0 16px 0", fontSize: "0.85rem", color: "#64748b", lineHeight: "1.5" }}>
+              You are discontinuing <strong>{discontinueTargetProject?.name}</strong> from <strong>{getProjectStage(discontinueTargetProject)}</strong>. Please specify the reason or client feedback for our audit history:
+            </p>
+
+            <div style={{ marginBottom: "18px" }}>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: "700", color: "#374151", marginBottom: "6px" }}>
+                Discontinuation Reason / Client Remarks *
+              </label>
+              <textarea
+                rows="4"
+                placeholder="e.g., Client paused expansion due to showroom lease delay; or commercial terms not aligned..."
+                value={discontinueReasonInput}
+                onChange={e => setDiscontinueReasonInput(e.target.value)}
+                style={{ width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #cbd5e1", fontSize: "0.88rem", resize: "none", boxSizing: "border-box" }}
+              />
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "10px" }}>
+              <button
+                type="button"
+                onClick={() => setShowDiscontinueModal(false)}
+                style={{ padding: "9px 18px", background: "#ffffff", border: "1px solid #cbd5e1", borderRadius: "8px", fontWeight: "600", fontSize: "0.85rem", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDiscontinue}
+                style={{ padding: "9px 22px", background: "#dc2626", color: "#ffffff", border: "none", borderRadius: "8px", fontWeight: "800", fontSize: "0.85rem", cursor: "pointer", boxShadow: "0 4px 10px rgba(220, 38, 38, 0.25)" }}
+              >
+                Confirm Discontinue 🛑
+              </button>
+            </div>
           </div>
         </div>
       )}

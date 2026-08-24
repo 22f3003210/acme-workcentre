@@ -3,7 +3,12 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://gvaeukrwjeknyjwbjwcr.supabase.co";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd2YWV1a3J3amVrbnlqd2Jqd2NyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ4OTg2NTIsImV4cCI6MjEwMDQ3NDY1Mn0.qAJJnDfQDNMVd5eAQEJpi8Z7odQitL5QRXArltnq9oA";
 
-export const isSupabaseConfigured = () => true;
+export const isSupabaseConfigured = () => {
+  if (typeof process !== "undefined" && (process.env?.NODE_ENV === "test" || process.env?.VITEST)) {
+    return false;
+  }
+  return true;
+};
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -65,6 +70,15 @@ export const supabaseAddProject = async (project) => {
     poc_contact: project.pocContact || "",
     client_contact: project.clientContact || "",
     status: project.status || "Active",
+    stage: project.stage || "On-Going Stage",
+    audit_sub_stage: project.auditSubStage || "pre_audit_virtual",
+    discontinued_from_stage: project.discontinuedFromStage || null,
+    discontinued_reason: project.discontinuedReason || null,
+    discontinued_date: project.discontinuedDate || null,
+    stage_history: project.stageHistory || [],
+    pre_audit_data: project.preAuditData || {},
+    project_plan: project.projectPlan || {},
+    meta_lead_data: project.metaLeadData || {},
     start_date: project.startDate || null,
     budget: Number(project.budget) || 0,
     spent: Number(project.spent) || 0,
@@ -93,6 +107,15 @@ export const supabaseUpdateProject = async (projectId, updatedFields) => {
   if (updatedFields.pocContact !== undefined) dbPayload.poc_contact = updatedFields.pocContact;
   if (updatedFields.clientContact !== undefined) dbPayload.client_contact = updatedFields.clientContact;
   if (updatedFields.status !== undefined) dbPayload.status = updatedFields.status;
+  if (updatedFields.stage !== undefined) dbPayload.stage = updatedFields.stage;
+  if (updatedFields.auditSubStage !== undefined) dbPayload.audit_sub_stage = updatedFields.auditSubStage;
+  if (updatedFields.discontinuedFromStage !== undefined) dbPayload.discontinued_from_stage = updatedFields.discontinuedFromStage;
+  if (updatedFields.discontinuedReason !== undefined) dbPayload.discontinued_reason = updatedFields.discontinuedReason;
+  if (updatedFields.discontinuedDate !== undefined) dbPayload.discontinued_date = updatedFields.discontinuedDate;
+  if (updatedFields.stageHistory !== undefined) dbPayload.stage_history = updatedFields.stageHistory;
+  if (updatedFields.preAuditData !== undefined) dbPayload.pre_audit_data = updatedFields.preAuditData;
+  if (updatedFields.projectPlan !== undefined) dbPayload.project_plan = updatedFields.projectPlan;
+  if (updatedFields.metaLeadData !== undefined) dbPayload.meta_lead_data = updatedFields.metaLeadData;
   if (updatedFields.startDate !== undefined) dbPayload.start_date = updatedFields.startDate;
   if (updatedFields.budget !== undefined) dbPayload.budget = Number(updatedFields.budget) || 0;
   if (updatedFields.spent !== undefined) dbPayload.spent = Number(updatedFields.spent) || 0;

@@ -148,16 +148,57 @@ CREATE TABLE IF NOT EXISTS public.advance_requests (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
 
--- 8. PROJECTS TABLE
+-- 8. PROJECTS TABLE (With Multi-Stage Lifecycle Support)
 CREATE TABLE IF NOT EXISTS public.projects (
     id TEXT PRIMARY KEY,
+    code TEXT,
     name TEXT NOT NULL,
     client TEXT,
+    poc_name TEXT,
+    poc_contact TEXT,
+    client_contact TEXT,
     business_unit TEXT,
     location TEXT,
     status TEXT NOT NULL DEFAULT 'Active',
+    stage TEXT NOT NULL DEFAULT 'On-Going Stage', -- 'Lead Stage', 'Audit Stage', 'Kickoff Stage', 'On-Going Stage', 'Discontinued Stage'
+    audit_sub_stage TEXT DEFAULT 'pre_audit_virtual', -- 'pre_audit_virtual', 'internal_checklist', 'visit_planning', 'audit_completed'
+    discontinued_from_stage TEXT, -- 'Lead Stage', 'Audit Stage', 'Kickoff Stage', 'On-Going Stage'
+    discontinued_reason TEXT,
+    discontinued_date DATE,
+    stage_history JSONB DEFAULT '[]'::jsonb,
+    pre_audit_data JSONB DEFAULT '{}'::jsonb,
+    project_plan JSONB DEFAULT '{}'::jsonb,
+    meta_lead_data JSONB DEFAULT '{}'::jsonb,
+    start_date DATE,
+    budget NUMERIC DEFAULT 0,
+    spent NUMERIC DEFAULT 0,
+    description TEXT,
+    engagement_purpose TEXT,
+    assigned_consultants JSONB DEFAULT '[]'::jsonb,
+    business_details JSONB,
+    audit_reports JSONB,
+    checklists JSONB,
+    client_visits JSONB,
+    scheduled_events JSONB,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now())
 );
+
+-- Schema Migration Script (Run in Supabase SQL Editor if projects table already exists)
+ALTER TABLE public.projects 
+  ADD COLUMN IF NOT EXISTS stage TEXT DEFAULT 'On-Going Stage',
+  ADD COLUMN IF NOT EXISTS audit_sub_stage TEXT DEFAULT 'pre_audit_virtual',
+  ADD COLUMN IF NOT EXISTS discontinued_from_stage TEXT,
+  ADD COLUMN IF NOT EXISTS discontinued_reason TEXT,
+  ADD COLUMN IF NOT EXISTS discontinued_date DATE,
+  ADD COLUMN IF NOT EXISTS stage_history JSONB DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS pre_audit_data JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS project_plan JSONB DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS meta_lead_data JSONB DEFAULT '{}'::jsonb;
+
+-- Backfill existing projects to 'On-Going Stage' so all current work is preserved
+UPDATE public.projects 
+SET stage = 'On-Going Stage' 
+WHERE stage IS NULL OR stage = '' OR stage = 'Active' OR stage = 'In Progress';
 
 -- Enable Row Level Security (RLS) and grant anon permissions for local/anon access
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;

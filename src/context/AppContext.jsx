@@ -264,13 +264,16 @@ export const AppProvider = ({ children }) => {
 
   const [currentUser, setCurrentUser] = useState(() => {
     try {
-      const isAuth = localStorage.getItem("workcentre_authenticated") === "true";
-      if (!isAuth) return null;
       const savedUserId = localStorage.getItem("workcentre_current_user_id");
-      const found = users.find(u => u.id === savedUserId);
-      return found || users[0];
+      if (savedUserId) {
+        const found = users.find(u => u.id === savedUserId);
+        if (found) return found;
+      }
+      const isAuth = localStorage.getItem("workcentre_authenticated");
+      if (isAuth === "false") return null;
+      return users[0] || initialUsers[0] || null;
     } catch (e) {
-      return null;
+      return users[0] || initialUsers[0] || null;
     }
   });
 
@@ -504,6 +507,15 @@ export const AppProvider = ({ children }) => {
             pocContact: p.poc_contact,
             clientContact: p.client_contact,
             status: p.status,
+            stage: p.stage || "On-Going Stage",
+            auditSubStage: p.audit_sub_stage || "pre_audit_virtual",
+            discontinuedFromStage: p.discontinued_from_stage || null,
+            discontinuedReason: p.discontinued_reason || null,
+            discontinuedDate: p.discontinued_date || null,
+            stageHistory: p.stage_history || [],
+            preAuditData: p.pre_audit_data || {},
+            projectPlan: p.project_plan || {},
+            metaLeadData: p.meta_lead_data || {},
             startDate: p.start_date,
             budget: Number(p.budget) || 0,
             spent: Number(p.spent) || 0,
@@ -525,8 +537,9 @@ export const AppProvider = ({ children }) => {
       }).catch(err => console.error("Supabase fetch projects error:", err));
 
       // Realtime Multi-Device Sync Channel
+      const channelId = `workcentre_realtime_${Math.random().toString(36).substring(2, 9)}`;
       const realtimeSyncChannel = supabase
-        .channel("workcentre_realtime_stream")
+        .channel(channelId)
         .on("postgres_changes", { event: "*", schema: "public", table: "projects" }, (payload) => {
           if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
             const p = payload.new;
@@ -539,6 +552,15 @@ export const AppProvider = ({ children }) => {
               pocContact: p.poc_contact,
               clientContact: p.client_contact,
               status: p.status,
+              stage: p.stage || "On-Going Stage",
+              auditSubStage: p.audit_sub_stage || "pre_audit_virtual",
+              discontinuedFromStage: p.discontinued_from_stage || null,
+              discontinuedReason: p.discontinued_reason || null,
+              discontinuedDate: p.discontinued_date || null,
+              stageHistory: p.stage_history || [],
+              preAuditData: p.pre_audit_data || {},
+              projectPlan: p.project_plan || {},
+              metaLeadData: p.meta_lead_data || {},
               startDate: p.start_date,
               budget: Number(p.budget) || 0,
               spent: Number(p.spent) || 0,
@@ -841,6 +863,12 @@ export const AppProvider = ({ children }) => {
           })));
         }
       }).catch(err => console.error("Supabase fetch company_inflows error:", err));
+
+      return () => {
+        if (realtimeSyncChannel) {
+          supabase.removeChannel(realtimeSyncChannel);
+        }
+      };
     }
   }, []);
 
@@ -1709,9 +1737,43 @@ export const AppProvider = ({ children }) => {
 
   // Projects Management
   const addProject = (projectData) => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const initialStage = projectData.stage || "On-Going Stage";
     const newProj = {
       id: `proj-${Date.now()}`,
       status: "Active",
+      stage: initialStage,
+      auditSubStage: projectData.auditSubStage || "pre_audit_virtual",
+      discontinuedFromStage: projectData.discontinuedFromStage || null,
+      discontinuedReason: projectData.discontinuedReason || null,
+      discontinuedDate: projectData.discontinuedDate || null,
+      stageHistory: projectData.stageHistory || [
+        { stage: initialStage, date: todayStr, notes: `Project created in ${initialStage}` }
+      ],
+      preAuditData: projectData.preAuditData || {
+        gmeetLink: "",
+        scheduledDate: "",
+        scheduledTime: "",
+        consultantName: "",
+        questionnaire: {
+          showroomSizeSqft: "",
+          dailyFootfalls: "",
+          posSoftware: "",
+          vaultSecurityProtocol: "",
+          hallmarkPurityPercentage: "",
+          goldDiamondRatio: "",
+          staffHeadcount: "",
+          growthGoals: ""
+        },
+        aiSummary: "",
+        meetingNotes: ""
+      },
+      projectPlan: projectData.projectPlan || {
+        scopeOfWork: "",
+        commercialAgreed: true,
+        kickoffNotes: ""
+      },
+      metaLeadData: projectData.metaLeadData || {},
       spent: 0,
       discussions: [],
       assignedConsultants: [],
